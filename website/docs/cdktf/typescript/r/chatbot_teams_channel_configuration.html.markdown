@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `channelName` - (Optional) Name of the Microsoft Teams channel.
 * `guardrailPolicyArns` - (Optional) List of IAM policy ARNs that are applied as channel guardrails. The AWS managed `AdministratorAccess` policy is applied by default if this is not set.
 * `loggingLevel` - (Optional) Logging levels include `ERROR`, `INFO`, or `NONE`.
@@ -112,4 +113,4 @@ Using `terraform import`, import Chatbot Microsoft Teams Channel Configuration u
 % terraform import aws_chatbot_teams_channel_configuration.example 5f4f15d2-b958-522a-8333-124aa8bf0925
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0806007ab81b864e2705100f5ab5a77d86935808601f480b1a6c54c8f664b05f -->
+<!-- cache-key: cdktf-0.20.8 input-2c96a8bd841f41bbcc760c6ca89d184559f45ab5cd74d98fcc0ed154094136b7 -->

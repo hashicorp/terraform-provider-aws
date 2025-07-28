@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,12 +44,12 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -111,7 +112,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 				),
 			},
@@ -121,7 +122,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "jp"),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s-3", rName)),
-					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDeprecated),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDeprecated)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-3", rName)),
 				),
 			},
@@ -160,11 +161,11 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(resourceName, "guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "template_physical_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ProductTypeCloudFormationTemplate)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -184,7 +185,7 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 
 func testAccCheckProvisioningArtifactDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_provisioning_artifact" {
@@ -202,9 +203,9 @@ func testAccCheckProvisioningArtifactDestroy(ctx context.Context) resource.TestC
 				ProvisioningArtifactId: aws.String(artifactID),
 			}
 
-			output, err := conn.DescribeProvisioningArtifactWithContext(ctx, input)
+			output, err := conn.DescribeProvisioningArtifact(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -229,7 +230,7 @@ func testAccCheckProvisioningArtifactExists(ctx context.Context, resourceName st
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		artifactID, productID, err := tfservicecatalog.ProvisioningArtifactParseID(rs.Primary.ID)
 
@@ -242,7 +243,7 @@ func testAccCheckProvisioningArtifactExists(ctx context.Context, resourceName st
 			ProvisioningArtifactId: aws.String(artifactID),
 		}
 
-		_, err = conn.DescribeProvisioningArtifactWithContext(ctx, input)
+		_, err = conn.DescribeProvisioningArtifact(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioning Artifact (%s): %w", rs.Primary.ID, err)

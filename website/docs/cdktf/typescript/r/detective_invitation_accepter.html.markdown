@@ -32,7 +32,7 @@ class MyConvertedCode extends TerraformStack {
     const awsDetectiveMemberPrimary = new DetectiveMember(this, "primary_1", {
       accountId: "ACCOUNT ID",
       emailAddress: "EMAIL",
-      graphArn: primary.id,
+      graphArn: primary.graphArn,
       message: "Message of the invite",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `graphArn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
 ## Attribute Reference
@@ -91,4 +92,4 @@ Using `terraform import`, import `aws_detective_invitation_accepter` using the g
 % terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca2bf5e5cb9affcfcf860965a82f07a76d1193a82b4cdb53e84a5d10e901c8a0 -->
+<!-- cache-key: cdktf-0.20.8 input-01f14a6a4a53bebdd2746daccb63e51eca285f326455a253e0b409f70402b72b -->

@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,21 +36,21 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 				Config: testAccRepositoryCreationTemplateConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "applied_for.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "applied_for.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applied_for.*", string(types.RCTAppliedForReplication)),
 					resource.TestCheckResourceAttr(resourceName, "custom_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutable)),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrefix, repositoryPrefix),
 					resource.TestCheckResourceAttr(resourceName, "repository_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.Foo", "Bar"),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -87,7 +88,6 @@ func TestAccECRRepositoryCreationTemplate_disappears(t *testing.T) {
 func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_ecr_repository_creation_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -96,10 +96,7 @@ func TestAccECRRepositoryCreationTemplate_failWhenAlreadyExists(t *testing.T) {
 		CheckDestroy:             testAccCheckRepositoryCreationTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryCreationTemplateConfig_failWhenAlreadyExist(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
-				),
+				Config:      testAccRepositoryCreationTemplateConfig_failWhenAlreadyExists(repositoryPrefix),
 				ExpectError: regexache.MustCompile(`TemplateAlreadyExistsException`),
 			},
 		},
@@ -122,10 +119,22 @@ func TestAccECRRepositoryCreationTemplate_ignoreEquivalentLifecycle(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccRepositoryCreationTemplateConfig_lifecycleNewOrder(repositoryPrefix),
-				PlanOnly: true,
+				Config: testAccRepositoryCreationTemplateConfig_lifecycleNewOrder(repositoryPrefix),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -147,7 +156,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -161,7 +170,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile("ecr:DescribeImages")),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 		},
@@ -246,7 +255,7 @@ resource "aws_ecr_repository_creation_template" "test" {
 `, repositoryPrefix)
 }
 
-func testAccRepositoryCreationTemplateConfig_failWhenAlreadyExist(repositoryPrefix string) string {
+func testAccRepositoryCreationTemplateConfig_failWhenAlreadyExists(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository_creation_template" "test" {
   prefix = %[1]q

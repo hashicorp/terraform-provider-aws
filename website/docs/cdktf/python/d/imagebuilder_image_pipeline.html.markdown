@@ -33,6 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image pipeline.
 
 ## Attribute Reference
@@ -65,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the image pipeline.
 * `tags` - Key-value map of resource tags for the image pipeline.
 
-<!-- cache-key: cdktf-0.20.1 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->
+<!-- cache-key: cdktf-0.20.8 input-d5d03781924755f5381999acbc42b183a3019bcc194111a7ca7d85a7878a7112 -->

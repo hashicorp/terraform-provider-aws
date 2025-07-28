@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agentVersion` - (Optional, Forces new resource) Version of the agent with which you want to associate the knowledge base. Valid values: `DRAFT`.
 
 ## Attribute Reference
@@ -56,6 +57,14 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Agent ID, agent version, and knowledge base ID separated by `,`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -89,4 +98,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Knowledge Base 
 % terraform import aws_bedrockagent_agent_knowledge_base_association.example GGRRAED6JP,DRAFT,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-74ab5484df00243116196b30cebfcc97fadefe5d78e8442bd00e6118b68b556d -->
+<!-- cache-key: cdktf-0.20.8 input-f322180ab2d37163bff0751d833905eb9b79671df395e89268e6fa83851aac07 -->

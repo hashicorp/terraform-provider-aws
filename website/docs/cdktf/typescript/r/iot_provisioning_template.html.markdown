@@ -112,6 +112,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the fleet provisioning template.
 * `description` - (Optional) The description of the fleet provisioning template.
 * `enabled` - (Optional) True to enable the fleet provisioning template, otherwise false.
@@ -168,4 +169,4 @@ Using `terraform import`, import IoT fleet provisioning templates using the `nam
 % terraform import aws_iot_provisioning_template.fleet FleetProvisioningTemplate
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0caa47853f782deb3ce1c0adf39db30dd119e9251e987dbe84f960ceed581db6 -->
+<!-- cache-key: cdktf-0.20.8 input-b65d29e1d8604073bed98df3edaf6975f173ff1a241a9ce8434d2b5bdc7b3de6 -->

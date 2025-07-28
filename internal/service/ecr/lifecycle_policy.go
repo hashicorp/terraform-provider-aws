@@ -4,9 +4,10 @@
 package ecr
 
 import (
+	"cmp"
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,10 +49,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
 			"registry_id": {
 				Type:     schema.TypeString,
@@ -65,7 +64,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 	}
 }
 
-func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -91,11 +90,11 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
-func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetLifecyclePolicyOutput, error) {
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -108,8 +107,6 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
 
 	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get(names.AttrPolicy).(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -128,7 +125,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -198,8 +195,8 @@ type lifecyclePolicy struct {
 }
 
 func (lp *lifecyclePolicy) reduce() {
-	sort.Slice(lp.Rules, func(i, j int) bool {
-		return aws.ToInt64(lp.Rules[i].RulePriority) < aws.ToInt64(lp.Rules[j].RulePriority)
+	slices.SortFunc(lp.Rules, func(a, b *lifecyclePolicyRule) int {
+		return cmp.Compare(aws.ToInt64(a.RulePriority), aws.ToInt64(b.RulePriority))
 	})
 
 	for _, rule := range lp.Rules {
@@ -208,16 +205,16 @@ func (lp *lifecyclePolicy) reduce() {
 }
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
-	sort.Slice(lprs.TagPatternList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPatternList[i]) < aws.ToString(lprs.TagPatternList[j])
+	slices.SortFunc(lprs.TagPatternList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPatternList) == 0 {
 		lprs.TagPatternList = nil
 	}
 
-	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
-		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
+	slices.SortFunc(lprs.TagPrefixList, func(a, b *string) int {
+		return cmp.Compare(aws.ToString(a), aws.ToString(b))
 	})
 
 	if len(lprs.TagPrefixList) == 0 {

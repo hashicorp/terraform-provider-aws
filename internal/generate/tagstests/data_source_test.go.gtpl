@@ -10,6 +10,10 @@
 {{- end }}
 {{ end }}
 
+{{ define "Test" -}}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+{{- end }}
+
 {{ define "TestCaseSetup" -}}
 {{ template "TestCaseSetupNoProviders" . -}}
 {{ if not .AlternateRegionProvider }}
@@ -18,7 +22,11 @@
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
-	PreCheck:   func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
+	PreCheck:     func() { acctest.PreCheck(ctx, t)
+		{{- range .PreChecks }}
+		{{ .Code }}
+		{{ end -}}
+	},
 	ErrorCheck: acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 {{- end }}
 
@@ -79,6 +87,10 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 package {{ .ProviderPackage }}_test
 
 import (
+	{{ if .OverrideIdentifier }}
+	"context"
+	"unique"
+	{{- end }}
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -88,6 +100,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{- if .OverrideIdentifier }}
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
@@ -96,9 +113,17 @@ import (
 {{ if .Serialize }}
 func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
+	{{ if .SerializeParallelTests -}}
+	t.Parallel()
+	{{- end }}
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: {{ template "testname" . }}_tags,
+		acctest.CtBasic:                  {{ template "testname" . }}_tags,
+		"NullMap":                        {{ template "testname" . }}_tags_NullMap,
+		"EmptyMap":                       {{ template "testname" . }}_tags_EmptyMap,
+		"DefaultTags_nonOverlapping":     {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
+		"IgnoreTags_Overlap_DefaultTag":  {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag,
+		"IgnoreTags_Overlap_ResourceTag": {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
@@ -108,7 +133,7 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
@@ -132,3 +157,177 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		},
 	})
 }
+
+func {{ template "testname" . }}_tags_NullMap(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetup" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName:        config.StringVariable(rName),{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetup" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/data.tags/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName:        config.StringVariable(rName),{{ end }}
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/data.tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/data.tags_ignore/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtProviderKey1),
+					),
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					{{ template "expectFullDataSourceTags" . }}(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+	{{- template "Init" . }}
+
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/data.tags_ignore/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtResourceKey1),
+					),
+					{{ template "AdditionalTfVars" . }}
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					{{ template "expectFullDataSourceTags" . }}(ctx, dataSourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				{{ if ne .DataSourceResourceImplementation "framework" -}}
+				ExpectNonEmptyPlan: true,
+				{{- end }}
+			},
+		},
+	})
+}
+
+{{ define "expectFullDataSourceTags" -}}
+{{ if .OverrideIdentifier }}expectFull{{ .Name }}DataSourceTags{{ else }}expectFullDataSourceTags{{ end }}
+{{- end }}
+
+{{ if .OverrideIdentifier }}
+func {{ template "expectFullDataSourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
+		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
+		{{ if ne .OverrideResourceType "" -}}
+		ResourceType:        "{{ .OverrideResourceType }}",
+		{{- end }}
+	}), knownValue)
+}
+{{ end }}

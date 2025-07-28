@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the assessment template.
 * `target_arn` - (Required) The assessment target ARN to attach the template to.
 * `duration` - (Required) The duration of the inspector run.
@@ -90,4 +91,4 @@ Using `terraform import`, import `aws_inspector_assessment_template` using the t
 % terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->
+<!-- cache-key: cdktf-0.20.8 input-eba3a185af4c48ecee1799bb6de4d703009b3769a58f1fe45256bff8237f1555 -->

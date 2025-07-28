@@ -135,6 +135,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine_version` - (Optional) The specific version of the engine for the Environment.
 * `force_update` - (Optional) Force update the environment even if applications are running.
 * `kms_key_id` - (Optional) ARN of the KMS key to use for the Environment.
@@ -214,4 +215,4 @@ Using `terraform import`, import Mainframe Modernization Environment using the `
 % terraform import aws_m2_environment.example 01234567890abcdef012345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d1757073a6e6cf5a6acfd5694df94816eb07c6503d2539964374bbcd6c8fceb4 -->
+<!-- cache-key: cdktf-0.20.8 input-8c8460339e906efa184cf6233feafccd529376f7da50be657ca924d352767ca3 -->

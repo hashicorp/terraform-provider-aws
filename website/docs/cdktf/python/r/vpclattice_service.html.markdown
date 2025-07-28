@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auth_type` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - (Optional) Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - (Optional) Custom domain name of the service.
@@ -90,4 +91,4 @@ Using `terraform import`, import VPC Lattice Service using the `id`. For example
 % terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f9acfec4249fc51134e9cb5589073b543ce94ac0103b759f9c21d3128e90b21c -->
+<!-- cache-key: cdktf-0.20.8 input-6e61415019929c7b1e7931822c646f7faa411ea1d3b0b45ddcbff3429e7ec068 -->

@@ -77,14 +77,14 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         test = VpcIpam(self, "test",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
         aws_vpc_ipam_pool_test = VpcIpamPool(self, "test_2",
             address_family="ipv4",
             ipam_scope_id=test.private_default_scope_id,
-            locale=Token.as_string(current.name)
+            locale=Token.as_string(current.region)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_test.override_logical_id("test")
@@ -107,6 +107,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
 * `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which ensures that EC2 instances launched in this VPC use the EC2 instance tenancy attribute specified when the EC2 instance is launched. The only other option is `dedicated`, which ensures that EC2 instances launched in this VPC are run on dedicated tenancy instances regardless of the tenancy attribute specified at launch. This has a dedicated per region fee of $2 per hour, plus an hourly per instance usage fee.
 * `ipv4_ipam_pool_id` - (Optional) The ID of an IPv4 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts. Using IPAM you can monitor IP address usage throughout your AWS Organization.
@@ -168,4 +169,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e1769c317ceb8ff9b909ae2b7a2d263552378fdc71e2b3381730a2670d3f6a5a -->
+<!-- cache-key: cdktf-0.20.8 input-f7bff029ef6b031e9305fb6a132c1813a502c30c38771d865814e071bae80db3 -->

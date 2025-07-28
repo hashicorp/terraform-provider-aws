@@ -5,6 +5,7 @@ package namevaluesfilters
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NameValuesFilters is a standard implementation for AWS resource filters.
@@ -15,10 +16,10 @@ type NameValuesFilters map[string][]string
 
 // Add adds missing and updates existing filters from common Terraform Provider SDK types.
 // Supports map[string]string, map[string][]string, *schema.Set.
-func (filters NameValuesFilters) Add(i interface{}) NameValuesFilters {
-	switch value := i.(type) {
+func (filters NameValuesFilters) Add(v any) NameValuesFilters {
+	switch v := v.(type) {
 	case map[string]string:
-		for name, v := range value {
+		for name, v := range v {
 			if values, ok := filters[name]; ok {
 				filters[name] = append(values, v)
 			} else {
@@ -29,30 +30,31 @@ func (filters NameValuesFilters) Add(i interface{}) NameValuesFilters {
 
 	case map[string][]string:
 		// We can't use fallthrough here, so recurse.
-		return filters.Add(NameValuesFilters(value))
+		return filters.Add(NameValuesFilters(v))
 
 	case NameValuesFilters:
-		for name, vs := range value {
+		for name, v := range v {
 			if values, ok := filters[name]; ok {
-				filters[name] = append(values, vs...)
+				filters[name] = append(values, v...)
 			} else {
-				values = make([]string, len(vs))
-				copy(values, vs)
+				values = make([]string, len(v))
+				copy(values, v)
 				filters[name] = values
 			}
 		}
 
 	case *schema.Set:
 		// The set of filters described by Schema().
-		for _, filter := range value.List() {
-			m := filter.(map[string]interface{})
-			name := m["name"].(string)
+		for _, tfMapRaw := range v.List() {
+			tfMap := tfMapRaw.(map[string]any)
+			name := tfMap[names.AttrName].(string)
 
-			for _, v := range m["values"].(*schema.Set).List() {
+			for _, v := range tfMap[names.AttrValues].(*schema.Set).List() {
+				v := v.(string)
 				if values, ok := filters[name]; ok {
-					filters[name] = append(values, v.(string))
+					filters[name] = append(values, v)
 				} else {
-					values = []string{v.(string)}
+					values = []string{v}
 					filters[name] = values
 				}
 			}
@@ -97,8 +99,8 @@ func (filters NameValuesFilters) Map() map[string][]string {
 
 // New creates NameValuesFilters from common Terraform Provider SDK types.
 // Supports map[string]string, map[string][]string, *schema.Set.
-func New(i interface{}) NameValuesFilters {
-	return make(NameValuesFilters).Add(i)
+func New(v any) NameValuesFilters {
+	return make(NameValuesFilters).Add(v)
 }
 
 // Schema returns a *schema.Schema that represents a set of custom filtering criteria
@@ -110,12 +112,11 @@ func Schema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{

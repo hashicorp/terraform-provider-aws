@@ -53,6 +53,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_type` - (Optional) Endpoint type. Valid values: `iot:CredentialProvider`, `iot:Data`, `iot:Data-ATS`, `iot:Jobs`.
 
 ## Attribute Reference
@@ -66,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
     * `iot:Data-ATS`: `IDENTIFIER-ats.iot.REGION.amazonaws.com`
     * `iot:Jobs`: `IDENTIFIER.jobs.iot.REGION.amazonaws.com`
 
-<!-- cache-key: cdktf-0.20.1 input-56c8383801b044a75be3c89aa515472690d24408a38b21081a32c8735b9a3414 -->
+<!-- cache-key: cdktf-0.20.8 input-33ef1b3dbb404c18fc5a3a4d486b9696a02e017278b7c3d758d136e34e4daace -->

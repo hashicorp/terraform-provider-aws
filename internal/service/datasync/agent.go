@@ -23,21 +23,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datasync_agent", name="Agent")
-// @Tags(identifierAttribute="id")
-func ResourceAgent() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeAgentOutput")
+// @Testing(importIgnore="activation_key;ip_address", plannableImportAction="Replace")
+// @Testing(preCheck="testAccPreCheck")
+func resourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
 		ReadWithoutTimeout:   resourceAgentRead,
 		UpdateWithoutTimeout: resourceAgentUpdate,
 		DeleteWithoutTimeout: resourceAgentDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -92,12 +94,10 @@ func ResourceAgent() *schema.Resource {
 				ForceNew: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			},
 			Timeout: time.Second * 10,
 		}
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 
 		var requestURL string
 		if v, ok := d.GetOk("private_link_endpoint"); ok {
@@ -179,7 +179,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	input := &datasync.CreateAgentInput{
+	input := datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
 		Tags:          getTagsIn(ctx),
 	}
@@ -200,7 +200,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateAgent(ctx, input)
+	output, err := conn.CreateAgent(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Agent: %s", err)
@@ -208,8 +208,8 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(output.AgentArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindAgentByARN(ctx, conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return findAgentByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -219,11 +219,11 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindAgentByARN(ctx, conn, d.Id())
+	output, err := findAgentByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Agent (%s) not found, removing from state", d.Id())
@@ -252,17 +252,17 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	if d.HasChange(names.AttrName) {
-		input := &datasync.UpdateAgentInput{
+		input := datasync.UpdateAgentInput{
 			AgentArn: aws.String(d.Id()),
 			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
+		_, err := conn.UpdateAgent(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s): %s", d.Id(), err)
@@ -272,14 +272,20 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
-	_, err := conn.DeleteAgent(ctx, &datasync.DeleteAgentInput{
+	input := datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
-	})
+	}
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteAgent(ctx, &input)
+	}, "in-use by these location(s)")
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return diags
@@ -292,12 +298,12 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
-	input := &datasync.DescribeAgentInput{
+func findAgentByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeAgentOutput, error) {
+	input := datasync.DescribeAgentInput{
 		AgentArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeAgent(ctx, input)
+	output, err := conn.DescribeAgent(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "does not exist") {
 		return nil, &retry.NotFoundError{

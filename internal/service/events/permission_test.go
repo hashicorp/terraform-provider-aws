@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,11 +66,16 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_basic(principal2, statementID),
@@ -77,6 +83,11 @@ func TestAccEventsPermission_basic(t *testing.T) {
 					testAccCheckPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -84,8 +95,15 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccPermissionConfig_defaultBusName(principal2, statementID),
-				PlanOnly: true,
+				Config: testAccPermissionConfig_defaultBusName(principal2, statementID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -110,7 +128,7 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
@@ -184,7 +202,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-1234567890"),
@@ -194,7 +212,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-0123456789"),

@@ -37,6 +37,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `defaultLogLevel` - (Optional) The default logging level. Valid Values: `"DEBUG"`, `"INFO"`, `"ERROR"`, `"WARN"`, `"DISABLED"`.
 * `disableAllLogs` - (Optional) If `true` all logs are disabled. The default is `false`.
 * `roleArn` - (Required) The ARN of the role that allows IoT to write to Cloudwatch logs.
@@ -45,4 +48,4 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-8b571a8dda736dcc0ea1559b030643ae474e857abed2e70ef420990d6b076aa1 -->
+<!-- cache-key: cdktf-0.20.8 input-1d008a229305c1a5763a924f49f4ed0a2cf09a0dbd05e7a519d3adb9058d75f5 -->

@@ -36,14 +36,14 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
     const awsVpcIpamPoolExample = new VpcIpamPool(this, "example_2", {
       addressFamily: "ipv4",
       ipamScopeId: example.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
@@ -91,14 +91,14 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
     const awsVpcIpamPoolExample = new VpcIpamPool(this, "example_2", {
       addressFamily: "ipv4",
       ipamScopeId: example.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
@@ -129,6 +129,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Optional, Forces new resource) The CIDR you want to assign to the pool.
 * `description` - (Optional, Forces new resource) The description for the allocation.
 * `disallowedCidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.
@@ -176,4 +177,4 @@ Using `terraform import`, import IPAM allocations using the allocation `id` and 
 % terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fda9663b9e39d957ce0f2859addfeffc21d1ce22091ce0b4c748dbc034daa31e -->
+<!-- cache-key: cdktf-0.20.8 input-2f5c3330d637bdb0c524bad2a3bdd743cb05091744bc2bbe21c8343bbcd8b756 -->

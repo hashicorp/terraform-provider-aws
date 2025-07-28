@@ -40,12 +40,12 @@ class MyConvertedCode(TerraformStack):
             local_domain_info=OpensearchOutboundConnectionLocalDomainInfo(
                 domain_name=local_domain.domain_name,
                 owner_id=Token.as_string(current.account_id),
-                region=Token.as_string(data_aws_region_current.name)
+                region=Token.as_string(data_aws_region_current.region)
             ),
             remote_domain_info=OpensearchOutboundConnectionRemoteDomainInfo(
                 domain_name=remote_domain.domain_name,
                 owner_id=Token.as_string(current.account_id),
-                region=Token.as_string(data_aws_region_current.name)
+                region=Token.as_string(data_aws_region_current.region)
             )
         )
 ```
@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
 * `connection_mode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `accept_connection` - (Optional, Forces new resource) Accepts the connection.
@@ -124,4 +125,4 @@ Using `terraform import`, import AWS Opensearch Outbound Connections using the O
 % terraform import aws_opensearch_outbound_connection.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-22357101732120a510373c3e4ffc6057617f56b27aa4b15000ded430bddb956a -->
+<!-- cache-key: cdktf-0.20.8 input-e369f3802eed1d1ecd0664201c3e2ddb778579c7fcd7e59137bd0dc4e1d31362 -->

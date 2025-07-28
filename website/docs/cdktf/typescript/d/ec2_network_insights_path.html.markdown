@@ -38,12 +38,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `networkInsightsPathId` - (Optional) ID of the Network Insights Path to select.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
 The arguments of this data source act as filters for querying the available
 Network Insights Paths. The given filters must match exactly one Network Insights Path
 whose data will be exported as attributes.
-
-* `networkInsightsPathId` - (Optional) ID of the Network Insights Path to select.
-* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
 
@@ -61,10 +64,12 @@ This data source exports the following attributes in addition to the arguments a
 * `destinationArn` - ARN of the destination.
 * `destinationIp` - IP address of the AWS resource that is the destination of the path.
 * `destinationPort` - Destination port.
+* `filterAtDestination` - Filters of the network paths at the destination.
+* `filterAtSource` - Filters of the network paths at the source.
 * `protocol` - Protocol.
 * `source` - AWS resource that is the source of the path.
 * `sourceArn` - ARN of the source.
 * `sourceIp` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-445b5efe4c93146386518473af01d6da2f1f20f20f9a688cc7349f4a0720df0a -->
+<!-- cache-key: cdktf-0.20.8 input-1bd5fbbba7b3d56164de0833355d92d9f02c6aa75618c6f0c22013c576b6848e -->

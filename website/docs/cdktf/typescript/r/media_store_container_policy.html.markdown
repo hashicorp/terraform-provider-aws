@@ -12,6 +12,8 @@ description: |-
 
 Provides a MediaStore Container Policy.
 
+!> **WARNING:** _This resource is deprecated and will be removed in a future version._ AWS has [announced](https://aws.amazon.com/blogs/media/support-for-aws-elemental-mediastore-ending-soon/) the discontinuation of AWS Elemental MediaStore, effective **November 13, 2025**. Users should begin transitioning to alternative solutions as soon as possible. For **simple live streaming workflows**, AWS recommends migrating to **Amazon S3**. For **advanced use cases** that require features such as packaging, DRM, or cross-region redundancy, consider using **AWS Elemental MediaPackage**.
+
 ~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
 
 ## Example Usage
@@ -62,7 +64,7 @@ class MyConvertedCode extends TerraformStack {
             ],
             resources: [
               "arn:aws:mediastore:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}:${" +
                 current.accountId +
                 "}:container/${" +
@@ -95,6 +97,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `containerName` - (Required) The name of the container.
 * `policy` - (Required) The contents of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
@@ -134,4 +137,4 @@ Using `terraform import`, import MediaStore Container Policy using the MediaStor
 % terraform import aws_media_store_container_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9ed289864924023edb076e3fc25bf237e0f5f6970e7ef7c1126877959c4604d5 -->
+<!-- cache-key: cdktf-0.20.8 input-02a1c7841dd05949a6ad1e4575d9d0404ca70390130bd09e6639482a6649dfe0 -->

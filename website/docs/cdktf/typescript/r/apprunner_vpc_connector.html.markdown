@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcConnectorName` - (Required) Name for the VPC connector.
 * `subnets` (Required) List of IDs of subnets that App Runner should use when it associates your service with a custom Amazon VPC. Specify IDs of subnets of a single Amazon VPC. App Runner determines the Amazon VPC from the subnets you specify.
 * `securityGroups` - List of IDs of security groups that App Runner should use for access to AWS resources under the specified subnets. If not specified, App Runner uses the default security group of the Amazon VPC. The default security group allows all outbound traffic.
@@ -86,4 +87,4 @@ Using `terraform import`, import App Runner vpc connector using the `arn`. For e
 % terraform import aws_apprunner_vpc_connector.example arn:aws:apprunner:us-east-1:1234567890:vpcconnector/example/1/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a25bb324f61ef65387154b76f7156f8f2fb7eb7f11a4d07c072913a4bb2014c1 -->
+<!-- cache-key: cdktf-0.20.8 input-54aba0cae40e42c5f052998da0f78a26b4253418a6efb074f00766c7c88196d9 -->

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -154,7 +153,6 @@ func ResourceKxVolume() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -163,7 +161,7 @@ const (
 	kxVolumeIDPartCount = 2
 )
 
-func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -181,7 +179,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &finspace.CreateKxVolumeInput{
 		ClientToken:         aws.String(id.UniqueId()),
-		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
+		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]any)),
 		EnvironmentId:       aws.String(environmentId),
 		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
 		VolumeName:          aws.String(volumeName),
@@ -193,8 +191,8 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
+	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Nas1Configuration = expandNas1Configuration(v.([]any))
 	}
 
 	out, err := conn.CreateKxVolume(ctx, in)
@@ -219,7 +217,7 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
 }
 
-func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -264,7 +262,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -280,8 +278,8 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateVolume = true
 	}
 
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && d.HasChanges("nas1_configuration") {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
+	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]any)) > 0 && d.HasChanges("nas1_configuration") {
+		in.Nas1Configuration = expandNas1Configuration(v.([]any))
 		updateVolume = true
 	}
 
@@ -301,7 +299,7 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
 }
 
-func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -381,7 +379,7 @@ func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, 
 }
 
 func statusKxVolume(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindKxVolumeByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -426,12 +424,12 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	return out, nil
 }
 
-func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
+func expandNas1Configuration(tfList []any) *types.KxNAS1Configuration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.KxNAS1Configuration{}
 
@@ -445,12 +443,12 @@ func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
 	return a
 }
 
-func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{} {
+func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Size; v != nil {
 		m[names.AttrSize] = aws.ToInt32(v)
@@ -460,15 +458,15 @@ func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{
 		m[names.AttrType] = v
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
+func flattenCluster(apiObject *types.KxAttachedCluster) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ClusterName; aws.ToString(v) != "" {
 		m[names.AttrClusterName] = aws.ToString(v)
@@ -485,12 +483,12 @@ func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
 	return m
 }
 
-func flattenAttachedClusters(apiObjects []types.KxAttachedCluster) []interface{} {
+func flattenAttachedClusters(apiObjects []types.KxAttachedCluster) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenCluster(&apiObject))

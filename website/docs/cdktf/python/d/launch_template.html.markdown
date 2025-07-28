@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `id` - (Optional) ID of the specific launch template to retrieve.
 * `name` - (Optional) Name of the launch template.
@@ -84,4 +85,4 @@ This resource also exports a full set of attributes corresponding to the argumen
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-ac085ab2a2118f2f53ba9bc1952c11c28381c52f43860ff26cbf46d376ef67e8 -->
+<!-- cache-key: cdktf-0.20.8 input-b1b13ec894e0f86ed2c960445db3edbcc701ab6ee2af8272242014d95cb0ae47 -->

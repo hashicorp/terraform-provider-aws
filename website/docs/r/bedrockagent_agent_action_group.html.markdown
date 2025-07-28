@@ -110,6 +110,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `action_group_state` - (Optional) Whether the action group is available for the agent to invoke or not when sending an [InvokeAgent](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_InvokeAgent.html) request. Valid values: `ENABLED`, `DISABLED`.
 * `api_schema` - (Optional) Either details about the S3 object containing the OpenAPI schema for the action group or the JSON or YAML-formatted payload defining the schema. For more information, see [Action group OpenAPI schemas](https://docs.aws.amazon.com/bedrock/latest/userguide/agents-api-schema.html). See [`api_schema` Block](#api_schema-block) for details.
 * `description` - (Optional) Description of the action group.
@@ -117,6 +118,7 @@ The following arguments are optional:
   Each function represents an action in an action group.
   See [`function_schema` Block](#function_schema-block) for details.
 * `parent_action_group_signature` - (Optional) To allow your agent to request the user for additional information when trying to complete a task, set this argument to `AMAZON.UserInput`. You must leave the `description`, `api_schema`, and `action_group_executor` arguments blank for this action group. Valid values: `AMAZON.UserInput`.
+* `prepare_agent` - (Optional) Whether or not to prepare the agent after creation or modification. Defaults to `true`.
 * `skip_resource_in_use_check` - (Optional) Whether the in-use check is skipped when deleting the action group.
 
 ### `action_group_executor` Block
@@ -189,7 +191,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `delete` - (Default `120m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_monitoring_schedule"
 description: |-
-  Provides a SageMaker Monitoring Schedule resource.
+  Provides a SageMaker AI Monitoring Schedule resource.
 ---
 
 # Resource: aws_sagemaker_monitoring_schedule
 
-Provides a SageMaker monitoring schedule resource.
+Provides a SageMaker AI monitoring schedule resource.
 
 ## Example Usage
 
@@ -29,6 +29,7 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `monitoring_schedule_config` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

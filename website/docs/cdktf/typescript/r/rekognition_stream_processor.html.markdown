@@ -313,6 +313,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dataSharingPreference` - (Optional) See [`dataSharingPreference`](#data_sharing_preference).
 * `kmsKeyId` - (Optional) Optional parameter for label detection stream processors.
 * `notificationChannel` - (Optional) The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notificationChannel`](#notification_channel).
@@ -389,7 +390,9 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `streamProcessorArn` - ARN of the Stream Processor.
+* `arn` - ARN of the Stream Processor.
+* `streamProcessorArn` - (**Deprecated**) ARN of the Stream Processor.
+  Use `arn` instead.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -432,4 +435,4 @@ Using `terraform import`, import Rekognition Stream Processor using the `name`. 
 % terraform import aws_rekognition_stream_processor.example my-stream 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3270ebf829691bb33fec57b588e584a3c7fc51a209426c171b198c7a90bc81f -->
+<!-- cache-key: cdktf-0.20.8 input-abe0591166b356690839bb3e9aa7a8f44be0b3d976ea807930a332854a221c26 -->

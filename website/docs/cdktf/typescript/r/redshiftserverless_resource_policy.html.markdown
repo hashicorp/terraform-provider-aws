@@ -53,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
 * `policy` - (Required) The policy to create or update. For example, the following policy grants a user authorization to restore a snapshot.
 
@@ -94,4 +95,4 @@ Using `terraform import`, import Redshift Serverless Resource Policies using the
 % terraform import aws_redshiftserverless_resource_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a616ab40a392ade8fb2ac2a0656140773e5db2656ed7fdddaff9050c933530e7 -->
+<!-- cache-key: cdktf-0.20.8 input-8fcb02f320a67b1d265579b4032bb742e9deacc0f5ede169163fe050c0de77f6 -->

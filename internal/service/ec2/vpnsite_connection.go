@@ -4,23 +4,22 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"net"
-	"sort"
+	"slices"
 	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,6 +90,16 @@ func resourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
+			},
+			"preshared_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"preshared_key_storage": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(preSharedKeyStorageType_Values(), false),
 			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
@@ -630,10 +638,7 @@ func resourceVPNConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			customizeDiffValidateOutsideIPAddressType,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: customizeDiffValidateOutsideIPAddressType,
 	}
 }
 
@@ -677,15 +682,19 @@ var (
 	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
-func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateVpnConnectionInput{
+	input := ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get(names.AttrType).(string)),
+	}
+
+	if v, ok := d.GetOk("preshared_key_storage"); ok {
+		input.PreSharedKeyStorage = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
@@ -696,7 +705,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateVpnConnection(ctx, input)
+	output, err := conn.CreateVpnConnection(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection: %s", err)
@@ -712,9 +721,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	vpnConnection, err := findVPNConnectionByID(ctx, conn, d.Id())
 
@@ -728,22 +738,16 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, vpnConnectionARN(ctx, c, d.Id()))
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
+	d.Set("preshared_key_arn", vpnConnection.PreSharedKeyArn)
 	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
-		input := &ec2.DescribeTransitGatewayAttachmentsInput{
+		input := ec2.DescribeTransitGatewayAttachmentsInput{
 			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
 				"resource-type":      string(awstypes.TransitGatewayAttachmentResourceTypeVpn),
@@ -751,7 +755,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 			}),
 		}
 
-		output, err := findTransitGatewayAttachment(ctx, conn, input)
+		output, err := findTransitGatewayAttachment(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
@@ -846,15 +850,21 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("tunnel2_vgw_inside_address", nil)
 	}
 
+	if tunnelInfo != nil && regexache.MustCompile("REDACTED").MatchString(tunnelInfo.Tunnel1PreSharedKey) {
+		d.Set("preshared_key_storage", preSharedKeyStorageTypeSecretsManager)
+	} else {
+		d.Set("preshared_key_storage", preSharedKeyStorageTypeStandard)
+	}
+
 	return diags
 }
 
-func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
-		input := &ec2.ModifyVpnConnectionInput{
+		input := ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
 
@@ -870,7 +880,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.VpnGatewayId = aws.String(v)
 		}
 
-		_, err := conn.ModifyVpnConnection(ctx, input)
+		_, err := conn.ModifyVpnConnection(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s): %s", d.Id(), err)
@@ -882,7 +892,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
-		input := &ec2.ModifyVpnConnectionOptionsInput{
+		input := ec2.ModifyVpnConnectionOptionsInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
 
@@ -902,7 +912,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
 		}
 
-		_, err := conn.ModifyVpnConnectionOptions(ctx, input)
+		_, err := conn.ModifyVpnConnectionOptions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) connection options: %s", d.Id(), err)
@@ -914,14 +924,23 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
-			input := &ec2.ModifyVpnTunnelOptionsInput{
-				TunnelOptions:             options,
+		if options, address, pskStorageChanged := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string), d.HasChange("preshared_key_storage"); (options != nil || pskStorageChanged) && address != "" {
+			input := ec2.ModifyVpnTunnelOptionsInput{
 				VpnConnectionId:           aws.String(d.Id()),
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			_, err := conn.ModifyVpnTunnelOptions(ctx, input)
+			if pskStorageChanged {
+				input.PreSharedKeyStorage = aws.String(d.Get("preshared_key_storage").(string))
+			}
+
+			if options != nil {
+				input.TunnelOptions = options
+			} else {
+				input.TunnelOptions = &awstypes.ModifyVpnTunnelOptionsSpecification{}
+			}
+
+			_, err := conn.ModifyVpnTunnelOptions(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) tunnel (%d) options: %s", d.Id(), i+1, err)
@@ -936,14 +955,15 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
-	_, err := conn.DeleteVpnConnection(ctx, &ec2.DeleteVpnConnectionInput{
+	input := ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVpnConnection(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return diags
@@ -958,6 +978,10 @@ func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func vpnConnectionARN(ctx context.Context, c *conns.AWSClient, vpnConnectionID string) string {
+	return c.RegionalARN(ctx, names.EC2, "vpn-connection/"+vpnConnectionID)
 }
 
 func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *awstypes.VpnConnectionOptionsSpecification {
@@ -1028,8 +1052,8 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		}
 	}
 
-	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
@@ -1107,21 +1131,21 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
-func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.VpnTunnelLogOptionsSpecification {
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]any) *awstypes.VpnTunnelLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.VpnTunnelLogOptionsSpecification{}
 
-	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cloudwatch_log_options"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *awstypes.CloudWatchLogOptionsSpecification {
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]any) *awstypes.CloudWatchLogOptionsSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -1195,8 +1219,8 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	}
 
 	if key := prefix + "log_options"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]any)[0].(map[string]any))
 		}
 
 		hasChange = true
@@ -1374,7 +1398,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject awstyp
 	s = nil
 
 	if apiObject.LogOptions != nil {
-		if err := d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
+		if err := d.Set(prefix+"log_options", []any{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
 			return fmt.Errorf("setting %s: %w", prefix+"log_options", err)
 		}
 	} else {
@@ -1428,8 +1452,8 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject awstyp
 	return nil
 }
 
-func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DestinationCidrBlock; v != nil {
 		tfMap["destination_cidr_block"] = aws.ToString(v)
@@ -1441,12 +1465,12 @@ func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interfa
 	return tfMap
 }
 
-func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []interface{} {
+func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVPNStaticRoute(apiObject))
@@ -1455,26 +1479,26 @@ func flattenVPNStaticRoutes(apiObjects []awstypes.VpnStaticRoute) []interface{} 
 	return tfList
 }
 
-func flattenVPNTunnelLogOptions(apiObject *awstypes.VpnTunnelLogOptions) map[string]interface{} {
+func flattenVPNTunnelLogOptions(apiObject *awstypes.VpnTunnelLogOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudWatchLogOptions; v != nil {
-		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
+		tfMap["cloudwatch_log_options"] = []any{flattenCloudWatchLogOptions(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[string]interface{} {
+func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LogEnabled; v != nil {
 		enabled := aws.ToBool(v)
@@ -1495,8 +1519,8 @@ func flattenCloudWatchLogOptions(apiObject *awstypes.CloudWatchLogOptions) map[s
 	return tfMap
 }
 
-func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AcceptedRouteCount; v != nil {
 		tfMap["accepted_route_count"] = aws.ToInt32(v)
@@ -1523,12 +1547,12 @@ func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{}
 	return tfMap
 }
 
-func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []interface{} {
+func flattenVGWTelemetries(apiObjects []awstypes.VgwTelemetry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenVGWTelemetry(apiObject))
@@ -1563,18 +1587,6 @@ type tunnelInfo struct {
 	Tunnel2CgwInsideAddress string
 	Tunnel2PreSharedKey     string
 	Tunnel2VgwInsideAddress string
-}
-
-func (slice xmlVpnConnectionConfig) Len() int {
-	return len(slice.Tunnels)
-}
-
-func (slice xmlVpnConnectionConfig) Less(i, j int) bool {
-	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
-}
-
-func (slice xmlVpnConnectionConfig) Swap(i, j int) {
-	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
 }
 
 // customerGatewayConfigurationToTunnelInfo converts the configuration information for the
@@ -1616,7 +1628,9 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 			}
 		}
 	} else {
-		sort.Sort(vpnConfig)
+		slices.SortFunc(vpnConfig.Tunnels, func(a, b xmlIpsecTunnel) int {
+			return cmp.Compare(a.OutsideAddress, b.OutsideAddress)
+		})
 	}
 
 	tunnelInfo := &tunnelInfo{
@@ -1673,7 +1687,7 @@ func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 }
 
 // customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
-func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v any) error {
 	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == outsideIPAddressTypePublicIPv4 {
 		return nil
 	}

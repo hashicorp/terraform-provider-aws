@@ -36,7 +36,7 @@ service "" {
   // Blocks with zero attributes will be ommitted 
   sdk {
     id             = "" 
-    client_version = [] 
+    client_version = 2 
   }
 
   names {
@@ -76,6 +76,7 @@ service "" {
   not_implemented     = bool
   allowed_subcategory = bool
   note                = ""
+  is_global           = bool
 }
 
 ```
@@ -90,7 +91,7 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `v1_package` | Code | [AWS SDK for Go v1](https://docs.aws.amazon.com/sdk-for-go/api/) package name |
 | `v2_package` | Code | [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2) package name |
 | `id` | Code | Represents the ServiceID of a AWS service which is a unique identifier of a specific service |
-| `client_version` | Code | HCL int list containing if in the TF AWS Provider, the service currently uses AWS SDK for Go v1 and/or v2; each integer represents the correlating version|
+| `client_version` | Code | Indicates which version of the AWS SDK is used for this service. Defaults to `2` |
 | `aliases` | Code | HCL string list of name variations (_e.g._, for "AMP", `prometheus,prometheusservice`). Do not include **ProviderPackageActual (or `provider_package_correct`, if blank) since that will create duplicates in the [Custom Endpoints guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/custom-service-endpoints). |
 | `provider_name_upper` | Code | [Correctly capitalized](https://hashicorp.github.io/terraform-provider-aws/naming/#mixed-caps) `ProviderPackageActual`, if it exists, otherwise `provider_package_correct` |
 | `human_friendly` | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
@@ -113,5 +114,6 @@ The explanation of the attributes of `data/names_data.hcl` are as follows:
 | `allowed_subcategory` | Code | Bool based on if `Exclude` is non-blank, whether to include `human_friendly` in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides `exclude` in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if `Exclude` is non-blank. |
 | `not_implemented` | Code | Bool based on whether the service is implemented by the provider |
 | `note` | Reference | Very brief note usually to explain why excluded |
+| `is_global` | Code | Bool indicating whether the service is [global](https://docs.aws.amazon.com/whitepapers/latest/aws-fault-isolation-boundaries/global-services.html). See [the Enhanced Region Support Guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/enhanced-region-support#global-services) |
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).

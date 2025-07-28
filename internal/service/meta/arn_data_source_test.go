@@ -26,7 +26,7 @@ func TestAccMetaARNDataSource_basic(t *testing.T) {
 			{
 				Config: testAccARNDataSourceConfig_basic(arn),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "account", "123456789012"),
+					resource.TestCheckResourceAttr(dataSourceName, "account", acctest.Ct12Digit),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, arn),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, "eu-west-1"), // lintignore:AWSAT003

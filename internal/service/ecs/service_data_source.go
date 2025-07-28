@@ -27,6 +27,10 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"availability_zone_rebalancing": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,7 +60,7 @@ func dataSourceService() *schema.Resource {
 	}
 }
 
-func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -69,6 +73,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := aws.ToString(service.ServiceArn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)

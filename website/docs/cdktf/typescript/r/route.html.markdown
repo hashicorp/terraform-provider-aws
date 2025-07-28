@@ -79,6 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `routeTableId` - (Required) The ID of the routing table.
 
 One of the following destination arguments must be supplied:
@@ -218,4 +219,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-82a10ad295ce34577ba999c5af56984db204da17baee1b7f51f6c4821fa0366d -->
+<!-- cache-key: cdktf-0.20.8 input-51acb982c10a6ca66d7e54bd69c6f71b89b04fb34bfe225db17ab5bb11a1568f -->

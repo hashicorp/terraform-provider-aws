@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `privateDnsEnabled` - (Required) Indicates whether a private hosted zone is associated with the VPC. Only applicable for `Interface` endpoints.
 * `vpcEndpointId` - (Required) VPC endpoint identifier.
 
@@ -82,4 +83,4 @@ Using `terraform import`, import a VPC (Virtual Private Cloud) Endpoint Private 
 % terraform import aws_vpc_endpoint_private_dns.example vpce-abcd-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-49b741dd5cb214f9cf00d1ac46aeffcfee5cf2eab477515748c3ab472f3e042a -->
+<!-- cache-key: cdktf-0.20.8 input-fb61383c27ad6532408d0d99242fa17f2ccc7b0a5214264644e63a609400534d -->

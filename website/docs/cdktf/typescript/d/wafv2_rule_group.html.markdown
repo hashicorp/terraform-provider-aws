@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the WAFv2 Rule Group.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the rule group that helps with identification.
 * `id` - Unique identifier of the rule group.
 
-<!-- cache-key: cdktf-0.20.1 input-4de733ef434bbfbe5aa4d54ed8db1f5e78db59b5a79986eddb88c9cc5144e9ca -->
+<!-- cache-key: cdktf-0.20.8 input-f8b7a16f11894ab0490418776042fc4b325e0d8c43a41a418d93e58d19921f99 -->

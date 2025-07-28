@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,10 +37,10 @@ func TestAccGlacierVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
 				),
 			},
@@ -69,8 +70,8 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
 			},
@@ -83,15 +84,15 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 				),
 			},
 			{
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
 			},
@@ -159,7 +160,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				Config: testAccVaultConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -172,7 +173,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				Config: testAccVaultConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -181,7 +182,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				Config: testAccVaultConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -229,16 +230,28 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 				Config: testAccVaultConfig_policyOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "access_policy", regexache.MustCompile(fmt.Sprintf(`"Sid":"%s"`, rName))),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVaultConfig_policyNewOrder(rName),
-				PlanOnly: true,
+				Config: testAccVaultConfig_policyNewOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -249,10 +262,6 @@ func testAccCheckVaultExists(ctx context.Context, n string, v *glacier.DescribeV
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Glacier Vault ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlacierClient(ctx)
@@ -345,7 +354,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+          "Resource": "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
        }
     ]
 }
@@ -381,7 +390,7 @@ resource "aws_glacier_vault" "test" {
              "glacier:AbortMultipartUpload",
              "glacier:CompleteMultipartUpload"
           ],
-          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
+          "Resource": ["arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"]
        }
     ]
 }
@@ -440,7 +449,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:CompleteMultipartUpload",
       ]
       Resource = [
-        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
+        "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s",
       ]
     }]
   })
@@ -472,7 +481,7 @@ resource "aws_glacier_vault" "test" {
         "glacier:InitiateMultipartUpload",
         "glacier:AbortMultipartUpload",
       ]
-      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
+      Resource = "arn:${data.aws_partition.current.partition}:glacier:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:vaults/%[1]s"
     }]
   })
 }

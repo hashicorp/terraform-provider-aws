@@ -35,9 +35,9 @@ class MyConvertedCode extends TerraformStack {
     new FsxWindowsFileSystem(this, "example", {
       activeDirectoryId: Token.asString(awsDirectoryServiceDirectoryExample.id),
       kmsKeyId: Token.asString(awsKmsKeyExample.arn),
-      storageCapacity: 300,
+      storageCapacity: 32,
       subnetIds: [Token.asString(awsSubnetExample.id)],
-      throughputCapacity: 1024,
+      throughputCapacity: 32,
     });
   }
 }
@@ -68,9 +68,9 @@ class MyConvertedCode extends TerraformStack {
         password: "avoid-plaintext-passwords",
         username: "Admin",
       },
-      storageCapacity: 300,
+      storageCapacity: 32,
       subnetIds: [Token.asString(awsSubnetExample.id)],
-      throughputCapacity: 1024,
+      throughputCapacity: 32,
     });
   }
 }
@@ -82,10 +82,11 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set `deploymentType` to `MULTI_AZ_1`.
-* `throughputCapacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
+* `throughputCapacity` - (Required) Throughput (megabytes per second) of the file system. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/performance.html).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activeDirectoryId` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `selfManagedActiveDirectory`.
 * `aliases` - (Optional) An array DNS alias names that you want to associate with the Amazon FSx file system.  For more information, see [Working with DNS Aliases](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-dns-aliases.html)
 * `auditLogConfiguration` - (Optional) The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system. See [`auditLogConfiguration` Block](#audit_log_configuration-block) for details.
@@ -217,4 +218,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7fa8e6f410a078e6243e08b1d44003de54acd11d819ea1c8c9817cd9106d7c9c -->
+<!-- cache-key: cdktf-0.20.8 input-bb355d18f4d91802d7261a5c5dd00e1ebccf7fbe210e292514a31e83734235ae -->

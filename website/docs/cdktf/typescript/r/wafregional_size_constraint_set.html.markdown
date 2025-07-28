@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the Size Constraint Set.
 * `sizeConstraints` - (Optional) Specifies the parts of web requests that you want to inspect the size of.
 
@@ -119,4 +120,4 @@ Using `terraform import`, import WAF Size Constraint Set using the id. For examp
 % terraform import aws_wafregional_size_constraint_set.size_constraint_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-64d9f0d82b2b891198f8ccc4cee325bd0e4f4efb84239342a4238efc9f6b5a0e -->
+<!-- cache-key: cdktf-0.20.8 input-6a6ddc834f3bb16d7a8d02fb57687baa98250e8b1171a905fd258d1c26947b90 -->

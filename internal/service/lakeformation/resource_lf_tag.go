@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -41,9 +42,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource LF Tag")
-func newResourceResourceLFTag(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourceLFTag{}
+// @FrameworkResource("aws_lakeformation_resource_lf_tag", name="Resource LF Tag")
+func newResourceLFTagResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceLFTagResource{}
+
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
@@ -54,16 +56,13 @@ const (
 	ResNameResourceLFTag = "Resource LF Tag"
 )
 
-type resourceResourceLFTag struct {
-	framework.ResourceWithConfigure
+type resourceLFTagResource struct {
+	framework.ResourceWithModel[ResourceLFTagResourceModel]
 	framework.WithTimeouts
+	framework.WithNoUpdate
 }
 
-func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lakeformation_resource_lf_tag"
-}
-
-func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceLFTagResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCatalogID: catalogIDSchemaOptional(),
@@ -262,10 +261,10 @@ func catalogIDSchemaOptionalComputed() schema.StringAttribute {
 	}
 }
 
-func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceLFTagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan ResourceResourceLFTagData
+	var plan ResourceLFTagResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -347,15 +346,13 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 
 	state := plan
 
-	id := fmt.Sprintf("%d", create.StringHashcode(prettify(in)))
+	id := strconv.Itoa(create.StringHashcode(prettify(in)))
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*lakeformation.GetResourceLFTagsOutput, error) {
 		return findResourceLFTagByID(ctx, conn, state.CatalogID.ValueString(), res)
 	})
-
-	out := outputRaw.(*lakeformation.GetResourceLFTagsOutput)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -375,10 +372,10 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceResourceLFTag) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state ResourceResourceLFTagData
+	var state ResourceLFTagResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -418,21 +415,10 @@ func (r *resourceResourceLFTag) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourceLFTag) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ResourceResourceLFTagData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceLFTagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state ResourceResourceLFTagData
+	var state ResourceLFTagResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -460,13 +446,15 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	in.LFTags = []awstypes.LFTagPair{
-		{
-			TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
-			TagValues: []string{
-				lfTag.Value.ValueString(),
+	if lfTag != nil {
+		in.LFTags = []awstypes.LFTagPair{
+			{
+				TagKey: fwflex.StringFromFramework(ctx, lfTag.Key),
+				TagValues: []string{
+					lfTag.Value.ValueString(),
+				},
 			},
-		},
+		}
 	}
 
 	if in.Resource == nil || reflect.DeepEqual(in.Resource, &awstypes.Resource{}) || len(in.LFTags) == 0 {
@@ -507,7 +495,7 @@ func (r *resourceResourceLFTag) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *resourceResourceLFTag) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *resourceLFTagResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrDatabase),
@@ -550,18 +538,18 @@ type lfTagTagger interface {
 }
 
 type dbTagger struct {
-	data *ResourceResourceLFTagData
+	data *ResourceLFTagResourceModel
 }
 
 type tbTagger struct {
-	data *ResourceResourceLFTagData
+	data *ResourceLFTagResourceModel
 }
 
 type tbcTagger struct {
-	data *ResourceResourceLFTagData
+	data *ResourceLFTagResourceModel
 }
 
-func newLFTagTagger(r *ResourceResourceLFTagData, diags *diag.Diagnostics) lfTagTagger {
+func newLFTagTagger(r *ResourceLFTagResourceModel, diags *diag.Diagnostics) lfTagTagger {
 	switch {
 	case !r.Database.IsNull():
 		return &dbTagger{data: r}
@@ -721,7 +709,8 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 	return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 }
 
-type ResourceResourceLFTagData struct {
+type ResourceLFTagResourceModel struct {
+	framework.WithRegionModel
 	CatalogID        types.String                                      `tfsdk:"catalog_id"`
 	Database         fwtypes.ListNestedObjectValueOf[Database]         `tfsdk:"database"`
 	ID               types.String                                      `tfsdk:"id"`

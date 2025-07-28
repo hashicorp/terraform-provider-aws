@@ -35,15 +35,18 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `name` - (Required) Name of the Kinesis Stream.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the Kinesis Firehose Delivery Stream.
 
 ## Attribute Reference
 
-`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Kinesis Stream (same as id).
+* `id` - ARN of the Kinesis Firehose Delivery Stream.
+* `arn` - ARN of the Kinesis Firehose Delivery Stream (same as `id`).
 
 [1]: https://aws.amazon.com/documentation/firehose/
 
-<!-- cache-key: cdktf-0.20.1 input-1dd963295de26dc82ebe6970ff79c68f651a64142b5fe860bf5803000337b30e -->
+<!-- cache-key: cdktf-0.20.8 input-d4eb67e2a8b3dd25acca8d4fc326161e97c1b17b969bea5cc1ede98706d1a8ef -->

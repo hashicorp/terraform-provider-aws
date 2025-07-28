@@ -5,8 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"log"
-	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,7 +22,7 @@ import (
 
 // @SDKDataSource("aws_alb_listener", name="Listener")
 // @SDKDataSource("aws_lb_listener", name="Listener")
-// @Testing(tagsTest=true)
+// @Tags(identifierAttribute="arn")
 func dataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,
@@ -268,16 +265,20 @@ func dataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"trust_store_arn": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -303,10 +304,9 @@ func dataSourceListener() *schema.Resource {
 	}
 }
 
-func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &elasticloadbalancingv2.DescribeListenersInput{}
 
@@ -330,17 +330,17 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.ToString(listener.ListenerArn))
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
+	if len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
-	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
-	})
-	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
+
+	sortListenerActions(listener.DefaultActions)
+
+	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -350,21 +350,6 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
-
-	tags, err := listTags(ctx, conn, d.Id())
-
-	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

@@ -220,6 +220,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
@@ -314,8 +315,8 @@ This resource supports the following arguments:
 #### Share Rule arguments
 
 * `target_accounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
-* `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `interval_unit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `unshare_interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
+* `unshare_interval_unit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 

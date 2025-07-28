@@ -52,6 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Please note that due to API limitations, updating only the description of an entry will require recreating the entry.
 * `prefix_list_id` - (Required) The ID of the prefix list.
@@ -87,4 +88,4 @@ Using `terraform import`, import prefix list entries using `prefix_list_id` and 
 % terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3d44a4444122a301a9ec7b354d4857edd3200d8c413f7cb4c55f5979d3c06693 -->
+<!-- cache-key: cdktf-0.20.8 input-19d590faa9e2f1b9bc7fdff528a90d59ab76827b8304893571fd9df106209a84 -->

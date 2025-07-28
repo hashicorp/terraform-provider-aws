@@ -6,21 +6,21 @@ package rds
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv1 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v1"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_instances")
-func DataSourceInstances() *schema.Resource {
+// @SDKDataSource("aws_db_instances", name="DB Instances")
+func dataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
@@ -41,24 +41,24 @@ func DataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeDBInstancesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv1.New(v.(*schema.Set)).RDSFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
-	filter := tfslices.PredicateTrue[*rds.DBInstance]()
+	filter := tfslices.PredicateTrue[*types.DBInstance]()
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		filter = func(x *rds.DBInstance) bool {
-			return KeyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]interface{})))
+		filter = func(x *types.DBInstance) bool {
+			return keyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]any)))
 		}
 	}
 
-	instances, err := findDBInstancesSDKv1(ctx, conn, input, filter)
+	instances, err := findDBInstances(ctx, conn, input, filter)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instances: %s", err)
@@ -68,11 +68,11 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	var instanceIdentifiers []string
 
 	for _, instance := range instances {
-		instanceARNS = append(instanceARNS, aws.StringValue(instance.DBInstanceArn))
-		instanceIdentifiers = append(instanceIdentifiers, aws.StringValue(instance.DBInstanceIdentifier))
+		instanceARNS = append(instanceARNS, aws.ToString(instance.DBInstanceArn))
+		instanceIdentifiers = append(instanceIdentifiers, aws.ToString(instance.DBInstanceIdentifier))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("instance_arns", instanceARNS)
 	d.Set("instance_identifiers", instanceIdentifiers)
 

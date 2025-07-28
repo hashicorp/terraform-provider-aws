@@ -39,9 +39,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbClusterIdentifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
-* `sharedAccounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -57,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `licenseModel` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
 
-* `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `sourceDbClusterSnapshotIdentifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storageEncrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -101,4 +102,4 @@ Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster sna
 % terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-045a88e8d45fb91c8f6bdd2ec66e16ba6b0181babf91868a0b18c493913fc802 -->
+<!-- cache-key: cdktf-0.20.8 input-9b121296b7abc787ae46486660faad88c4d64778084a17936aaf1c7e849f5ad4 -->

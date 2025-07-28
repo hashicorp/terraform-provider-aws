@@ -9,7 +9,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +22,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func testAccDecodeAppID(t *testing.T) {
+	t.Parallel()
+
+	appTypes := map[string]awstypes.AppType{
+		"jupyterserver":    awstypes.AppTypeJupyterServer,
+		"kernelgateway":    awstypes.AppTypeKernelGateway,
+		"detailedprofiler": awstypes.AppTypeDetailedProfiler,
+		"tensorboard":      awstypes.AppTypeTensorBoard,
+		"codeeditor":       awstypes.AppTypeCodeEditor,
+		"jupyterlab":       awstypes.AppTypeJupyterLab,
+		"rstudioserverpro": awstypes.AppTypeRStudioServerPro,
+		"rsessiongateway":  awstypes.AppTypeRSessionGateway,
+		"canvas":           awstypes.AppTypeCanvas,
+	}
+
+	arn := arn.ARN{
+		AccountID: "012345678912",
+		Partition: acctest.Partition(),
+		Region:    endpoints.EuWest2RegionID,
+		Resource:  "app/domain-id/user-profile-name/%s/app-name",
+		Service:   names.SageMaker,
+	}.String()
+
+	for key, value := range appTypes {
+		_, _, appType, _, err := tfsagemaker.DecodeAppID(fmt.Sprintf(arn, key))
+
+		if err != nil {
+			t.Errorf("Unexpected error: %s", err)
+		}
+
+		if string(value) != appType {
+			t.Errorf("Got: %s, want: %s", appType, string(value))
+		}
+	}
+}
 
 func testAccApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -43,11 +82,11 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -113,7 +152,7 @@ func testAccApp_resourceSpec(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 				),
@@ -149,7 +188,7 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
@@ -184,7 +223,7 @@ func testAccApp_tags(t *testing.T) {
 				Config: testAccAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -197,7 +236,7 @@ func testAccApp_tags(t *testing.T) {
 				Config: testAccAppConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -206,7 +245,7 @@ func testAccApp_tags(t *testing.T) {
 				Config: testAccAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -244,7 +283,7 @@ func testAccApp_disappears(t *testing.T) {
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_app" {
@@ -273,7 +312,7 @@ func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker App (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI App (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -291,7 +330,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *sagemaker.DescribeA
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		appType := rs.Primary.Attributes["app_type"]

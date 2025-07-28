@@ -48,12 +48,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source has no arguments.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `registration_code` - The CA certificate registration code.
 
-<!-- cache-key: cdktf-0.20.1 input-b213f9c9bddd9fab0b19c645c2e52d06180f1dd3b0e3c621c70d2cd75e42ddc7 -->
+<!-- cache-key: cdktf-0.20.8 input-9a81848e84c4c51aff5094974375550948a0e06fceb9cd62ca5e58d65a31ea37 -->

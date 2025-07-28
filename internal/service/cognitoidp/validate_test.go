@@ -10,6 +10,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestValidIdentityProviderName(t *testing.T) {
+	t.Parallel()
+
+	validValues := []string{
+		"foo",
+		"7346241598935552",
+		"foo_bar",
+		"foo:bar",
+		"foo/bar",
+		"foo-bar",
+		"$foobar",
+		strings.Repeat("W", 32),
+		strings.Repeat("あ", 32), // UTF-8 (2 bytes/char)
+	}
+
+	for _, s := range validValues {
+		_, errors := validIdentityProviderName(s, names.AttrName)
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Identity Provider Name: %v", s, errors)
+		}
+	}
+
+	invalidValues := []string{
+		"",
+		strings.Repeat("W", 33), // > 32
+		strings.Repeat("あ", 33), // UTF-8 (2 bytes/char)
+	}
+
+	for _, s := range invalidValues {
+		_, errors := validIdentityProviderName(s, names.AttrName)
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Identity Provider Name: %v", s, errors)
+		}
+	}
+}
+
 func TestValidUserGroupName(t *testing.T) {
 	t.Parallel()
 
@@ -22,6 +58,7 @@ func TestValidUserGroupName(t *testing.T) {
 		"foo-bar",
 		"$foobar",
 		strings.Repeat("W", 128),
+		strings.Repeat("あ", 128), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range validValues {
@@ -34,6 +71,7 @@ func TestValidUserGroupName(t *testing.T) {
 	invalidValues := []string{
 		"",
 		strings.Repeat("W", 129), // > 128
+		strings.Repeat("あ", 129), // UTF-8 (2 bytes/char)
 	}
 
 	for _, s := range invalidValues {

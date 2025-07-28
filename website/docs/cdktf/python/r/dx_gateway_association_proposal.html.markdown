@@ -39,6 +39,7 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `associated_gateway_id` - (Required) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
 * `dx_gateway_id` - (Required) Direct Connect Gateway identifier.
 * `dx_gateway_owner_account_id` - (Required) AWS Account identifier of the Direct Connect Gateway's owner.
@@ -107,4 +108,4 @@ Using a proposal ID, Direct Connect Gateway ID and associated gateway ID separat
 The latter case is useful when a previous proposal has been accepted and deleted by AWS.
 The `aws_dx_gateway_association_proposal` resource will then represent a pseudo-proposal for the same Direct Connect Gateway and associated gateway. If no previous proposal is available, use a tool like [`uuidgen`](http://manpages.ubuntu.com/manpages/bionic/man1/uuidgen.1.html) to generate a new random pseudo-proposal ID.
 
-<!-- cache-key: cdktf-0.20.1 input-4c6dba02a31331ff74f6b982064aff401065a96d07736b20f32eb5d034a7822f -->
+<!-- cache-key: cdktf-0.20.8 input-47ac1f133f6ea7ee6ca78b9c1db37ef36c7bf2eacd236da792876b475d2810fa -->

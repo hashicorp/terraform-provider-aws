@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,7 +17,7 @@ import (
 
 func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
@@ -47,7 +47,7 @@ func TestAccOpenSearchInboundConnectionAccepter_basic(t *testing.T) {
 
 func TestAccOpenSearchInboundConnectionAccepter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
+	var domain awstypes.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_inbound_connection_accepter.test"
@@ -154,13 +154,13 @@ resource "aws_opensearch_outbound_connection" "test" {
   connection_alias = "%s"
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_1.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.domain_2.domain_name
   }
 }

@@ -120,6 +120,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `name` - (Required) Name of the data catalog. The catalog name must be unique for the AWS account and can use a maximum of 128 alphanumeric, underscore, at sign, or hyphen characters.
 - `type` - (Required) Type of data catalog: `LAMBDA` for a federated catalog, `GLUE` for AWS Glue Catalog, or `HIVE` for an external hive metastore.
 - `parameters` - (Required) Key value pairs that specifies the Lambda function or functions to use for the data catalog. The mapping used depends on the catalog type.
@@ -159,4 +160,4 @@ Using `terraform import`, import data catalogs using their `name`. For example:
 % terraform import aws_athena_data_catalog.example example-data-catalog
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca384d0d131eb64581ab0b3c036a49902737674d63de3f2960c9f3aa9b8f446f -->
+<!-- cache-key: cdktf-0.20.8 input-d2a9b93ba5d74ed54bfa566cc2c2a3cd91dccbd91ed266293d12b57a2a47aab6 -->

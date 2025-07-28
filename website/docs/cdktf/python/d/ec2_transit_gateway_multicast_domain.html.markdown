@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_multicast_domain_id` - (Optional) Identifier of the EC2 Transit Gateway Multicast Domain.
 
@@ -100,4 +101,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-854de9a7e77b920dc2a59508efed1e997a904be759a67e383d582356d4c4d937 -->
+<!-- cache-key: cdktf-0.20.8 input-5ebe858e0a9c41c73da027475a15ecb2e758abe13d1a361d5d8074affaaf3a66 -->

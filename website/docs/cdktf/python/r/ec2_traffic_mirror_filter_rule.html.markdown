@@ -67,6 +67,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the traffic mirror filter rule.
 * `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added
 * `destination_cidr_block` - (Required) Destination CIDR block to assign to the Traffic Mirror rule.
@@ -115,4 +116,4 @@ Using `terraform import`, import traffic mirror rules using the `traffic_mirror_
 % terraform import aws_ec2_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ee8ae70ab3b42d0c264494b7dc21ff8f9e48c2c41596a2bf47513cd2380b21c6 -->
+<!-- cache-key: cdktf-0.20.8 input-a3571fa1a876027f022c3f5054d76d3add831465adfa3a5d7813ceae71408722 -->

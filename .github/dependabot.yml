@@ -8,15 +8,12 @@ updates:
   - package-ecosystem: "gomod"
     directories:
       - "/"
-      - "/.ci/providerlint"
-      - "/.ci/tools"
-      - "/skaff"
-      - "/tools/awssdkpatch"
-      - "/tools/tfsdk2fw"
     groups:
-      aws-sdk-go:
+      aws-sdk-go-v1:
         patterns:
           - "github.com/aws/aws-sdk-go"
+      aws-sdk-go-v2:
+        patterns:
           - "github.com/aws/aws-sdk-go-v2"
           - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
@@ -25,13 +22,12 @@ updates:
           - "github.com/hashicorp/aws-sdk-go-base/v2/*"
       terraform-devex:
         patterns:
-          - "github.com/hashicorp/terraform-plugin-framework"
-          - "github.com/hashicorp/terraform-plugin-framework-timeouts"
-          - "github.com/hashicorp/terraform-plugin-framework-validators"
-          - "github.com/hashicorp/terraform-plugin-mux"
-          - "github.com/hashicorp/terraform-plugin-sdk/v2"
-          - "github.com/hashicorp/terraform-plugin-testing"
+          - "github.com/hashicorp/terraform-plugin-*"
     ignore:
+      # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
+      - dependency-name: "github.com/aws/smithy-go"
+      # go-cty should only be updated via terraform-plugin-sdk
+      - dependency-name: "github.com/hashicorp/go-cty"
       # hcl/v2 should only be updated via terraform-plugin-sdk
       - dependency-name: "github.com/hashicorp/hcl/v2"
       # terraform-plugin-go should only be updated via terraform-plugin-framework
@@ -44,6 +40,16 @@ updates:
       - dependency-name: "google.golang.org/grpc"
       # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/protobuf"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 30
+
+  - package-ecosystem: "gomod"
+    directories:
+      - "/.ci/providerlint"
+      - "/.ci/tools"
+      - "/skaff"
+      - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

@@ -3,8 +3,8 @@ package appmesh
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
@@ -20,17 +20,24 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *appmesh.Client, identifier string, optFns ...func(*appmesh.Options)) (tftags.KeyValueTags, error) {
-	input := &appmesh.ListTagsForResourceInput{
+	input := appmesh.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	var output []awstypes.TagRef
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+	pages := appmesh.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists appmesh service tags and set them in Context.
@@ -39,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).AppMeshClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -51,8 +58,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns appmesh service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
+// svcTags returns appmesh service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	result := make([]awstypes.TagRef, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +74,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.TagRef {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from appmesh service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from appmesh service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +89,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.TagRef) tftags.KeyValueTa
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.TagRef {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +100,7 @@ func getTagsIn(ctx context.Context) []awstypes.TagRef {
 // setTagsOut sets appmesh service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.TagRef) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -109,30 +116,30 @@ func updateTags(ctx context.Context, conn *appmesh.Client, identifier string, ol
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.AppMesh)
 	if len(removedTags) > 0 {
-		input := &appmesh.UntagResourceInput{
+		input := appmesh.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.AppMesh)
 	if len(updatedTags) > 0 {
-		input := &appmesh.TagResourceInput{
+		input := appmesh.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

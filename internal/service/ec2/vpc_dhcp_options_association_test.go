@@ -37,7 +37,7 @@ func TestAccVPCDHCPOptionsAssociation_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -133,23 +133,12 @@ func TestAccVPCDHCPOptionsAssociation_default(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func testAccVPCDHCPOptionsAssociationVPCImportIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrVPCID], nil
-	}
 }
 
 func testAccCheckVPCDHCPOptionsAssociationDestroy(ctx context.Context) resource.TestCheckFunc {

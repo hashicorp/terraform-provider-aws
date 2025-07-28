@@ -175,6 +175,22 @@ func resourceReplicator() *schema.Resource {
 											},
 										},
 									},
+									"topic_name_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+												},
+											},
+										},
+									},
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -239,19 +255,17 @@ func resourceReplicator() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	name := d.Get("replicator_name").(string)
 	input := &kafka.CreateReplicatorInput{
-		KafkaClusters:           expandKafkaClusters(d.Get("kafka_cluster").([]interface{})),
-		ReplicationInfoList:     expandReplicationInfos(d.Get("replication_info_list").([]interface{})),
+		KafkaClusters:           expandKafkaClusters(d.Get("kafka_cluster").([]any)),
+		ReplicationInfoList:     expandReplicationInfos(d.Get("replication_info_list").([]any)),
 		ReplicatorName:          aws.String(name),
 		ServiceExecutionRoleArn: aws.String(d.Get("service_execution_role_arn").(string)),
 		Tags:                    getTagsIn(ctx),
@@ -276,7 +290,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
 }
 
-func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
@@ -318,7 +332,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
@@ -332,14 +346,14 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChanges("replication_info_list.0.consumer_group_replication") {
-			if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChanges("replication_info_list.0.topic_replication") {
-			if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.TopicReplication = expandTopicReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TopicReplication = expandTopicReplicationUpdate(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -357,7 +371,7 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
 }
 
-func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -442,7 +456,7 @@ func waitReplicatorDeleted(ctx context.Context, conn *kafka.Client, arn string, 
 }
 
 func statusReplicator(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicatorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -482,12 +496,12 @@ func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*
 	return output, nil
 }
 
-func flattenReplicationInfoDescriptions(apiObjects []types.ReplicationInfoDescription, sourceCluster, targetCluster *string) []interface{} {
+func flattenReplicationInfoDescriptions(apiObjects []types.ReplicationInfoDescription, sourceCluster, targetCluster *string) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenReplicationInfoDescription(apiObject, sourceCluster, targetCluster))
@@ -496,8 +510,8 @@ func flattenReplicationInfoDescriptions(apiObjects []types.ReplicationInfoDescri
 	return tfList
 }
 
-func flattenReplicationInfoDescription(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenReplicationInfoDescription(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := sourceCluster; v != nil {
 		tfMap["source_kafka_cluster_arn"] = aws.ToString(v)
@@ -520,22 +534,22 @@ func flattenReplicationInfoDescription(apiObject types.ReplicationInfoDescriptio
 	}
 
 	if v := apiObject.TopicReplication; v != nil {
-		tfMap["topic_replication"] = []interface{}{flattenTopicReplication(v)}
+		tfMap["topic_replication"] = []any{flattenTopicReplication(v)}
 	}
 
 	if v := apiObject.ConsumerGroupReplication; v != nil {
-		tfMap["consumer_group_replication"] = []interface{}{flattenConsumerGroupReplication(v)}
+		tfMap["consumer_group_replication"] = []any{flattenConsumerGroupReplication(v)}
 	}
 
 	return tfMap
 }
 
-func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) map[string]interface{} {
+func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConsumerGroupsToReplicate; v != nil {
 		tfMap["consumer_groups_to_replicate"] = v
@@ -556,12 +570,12 @@ func flattenConsumerGroupReplication(apiObject *types.ConsumerGroupReplication) 
 	return tfMap
 }
 
-func flattenTopicReplication(apiObject *types.TopicReplication) map[string]interface{} {
+func flattenTopicReplication(apiObject *types.TopicReplication) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if aws.ToBool(apiObject.CopyAccessControlListsForTopics) {
 		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
@@ -576,7 +590,11 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 	}
 
 	if v := apiObject.StartingPosition; v != nil {
-		tfMap["starting_position"] = []interface{}{flattenReplicationStartingPosition(v)}
+		tfMap["starting_position"] = []any{flattenReplicationStartingPosition(v)}
+	}
+
+	if v := apiObject.TopicNameConfiguration; v != nil {
+		tfMap["topic_name_configuration"] = []any{flattenReplicationTopicNameConfiguration(v)}
 	}
 
 	if v := apiObject.TopicsToReplicate; v != nil {
@@ -590,12 +608,12 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 	return tfMap
 }
 
-func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]interface{} {
+func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Type; v != "" {
 		tfMap[names.AttrType] = v
@@ -604,12 +622,26 @@ func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosi
 	return tfMap
 }
 
-func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription) []interface{} { // nosemgrep:ci.kafka-in-func-name
+func flattenReplicationTopicNameConfiguration(apiObject *types.ReplicationTopicNameConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
+
+	return tfMap
+}
+
+func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription) []any { // nosemgrep:ci.kafka-in-func-name
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenKafkaClusterDescription(apiObject))
@@ -618,26 +650,26 @@ func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription)
 	return tfList
 }
 
-func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map[string]interface{} { // nosemgrep:ci.kafka-in-func-name
-	tfMap := map[string]interface{}{}
+func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map[string]any { // nosemgrep:ci.kafka-in-func-name
+	tfMap := map[string]any{}
 
 	if v := apiObject.AmazonMskCluster; v != nil {
-		tfMap["amazon_msk_cluster"] = []interface{}{flattenAmazonMSKCluster(v)}
+		tfMap["amazon_msk_cluster"] = []any{flattenAmazonMSKCluster(v)}
 	}
 
 	if v := apiObject.VpcConfig; v != nil {
-		tfMap[names.AttrVPCConfig] = []interface{}{flattenKafkaClusterClientVPCConfig(v)}
+		tfMap[names.AttrVPCConfig] = []any{flattenKafkaClusterClientVPCConfig(v)}
 	}
 
 	return tfMap
 }
 
-func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} { // nosemgrep:ci.kafka-in-func-name
+func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]any { // nosemgrep:ci.kafka-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
 		tfMap["security_groups_ids"] = v
@@ -650,19 +682,19 @@ func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcCo
 	return tfMap
 }
 
-func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]interface{} { // nosemgrep:ci.msk-in-func-name
+func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]any { // nosemgrep:ci.msk-in-func-name
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"msk_cluster_arn": apiObject.MskClusterArn,
 	}
 
 	return tfMap
 }
 
-func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.ConsumerGroupReplicationUpdate {
+func expandConsumerGroupReplicationUpdate(tfMap map[string]any) *types.ConsumerGroupReplicationUpdate {
 	apiObject := &types.ConsumerGroupReplicationUpdate{}
 
 	if v, ok := tfMap["consumer_groups_to_replicate"].(*schema.Set); ok {
@@ -684,16 +716,8 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 	return apiObject
 }
 
-func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicReplicationUpdate {
+func expandTopicReplicationUpdate(tfMap map[string]any) *types.TopicReplicationUpdate {
 	apiObject := &types.TopicReplicationUpdate{}
-
-	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
-		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
-		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
-	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
 		apiObject.CopyTopicConfigurations = aws.Bool(v)
@@ -707,10 +731,18 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
+		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
+		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
+	}
+
 	return apiObject
 }
 
-func expandReplicationInfos(tfList []interface{}) []types.ReplicationInfo {
+func expandReplicationInfos(tfList []any) []types.ReplicationInfo {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -718,7 +750,7 @@ func expandReplicationInfos(tfList []interface{}) []types.ReplicationInfo {
 	var apiObjects []types.ReplicationInfo
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -732,7 +764,7 @@ func expandReplicationInfos(tfList []interface{}) []types.ReplicationInfo {
 	return apiObjects
 }
 
-func expandReplicationInfo(tfMap map[string]interface{}) types.ReplicationInfo {
+func expandReplicationInfo(tfMap map[string]any) types.ReplicationInfo {
 	apiObject := types.ReplicationInfo{}
 
 	if v, ok := tfMap["source_kafka_cluster_arn"].(string); ok {
@@ -747,18 +779,18 @@ func expandReplicationInfo(tfMap map[string]interface{}) types.ReplicationInfo {
 		apiObject.TargetCompressionType = types.TargetCompressionType(v)
 	}
 
-	if v, ok := tfMap["topic_replication"].([]interface{}); ok {
-		apiObject.TopicReplication = expandTopicReplication(v[0].(map[string]interface{}))
+	if v, ok := tfMap["topic_replication"].([]any); ok {
+		apiObject.TopicReplication = expandTopicReplication(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["consumer_group_replication"].([]interface{}); ok {
-		apiObject.ConsumerGroupReplication = expandConsumerGroupReplication(v[0].(map[string]interface{}))
+	if v, ok := tfMap["consumer_group_replication"].([]any); ok {
+		apiObject.ConsumerGroupReplication = expandConsumerGroupReplication(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.ConsumerGroupReplication {
+func expandConsumerGroupReplication(tfMap map[string]any) *types.ConsumerGroupReplication {
 	apiObject := &types.ConsumerGroupReplication{}
 
 	if v, ok := tfMap["consumer_groups_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
@@ -780,7 +812,7 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 	return apiObject
 }
 
-func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplication {
+func expandTopicReplication(tfMap map[string]any) *types.TopicReplication {
 	apiObject := &types.TopicReplication{}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
@@ -795,8 +827,12 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["starting_position"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.StartingPosition = expandReplicationStartingPosition(v[0].(map[string]interface{}))
+	if v, ok := tfMap["starting_position"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StartingPosition = expandReplicationStartingPosition(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["topic_name_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TopicNameConfiguration = expandReplicationTopicNameConfiguration(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
@@ -810,7 +846,7 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	return apiObject
 }
 
-func expandReplicationStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
+func expandReplicationStartingPosition(tfMap map[string]any) *types.ReplicationStartingPosition {
 	apiObject := &types.ReplicationStartingPosition{}
 
 	if v, ok := tfMap[names.AttrType].(string); ok {
@@ -820,7 +856,17 @@ func expandReplicationStartingPosition(tfMap map[string]interface{}) *types.Repl
 	return apiObject
 }
 
-func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
+func expandReplicationTopicNameConfiguration(tfMap map[string]any) *types.ReplicationTopicNameConfiguration {
+	apiObject := &types.ReplicationTopicNameConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = types.ReplicationTopicNameConfigurationType(v)
+	}
+
+	return apiObject
+}
+
+func expandKafkaClusters(tfList []any) []types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -828,7 +874,7 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster { // nosemgr
 	var apiObjects []types.KafkaCluster
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -842,21 +888,21 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster { // nosemgr
 	return apiObjects
 }
 
-func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
+func expandKafkaCluster(tfMap map[string]any) types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	apiObject := types.KafkaCluster{}
 
-	if v, ok := tfMap[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VpcConfig = expandKafkaClusterClientVPCConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap[names.AttrVPCConfig].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VpcConfig = expandKafkaClusterClientVPCConfig(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["amazon_msk_cluster"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmazonMskCluster = expandAmazonMSKCluster(v[0].(map[string]interface{}))
+	if v, ok := tfMap["amazon_msk_cluster"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AmazonMskCluster = expandAmazonMSKCluster(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig { // nosemgrep:ci.kafka-in-func-name
+func expandKafkaClusterClientVPCConfig(tfMap map[string]any) *types.KafkaClusterClientVpcConfig { // nosemgrep:ci.kafka-in-func-name
 	apiObject := &types.KafkaClusterClientVpcConfig{}
 
 	if v, ok := tfMap["security_groups_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -870,7 +916,7 @@ func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.Kafk
 	return apiObject
 }
 
-func expandAmazonMSKCluster(tfMap map[string]interface{}) *types.AmazonMskCluster { // nosemgrep:ci.msk-in-func-name
+func expandAmazonMSKCluster(tfMap map[string]any) *types.AmazonMskCluster { // nosemgrep:ci.msk-in-func-name
 	apiObject := &types.AmazonMskCluster{}
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {

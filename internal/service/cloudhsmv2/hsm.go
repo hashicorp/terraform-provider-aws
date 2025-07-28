@@ -81,7 +81,7 @@ func resourceHSM() *schema.Resource {
 	}
 }
 
-func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -126,7 +126,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceHSMRead(ctx, d, meta)...)
 }
 
-func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
@@ -158,15 +158,16 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	return diags
 }
 
-func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
-	_, err := conn.DeleteHsm(ctx, &cloudhsmv2.DeleteHsmInput{
+	input := cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 		HsmId:     aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteHsm(ctx, &input)
 
 	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags
@@ -194,8 +195,6 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 
 	for _, v := range output {
 		for _, v := range v.Hsms {
-			v := v
-
 			// CloudHSMv2 HSM instances can be recreated, but the ENI ID will
 			// remain consistent. Without this ENI matching, HSM instances
 			// instances can become orphaned.
@@ -209,7 +208,7 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 }
 
 func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findHSMByTwoPartKey(ctx, conn, id, "")
 
 		if tfresource.NotFound(err) {

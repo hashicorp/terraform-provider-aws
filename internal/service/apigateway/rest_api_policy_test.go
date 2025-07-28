@@ -118,10 +118,10 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		req := &apigateway.GetRestApiInput{
+		req := apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
 		}
-		describe, err := conn.GetRestApi(ctx, req)
+		describe, err := conn.GetRestApi(ctx, &req)
 		if err != nil {
 			return err
 		}
@@ -155,8 +155,8 @@ func testAccCheckRestAPIPolicyDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			req := &apigateway.GetRestApisInput{}
-			describe, err := conn.GetRestApis(ctx, req)
+			req := apigateway.GetRestApisInput{}
+			describe, err := conn.GetRestApis(ctx, &req)
 			if err == nil {
 				if len(describe.Items) != 0 &&
 					aws.ToString(describe.Items[0].Id) == rs.Primary.ID &&

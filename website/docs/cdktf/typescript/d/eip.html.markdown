@@ -111,14 +111,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Elastic IPs in the current region. The given filters must match exactly one
-Elastic IP whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `id` - (Optional) Allocation ID of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `publicIp`
 * `publicIp` - (Optional) Public IP of the specific EIP to retrieve.
-* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP.
+
+The arguments of this data source act as filters for querying the available
+Elastic IPs in the current region. The given filters must match exactly one
+Elastic IP whose data will be exported as attributes.
 
 ## Attribute Reference
 
@@ -131,6 +134,7 @@ This data source exports the following attributes in addition to the arguments a
 * `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instanceId` - ID of the instance that the address is associated with (if any).
+* `ipamPoolId`- The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `networkInterfaceId` - The ID of the network interface.
 * `networkInterfaceOwnerId` - The ID of the AWS account that owns the network interface.
 * `privateIp` - Private IP address associated with the Elastic IP address.
@@ -149,4 +153,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-a3e7528dacde4846d7e05618958cba7c8f5884ccbf6f30720062dfd0069a7b9f -->
+<!-- cache-key: cdktf-0.20.8 input-a217cb9ee7887eae8156d27d984ee0879f21d8974441b5ca3c22063e4d63488d -->

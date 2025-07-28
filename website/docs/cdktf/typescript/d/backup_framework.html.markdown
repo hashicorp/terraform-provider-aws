@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Backup framework name.
 
 ## Attribute Reference
@@ -76,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 * `complianceResourceTypes` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.
 * `tags` - Tag key-value pair applied to those AWS resources that you want to trigger an evaluation for a rule. A maximum of one key-value pair can be provided.
 
-<!-- cache-key: cdktf-0.20.1 input-070382f6ead1d1cc0b69de2f856a82f41ed348235bed7c03c3b9216ebaf43096 -->
+<!-- cache-key: cdktf-0.20.8 input-46d0e60e683d22bc15ff31ea980f15647dbbd7d61b8eb1307889fdf74bdb68eb -->

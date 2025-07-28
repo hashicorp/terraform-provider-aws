@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -24,12 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/mitchellh/go-homedir"
 )
 
 // @SDKResource("aws_rds_custom_db_engine_version", name="Custom DB Engine Version")
@@ -129,7 +128,7 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 				),
 				ConflictsWith:    []string{"filename"},
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -160,12 +159,10 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		mutexKey = `aws_rds_custom_engine_version`
 	)
@@ -175,7 +172,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 	input := &rds.CreateCustomDBEngineVersionInput{
 		Engine:        aws.String(d.Get(names.AttrEngine).(string)),
 		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
-		Tags:          getTagsInV2(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("database_installation_files_s3_bucket_name"); ok {
@@ -197,13 +194,12 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		file, err := resourceCustomDBEngineVersionLoadFileContent(v.(string))
-
+		file, err := tfio.ReadFileContents(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Manifest = aws.String(file)
+		input.Manifest = aws.String(string(file))
 	} else if v, ok := d.GetOk("manifest"); ok {
 		input.Manifest = aws.String(v.(string))
 	}
@@ -223,11 +219,13 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		// See https://github.com/hashicorp/terraform/issues/9364
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
-		file, err := resourceCustomDBEngineVersionLoadFileContent(filename)
+
+		file, err := tfio.ReadFileContents(filename)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.Manifest = aws.String(file)
+
+		input.Manifest = aws.String(string(file))
 	} else if v, ok := d.GetOk("manifest"); ok {
 		input.Manifest = aws.String(v.(string))
 	}
@@ -248,7 +246,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
 }
 
-func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -285,12 +283,12 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
 	d.Set(names.AttrStatus, out.Status)
 
-	setTagsOutV2(ctx, out.TagList)
+	setTagsOut(ctx, out.TagList)
 
 	return diags
 }
 
-func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -327,7 +325,7 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
 }
 
-func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -434,7 +432,7 @@ const (
 )
 
 func statusDBEngineVersion(ctx context.Context, conn *rds.Client, engine, engineVersion string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCustomDBEngineVersionByTwoPartKey(ctx, conn, engine, engineVersion)
 
 		if tfresource.NotFound(err) {
@@ -500,16 +498,4 @@ func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.Client, eng
 	}
 
 	return nil, err
-}
-
-func resourceCustomDBEngineVersionLoadFileContent(filename string) (string, error) {
-	filename, err := homedir.Expand(filename)
-	if err != nil {
-		return "", err
-	}
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	return string(fileContent), nil
 }

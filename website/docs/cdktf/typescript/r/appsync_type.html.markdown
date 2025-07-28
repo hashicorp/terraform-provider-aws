@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apiId` - (Required) GraphQL API ID.
 * `format` - (Required) The type format: `SDL` or `JSON`.
 * `definition` - (Required) The type definition.
@@ -89,4 +90,4 @@ Using `terraform import`, import Appsync Types using the `id`. For example:
 % terraform import aws_appsync_type.example api-id:format:name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-583d1e739ac827e753ccd0e8ee386fa69ac34d8c7a9c5385c707c9de6772d943 -->
+<!-- cache-key: cdktf-0.20.8 input-ab00bdf236b75a0f9a3275aa4e7270135a163abe44ee2c563fbb075b8605d5a6 -->

@@ -26,11 +26,11 @@ from imports.aws.vpclattice_listener_rule import VpclatticeListenerRule
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        VpclatticeListenerRule(self, "test",
+        VpclatticeListenerRule(self, "example",
             action=VpclatticeListenerRuleAction(
                 forward=VpclatticeListenerRuleActionForward(
                     target_groups=[VpclatticeListenerRuleActionForwardTargetGroups(
-                        target_group_identifier=example.id,
+                        target_group_identifier=Token.as_string(aws_vpclattice_target_group_example.id),
                         weight=1
                     ), VpclatticeListenerRuleActionForwardTargetGroups(
                         target_group_identifier=example2.id,
@@ -78,13 +78,13 @@ from imports.aws.vpclattice_listener_rule import VpclatticeListenerRule
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        VpclatticeListenerRule(self, "test",
+        VpclatticeListenerRule(self, "example",
             action=VpclatticeListenerRuleAction(
                 fixed_response=VpclatticeListenerRuleActionFixedResponse(
                     status_code=404
                 )
             ),
-            listener_identifier=example.listener_id,
+            listener_identifier=Token.as_string(aws_vpclattice_listener_example.listener_id),
             match=VpclatticeListenerRuleMatch(
                 http_match=VpclatticeListenerRuleMatchHttpMatch(
                     path_match=VpclatticeListenerRuleMatchHttpMatchPathMatch(
@@ -108,67 +108,107 @@ The following arguments are required:
 * `service_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service.
 * `listener_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the listener.
 * `action` - (Required) The action for the listener rule.
+  See [`action` Block](#action-block) for details.
 * `match` - (Required) The rule match.
+  See [`match` Block](#match-block)
 * `name` - (Required) The name of the rule. The name must be unique within the listener. The valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `priority` - (Required) The priority assigned to the rule. Each rule for a specific listener must have a unique priority. The lower the priority number the higher the priority.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-action (`action`) supports the following:
+### `action` Block
+
+The `action` block supports the following:
+
+Exactly one of `fixed_response` or `forward` is required.
 
 * `fixed_response` - (Optional) Describes the rule action that returns a custom HTTP response.
+  See [`fixed_response` Block](#fixed_response-block) for details.
 * `forward` - (Optional) The forward action. Traffic that matches the rule is forwarded to the specified target groups.
+  See [`forward` Block](#forward-block) for details.
 
-fixed response (`fixed_response`) supports the following:
+### `fixed_response` Block
+
+The `fixed_response` block supports the following:
 
 * `status_code` - (Optional) The HTTP response code.
 
-forward (`forward`) supports the following:
+### `forward` Block
+
+The `forward` block supports the following:
 
 * `target_groups` - (Optional) The target groups. Traffic matching the rule is forwarded to the specified target groups. With forward actions, you can assign a weight that controls the prioritization and selection of each target group. This means that requests are distributed to individual target groups based on their weights. For example, if two target groups have the same weight, each target group receives half of the traffic.
 
 The default value is 1 with maximum number of 2. If only one target group is provided, there is no need to set the weight; 100% of traffic will go to that target group.
 
-action (`match`) supports the following:
+### `match` Block
 
-* `http_match` - (Optional) The HTTP criteria that a rule must match.
+The `match` block supports the following:
 
-http match (`http_match`) supports the following:
+* `http_match` - (Required) The HTTP criteria that a rule must match.
+  See [`http_match` Block](#http_match-block) for details.
 
-* `header_matches` - (Optional) The header matches. Matches incoming requests with rule based on request header value before applying rule action.
+### `http_match` Block
+
+The `http_match` block supports the following:
+
+At least one of `header_matches`, `method`, or `path_match` is required.
+
+* `header_matches` - (Optional) The header matches.
+  Matches incoming requests with rule based on request header value before applying rule action.
+  See [`header_matches` Block](#header_matches-block) for details.
 * `method` - (Optional) The HTTP method type.
 * `path_match` - (Optional) The path match.
+  See [`path_match` Block](#path_match-block) for details.
 
-header matches (`header_matches`) supports the following:
+### `header_matches` Block
 
-* `case_sensitive` - (Optional) Indicates whether the match is case sensitive. Defaults to false.
+The `header_matches` block supports the following:
+
+* `case_sensitive` - (Optional) Indicates whether the match is case sensitive.
+  Default is `false`.
 * `match` - (Optional) The header match type.
-* `name` - (Optional) The name of the header.
+  See [Header Match `match` Block](#header-match-match-block) for details.
+* `name` - (Required) The name of the header.
 
-header matches match (`match`) supports the following:
+### Header Match `match` Block
+
+The Header Match `match` block supports the following:
+
+Exactly one of `contains`, `exact`, or `prefix` is required.
 
 * `contains` - (Optional) Specifies a contains type match.
 * `exact` - (Optional) Specifies an exact type match.
-* `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
+* `prefix` - (Optional) Specifies a prefix type match.
+  Matches the value with the prefix.
 
-path match (`path_match`) supports the following:
+### `path_match` Block
 
-* `case_sensitive` - (Optional) Indicates whether the match is case sensitive. Defaults to false.
+The `path_match` block supports the following:
+
+* `case_sensitive` - (Optional) Indicates whether the match is case sensitive.
+  Default is `false`.
 * `match` - (Optional) The header match type.
+  See [Path Match `match` Block](#path-match-match-block) for details.
 
-path match match (`match`) supports the following:
+### Path Match `match` Block
+
+The Path Match `match` block supports the following:
+
+Exactly one of `exact` or `prefix` is required.
 
 * `exact` - (Optional) Specifies an exact type match.
-* `prefix` - (Optional) Specifies a prefix type match. Matches the value with the prefix.
+* `prefix` - (Optional) Specifies a prefix type match.
+  Matches the value with the prefix.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN for the listener rule.
-* `id` - A forward slash-delimited string concatenating `service_identifier`, `listener_identifier`, and `rule_id`.
 * `rule_id` - Unique identifier for the listener rule.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
@@ -205,4 +245,4 @@ Using `terraform import`, import VPC Lattice Listener Rule using the `id`. For e
 % terraform import aws_vpclattice_listener_rule.example service123/listener456/rule789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2ce4885aeda3f51075b0868b2a75d6a185abdd5966060f7435907f5f2e496547 -->
+<!-- cache-key: cdktf-0.20.8 input-f95017130829eedd78838a84b4ae93d2ba8cfb5b398e577b6369c7ff22310277 -->

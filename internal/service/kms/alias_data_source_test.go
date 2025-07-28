@@ -27,9 +27,9 @@ func TestAccKMSAliasDataSource_service(t *testing.T) {
 			{
 				Config: testAccAliasDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kms", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "target_key_arn", "kms", regexache.MustCompile(`key/[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "target_key_arn", "kms", regexache.MustCompile(`key/[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}`)),
 					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexache.MustCompile("^[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}$")),
 				),
 			},
@@ -73,6 +73,7 @@ func testAccAliasDataSourceConfig_cmk(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test" {

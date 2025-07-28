@@ -93,6 +93,7 @@ class MyConvertedCode extends TerraformStack {
                   metricName: "ApproximateNumberOfMessagesVisible",
                   namespace: "AWS/SQS",
                 },
+                period: 10,
                 stat: "Sum",
               },
               returnData: false,
@@ -111,6 +112,7 @@ class MyConvertedCode extends TerraformStack {
                   metricName: "GroupInServiceInstances",
                   namespace: "AWS/AutoScaling",
                 },
+                period: 10,
                 stat: "Average",
               },
               returnData: false,
@@ -255,6 +257,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
 * `autoscalingGroupName` - (Required) Name of the autoscaling group.
 * `adjustmentType` - (Optional) Whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity`, and `PercentChangeInCapacity`.
@@ -386,6 +391,7 @@ This configuration block supports the following arguments:
 * `metricDimension` - (Optional) Dimensions of the metric.
 * `metricName` - (Optional) Name of the metric.
 * `namespace` - (Optional) Namespace of the metric.
+* `period` - (Optional) The period of the metric in seconds.
 * `statistic` - (Optional) Statistic of the metric.
 * `unit` - (Optional) Unit of the metric.
 * `metrics` - (Optional) Metrics to include, as a metric data query.
@@ -412,6 +418,7 @@ This configuration block supports the following arguments:
 This configuration block supports the following arguments:
 
 * `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `period` - (Optional) The period of the metric in seconds.
 * `stat` - (Required) Statistic of the metrics to return.
 * `unit` - (Optional) Unit of the metrics to return.
 
@@ -565,4 +572,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1a935d98d5c3d9f4a9bef71565e80bce00a31cc1048dff1b2128dc3d558f054b -->
+<!-- cache-key: cdktf-0.20.8 input-21629d43d2455d1b0c27aa8d1d6c5975e7723854b46ec9353e2cb54dd861f3b7 -->

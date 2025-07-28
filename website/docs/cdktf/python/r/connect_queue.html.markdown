@@ -100,6 +100,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the Queue.
 * `hours_of_operation_id` - (Required) Specifies the identifier of the Hours of Operation.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -150,4 +151,4 @@ Using `terraform import`, import Amazon Connect Queues using the `instance_id` a
 % terraform import aws_connect_queue.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2ad77533b286fa62f6bf36fa4951ae8f0bd431d1f8cd5d285ecbbda98060e486 -->
+<!-- cache-key: cdktf-0.20.8 input-89395fb4488f046ce3cb1d2ae5401a88b683f017636d27cd4a3607a672fa97c6 -->

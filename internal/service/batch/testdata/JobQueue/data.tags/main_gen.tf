@@ -1,6 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_batch_job_queue" "test" {
   name = aws_batch_job_queue.test.name
 }
@@ -10,15 +11,18 @@ resource "aws_batch_job_queue" "test" {
   priority = 1
   state    = "DISABLED"
 
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
 
   tags = var.resource_tags
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = var.rName
-  service_role             = aws_iam_role.batch_service.arn
-  type                     = "UNMANAGED"
+  name         = var.rName
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
 
   depends_on = [aws_iam_role_policy_attachment.batch_service]
 }

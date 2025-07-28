@@ -15,11 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sns_topic")
+// @SDKDataSource("aws_sns_topic", name="Topic")
+// @Testing(tagsTest=true)
+// @Tags(identifierAttribute="arn")
 func dataSourceTopic() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTopicRead,
@@ -33,11 +36,12 @@ func dataSourceTopic() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 

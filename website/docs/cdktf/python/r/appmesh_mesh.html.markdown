@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
     * `egress_filter`- (Optional) Egress filter rules for the service mesh.
@@ -106,4 +107,4 @@ Using `terraform import`, import App Mesh service meshes using the `name`. For e
 % terraform import aws_appmesh_mesh.simple simpleapp
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6fabf3d074187453279c89dc4a5acf10ecf8a373b0e45a5236e4039a7bfc702f -->
+<!-- cache-key: cdktf-0.20.8 input-316fec3c48738e2773cf563b11d58c876d3533eb471e583b5637886054b43e47 -->

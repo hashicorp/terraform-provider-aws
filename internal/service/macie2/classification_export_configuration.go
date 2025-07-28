@@ -5,11 +5,10 @@ package macie2
 
 import (
 	"context"
-	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,23 +17,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_macie2_classification_export_configuration")
-func ResourceClassificationExportConfiguration() *schema.Resource {
+// @SDKResource("aws_macie2_classification_export_configuration", name="Classification Export Configuration")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
+// @Testing(generator=false)
+func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,
 		UpdateWithoutTimeout: resourceClassificationExportConfigurationUpdate,
 		DeleteWithoutTimeout: resourceClassificationExportConfigurationDelete,
 		ReadWithoutTimeout:   resourceClassificationExportConfigurationRead,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"s3_destination": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     1,
-				AtLeastOneOf: []string{"s3_destination"},
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrBucketName: {
@@ -57,59 +56,54 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 	}
 }
 
-func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	if d.IsNewResource() {
-		output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &macie2.GetClassificationExportConfigurationInput{})
+		output, err := conn.GetClassificationExportConfiguration(ctx, &macie2.GetClassificationExportConfigurationInput{})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Macie classification export configuration failed: %s", err)
 		}
 
-		if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			return sdkdiag.AppendErrorf(diags, "creating Macie classification export configuration: a configuration already exists")
 		}
 	}
 
 	input := macie2.PutClassificationExportConfigurationInput{
-		Configuration: &macie2.ClassificationExportConfiguration{},
+		Configuration: &awstypes.ClassificationExportConfiguration{
+			S3Destination: expandClassificationExportConfiguration(d.Get("s3_destination").([]any)[0].(map[string]any)),
+		},
 	}
 
-	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
-
-	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
-
+	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie classification export configuration failed: %s", err)
 	}
 
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+
 	return append(diags, resourceClassificationExportConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
-		Configuration: &macie2.ClassificationExportConfiguration{},
+		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
 
-	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("s3_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]any)[0].(map[string]any))
 	} else {
 		input.Configuration.S3Destination = nil
 	}
 
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
-
-	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
+	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie classification export configuration failed: %s", err)
@@ -118,43 +112,40 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 	return append(diags, resourceClassificationExportConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := macie2.GetClassificationExportConfigurationInput{} // api does not have a getById() like endpoint.
-	output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
+	output, err := conn.GetClassificationExportConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Macie classification export configuration failed: %s", err)
 	}
 
-	if (macie2.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
-		if (macie2.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+	if (awstypes.ClassificationExportConfiguration{}) != *output.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (awstypes.S3Destination{}) != *output.Configuration.S3Destination { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			var flattenedS3Destination = flattenClassificationExportConfigurationS3DestinationResult(output.Configuration.S3Destination)
-			if err := d.Set("s3_destination", []interface{}{flattenedS3Destination}); err != nil {
+			if err := d.Set("s3_destination", []any{flattenedS3Destination}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Macie classification export configuration s3_destination: %s", err)
 			}
 		}
-		d.SetId(fmt.Sprintf("%s:%s:%s", "macie:classification_export_configuration", meta.(*conns.AWSClient).AccountID, meta.(*conns.AWSClient).Region))
 	}
 
 	return diags
 }
 
-func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClassificationExportConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := macie2.PutClassificationExportConfigurationInput{
-		Configuration: &macie2.ClassificationExportConfiguration{},
+		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
 
-	log.Printf("[DEBUG] deleting Macie classification export configuration: %s", input)
-
-	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
+	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Macie classification export configuration failed: %s", err)
@@ -163,12 +154,12 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 	return diags
 }
 
-func expandClassificationExportConfiguration(tfMap map[string]interface{}) *macie2.S3Destination {
+func expandClassificationExportConfiguration(tfMap map[string]any) *awstypes.S3Destination {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &macie2.S3Destination{}
+	apiObject := &awstypes.S3Destination{}
 
 	if v, ok := tfMap[names.AttrBucketName].(string); ok {
 		apiObject.BucketName = aws.String(v)
@@ -185,23 +176,23 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *maci
 	return apiObject
 }
 
-func flattenClassificationExportConfigurationS3DestinationResult(apiObject *macie2.S3Destination) map[string]interface{} {
+func flattenClassificationExportConfigurationS3DestinationResult(apiObject *awstypes.S3Destination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap[names.AttrBucketName] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.KeyPrefix; v != nil {
-		tfMap["key_prefix"] = aws.StringValue(v)
+		tfMap["key_prefix"] = aws.ToString(v)
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfMap[names.AttrKMSKeyARN] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	return tfMap

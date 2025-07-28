@@ -30,6 +30,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"dateFilters":        testAccAutomationRule_dateFilters,
 			"mapFilters":         testAccAutomationRule_mapFilters,
 			"tags":               testAccAutomationRule_tags,
+			"Identity":           testAccSecurityHubAutomationRule_IdentitySerial,
 		},
 		"ActionTarget": {
 			acctest.CtBasic:      testAccActionTarget_basic,
@@ -88,6 +89,12 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:                         testAccStandardsControl_basic,
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
+		},
+		"StandardsControlAssociation": {
+			acctest.CtBasic: testAccStandardsControlAssociation_basic,
+		},
+		"StandardsControlAssociationsDataSource": {
+			acctest.CtBasic: testAccStandardsControlAssociationsDataSource_basic,
 		},
 		"StandardsSubscription": {
 			acctest.CtBasic:      testAccStandardsSubscription_basic,

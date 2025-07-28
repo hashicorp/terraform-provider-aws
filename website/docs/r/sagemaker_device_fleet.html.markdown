@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_device_fleet"
 description: |-
-  Provides a SageMaker Device Fleet resource.
+  Provides a SageMaker AI Device Fleet resource.
 ---
 
 # Resource: aws_sagemaker_device_fleet
 
-Provides a SageMaker Device Fleet resource.
+Provides a SageMaker AI Device Fleet resource.
 
 ## Example Usage
 
@@ -29,6 +29,7 @@ resource "aws_sagemaker_device_fleet" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_fleet_name` - (Required) The name of the Device Fleet (must be unique).
 * `role_arn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
 * `output_config` - (Required) Specifies details about the repository. see [Output Config](#output-config) details below.
@@ -39,7 +40,7 @@ This resource supports the following arguments:
 ### Output Config
 
 * `s3_output_location` - (Required) The Amazon Simple Storage (S3) bucker URI.
-* `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to encrypt data on the storage volume after compilation job. If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS key for Amazon S3 for your role's account.
+* `kms_key_id` - (Optional) The AWS Key Management Service (AWS KMS) key that Amazon SageMaker AI uses to encrypt data on the storage volume after compilation job. If you don't provide a KMS key ID, Amazon SageMaker AI uses the default KMS key for Amazon S3 for your role's account.
 
 ## Attribute Reference
 
@@ -51,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Device Fleets using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Device Fleets using the `name`. For example:
 
 ```terraform
 import {
@@ -60,7 +61,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Device Fleets using the `name`. For example:
+Using `terraform import`, import SageMaker AI Device Fleets using the `name`. For example:
 
 ```console
 % terraform import aws_sagemaker_device_fleet.example my-fleet

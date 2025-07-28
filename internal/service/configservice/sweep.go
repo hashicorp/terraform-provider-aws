@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -198,12 +197,12 @@ type configurationRecorderSweeper struct {
 	name   string
 }
 
-func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (s *configurationRecorderSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	r := resourceConfigurationRecorderStatus()
 	d := r.Data(nil)
 	d.SetId(s.name)
 
-	if err := sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...); err != nil {
+	if err := sdk.NewSweepResource(r, d, s.client).Delete(ctx, optFns...); err != nil {
 		return err
 	}
 
@@ -211,7 +210,7 @@ func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.
 	d = r.Data(nil)
 	d.SetId(s.name)
 
-	return sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...)
+	return sdk.NewSweepResource(r, d, s.client).Delete(ctx, optFns...)
 }
 
 func sweepConfigurationRecorder(region string) error {

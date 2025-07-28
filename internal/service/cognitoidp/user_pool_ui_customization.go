@@ -79,12 +79,16 @@ const (
 	userPoolUICustomizationResourceIDPartCount = 2
 )
 
-func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPoolID, clientID := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrClientID).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
@@ -102,9 +106,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 		input.ImageFile = v
 	}
 
-	_, err := conn.SetUICustomization(ctx, input)
-
-	if err != nil {
+	if _, err := conn.SetUICustomization(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool UI Customization (%s): %s", id, err)
 	}
 
@@ -113,7 +115,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPoolUICustomizationRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -146,7 +148,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -157,10 +159,11 @@ func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.Resour
 	userPoolID, clientID := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool UI Customization: %s", d.Id())
-	_, err = conn.SetUICustomization(ctx, &cognitoidentityprovider.SetUICustomizationInput{
+	input := cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.SetUICustomization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

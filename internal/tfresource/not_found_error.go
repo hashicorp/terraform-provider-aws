@@ -13,12 +13,12 @@ import (
 )
 
 type EmptyResultError struct {
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrEmptyResult = &EmptyResultError{}
 
-func NewEmptyResultError(lastRequest interface{}) error {
+func NewEmptyResultError(lastRequest any) error {
 	return &EmptyResultError{
 		LastRequest: lastRequest,
 	}
@@ -33,7 +33,7 @@ func (e *EmptyResultError) Is(err error) bool {
 	return ok
 }
 
-func (e *EmptyResultError) As(target interface{}) bool {
+func (e *EmptyResultError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -49,12 +49,12 @@ func (e *EmptyResultError) As(target interface{}) bool {
 
 type TooManyResultsError struct {
 	Count       int
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrTooManyResults = &TooManyResultsError{}
 
-func NewTooManyResultsError(count int, lastRequest interface{}) error {
+func NewTooManyResultsError(count int, lastRequest any) error {
 	return &TooManyResultsError{
 		Count:       count,
 		LastRequest: lastRequest,
@@ -70,7 +70,7 @@ func (e *TooManyResultsError) Is(err error) bool {
 	return ok
 }
 
-func (e *TooManyResultsError) As(target interface{}) bool {
+func (e *TooManyResultsError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -99,39 +99,6 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 
 // foundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
 type foundFunc[T any] tfslices.Predicate[*T]
-
-// AssertSinglePtrResult returns the single non-nil pointer value in the specified slice.
-// Returns a `NotFound` error otherwise.
-// If any of the specified functions return false for the value, a `NotFound` error is returned.
-func AssertSinglePtrResult[T any](a []*T, fs ...foundFunc[T]) (*T, error) {
-	if l := len(a); l == 0 {
-		return nil, NewEmptyResultError(nil)
-	} else if l > 1 {
-		return nil, NewTooManyResultsError(l, nil)
-	} else if v := a[0]; v == nil {
-		return nil, NewEmptyResultError(nil)
-	} else {
-		for _, f := range fs {
-			if !f(v) {
-				return nil, NewEmptyResultError(nil)
-			}
-		}
-		return v, nil
-	}
-}
-
-// AssertMaybeSinglePtrResult returns the single non-nil pointer value in the specified slice, or `None` if the slice is empty.
-// Returns a `NotFound` error otherwise.
-func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
-	if l := len(a); l == 0 {
-		return option.None[*T](), nil
-	} else if l > 1 {
-		return nil, NewTooManyResultsError(l, nil)
-	} else if a[0] == nil {
-		return nil, NewEmptyResultError(nil)
-	}
-	return option.Some(a[0]), nil
-}
 
 // AssertMaybeSingleValueResult returns the single non-nil value in the specified slice, or `None` if the slice is empty.
 // Returns a `NotFound` error otherwise.

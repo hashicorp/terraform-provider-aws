@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
         parameters: {
           endpoint:
             "secretsmanager.${" +
-            dataAwsRegionCurrent.name +
+            dataAwsRegionCurrent.region +
             "}.${" +
             current.dnsSuffix +
             "}",
@@ -60,6 +60,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the stack to create. The resource deployed in AWS will be prefixed with `serverlessrepo-`
 * `applicationId` - (Required) The ARN of the application from the Serverless Application Repository.
 * `capabilities` - (Required) A list of capabilities. Valid values are `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, `CAPABILITY_RESOURCE_POLICY`, or `CAPABILITY_AUTO_EXPAND`
@@ -107,4 +108,4 @@ Using `terraform import`, import Serverless Application Repository Stack using t
 % terraform import aws_serverlessapplicationrepository_cloudformation_stack.example serverlessrepo-postgres-rotator
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3c56c5981c41da613753a417692699808c2eda591b3a00277762ed97e8d26af7 -->
+<!-- cache-key: cdktf-0.20.8 input-e16f59c917bbf5d74a75eb2ae8a59dede54c8a822003eff1aaf8c3ab6cd76d96 -->

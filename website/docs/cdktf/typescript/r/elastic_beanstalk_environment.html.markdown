@@ -50,29 +50,30 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
-* `application` – (Required) Name of the application that contains the version
+* `application` - (Required) Name of the application that contains the version
   to be deployed
 * `cnamePrefix` - (Optional) Prefix to use for the fully qualified DNS name of
   the Environment.
 * `description` - (Optional) Short description of the Environment
 * `tier` - (Optional) Elastic Beanstalk Environment tier. Valid values are `Worker`
   or `WebServer`. If tier is left blank `WebServer` will be used.
-* `setting` – (Optional) Option settings to configure the new Environment. These
+* `setting` - (Optional) Option settings to configure the new Environment. These
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
-* `solutionStackName` – (Optional) A solution stack to base your environment
+* `solutionStackName` - (Optional) A solution stack to base your environment
 off of. Example stacks can be found in the [Amazon API documentation][1]
-* `templateName` – (Optional) The name of the Elastic Beanstalk Configuration
+* `templateName` - (Optional) The name of the Elastic Beanstalk Configuration
   template to use in deployment
-* `platformArn` – (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
+* `platformArn` - (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
   to use in deployment
 * `waitForReadyTimeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for an Elastic Beanstalk Environment to be in a ready state before timing
   out.
-* `pollInterval` – The time between polling the AWS API to
+* `pollInterval` - The time between polling the AWS API to
 check if changes have been applied. Use this to adjust the rate of API calls
 for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
@@ -142,9 +143,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `application` – The Elastic Beanstalk Application specified for this environment.
-* `setting` – Settings specifically set for this Environment.
-* `allSettings` – List of all option settings configured in this Environment. These
+* `application` - The Elastic Beanstalk Application specified for this environment.
+* `setting` - Settings specifically set for this Environment.
+* `allSettings` - List of all option settings configured in this Environment. These
   are a combination of default settings and their overrides from `setting` in
   the configuration.
 * `cname` - Fully qualified DNS name for this Environment.
@@ -192,4 +193,4 @@ Using `terraform import`, import Elastic Beanstalk Environments using the `id`. 
 % terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ad1ef9e1da7358ae03a61072b63ebad273ca716292310f87ea1ffcf0427f9d1d -->
+<!-- cache-key: cdktf-0.20.8 input-4f7540e20b1bbb399031387cdc7da971d673a21ecb67346f71cec6e36c7761fb -->

@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new CloudformationStackSetInstance(this, "example", {
       accountId: "123456789012",
-      region: "us-east-1",
+      stackSetInstanceRegion: "us-east-1",
       stackSetName: Token.asString(awsCloudformationStackSetExample.name),
     });
   }
@@ -149,7 +149,7 @@ class MyConvertedCode extends TerraformStack {
           ),
         ],
       },
-      region: "us-east-1",
+      stackSetInstanceRegion: "us-east-1",
       stackSetName: Token.asString(awsCloudformationStackSetExample.name),
     });
   }
@@ -163,12 +163,13 @@ This resource supports the following arguments:
 
 * `stackSetName` - (Required) Name of the StackSet.
 * `accountId` - (Optional) Target AWS Account ID to create a Stack based on the StackSet. Defaults to current account.
-* `deploymentTargets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
-* `parameterOverrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
-* `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
-* `retainStack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
 * `callAs` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
+* `deploymentTargets` - (Optional) AWS Organizations accounts to which StackSets deploys. StackSets doesn't deploy stack instances to the organization management account, even if the organization management account is in your organization or in an OU in your organization. Drift detection is not possible for this argument. See [deployment_targets](#deployment_targets-argument-reference) below.
 * `operationPreferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation.
+* `parameterOverrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
+* `region` - (Optional, **Deprecated**) Target AWS Region to create a Stack based on the StackSet. Defaults to current region. Use `stackSetInstanceRegion` instead.
+* `retainStack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
+* `stackSetInstanceRegion` - Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 
 ### `deploymentTargets` Argument Reference
 
@@ -306,4 +307,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-df3b021595bf17ab87ad0e2cb4d9e10047a4c95db5d1b42a83199e41724c991f -->
+<!-- cache-key: cdktf-0.20.8 input-5d2e24ae0fb8c542cb307e43a3df6fbc81d6cfa6588278d2346825b527a24044 -->

@@ -70,6 +70,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filters` - (Optional) Filter configurations for the Amazon SNS notification topic. See the [`filters` argument reference](#filters-argument-reference) below.
 
 ### `sns` Argument Reference
@@ -112,4 +113,4 @@ Using `terraform import`, import DevOps Guru Notification Channel using the `id`
 % terraform import aws_devopsguru_notification_channel.example id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-11be83f6d74ed442716d3d214c1e5b54106b57f1faaf225407b9c84a8ad2bcea -->
+<!-- cache-key: cdktf-0.20.8 input-988d21260741e64ba58faeb15fbef7c4c64fcc5ed6b365dccc34c2977f89a4ce -->

@@ -51,7 +51,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &patternSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 				),
@@ -82,7 +82,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 				),
@@ -92,7 +92,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "three"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "four"),
@@ -124,7 +124,7 @@ func testAccRegexPatternSet_noPatterns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &patternSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "0"),
 				),
 			},
 			{

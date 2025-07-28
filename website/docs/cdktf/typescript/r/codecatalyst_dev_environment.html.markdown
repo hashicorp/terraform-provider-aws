@@ -62,6 +62,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `inactivityTimeoutMinutes` - (Optional) The amount of time the Dev Environment will run without any activity detected before stopping, in minutes. Only whole integers are allowed. Dev Environments consume compute minutes when running.
 * `repositories` - (Optional) The source repository that contains the branch to clone into the Dev Environment.
 
@@ -93,4 +94,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.20.1 input-83072c31095d92a81b54f714ca680dc32ebce04ee3482f885395e5500cfeace5 -->
+<!-- cache-key: cdktf-0.20.8 input-4d979a7cbb8ad6ec69b210bc01b5b0939f039007114624b91e70f03f174a597a -->

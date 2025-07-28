@@ -5,7 +5,7 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_https_redirection_policy")
+// @SDKResource("aws_lightsail_lb_https_redirection_policy", name="Load Balancer HTTPS Redirection Policy")
 func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerHTTPSRedirectionPolicyCreate,
@@ -52,7 +52,7 @@ func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -60,7 +60,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	in := lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
 		AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-		AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+		AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 	}
 
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -80,7 +80,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	return append(diags, resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -103,7 +103,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 	return diags
 }
 
-func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -112,7 +112,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -131,7 +131,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 	return append(diags, resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)

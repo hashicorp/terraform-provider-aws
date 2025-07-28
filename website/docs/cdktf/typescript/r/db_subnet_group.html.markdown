@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the DB subnet group. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the DB subnet group. Defaults to "Managed by Terraform".
@@ -92,4 +93,4 @@ Using `terraform import`, import DB Subnet groups using the `name`. For example:
 % terraform import aws_db_subnet_group.default production-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-179353c0fba303d203c766c21037c29f91420947dad2e027698bb64aec31054a -->
+<!-- cache-key: cdktf-0.20.8 input-5971087905079540516ec17692b1202325f03a45cbb5fb9cde8152711452642c -->

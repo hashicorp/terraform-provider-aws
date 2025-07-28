@@ -35,6 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 
 ## Attribute Reference
@@ -48,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the alias
 * `name_prefix` - Prefix of the alias
 
-<!-- cache-key: cdktf-0.20.1 input-f0c72d32a5703f22842706c4ad41df917ac01904fa6128835963fb7e92acb28f -->
+<!-- cache-key: cdktf-0.20.8 input-1e0b6f8b396a4ffbc1190b4a774fd3b8e87f895112b491e3f0284fc6497ef793 -->

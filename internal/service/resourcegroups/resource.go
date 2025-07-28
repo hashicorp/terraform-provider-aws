@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,9 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	resourceIDPartCount = 2
 )
 
 // @SDKResource("aws_resourcegroups_resource", name="Resource")
@@ -33,9 +37,22 @@ func resourceResource() *schema.Resource {
 		ReadWithoutTimeout:   resourceResourceRead,
 		DeleteWithoutTimeout: resourceResourceDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceResourceConfigV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,13 +74,17 @@ func resourceResource() *schema.Resource {
 	}
 }
 
-func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	groupARN := d.Get("group_arn").(string)
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	id := strings.Join([]string{strings.Split(strings.ToLower(groupARN), "/")[1], strings.Split(resourceARN, "/")[1]}, "_")
+	id, err := flex.FlattenResourceId([]string{groupARN, resourceARN}, resourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &resourcegroups.GroupResourcesInput{
 		Group:        aws.String(groupARN),
 		ResourceArns: []string{resourceARN},
@@ -88,12 +109,18 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
-func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-	output, err := findResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get(names.AttrResourceARN).(string))
+	parts, err := flex.ExpandResourceId(d.Id(), resourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	groupARN := parts[0]
+	resourceARN := parts[1]
 
+	output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -104,13 +131,14 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Resource Groups Resource (%s): %s", d.Id(), err)
 	}
 
+	d.Set("group_arn", groupARN)
 	d.Set(names.AttrResourceARN, output.Identifier.ResourceArn)
 	d.Set(names.AttrResourceType, output.Identifier.ResourceType)
 
 	return diags
 }
 
-func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
@@ -170,7 +198,7 @@ func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, 
 }
 
 func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 
 		if tfresource.NotFound(err) {

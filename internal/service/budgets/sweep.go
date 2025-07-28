@@ -37,7 +37,7 @@ func sweepBudgetActions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.BudgetsClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &budgets.DescribeBudgetActionsForAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -81,7 +81,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.BudgetsClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &budgets.DescribeBudgetsInput{
 		AccountId: aws.String(accountID),
 	}

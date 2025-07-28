@@ -87,7 +87,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `prefix` - (Required, Forces new resource) The repository name prefix to match against.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `prefix` - (Required, Forces new resource) The repository name prefix to match against. Use `ROOT` to match any prefix that doesn't explicitly match another template.
 * `appliedFor` - (Required) Which features this template applies to. Must contain one or more of `PULL_THROUGH_CACHE` or `REPLICATION`.
 * `customRoleArn` - (Optional) A custom IAM role to use for repository creation. Required if using repository tags or KMS encryption.
 * `description` - (Optional) The description for this template.
@@ -140,4 +141,4 @@ Using `terraform import`, import the ECR Repository Creating Templates using the
 % terraform import aws_ecr_repository_creation_template.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-62aa6306b475e690ba9b92a748d682c61ada6515f552c32c8ec364a7d1180a7e -->
+<!-- cache-key: cdktf-0.20.8 input-a5c53f5092ebf2a950d2764e7cde9ee0fe17ecd6a325aa37613b76596295e7d4 -->

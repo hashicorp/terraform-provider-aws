@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-### Managing Redis Engine Versions
+### Managing Redis OOS/Valkey Engine Versions
 
 The initial Redis version is determined by the version set on the primary replication group.
 However, once it is part of a Global Replication Group,
@@ -112,6 +112,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automatic_failover_enabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
   When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.
 * `cache_node_type` - (Optional) The instance class used.
@@ -126,9 +127,9 @@ This resource supports the following arguments:
   When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below.
-* `global_replication_group_id_suffix` – (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.
-* `primary_replication_group_id` – (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primary_replication_group_id` is changed, creates a new resource.
-* `global_replication_group_description` – (Optional) A user-created description for the global replication group.
+* `global_replication_group_id_suffix` - (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.
+* `primary_replication_group_id` - (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primary_replication_group_id` is changed, creates a new resource.
+* `global_replication_group_description` - (Optional) A user-created description for the global replication group.
 * `num_node_groups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameter_group_name` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
   Required when upgrading a major engine version, but will be ignored if left configured after the upgrade is complete.
@@ -186,4 +187,4 @@ Using `terraform import`, import ElastiCache Global Replication Groups using the
 % terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->
+<!-- cache-key: cdktf-0.20.8 input-142dcc2fd1608130ba4d055b28986206362a50811e2b915df21b209f3b0e60dc -->

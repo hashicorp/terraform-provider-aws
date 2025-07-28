@@ -116,6 +116,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the resource to associate with the web ACL. This must be an ARN of an Application Load Balancer, an Amazon API Gateway stage (REST only, HTTP is unsupported), an Amazon Cognito User Pool, an Amazon AppSync GraphQL API, an Amazon App Runner service, or an Amazon Verified Access instance.
 * `webAclArn` - (Required) The Amazon Resource Name (ARN) of the Web ACL that you want to associate with the resource.
 
@@ -161,4 +162,4 @@ Using `terraform import`, import WAFv2 Web ACL Association using `WEB_ACL_ARN,RE
 % terraform import aws_wafv2_web_acl_association.example arn:aws:wafv2:...7ce849ea,arn:aws:apigateway:...ages/name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a27998dfc5e188299395b679b4a1dc7cb0d0a3339e79b0e25fae805f43a48faa -->
+<!-- cache-key: cdktf-0.20.8 input-c79f084f7d69e9ca32efd2dbfbfc6be60ddb7c39b0a24b856146e5c1e65f1a86 -->

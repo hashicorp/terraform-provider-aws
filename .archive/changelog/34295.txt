@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_secretsmanager_secret_rotation: Fix bug where `automatically_after_days` was not being set properly when `schedule_expression` had been set previously
+```
+
+```release-note:bug
+resource/aws_secretsmanager_secret_rotation: Retry rotation in case it has not yet propagated when previously an error would occur: `InvalidRequestException: A previous rotation isn't complete. That rotation will be reattempted.`
+```

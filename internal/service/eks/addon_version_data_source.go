@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_addon_version")
+// @SDKDataSource("aws_eks_addon_version", name="Add-On Version")
 func dataSourceAddonVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAddonVersionRead,
@@ -47,7 +47,7 @@ func dataSourceAddonVersion() *schema.Resource {
 	}
 }
 
-func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)

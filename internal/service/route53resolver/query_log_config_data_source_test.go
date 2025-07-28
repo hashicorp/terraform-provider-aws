@@ -6,7 +6,6 @@ package route53resolver_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +22,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.Route53Resolver)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
@@ -56,7 +55,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, route53resolver.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.Route53Resolver)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),

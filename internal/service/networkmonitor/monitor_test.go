@@ -10,7 +10,10 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
@@ -30,48 +33,18 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitorConfig_basic(rName, 30),
+				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccMonitorConfig_basic(rName, 60),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "networkmonitor", "monitor/{monitor_name}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "monitor_name"),
+					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 				),
-			},
-		},
-	})
-}
-
-func TestAccNetworkMonitorMonitor_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmonitor_monitor.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -79,20 +52,10 @@ func TestAccNetworkMonitorMonitor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
 		},
@@ -111,12 +74,46 @@ func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMonitorConfig_basic(rName, 30),
+				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmonitor.ResourceMonitor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmonitor_monitor.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMonitorConfig_aggregationPeriod(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitorExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
+				),
 			},
 		},
 	})
@@ -163,38 +160,19 @@ func testAccCheckMonitorExists(ctx context.Context, n string) resource.TestCheck
 	}
 }
 
-func testAccMonitorConfig_basic(rName string, aggregation int) string {
+func testAccMonitorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_networkmonitor_monitor" "test" {
-  aggregation_period = %[2]d
+  monitor_name = %[1]q
+}
+`, rName)
+}
+
+func testAccMonitorConfig_aggregationPeriod(rName string, aggregation int) string {
+	return fmt.Sprintf(`
+resource "aws_networkmonitor_monitor" "test" {
   monitor_name       = %[1]q
+  aggregation_period = %[2]d
 }
 `, rName, aggregation)
-}
-
-func testAccMonitorConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmonitor_monitor" "test" {
-  aggregation_period = 30
-  monitor_name       = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmonitor_monitor" "test" {
-  aggregation_period = 30
-  monitor_name       = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

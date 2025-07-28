@@ -17,10 +17,17 @@ func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 
 	type struct1 struct{}
+
 	type struct2 struct {
 		ARN             types.String `tfsdk:"arn"`
 		ID              types.Int64  `tfsdk:"id"`
 		IncludeProperty types.Bool   `tfsdk:"include_property"`
+	}
+
+	type struct3 struct {
+		F1 types.String `tfsdk:"f1"`
+		struct2
+		F2 types.Int32 `tfsdk:"f2"`
 	}
 
 	ctx := context.Background()
@@ -47,6 +54,23 @@ func TestAttributeTypes(t *testing.T) {
 		"arn":              types.StringType,
 		"id":               types.Int64Type,
 		"include_property": types.BoolType,
+	}
+
+	if diff := cmp.Diff(got, wanted); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+
+	got, err = fwtypes.AttributeTypes[struct3](ctx)
+	if err != nil {
+		t.Fatalf("unexpected error")
+	}
+
+	wanted = map[string]attr.Type{
+		"f1":               types.StringType,
+		"arn":              types.StringType,
+		"id":               types.Int64Type,
+		"include_property": types.BoolType,
+		"f2":               types.Int32Type,
 	}
 
 	if diff := cmp.Diff(got, wanted); diff != "" {

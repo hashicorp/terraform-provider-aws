@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,10 +55,13 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// tags_all is Optional+Computed.
-				if k == names.AttrTags || k == names.AttrTagsAll {
+				if k == names.AttrTags || k == names.AttrTagsAll || k == "volume_tags" {
 					continue
 				}
-				v.ForceNew = true
+				// Copy-on-write
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x.ForceNew = true
+				s[k] = &x
 			}
 
 			// Remove attributes added for spot instances.
@@ -68,12 +69,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 			delete(s, "instance_market_options")
 			delete(s, "spot_instance_request_id")
 
-			s["block_duration_minutes"] = &schema.Schema{
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntDivisibleBy(60),
-			}
 			s["instance_interruption_behavior"] = &schema.Schema{
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -130,11 +125,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
 			}
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -143,14 +133,10 @@ func resourceSpotInstanceRequest() *schema.Resource {
 
 			return s
 		}(),
-
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -159,7 +145,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ec2.RequestSpotInstancesInput{
+	input := ec2.RequestSpotInstancesInput{
 		ClientToken: aws.String(id.UniqueId()),
 		// Though the AWS API supports creating spot instance requests for multiple
 		// instances, for TF purposes we fix this to one instance per request.
@@ -185,10 +171,6 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 		Type:              awstypes.SpotInstanceType(d.Get("spot_type").(string)),
 	}
 
-	if v, ok := d.GetOk("block_duration_minutes"); ok {
-		input.BlockDurationMinutes = aws.Int32(int32(v.(int)))
-	}
-
 	if v, ok := d.GetOk("launch_group"); ok {
 		input.LaunchGroup = aws.String(v.(string))
 	}
@@ -209,8 +191,8 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
-			return conn.RequestSpotInstances(ctx, input)
+		func() (any, error) {
+			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -243,11 +225,11 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
 }
 
-func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	request, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.SpotInstanceRequest, error) {
 		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -260,8 +242,6 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", d.Id(), err)
 	}
-
-	request := outputRaw.(*awstypes.SpotInstanceRequest)
 
 	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending
@@ -276,7 +256,6 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("spot_request_state", request.State)
 	d.Set("launch_group", request.LaunchGroup)
-	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
 	setTagsOut(ctx, request.Tags)
 
@@ -292,7 +271,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -300,14 +279,15 @@ func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
 }
 
-func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+	input := ec2.CancelSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []string{d.Id()},
-	})
+	}
+	_, err := conn.CancelSpotInstanceRequests(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
 		return diags
@@ -326,7 +306,7 @@ func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

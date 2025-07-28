@@ -41,6 +41,7 @@ const (
 	loadBalancerAttributeRoutingHTTPXFFHeaderProcessingMode              = "routing.http.xff_header_processing.mode"
 	loadBalancerAttributeRoutingHTTP2Enabled                             = "routing.http2.enabled"
 	loadBalancerAttributeWAFFailOpenEnabled                              = "waf.fail_open.enabled"
+	loadBalancerAttributeZonalShiftConfigEnabled                         = "zonal_shift.config.enabled"
 
 	// The following attributes are supported by only Network Load Balancers:
 	loadBalancerAttributeDNSRecordClientRoutingPolicy = "dns_record.client_routing_policy"
@@ -200,7 +201,7 @@ const (
 )
 
 func healthCheckProtocolEnumValues() []string {
-	return enum.Slice[awstypes.ProtocolEnum](
+	return enum.Slice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

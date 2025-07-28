@@ -55,21 +55,22 @@ func resourcePatchGroup() *schema.Resource {
 	}
 }
 
-func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &ssm.RegisterPatchBaselineForPatchGroupInput{
 		BaselineId: aws.String(baselineID),
 		PatchGroup: aws.String(patchGroup),
 	}
 
-	_, err := conn.RegisterPatchBaselineForPatchGroup(ctx, input)
-
-	if err != nil {
+	if _, err := conn.RegisterPatchBaselineForPatchGroup(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Group (%s): %s", id, err)
 	}
 
@@ -78,7 +79,7 @@ func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourcePatchGroupRead(ctx, d, meta)...)
 }
 
-func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -110,7 +111,7 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 

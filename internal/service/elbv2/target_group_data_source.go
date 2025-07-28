@@ -5,12 +5,11 @@ package elbv2
 
 import (
 	"context"
-	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +22,7 @@ import (
 
 // @SDKDataSource("aws_alb_target_group", name="Target Group")
 // @SDKDataSource("aws_lb_target_group", name="Target Group")
-// @Testing(tagsTest=true)
+// @Tags(identifierAttribute="arn")
 func dataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTargetGroupRead,
@@ -182,12 +181,11 @@ func dataSourceTargetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	partition := meta.(*conns.AWSClient).Partition
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]any)).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 
@@ -207,7 +205,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		var targetGroups []awstypes.TargetGroup
 
 		for _, targetGroup := range results {
-			arn := aws.StringValue(targetGroup.TargetGroupArn)
+			arn := aws.ToString(targetGroup.TargetGroupArn)
 			tags, err := listTags(ctx, conn, arn)
 
 			if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
@@ -233,7 +231,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	targetGroup := results[0]
-	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
+	d.SetId(aws.ToString(targetGroup.TargetGroupArn))
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
@@ -265,26 +263,11 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("stickiness", []interface{}{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
+	if err := d.Set("stickiness", []any{flattenTargetGroupStickinessAttributes(attributes, protocol)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stickiness: %s", err)
 	}
 
 	targetGroupAttributes.flatten(d, targetType, attributes)
-
-	tags, err := listTags(ctx, conn, d.Id())
-
-	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ELBv2 Target Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) String identifier of the associated REST API.
 * `responseType` - (Required) Response type of the associated GatewayResponse.
 * `statusCode` - (Optional) HTTP status code of the Gateway Response.
@@ -92,4 +93,4 @@ Using `terraform import`, import `aws_api_gateway_gateway_response` using `REST-
 % terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1cf3d4efa3dea58b3eb33a7d86b84e6f760a3bfa3f2190d9e1f9e796eec417fc -->
+<!-- cache-key: cdktf-0.20.8 input-a14260c5eb0c0d600fe4e89fb6f7dce663f8f56bb8fa71be9037b76a5f392f2e -->

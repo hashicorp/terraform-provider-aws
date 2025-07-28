@@ -67,6 +67,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Vault. Names can be between 1 and 255 characters long and the valid characters are a-z, A-Z, 0-9, '_' (underscore), '-' (hyphen), and '.' (period).
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.
   The heredoc syntax or `file` function is helpful here. Use the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html) for more information on Glacier Vault Policy
@@ -111,4 +112,4 @@ Using `terraform import`, import Glacier Vaults using the `name`. For example:
 % terraform import aws_glacier_vault.archive my_archive
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1bfb612252a42581f297e83a2d1f1c7c609160aeeb4a7bd67bccea5a3aa3cff5 -->
+<!-- cache-key: cdktf-0.20.8 input-f24eeb18c2c3b736e94f1bfcb46e8c25e55e6ffe262f80342d41567d875e4d07 -->

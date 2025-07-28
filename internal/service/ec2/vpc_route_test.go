@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -160,6 +161,11 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -169,8 +175,15 @@ func TestAccVPCRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 			},
 			{
 				// Verify that expanded form of the destination CIDR causes no diff.
-				Config:   testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
-				PlanOnly: true,
+				Config: testAccVPCRouteConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -249,7 +262,7 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -484,7 +497,7 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -579,7 +592,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -628,7 +641,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
@@ -651,7 +664,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
@@ -1826,7 +1839,7 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -1921,7 +1934,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -2679,7 +2692,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id          = aws_vpc.test.id
-  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
   route_table_ids = [aws_route_table.test.id]
 }
 `, rName)

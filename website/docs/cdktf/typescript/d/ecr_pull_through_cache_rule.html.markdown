@@ -38,7 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-- `ecrRepositoryPrefix` - (Required) The repository name prefix to use when caching images from the source registry.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ecrRepositoryPrefix` - (Required) The repository name prefix to use when caching images from the source registry.
 
 ## Attribute Reference
 
@@ -46,7 +47,9 @@ This data source exports the following attributes in addition to the arguments a
 
 - `id` - The repository name prefix.
 - `credentialArn` - ARN of the Secret which will be used to authenticate against the registry.
+- `customRoleArn` - The ARN of the IAM role associated with the pull through cache rule. Used if the upstream registry is a cross-account ECR private registry.
 - `registryId` - The registry ID where the repository was created.
-- `upstreamRegistryUrl` - The registry URL of the upstream public registry to use as the source.
+- `upstreamRegistryUrl` - The registry URL of the upstream registry to use as the source.
+- `upstreamRepositoryPrefix` - The upstream repository prefix associated with the pull through cache rule.
 
-<!-- cache-key: cdktf-0.20.1 input-51f9ce17c5f6437a6a7033bcc7164586c2d49132414e45c72255adc80ed3befc -->
+<!-- cache-key: cdktf-0.20.8 input-e2080b23e6afea8514eb1fb169c0f3157fe09ad83afd7fb0022cf1b0cb732f64 -->

@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
-const defaultKMSKeyAlias = "alias/aws/s3"
-
 type bucketNameType int
 
 const (
@@ -21,13 +19,16 @@ const (
 	bucketNameTypeObjectLambdaAccessPointAlias
 	bucketNameTypeObjectLambdaAccessPointARN
 	bucketNameTypeMultiRegionAccessPointARN
+	bucketNameTypeS3OnOutpostsAccessPointAlias
+	bucketNameTypeS3OnOutpostsAccessPointARN
 )
 
 func bucketNameTypeFor(bucket string) bucketNameType {
 	switch {
 	case arn.IsARN(bucket):
-		switch v, _ := arn.Parse(bucket); v.Resource {
-		case "accesspoint":
+		v, _ := arn.Parse(bucket)
+		switch {
+		case strings.HasPrefix(v.Resource, "accesspoint/"):
 			switch v.Service {
 			case "s3":
 				if v.Region == "" {
@@ -37,6 +38,11 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 			case "s3-object-lambda":
 				return bucketNameTypeObjectLambdaAccessPointARN
 			}
+		case strings.HasPrefix(v.Resource, "outpost/"):
+			switch v.Service {
+			case "s3-outposts":
+				return bucketNameTypeS3OnOutpostsAccessPointARN
+			}
 		}
 	case directoryBucketNameRegex.MatchString(bucket):
 		return bucketNameTypeDirectoryBucket
@@ -44,7 +50,9 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 		return bucketNameTypeAccessPointAlias
 	case strings.HasSuffix(bucket, "--ol-s3"):
 		return bucketNameTypeObjectLambdaAccessPointAlias
+	case strings.HasSuffix(bucket, "--op-s3"):
+		return bucketNameTypeS3OnOutpostsAccessPointAlias
 	}
 
-	return bucketNameTypeDirectoryBucket
+	return bucketNameTypeGeneralPurposeBucket
 }

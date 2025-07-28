@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:cloudtrail:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:trail/example",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:cloudtrail:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:trail/example",
@@ -483,6 +483,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advancedEventSelector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `eventSelector`.
 * `cloudWatchLogsGroupArn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloudWatchLogsRoleArn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -495,7 +496,7 @@ The following arguments are optional:
 * `isOrganizationTrail` - (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `kmsKeyId` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3KeyPrefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
-* `snsTopicName` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
+* `snsTopicName` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery. Specify the SNS topic ARN if it resides in another region.
 * `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
@@ -536,6 +537,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the trail.
 * `homeRegion` - Region in which the trail was created.
 * `id` - ARN of the trail.
+* `snsTopicArn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -570,4 +572,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->
+<!-- cache-key: cdktf-0.20.8 input-a1f175998792e4fbf1f09fac4172e6ca4d2fdde7fc2ceb0d008fa36c132b4212 -->

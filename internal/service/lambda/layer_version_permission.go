@@ -96,13 +96,16 @@ func resourceLayerVersionPermission() *schema.Resource {
 	}
 }
 
-func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	versionNumber := d.Get("version_number").(int)
-	id := errs.Must(flex.FlattenResourceId([]string{layerName, strconv.FormatInt(int64(versionNumber), 10)}, layerVersionPermissionResourceIDPartCount, true))
+	id, err := flex.FlattenResourceId([]string{layerName, strconv.FormatInt(int64(versionNumber), 10)}, layerVersionPermissionResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &lambda.AddLayerVersionPermissionInput{
 		Action:        aws.String(d.Get(names.AttrAction).(string)),
 		LayerName:     aws.String(layerName),
@@ -115,9 +118,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 		input.OrganizationId = aws.String(v.(string))
 	}
 
-	_, err := conn.AddLayerVersionPermission(ctx, input)
-
-	if err != nil {
+	if _, err := conn.AddLayerVersionPermission(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "adding Lambda Layer Version Permission (%s): %s", id, err)
 	}
 
@@ -126,7 +127,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceLayerVersionPermissionRead(ctx, d, meta)...)
 }
 
-func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -208,7 +209,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 

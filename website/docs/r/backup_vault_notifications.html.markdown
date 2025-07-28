@@ -56,6 +56,7 @@ resource "aws_backup_vault_notifications" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_vault_name` - (Required) Name of the backup vault to add notifications for.
 * `sns_topic_arn` - (Required) The Amazon Resource Name (ARN) that specifies the topic for a backup vault’s events
 * `backup_vault_events` - (Required) An array of events that indicate the status of jobs to back up resources to the backup vault.

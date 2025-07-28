@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_iam_policy: Fix persistent validation errors when malformed `policy` content is written to state
+```
+```release-note:bug
+resource/aws_iam_role_policy: Fix persistent validation errors when malformed `policy` content is written to state
+```
+```release-note:bug
+resource/aws_ecr_repository_policy: Fix persistent validation errors when malformed `policy` content is written to state
+```
+```release-note:bug
+resource/aws_secretsmanager_secret: Fix persistent validation errors when malformed `policy` content is written to state
+```
+```release-note:bug
+resource/aws_s3_bucket_policy: Fix persistent validation errors when malformed `policy` content is written to state
+```
+```release-note:bug
+resource/aws_kms_key: Fix persistent validation errors when malformed `policy` content is written to state
+```
+

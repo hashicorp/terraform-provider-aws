@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
 * `multi_az` - (Optional) Whether or not to maintain extra instances for the domain in a second Availability Zone to ensure high availability.
@@ -136,4 +137,4 @@ Using `terraform import`, import CloudSearch Domains using the `name`. For examp
 % terraform import aws_cloudsearch_domain.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ceae2d1756852153a56b7559bc1249bcbdcd21cd8eb1c3b3095494c7547dd974 -->
+<!-- cache-key: cdktf-0.20.8 input-b9f492819abe7a94bab0c66f1db81b3ebde68058d8ffb7f7603bd3efdcd07ca4 -->

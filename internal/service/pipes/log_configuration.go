@@ -89,19 +89,19 @@ func logConfigurationSchema() *schema.Schema {
 	}
 }
 
-func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.PipeLogConfigurationParameters {
+func expandPipeLogConfigurationParameters(tfMap map[string]any) *types.PipeLogConfigurationParameters {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PipeLogConfigurationParameters{}
 
-	if v, ok := tfMap["cloudwatch_logs_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudwatchLogsLogDestination = expandCloudWatchLogsLogDestinationParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cloudwatch_logs_log_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudwatchLogsLogDestination = expandCloudWatchLogsLogDestinationParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["firehose_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.FirehoseLogDestination = expandFirehoseLogDestinationParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["firehose_log_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FirehoseLogDestination = expandFirehoseLogDestinationParameters(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["include_execution_data"].(*schema.Set); ok && v != nil {
@@ -112,14 +112,14 @@ func expandPipeLogConfigurationParameters(tfMap map[string]interface{}) *types.P
 		apiObject.Level = types.LogLevel(v)
 	}
 
-	if v, ok := tfMap["s3_log_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3LogDestination = expandS3LogDestinationParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["s3_log_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3LogDestination = expandS3LogDestinationParameters(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogsLogDestinationParameters(tfMap map[string]interface{}) *types.CloudwatchLogsLogDestinationParameters {
+func expandCloudWatchLogsLogDestinationParameters(tfMap map[string]any) *types.CloudwatchLogsLogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -133,7 +133,7 @@ func expandCloudWatchLogsLogDestinationParameters(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandFirehoseLogDestinationParameters(tfMap map[string]interface{}) *types.FirehoseLogDestinationParameters {
+func expandFirehoseLogDestinationParameters(tfMap map[string]any) *types.FirehoseLogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -147,7 +147,7 @@ func expandFirehoseLogDestinationParameters(tfMap map[string]interface{}) *types
 	return apiObject
 }
 
-func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.S3LogDestinationParameters {
+func expandS3LogDestinationParameters(tfMap map[string]any) *types.S3LogDestinationParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -173,19 +173,19 @@ func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.S3Log
 	return apiObject
 }
 
-func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[string]interface{} {
+func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudwatchLogsLogDestination; v != nil {
-		tfMap["cloudwatch_logs_log_destination"] = []interface{}{flattenCloudWatchLogsLogDestination(v)}
+		tfMap["cloudwatch_logs_log_destination"] = []any{flattenCloudWatchLogsLogDestination(v)}
 	}
 
 	if v := apiObject.FirehoseLogDestination; v != nil {
-		tfMap["firehose_log_destination"] = []interface{}{flattenFirehoseLogDestination(v)}
+		tfMap["firehose_log_destination"] = []any{flattenFirehoseLogDestination(v)}
 	}
 
 	if v := apiObject.IncludeExecutionData; v != nil {
@@ -197,18 +197,18 @@ func flattenPipeLogConfiguration(apiObject *types.PipeLogConfiguration) map[stri
 	}
 
 	if v := apiObject.S3LogDestination; v != nil {
-		tfMap["s3_log_destination"] = []interface{}{flattenS3LogDestination(v)}
+		tfMap["s3_log_destination"] = []any{flattenS3LogDestination(v)}
 	}
 
 	return tfMap
 }
 
-func flattenCloudWatchLogsLogDestination(apiObject *types.CloudwatchLogsLogDestination) map[string]interface{} {
+func flattenCloudWatchLogsLogDestination(apiObject *types.CloudwatchLogsLogDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LogGroupArn; v != nil {
 		tfMap["log_group_arn"] = aws.ToString(v)
@@ -217,12 +217,12 @@ func flattenCloudWatchLogsLogDestination(apiObject *types.CloudwatchLogsLogDesti
 	return tfMap
 }
 
-func flattenFirehoseLogDestination(apiObject *types.FirehoseLogDestination) map[string]interface{} {
+func flattenFirehoseLogDestination(apiObject *types.FirehoseLogDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeliveryStreamArn; v != nil {
 		tfMap["delivery_stream_arn"] = aws.ToString(v)
@@ -231,12 +231,12 @@ func flattenFirehoseLogDestination(apiObject *types.FirehoseLogDestination) map[
 	return tfMap
 }
 
-func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]interface{} {
+func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BucketName; v != nil {
 		tfMap[names.AttrBucketName] = aws.ToString(v)

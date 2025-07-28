@@ -22,6 +22,7 @@ data "aws_launch_configuration" "ubuntu" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the launch configuration.
 
 ## Attribute Reference
@@ -41,7 +42,6 @@ This data source exports the following attributes in addition to the arguments a
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `security_groups` - List of associated Security Group IDS.
 * `associate_public_ip_address` - Whether a Public IP address is associated with the instance.
-* `primary_ipv6` - Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `user_data` - User Data of the instance.
 * `enable_monitoring` - Whether Detailed Monitoring is Enabled.
 * `ebs_optimized` - Whether the launched EC2 instance will be EBS-optimized.

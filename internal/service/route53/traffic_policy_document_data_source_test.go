@@ -6,9 +6,9 @@ package route53_test
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -82,7 +82,7 @@ func testAccCheckTrafficPolicySameJSON(resourceName, jsonExpected string) resour
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
 
-		if !awsutil.DeepEqual(&j, &j2) {
+		if !reflect.DeepEqual(&j, &j2) {
 			return fmt.Errorf("expected out to be %v, got %v", j, j2)
 		}
 
@@ -191,12 +191,12 @@ data "aws_route53_traffic_policy_document" "test" {
   endpoint {
     id    = "my_elb"
     type  = "elastic-load-balancer"
-    value = "elb-111111.${data.aws_region.current.name}.elb.amazonaws.com"
+    value = "elb-111111.${data.aws_region.current.region}.elb.amazonaws.com"
   }
   endpoint {
     id     = "site_down_banner"
     type   = "s3-website"
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
     value  = "www.example.com"
   }
 

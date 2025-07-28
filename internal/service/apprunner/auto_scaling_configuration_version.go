@@ -21,22 +21,19 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_auto_scaling_configuration_version", name="AutoScaling Configuration Version")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 func resourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,
 		ReadWithoutTimeout:   resourceAutoScalingConfigurationRead,
 		UpdateWithoutTimeout: resourceAutoScalingConfigurationUpdate,
 		DeleteWithoutTimeout: resourceAutoScalingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -76,14 +73,14 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 				Optional:     true,
 				Default:      25,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      1,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 25),
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -92,12 +89,10 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -135,7 +130,7 @@ func resourceAutoScalingConfigurationCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceAutoScalingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
@@ -166,22 +161,23 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
-func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	log.Printf("[INFO] Deleting App Runner AutoScaling Configuration Version: %s", d.Id())
-	_, err := conn.DeleteAutoScalingConfiguration(ctx, &apprunner.DeleteAutoScalingConfigurationInput{
+	input := apprunner.DeleteAutoScalingConfigurationInput{
 		AutoScalingConfigurationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteAutoScalingConfiguration(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "The auto scaling configuration you specified has been deleted") {
 		return diags
 	}
 
@@ -235,11 +231,11 @@ func findAutoScalingConfigurationSummary(ctx context.Context, conn *apprunner.Cl
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]*types.AutoScalingConfigurationSummary, error) {
-	var output []*types.AutoScalingConfigurationSummary
+func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.Client, input *apprunner.ListAutoScalingConfigurationsInput, filter tfslices.Predicate[*types.AutoScalingConfigurationSummary]) ([]types.AutoScalingConfigurationSummary, error) {
+	var output []types.AutoScalingConfigurationSummary
 
 	pages := apprunner.NewListAutoScalingConfigurationsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -250,8 +246,7 @@ func findAutoScalingConfigurationSummaries(ctx context.Context, conn *apprunner.
 		}
 
 		for _, v := range page.AutoScalingConfigurationSummaryList {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}
@@ -266,7 +261,7 @@ const (
 )
 
 func statusAutoScalingConfiguration(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAutoScalingConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

@@ -14,7 +14,7 @@ import (
 )
 
 func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName)
 
 		if tfresource.NotFound(err) {
@@ -30,7 +30,7 @@ func statusTable(ctx context.Context, conn *dynamodb.Client, tableName string) r
 }
 
 func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findImportByARN(ctx, conn, importARN)
 
 		if tfresource.NotFound(err) {
@@ -50,7 +50,7 @@ func statusImport(ctx context.Context, conn *dynamodb.Client, importARN string) 
 }
 
 func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -72,7 +72,7 @@ func statusReplicaUpdate(ctx context.Context, conn *dynamodb.Client, tableName, 
 }
 
 func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, region string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -94,7 +94,7 @@ func statusReplicaDelete(ctx context.Context, conn *dynamodb.Client, tableName, 
 }
 
 func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGSIByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if tfresource.NotFound(err) {
@@ -114,7 +114,7 @@ func statusGSI(ctx context.Context, conn *dynamodb.Client, tableName, indexName 
 }
 
 func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPITRByTableName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {
@@ -134,7 +134,7 @@ func statusPITR(ctx context.Context, conn *dynamodb.Client, tableName string, op
 }
 
 func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTTLByTableName(ctx, conn, tableName)
 
 		if tfresource.NotFound(err) {
@@ -154,7 +154,7 @@ func statusTTL(ctx context.Context, conn *dynamodb.Client, tableName string) ret
 }
 
 func statusSSE(ctx context.Context, conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if tfresource.NotFound(err) {

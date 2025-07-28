@@ -41,7 +41,7 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAccessPointPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "access_point_arn"),
 				ImportStateVerify: true,
 			},
 		},
@@ -117,7 +117,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAccessPointPolicyImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "access_point_arn"),
 				ImportStateVerify: true,
 			},
 			{
@@ -130,17 +130,6 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccAccessPointPolicyImportStateIdFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["access_point_arn"], nil
-	}
 }
 
 func testAccCheckAccessPointPolicyDestroy(ctx context.Context) resource.TestCheckFunc {

@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -40,7 +40,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
@@ -140,8 +140,8 @@ func testAccCheckPipeline_notifications(
 			return fmt.Errorf("ETC notifications didn't match:\n\texpected: %#v\n\tgot: %#v\n\n", notifications, notes)
 		}
 
-		sort.Strings(notes)
-		sort.Strings(notifications)
+		slices.Sort(notes)
+		slices.Sort(notifications)
 
 		if !reflect.DeepEqual(notes, notifications) {
 			return fmt.Errorf("ETC notifications were not equal:\n\texpected: %#v\n\tgot: %#v\n\n", notifications, notes)
@@ -345,8 +345,10 @@ resource "aws_s3_bucket" "test" {
 func testAccPipelineConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

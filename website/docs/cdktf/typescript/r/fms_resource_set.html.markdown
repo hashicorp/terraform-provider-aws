@@ -43,8 +43,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceSet` - (Required) Details about the resource set to be created or updated. See [`resourceSet` Attribute Reference](#resource_set-attribute-reference) below.
 
 ### `resourceSet` Attribute Reference
@@ -53,7 +54,7 @@ The following arguments are required:
 * `resourceTypeList` - (Required) Determines the resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
 * `description` - (Optional) Description of the resource set.
 * `lastUpdateTime` - (Optional) Last time that the reosurce set was changed.
-* `resourceSetStatus` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but theyy can't edit or delete the resource set.)
+* `resourceSetStatus` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but they can't edit or delete the resource set.)
 
 ## Attribute Reference
 
@@ -102,4 +103,4 @@ Using `terraform import`, import FMS (Firewall Manager) Resource Set using the `
 % terraform import aws_fms_resource_set.example resource_set-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c25d86bf87b04f982199b73cc7664bc83aa132bdcb1592d4e0d4c94e5d21c0fe -->
+<!-- cache-key: cdktf-0.20.8 input-c6e0549773a34f6bcdc1319a6a6d089a1ea13f0a0950f194d7b90d952c0466cc -->

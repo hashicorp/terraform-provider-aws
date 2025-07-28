@@ -37,7 +37,7 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
@@ -77,7 +77,7 @@ func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_path(rName, path),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa%s%s", path, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa%s%s", path, rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
 				),
 			},

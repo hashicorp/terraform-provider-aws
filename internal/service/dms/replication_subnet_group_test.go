@@ -36,8 +36,8 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -75,51 +75,6 @@ func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_subnet_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationSubnetGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccReplicationSubnetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccReplicationSubnetGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -174,33 +129,4 @@ resource "aws_dms_replication_subnet_group" "test" {
   subnet_ids                           = aws_subnet.test[*].id
 }
 `, rName, description))
-}
-
-func testAccReplicationSubnetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_id          = %[1]q
-  replication_subnet_group_description = "testing"
-  subnet_ids                           = aws_subnet.test[*].id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccReplicationSubnetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_id          = %[1]q
-  replication_subnet_group_description = "testing"
-  subnet_ids                           = aws_subnet.test[*].id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

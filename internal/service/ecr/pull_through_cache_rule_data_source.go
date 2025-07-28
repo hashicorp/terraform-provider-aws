@@ -25,6 +25,10 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"custom_role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ecr_repository_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,11 +48,15 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"upstream_repository_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -61,9 +69,11 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.ToString(rule.EcrRepositoryPrefix))
 	d.Set("credential_arn", rule.CredentialArn)
+	d.Set("custom_role_arn", rule.CustomRoleArn)
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
+	d.Set("upstream_repository_prefix", rule.UpstreamRepositoryPrefix)
 
 	return diags
 }

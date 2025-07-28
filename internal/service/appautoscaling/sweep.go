@@ -24,9 +24,9 @@ const (
 )
 
 func RegisterSweepers() {
-	sweep.Register("aws_appautoscaling_policy", sweepPolicy)
+	awsv2.Register("aws_appautoscaling_policy", sweepPolicy)
 
-	sweep.Register("aws_appautoscaling_target", sweepTarget,
+	awsv2.Register("aws_appautoscaling_target", sweepTarget,
 		"aws_appautoscaling_policy",
 	)
 }
@@ -46,12 +46,6 @@ func sweepPolicy(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 		pages := applicationautoscaling.NewDescribeScalingPoliciesPaginator(conn, &input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
-			if awsv2.SkipSweepError(err) {
-				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-					"error": err.Error(),
-				})
-				return nil, nil
-			}
 			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "at 'serviceNamespace' failed to satisfy constraint") {
 				tflog.Info(ctx, "Skipping service namespace", map[string]any{
 					"error": err.Error(),
@@ -93,12 +87,6 @@ func sweepTarget(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 		pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, &input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
-			if awsv2.SkipSweepError(err) {
-				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-					"error": err.Error(),
-				})
-				return nil, nil
-			}
 			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "at 'serviceNamespace' failed to satisfy constraint") {
 				tflog.Info(ctx, "Skipping service namespace", map[string]any{
 					"error": err.Error(),

@@ -72,7 +72,7 @@ func resourceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -128,7 +128,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -160,7 +160,7 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -170,10 +170,11 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting Appsync API Key: %s", d.Id())
-	_, err = conn.DeleteApiKey(ctx, &appsync.DeleteApiKeyInput{
+	input := appsync.DeleteApiKeyInput{
 		ApiId: aws.String(apiID),
 		Id:    aws.String(keyID),
-	})
+	}
+	_, err = conn.DeleteApiKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

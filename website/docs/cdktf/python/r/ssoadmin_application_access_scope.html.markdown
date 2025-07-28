@@ -40,8 +40,8 @@ class MyConvertedCode(TerraformStack):
         aws_ssoadmin_application_example.override_logical_id("example")
         aws_ssoadmin_application_access_scope_example =
         SsoadminApplicationAccessScope(self, "example_2",
-            application_arn=Token.as_string(aws_ssoadmin_application_example.application_arn),
-            authorized_targets=["arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901"
+            application_arn=Token.as_string(aws_ssoadmin_application_example.arn),
+            authorized_targets=["arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012"
             ],
             scope="sso:account:access"
         )
@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorized_targets` - (Optional) Specifies an array list of ARNs that represent the authorized targets for this access scope.
 
 ## Attribute Reference
@@ -82,13 +83,13 @@ from imports.aws.ssoadmin_application_access_scope import SsoadminApplicationAcc
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsoadminApplicationAccessScope.generate_config_for_import(self, "example", "arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access")
+        SsoadminApplicationAccessScope.generate_config_for_import(self, "example", "arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access")
 ```
 
 Using `terraform import`, import SSO Admin Application Access Scope using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access
+% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cf505dadf134c69cd6c7c26ff4c81d309a119192ad2e48ef73877664e79abeb0 -->
+<!-- cache-key: cdktf-0.20.8 input-f3dec092d86f98863e4857dc79555ffc7d6e54579d8186572e056c8c788a15c6 -->

@@ -72,6 +72,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `as2_config` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
 * `logging_role` - (Optional) The IAM Role which is required for allowing the connector to turn on CloudWatch logging for Amazon S3 events.
@@ -128,4 +129,4 @@ Using `terraform import`, import Transfer AS2 Connector using the `connector_id`
 % terraform import aws_transfer_connector.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b870b656d06cf5d883b713f3560edb961cd460502fa124ce4f32c7d3f023d2c9 -->
+<!-- cache-key: cdktf-0.20.8 input-96563d596479ecdb922f821c979b7e79116d48d5581501da58bfe185e99da6ac -->

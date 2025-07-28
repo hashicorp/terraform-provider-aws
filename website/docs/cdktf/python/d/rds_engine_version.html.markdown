@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_only` - (Optional) Whether the engine version must be an AWS-defined default version. Some engines have multiple default versions, such as for each major version. Using `default_only` may help avoid `multiple RDS engine versions` errors. See also `latest`.
 * `filter` - (Optional) One or more name/value pairs to use in filtering versions. There are several valid keys; for a full reference, check out [describe-db-engine-versions in the AWS CLI reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-engine-versions.html).
 * `has_major_target` - (Optional) Whether the engine version must have one or more major upgrade targets. Not including `has_major_target` or setting it to `false` doesn't imply that there's no corresponding major upgrade target for the engine version.
@@ -92,8 +93,11 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_feature_names` - Set of features supported by the engine version.
 * `supported_modes` - Set of supported engine version modes.
 * `supported_timezones` - Set of the time zones supported by the engine version.
+* `supports_certificate_rotation_without_restart` - Whether the certificates can be rotated without restarting the Aurora instance.
 * `supports_global_databases` - Whether you can use Aurora global databases with the engine version.
+* `supports_integrations` - Whether the engine version supports integrations with other AWS services.
 * `supports_log_exports_to_cloudwatch` - Whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
+* `supports_local_write_forwarding` - Whether the engine version supports local write forwarding or not.
 * `supports_limitless_database` - Whether the engine version supports Aurora Limitless Database.
 * `supports_parallel_query` - Whether you can use Aurora parallel query with the engine version.
 * `supports_read_replica` - Whether the engine version supports read replicas.
@@ -103,4 +107,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_actual` - Complete engine version.
 * `version_description` - Description of the engine version.
 
-<!-- cache-key: cdktf-0.20.1 input-c79463a69506695ed29ad8f547a90f667cebfb0ef7c37e26376a528db05d0b20 -->
+<!-- cache-key: cdktf-0.20.8 input-b058d00a50498da6f75c0d50123bc1a7dcb6dfd555683625d54c3688c9a76d67 -->

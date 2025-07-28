@@ -88,6 +88,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `errorDocument` - (Optional, Conflicts with `redirectAllRequestsTo`) Name of the error document for the website. [See below](#error_document).
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
@@ -216,4 +217,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_website_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2bd65f193d56ad7f250de1a3de6546120dfff97bf42a13c7dc68b5c6058c0969 -->
+<!-- cache-key: cdktf-0.20.8 input-2871104537b7983a713e83a9ccf4b05ca2d748865bf7d8e813f83a1fc4241dc8 -->

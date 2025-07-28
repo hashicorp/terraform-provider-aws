@@ -52,7 +52,7 @@ class MyConvertedCode extends TerraformStack {
               "arn:${" +
                 dataAwsPartitionCurrent.partition +
                 "}:bedrock:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}::foundation-model/anthropic.claude-v2",
             ],
           },
@@ -78,7 +78,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:bedrock:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:agent/*",
@@ -143,6 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the alias.
 * `routingConfiguration` - (Optional) Details about the routing configuration of the alias. See [`routingConfiguration` Block](#routing_configuration-block) for details.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -203,4 +204,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Alias using the
 % terraform import aws_bedrockagent_agent_alias.example 66IVY0GUTF,GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ec9002dbf394ea30a92ebfbe0cd46c10a1224be5c43880fe491b2e709a8ed68e -->
+<!-- cache-key: cdktf-0.20.8 input-59bd883dbf733785b3b0cb48204ba4cbf50911c0f7bae560667b0116b3b29f91 -->

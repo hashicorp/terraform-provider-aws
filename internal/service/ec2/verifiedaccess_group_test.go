@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -44,9 +44,9 @@ func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) 
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -65,7 +65,7 @@ func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) 
 
 func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
@@ -85,7 +85,7 @@ func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
 				),
@@ -101,7 +101,7 @@ func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
@@ -125,9 +125,9 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -144,7 +144,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
@@ -161,7 +161,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 
 func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -189,7 +189,7 @@ func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaph
 
 func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -207,7 +207,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -221,7 +221,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -230,7 +230,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -240,7 +240,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandString(100)
@@ -276,7 +276,7 @@ func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore)
 
 func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandString(100)
@@ -326,7 +326,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 }
 func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessGroup
+	var v awstypes.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandString(100)
@@ -350,9 +350,9 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -382,7 +382,7 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 	})
 }
 
-func testAccCheckVerifiedAccessGroupExists(ctx context.Context, n string, v *types.VerifiedAccessGroup) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessGroupExists(ctx context.Context, n string, v *awstypes.VerifiedAccessGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -474,7 +474,9 @@ resource "aws_verifiedaccess_group" "test" {
 func testAccVerifiedAccessGroupConfig_kms(rName, policyDoc string) string {
 	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test_key" {
-  description = "KMS key for Verified Access Group test"
+  description             = "KMS key for Verified Access Group test"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_verifiedaccess_group" "test" {

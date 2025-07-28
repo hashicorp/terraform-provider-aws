@@ -2,9 +2,9 @@
     "artifact_type": "RESOURCE",
     "typeName": "ExampleCompany::ExampleService::ExampleResource",
     "language": "go",
-    "runtime": "go1.x",
-    "entrypoint": "handler",
-    "testEntrypoint": "handler",
+    "runtime": "provided.al2",
+    "entrypoint": "bootstrap",
+    "testEntrypoint": "bootstrap",
     "settings": {
         "version": false,
         "subparser_name": null,

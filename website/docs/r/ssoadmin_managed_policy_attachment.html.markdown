@@ -49,7 +49,7 @@ resource "aws_identitystore_group" "example" {
   description       = "Admin Group"
 }
 
-resource "aws_ssoadmin_account_assignment" "account_assignment" {
+resource "aws_ssoadmin_account_assignment" "example" {
   instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 
@@ -76,6 +76,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `managed_policy_arn` - (Required, Forces new resource) The IAM managed policy Amazon Resource Name (ARN) to be attached to the Permission Set.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.

@@ -42,7 +42,6 @@ func TestSmithyJSONTypeValueFromTerraform(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -83,7 +82,6 @@ func TestSmithyJSONValidateAttribute(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -108,7 +106,7 @@ func newTestJSONDocument(v any) smithyjson.JSONStringer {
 	return &testJSONDocument{Value: v}
 }
 
-func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
+func (m *testJSONDocument) UnmarshalSmithyDocument(v any) error {
 	data, err := json.Marshal(m.Value)
 	if err != nil {
 		return err
@@ -155,7 +153,6 @@ func TestSmithyJSONValueInterface(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `functionArn` - (Required) ARN of the Lambda Function, omitting any version or alias qualifier.
 * `instanceId` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 
-<!-- cache-key: cdktf-0.20.1 input-c1d2d9bab41d5c50f6cd1ef56d9cd79787374ce4ee8749c6691de4b6f052c798 -->
+<!-- cache-key: cdktf-0.20.8 input-9328beb442b82fbb698c32ac7509006da3c738dc313e2f5bca071af0d6c47788 -->

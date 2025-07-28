@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_static_ip")
+// @SDKResource("aws_lightsail_static_ip", name="Static IP")
 func ResourceStaticIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStaticIPCreate,
@@ -47,7 +47,7 @@ func ResourceStaticIP() *schema.Resource {
 	}
 }
 
-func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
@@ -65,7 +65,7 @@ func resourceStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceStaticIPRead(ctx, d, meta)...)
 }
 
-func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
@@ -90,7 +90,7 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 

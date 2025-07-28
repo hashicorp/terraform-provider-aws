@@ -85,6 +85,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identityPoolId` (Required) - An identity pool ID.
 * `identityProviderName` (Required) - The name of the identity provider.
 * `principalTags`: (Optional: []) - String to string map of variables.
@@ -126,4 +127,4 @@ Using `terraform import`, import Cognito Identity Pool Roles Attachment using th
 % terraform import aws_cognito_identity_pool_provider_principal_tag.example us-west-2_abc123:CorpAD
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d4f777a31b91b31ab50e67859396a09149b958fe813bebf15e96c5dcc295d8be -->
+<!-- cache-key: cdktf-0.20.8 input-f750e8323abc1755534a9b4e98c05e6e56caf580bab5eca4d5d662e1d5f07a79 -->

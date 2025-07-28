@@ -35,7 +35,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", ""),
 				),
@@ -67,7 +67,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, ""),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
 				),
@@ -104,17 +104,15 @@ func testAccCheckStatementExists(ctx context.Context, n string, v *redshiftdata.
 }
 
 func testAccStatementConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
 
 resource "aws_redshiftdata_statement" "test" {
@@ -123,7 +121,7 @@ resource "aws_redshiftdata_statement" "test" {
   db_user            = aws_redshift_cluster.test.master_username
   sql                = "CREATE GROUP group_name;"
 }
-`, rName))
+`, rName)
 }
 
 func testAccStatementConfig_workgroup(rName string) string {

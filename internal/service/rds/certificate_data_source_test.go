@@ -62,6 +62,32 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 	})
 }
 
+func TestAccRDSCertificateDataSource_defaultForNewLaunches(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_defaultForNewLaunches(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
+					resource.TestCheckResourceAttr(dataSourceName, "customer_override", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexache.MustCompile(`^[0-9a-f]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexache.MustCompile(acctest.RFC3339RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexache.MustCompile(acctest.RFC3339RegexPattern)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCertificatePreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
@@ -96,4 +122,11 @@ data "aws_rds_certificate" "test" {
   latest_valid_till = true
 }
 `
+}
+
+func testAccCertificateDataSourceConfig_defaultForNewLaunches() string {
+	return `
+data "aws_rds_certificate" "test" {
+  default_for_new_launches = true
+}`
 }

@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter_in_arns` - (Optional) A list of ARNs for resources the path must traverse.
 * `wait_for_completion` - (Optional) If enabled, the resource will wait for the Network Insights Analysis status to change to `succeeded` or `failed`. Setting this to `false` will skip the process. Default: `true`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -96,4 +97,4 @@ Using `terraform import`, import Network Insights Analyzes using the `id`. For e
 % terraform import aws_ec2_network_insights_analysis.test nia-0462085c957f11a55
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3063c975278b92355095dba4f28ceb3bf6d912cc122c65aa893f7f35c8cbcee9 -->
+<!-- cache-key: cdktf-0.20.8 input-9eaa122c8ad17db4f96d8da9b19ff0f3e65da17fff79556053203ed13b0aac1f -->

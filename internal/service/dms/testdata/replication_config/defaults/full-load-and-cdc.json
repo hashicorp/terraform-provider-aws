@@ -81,7 +81,11 @@
       }
     ],
     "CloudWatchLogGroup": null,
-    "CloudWatchLogStream": null
+    "CloudWatchLogStream": null,
+    "LogConfiguration": {
+      "EnableTraceOnError": false,
+      "TraceOnErrorMb": 10
+    }
   },
   "StreamBufferSettings": {
     "StreamBufferCount": 3,
@@ -170,7 +174,8 @@
     "MinTransactionSize": 1000,
     "MemoryKeepTime": 60,
     "BatchApplyMemoryLimit": 500,
-    "MemoryLimitTotal": 1024
+    "MemoryLimitTotal": 1024,
+    "RecoveryTimeout": -1
   },
   "ChangeProcessingDdlHandlingPolicy": {
     "HandleSourceTableDropped": true,

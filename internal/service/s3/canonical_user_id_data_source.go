@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_canonical_user_id", name="Canonical User ID")
+// @Region(global=true)
 func dataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCanonicalUserIDRead,
@@ -29,7 +30,7 @@ func dataSourceCanonicalUserID() *schema.Resource {
 	}
 }
 
-func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 

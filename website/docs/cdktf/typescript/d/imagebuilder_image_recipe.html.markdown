@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image recipe.
 
 ## Attribute Reference
@@ -73,4 +74,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the image recipe.
 * `workingDirectory` - Working directory used during build and test workflows.
 
-<!-- cache-key: cdktf-0.20.1 input-03811fbdc954ff54a22086b82658d8b2b187a94c5c0090a064a40b03c615a004 -->
+<!-- cache-key: cdktf-0.20.8 input-5e717e3d5766f2e85f7b0bbf188763b35af97a1fa63fa15d0c53963d2194d6c1 -->

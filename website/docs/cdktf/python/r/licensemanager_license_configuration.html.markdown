@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the license configuration.
 * `description` - (Optional) Description of the license configuration.
 * `license_count` - (Optional) Number of licenses managed by the license configuration.
@@ -99,4 +100,4 @@ Using `terraform import`, import license configurations using the `id`. For exam
 % terraform import aws_licensemanager_license_configuration.example arn:aws:license-manager:eu-west-1:123456789012:license-configuration:lic-0123456789abcdef0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a8f27111f7375c06f96dc77659a24d2efcdd9bfe181e061904d734084d24650 -->
+<!-- cache-key: cdktf-0.20.8 input-4fde306ee7861f6607ddd2108c27bd24f069193d7f72ab9c92a64bf8dfc622a0 -->

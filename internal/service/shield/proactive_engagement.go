@@ -27,18 +27,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Proactive Engagement")
+// @FrameworkResource("aws_shield_proactive_engagement", name="Proactive Engagement")
 func newProactiveEngagementResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &proactiveEngagementResource{}, nil
 }
 
 type proactiveEngagementResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[proactiveEngagementResourceModel]
 	framework.WithImportByID
-}
-
-func (r *proactiveEngagementResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_shield_proactive_engagement"
 }
 
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -109,7 +105,7 @@ func (r *proactiveEngagementResource) Create(ctx context.Context, request resour
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(updateEmergencyContactSettings(ctx, conn, &data)...)
 	if response.Diagnostics.HasError() {
@@ -158,7 +154,7 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust[emergencyContactModel](ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
+	data.EmergencyContactList = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, tfslices.ApplyToAll(emergencyContacts, func(apiObject awstypes.EmergencyContact) emergencyContactModel {
 		return emergencyContactModel{
 			ContactNotes: fwflex.StringToFramework(ctx, apiObject.ContactNotes),
 			EmailAddress: fwflex.StringToFramework(ctx, apiObject.EmailAddress),

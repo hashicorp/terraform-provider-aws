@@ -55,7 +55,7 @@ func resourceWebACLAssociation() *schema.Resource {
 	}
 }
 
-func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
@@ -67,7 +67,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 		WebACLId:    aws.String(webACLID),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
 		return conn.AssociateWebACL(ctx, input)
 	})
 
@@ -80,7 +80,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
@@ -116,9 +116,10 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DisassociateWebACL(ctx, &wafregional.DisassociateWebACLInput{
+	input := wafregional.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
-	})
+	}
+	_, err = conn.DisassociateWebACL(ctx, &input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags

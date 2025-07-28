@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the scheduling policy.
 
 ## Attribute Reference
@@ -59,4 +60,4 @@ A `shareDistribution` block supports the following arguments:
 * `shareIdentifier` - Fair share identifier or fair share identifier prefix. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 * `weightFactor` - Weight factor for the fair share identifier. For more information, see [ShareAttributes](https://docs.aws.amazon.com/batch/latest/APIReference/API_ShareAttributes.html).
 
-<!-- cache-key: cdktf-0.20.1 input-a3c940bd9dab02eb61feff7643ca700cbd6562b5e25eb6379d0c7a0bc4618bc4 -->
+<!-- cache-key: cdktf-0.20.8 input-75d22bbd135a9bfe1d29f666df0510a35181101a9d04918250e204f0206dd703 -->

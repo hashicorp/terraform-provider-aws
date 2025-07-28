@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `securityGroupIds` - (Required) Security group IDs for the VPC Link.
 * `subnetIds` - (Required) Subnet IDs for the VPC Link.
@@ -87,4 +88,4 @@ Using `terraform import`, import `aws_apigatewayv2_vpc_link` using the VPC Link 
 % terraform import aws_apigatewayv2_vpc_link.example aabbccddee
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7f7266061a30dbdd15dacececebef105a6b52be6446a7f4871237c0ef1b7c4b6 -->
+<!-- cache-key: cdktf-0.20.8 input-9660a1aa15cd8df3047037965e7c929e11017be9b70962c4c49316592e1af354 -->

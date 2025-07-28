@@ -44,12 +44,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_shield_subscription.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import Shield Subscription using the `id`. For example:
 
 ```console
-% terraform import aws_shield_subscription.example 012345678901
+% terraform import aws_shield_subscription.example 123456789012
 ```

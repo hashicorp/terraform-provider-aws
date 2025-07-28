@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,7 +17,7 @@ import (
 
 func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster_iam_roles.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -31,7 +31,7 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
 			{
@@ -43,14 +43,14 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 				Config: testAccClusterIAMRolesConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 
 func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -82,7 +82,7 @@ func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 }
 
 func testAccClusterIAMRolesConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
   path = "/"
@@ -132,17 +132,15 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterIAMRolesConfig_basic(rName string) string {

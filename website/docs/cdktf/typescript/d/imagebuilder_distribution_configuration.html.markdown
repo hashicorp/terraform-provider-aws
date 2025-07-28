@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the distribution configuration.
 
 ## Attribute Reference
@@ -78,7 +81,16 @@ This data source exports the following attributes in addition to the arguments a
         * `accountId` - The account ID that this configuration applies to.
     * `licenseConfigurationArns` - Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
     * `region` - AWS Region of distribution.
+    * `s3ExportConfiguration` - Nested list of S3 export configuration.
+        * `diskImageFormat` - The disk image format of the exported image (`RAW`, `VHD`, or `VMDK`)
+        * `roleName` - The name of the IAM role to use for exporting.
+        * `s3Bucket` - The name of the S3 bucket to store the exported image in.
+        * `s3Prefix` - The prefix for the exported image.
+    * `ssmParameterConfiguration` - Nested list of SSM parameter configuration.
+        * `parameterName` - Name of the SSM parameter used to store the AMI ID after distribution.
+        * `amiAccountId` - The AWS account ID that own the parameter in the given region.
+        * `dataType` - The data type of the SSM parameter.
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.20.1 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->
+<!-- cache-key: cdktf-0.20.8 input-98663c9267023c859ae8c9b1265078e7dfdc57e80a0570154cfe38bc01eb9ee4 -->

@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Optional) The VPC ID to create in.
 * `availability_zone` - (Optional) The Availability Zone for the virtual private gateway.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -76,4 +77,4 @@ Using `terraform import`, import VPN Gateways using the VPN gateway `id`. For ex
 % terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-23251df1f50c37a9ee6f1698ee1bc52e7ae914120d59db5552c6f4fc31ca25f4 -->
+<!-- cache-key: cdktf-0.20.8 input-5f5fae104895362071f7c4ccaeb8ba0e791c75320643b10c34383804d3626d90 -->

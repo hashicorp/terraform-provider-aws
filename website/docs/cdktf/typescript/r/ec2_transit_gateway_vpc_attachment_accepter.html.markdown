@@ -51,6 +51,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transitGatewayAttachmentId` - (Required) The ID of the EC2 Transit Gateway Attachment to manage.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the VPC Attachment should be associated with the EC2 Transit Gateway association default route table. Default value: `true`.
 * `transitGatewayDefaultRouteTablePropagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. Default value: `true`.
@@ -64,6 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `applianceModeSupport` - Whether Appliance Mode support is enabled. Valid values: `disable`, `enable`.
 * `dnsSupport` - Whether DNS support is enabled. Valid values: `disable`, `enable`.
+* `securityGroupReferencingSupport` - Whether Security Group Referencing Support is enabled. Valid values: `disable`, `enable`.
 * `ipv6Support` - Whether IPv6 support is enabled. Valid values: `disable`, `enable`.
 * `subnetIds` - Identifiers of EC2 Subnets.
 * `transitGatewayId` - Identifier of EC2 Transit Gateway.
@@ -102,4 +104,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_vpc_attachment_accepte
 % terraform import aws_ec2_transit_gateway_vpc_attachment_accepter.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ecbf6dbf5eb02fc6c50aa5f135ccaddf1f97a389191703614a66b382e746bf66 -->
+<!-- cache-key: cdktf-0.20.8 input-bddf49cd1a12d49a345f5bc5ac1fb83a1b08add8b4360494409f70edf0ab2cfa -->

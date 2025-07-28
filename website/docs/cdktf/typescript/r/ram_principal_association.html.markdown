@@ -88,6 +88,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
 * `resourceShareArn` - (Required) The Amazon Resource Name (ARN) of the resource share.
 
@@ -129,4 +130,4 @@ Using `terraform import`, import RAM Principal Associations using their Resource
 % terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-623c2b071e2dcf8be643331968c3fa3f7507a8b07a6370bcf13bd342be258453 -->
+<!-- cache-key: cdktf-0.20.8 input-c739528be72edcc93340342f92231c96dd2db9d74becbb8b9d8ef035fc158cc9 -->

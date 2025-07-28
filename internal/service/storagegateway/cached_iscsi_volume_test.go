@@ -94,17 +94,17 @@ func TestAccStorageGatewayCachediSCSIVolume_basic(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-.+$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "5368709120"),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", acctest.CtFalse),
 				),
@@ -164,8 +164,8 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -178,8 +178,8 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -188,8 +188,8 @@ func TestAccStorageGatewayCachediSCSIVolume_tags(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -213,17 +213,17 @@ func TestAccStorageGatewayCachediSCSIVolume_snapshotID(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "chap_enabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "lun_number", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "lun_number", "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexache.MustCompile(`^\d+$`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrSnapshotID, regexache.MustCompile(`^snap-.+$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-.+$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "5368709120"),
 				),
 			},
@@ -253,16 +253,16 @@ func TestAccStorageGatewayCachediSCSIVolume_sourceVolumeARN(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_sourceARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &cachedIscsiVolume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "gateway_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)),
 					resource.TestMatchResourceAttr(resourceName, "network_interface_port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "source_volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrTargetARN, "storagegateway", regexache.MustCompile(fmt.Sprintf(`gateway/sgw-.+/target/iqn.1997-05.com.amazon:%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "target_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "volume_id", regexache.MustCompile(`^vol-.+$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "volume_arn", "storagegateway", regexache.MustCompile(`gateway/sgw-.+/volume/vol-.`)),
 					resource.TestCheckResourceAttr(resourceName, "volume_size_in_bytes", "1073741824"),
 				),
 			},
@@ -347,7 +347,7 @@ func testAccCheckCachediSCSIVolumeDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCachediSCSIVolumeBaseConfig(rName string) string {
+func testAccCachediSCSIVolumeConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		testAccGatewayConfig_typeCached(rName),
 		fmt.Sprintf(`
@@ -392,7 +392,7 @@ resource "aws_storagegateway_cache" "test" {
 
 func testAccCachediSCSIVolumeConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCachediSCSIVolumeBaseConfig(rName),
+		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
   gateway_arn          = aws_storagegateway_cache.test.gateway_arn
@@ -404,10 +404,15 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 }
 
 func testAccCachediSCSIVolumeConfig_kmsEncrypted(rName string) string {
-	return testAccCachediSCSIVolumeBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccCachediSCSIVolumeConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-  policy      = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
  {
    "Version": "2012-10-17",
    "Id": "kms-tf-1",
@@ -434,12 +439,12 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
   kms_encrypted        = true
   kms_key              = aws_kms_key.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccCachediSCSIVolumeConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccCachediSCSIVolumeBaseConfig(rName),
+		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
   gateway_arn          = aws_storagegateway_cache.test.gateway_arn
@@ -456,7 +461,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccCachediSCSIVolumeConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccCachediSCSIVolumeBaseConfig(rName),
+		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "test" {
   gateway_arn          = aws_storagegateway_cache.test.gateway_arn
@@ -474,7 +479,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccCachediSCSIVolumeConfig_snapshotID(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCachediSCSIVolumeBaseConfig(rName),
+		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "snapvolume" {
   availability_zone = aws_instance.test.availability_zone
@@ -506,7 +511,7 @@ resource "aws_storagegateway_cached_iscsi_volume" "test" {
 
 func testAccCachediSCSIVolumeConfig_sourceARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCachediSCSIVolumeBaseConfig(rName),
+		testAccCachediSCSIVolumeConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_storagegateway_cached_iscsi_volume" "source" {
   gateway_arn          = aws_storagegateway_cache.test.gateway_arn

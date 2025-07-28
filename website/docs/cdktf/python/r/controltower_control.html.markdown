@@ -39,7 +39,7 @@ class MyConvertedCode(TerraformStack):
         data_aws_organizations_organizational_units_example.override_logical_id("example")
         current = DataAwsRegion(self, "current")
         aws_controltower_control_example = ControltowerControl(self, "example_3",
-            control_identifier="arn:aws:controltower:${" + current.name + "}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK",
+            control_identifier="arn:aws:controltower:${" + current.region + "}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK",
             parameters=[ControltowerControlParameters(
                 key="AllowedRegions",
                 value=Token.as_string(Fn.jsonencode(["us-east-1"]))
@@ -54,13 +54,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This following arguments are required:
+The following arguments are required:
 
 * `control_identifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `target_identifier` - (Required) The ARN of the organizational unit.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
 
 ### Parameters
@@ -100,4 +101,4 @@ Using `terraform import`, import Control Tower Controls using their `organizatio
 % terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5f1cc75964a9bab80576b7038263cd126393a7d6d85ad5f6f57aad1a6e199a91 -->
+<!-- cache-key: cdktf-0.20.8 input-99f2dc97ffce7147a933e420c5b996d742c6d4b37110b3de09ef8f78c33f86a0 -->

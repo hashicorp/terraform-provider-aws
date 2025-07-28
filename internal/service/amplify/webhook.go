@@ -6,11 +6,9 @@ package amplify
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -63,11 +61,11 @@ func resourceWebhook() *schema.Resource {
 	}
 }
 
-func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	input := &amplify.CreateWebhookInput{
+	input := amplify.CreateWebhookInput{
 		AppId:      aws.String(d.Get("app_id").(string)),
 		BranchName: aws.String(d.Get("branch_name").(string)),
 	}
@@ -76,7 +74,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateWebhook(ctx, input)
+	output, err := conn.CreateWebhook(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Webhook: %s", err)
@@ -87,7 +85,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -103,22 +101,8 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Amplify Webhook (%s): %s", d.Id(), err)
 	}
 
-	webhookArn := aws.ToString(webhook.WebhookArn)
-	arn, err := arn.Parse(webhookArn)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	// arn:${Partition}:amplify:${Region}:${Account}:apps/${AppId}/webhooks/${WebhookId}
-	parts := strings.Split(arn.Resource, "/")
-
-	if len(parts) != 4 {
-		return sdkdiag.AppendErrorf(diags, "unexpected format for ARN resource (%s)", arn.Resource)
-	}
-
-	d.Set("app_id", parts[1])
-	d.Set(names.AttrARN, webhookArn)
+	d.Set("app_id", webhook.AppId)
+	d.Set(names.AttrARN, webhook.WebhookArn)
 	d.Set("branch_name", webhook.BranchName)
 	d.Set(names.AttrDescription, webhook.Description)
 	d.Set(names.AttrURL, webhook.WebhookUrl)
@@ -126,11 +110,11 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	input := &amplify.UpdateWebhookInput{
+	input := amplify.UpdateWebhookInput{
 		WebhookId: aws.String(d.Id()),
 	}
 
@@ -142,7 +126,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	_, err := conn.UpdateWebhook(ctx, input)
+	_, err := conn.UpdateWebhook(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Amplify Webhook (%s): %s", d.Id(), err)
@@ -151,14 +135,15 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Amplify Webhook: %s", d.Id())
-	_, err := conn.DeleteWebhook(ctx, &amplify.DeleteWebhookInput{
+	input := amplify.DeleteWebhookInput{
 		WebhookId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteWebhook(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -172,11 +157,11 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findWebhookByID(ctx context.Context, conn *amplify.Client, id string) (*types.Webhook, error) {
-	input := &amplify.GetWebhookInput{
+	input := amplify.GetWebhookInput{
 		WebhookId: aws.String(id),
 	}
 
-	output, err := conn.GetWebhook(ctx, input)
+	output, err := conn.GetWebhook(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{

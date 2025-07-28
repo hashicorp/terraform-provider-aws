@@ -228,6 +228,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `listenerArn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
@@ -257,7 +258,7 @@ Action Blocks (for `action`) support the following:
 
 Forward Blocks (for `forward`) support the following:
 
-* `targetGroup` - (Required) One or more target groups block.
+* `targetGroup` - (Required) One or more target group blocks.
 * `stickiness` - (Optional) The target group stickiness for the rule.
 
 Target Group Blocks (for `targetGroup`) supports the following:
@@ -390,4 +391,4 @@ Using `terraform import`, import rules using their ARN. For example:
 % terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbd617f4b3a03ad14c1f71b3912c93fb6d97fddee02da2aaec8e62c4c5648dcf -->
+<!-- cache-key: cdktf-0.20.8 input-7d7330af256e94a544fcc1db23c025e1dcea928d99e5941ce37ffd863032ef9d -->

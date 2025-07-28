@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workgroupName` - (Required) The name of the workgroup associated with the database.
 * `dbName` - (Optional) The name of the database to get temporary authorization to log on to.
 * `durationSeconds` - (Optional) The number of seconds until the returned temporary password expires. The minimum is 900 seconds, and the maximum is 3600 seconds.
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `dbUser` - A database user name that is authorized to log on to the database `dbName` using the password `dbPassword` . If the specified `dbUser` exists in the database, the new user name has the same database privileges as the user named in `dbUser` . By default, the user is added to PUBLIC. the user doesn't exist in the database.
 * `expiration` - Date and time the password in `dbPassword` expires.
 
-<!-- cache-key: cdktf-0.20.1 input-34a2bbcfc773ba4d89d7b456bbb05f8a84bac33ed819e86e9a4b29600cb82b59 -->
+<!-- cache-key: cdktf-0.20.8 input-47410480b624f732e0717e1f47164e0aac1b6badeecbed2c7d0d15eb5565bcec -->

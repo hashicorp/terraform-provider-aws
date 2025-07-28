@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logGroupName` - (Required) The name of the log group under which the log stream is to be created.
 * `policyDocument` - (Required) Specifies the data protection policy in JSON. Read more at [Data protection policy syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/mask-sensitive-log-data-start.html#mask-sensitive-log-data-policysyntax).
 
@@ -126,4 +127,4 @@ Using `terraform import`, import this resource using the `logGroupName`. For exa
 % terraform import aws_cloudwatch_log_data_protection_policy.example my-log-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5d0eb45bdebf63544029d216f663f1fa8e735ed48c73f741006440431b616666 -->
+<!-- cache-key: cdktf-0.20.8 input-1ca323a509dca7ed12574c22cf86a8d5e031d22a3778bf662273e0350f25bb50 -->

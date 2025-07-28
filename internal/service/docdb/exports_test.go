@@ -5,6 +5,13 @@ package docdb
 
 // Exports for use in tests only.
 var (
+	ResourceCluster               = resourceCluster
+	ResourceClusterInstance       = resourceClusterInstance
+	ResourceClusterParameterGroup = resourceClusterParameterGroup
+	ResourceEventSubscription     = resourceEventSubscription
+	ResourceGlobalCluster         = resourceGlobalCluster
+	ResourceSubnetGroup           = resourceSubnetGroup
+
 	FindDBClusterByID                 = findDBClusterByID
 	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
 	FindDBSubnetGroupByName           = findDBSubnetGroupByName

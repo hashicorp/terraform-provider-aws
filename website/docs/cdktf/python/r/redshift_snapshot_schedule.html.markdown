@@ -34,6 +34,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identifier` - (Optional, Forces new resource) The snapshot schedule identifier. If omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
 identifier beginning with the specified prefix. Conflicts with `identifier`.
@@ -74,4 +75,4 @@ Using `terraform import`, import Redshift Snapshot Schedule using the `identifie
 % terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0efaf47bc050c3417ad21dec274dd17ba88abe8c5b011ce8e99d3a0223fa2ffa -->
+<!-- cache-key: cdktf-0.20.8 input-cbfcbe9d650987e15d30a73204538668ccc2e494691b5c150fb75ff1253eb683 -->

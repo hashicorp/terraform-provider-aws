@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,10 +41,10 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					testAccCheckZoneExists(ctx, resourceName, &zone),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
-					resource.TestCheckResourceAttr(resourceName, "name_servers.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
 				),
 			},
 			{
@@ -256,7 +257,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag1key", "tag1value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1value"),
 				),
 			},
@@ -270,7 +271,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags2(zoneName, "tag1key", "tag1valueupdated", "tag2key", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1valueupdated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
@@ -279,7 +280,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag2key", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
 			},
@@ -305,7 +306,7 @@ func TestAccRoute53Zone_VPC_single(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName, &zone),
 				),
 			},
@@ -338,7 +339,7 @@ func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 				Config: testAccZoneConfig_vpcMultiple(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "2"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 					testAccCheckZoneAssociatesVPC(vpcResourceName2, &zone),
 				),
@@ -372,7 +373,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
 			},
@@ -380,7 +381,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcMultiple(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "2"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 					testAccCheckZoneAssociatesVPC(vpcResourceName2, &zone),
 				),
@@ -389,7 +390,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
 			},
@@ -419,12 +420,123 @@ func TestAccRoute53Zone_VPC_single_forceDestroy(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle_forceDestroy(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
 					testAccCheckZoneAssociatesVPC(vpcResourceName, &zone),
 					// Add >100 records to verify pagination works ok
 					testAccCreateRandomRecordsInZoneID(ctx, &zone, 100),
 					testAccCreateRandomRecordsInZoneID(ctx, &zone, 5),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_escapedCharacter(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// "a%b.<RandomDomainName>".
+				// Double escaped due to use of 'fmt.Sprintf'.
+				Config: testAccZoneConfig_basic("a\\\\044b." + domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "a\\044b."+domainName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_classlessDelegation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	// https://datatracker.ietf.org/doc/html/rfc2317.
+	zoneName := "1.0/25.2.0.192.in-addr.arpa"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_escapedSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName := "0/24." + acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_escapedSpace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	// double-escape is required for templating the tf resource
+	zoneName := "a\\\\040b." + acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -464,7 +576,7 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 		if recordsCount > 100 {
 			return fmt.Errorf("Route53 API only allows 100 record sets in a single batch")
 		}
-		for i := 0; i < recordsCount; i++ {
+		for range recordsCount {
 			changes = append(changes, awstypes.Change{
 				Action: awstypes.ChangeActionUpsert,
 				ResourceRecordSet: &awstypes.ResourceRecordSet{
@@ -491,8 +603,9 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 			return err
 		}
 
+		timeout := 30 * time.Minute
 		if output.ChangeInfo != nil {
-			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), timeout); err != nil {
 				return err
 			}
 		}

@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
 * `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
@@ -270,4 +271,4 @@ Using `terraform import`, import `aws_ec2_fleet` using the Fleet identifier. For
 % terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2399e131b0f1b32741890b257288577d57d9d69da2eb2b292e485bab8324656a -->
+<!-- cache-key: cdktf-0.20.8 input-cbfa2fc10c6e39a986b87b5b57746cf7b8c066763253d7faeab7362818db789a -->

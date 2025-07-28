@@ -7,18 +7,19 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type TemplateData struct {
-	Services []ServiceDatum
+	Services []serviceDatum
 }
 
-type ServiceDatum struct {
+type serviceDatum struct {
 	ProviderPackage   string
 	ProviderNameUpper string
 	SDKID             string
@@ -49,7 +50,7 @@ func main() {
 			continue
 		}
 
-		sd := ServiceDatum{
+		sd := serviceDatum{
 			ProviderPackage:   l.ProviderPackage(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			SDKID:             l.SDKID(),
@@ -58,13 +59,13 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.Slice(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortFunc(td.Services, func(a, b serviceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("consts", tmpl, td); err != nil {
+	if err := d.BufferTemplate("consts", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

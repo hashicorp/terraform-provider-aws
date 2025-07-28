@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,7 +98,6 @@ func ResourceKxScalingGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -108,7 +106,7 @@ const (
 	kxScalingGroupIDPartCount = 2
 )
 
-func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -148,7 +146,7 @@ func resourceKxScalingGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceKxScalingGroupRead(ctx, d, meta)...)
 }
 
-func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -181,13 +179,13 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceKxScalingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxScalingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	// Tags only.
 	return append(diags, resourceKxScalingGroupRead(ctx, d, meta)...)
 }
 
-func resourceKxScalingGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxScalingGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -277,7 +275,7 @@ func waitKxScalingGroupDeleted(ctx context.Context, conn *finspace.Client, id st
 }
 
 func statusKxScalingGroup(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := FindKxScalingGroupById(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil

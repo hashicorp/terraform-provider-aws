@@ -4,6 +4,7 @@
 package slices
 
 import (
+	"iter"
 	"slices"
 )
 
@@ -12,7 +13,7 @@ func Reverse[S ~[]E, E any](s S) S {
 	n := len(s)
 	v := S(make([]E, 0, n))
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		v = append(v, s[n-(i+1)])
 	}
 
@@ -57,6 +58,17 @@ func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2
 	return v, nil
 }
 
+// AppliedToEach returns an iterator that yields the slice elements transformed by the function `f`.
+func AppliedToEach[S ~[]E, E any, T any](s S, f func(E) T) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for _, v := range s {
+			if !yield(f(v)) {
+				return
+			}
+		}
+	}
+}
+
 // Values returns a new slice containing values from the pointers in each element of the original slice `s`.
 func Values[S ~[]*E, E any](s S) []E {
 	return ApplyToAll(s, func(e *E) E {
@@ -80,7 +92,7 @@ func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
 	return slices.Clip(v)
 }
 
-// All returns `true` if the filter function `f` retruns `true` for all items in slice `s`.
+// All returns `true` if the filter function `f` returns `true` for all items in slice `s`.
 func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	for _, e := range s {
 		if !f(e) {
@@ -90,31 +102,9 @@ func All[S ~[]E, E any](s S, f Predicate[E]) bool {
 	return true
 }
 
-// Any returns `true` if the filter function `f` retruns `true` for any item in slice `s`.
+// Any returns `true` if the filter function `f` returns `true` for any item in slice `s`.
 func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
-	for _, e := range s {
-		if f(e) {
-			return true
-		}
-	}
-	return false
-}
-
-// Chunks returns a slice of S, each of the specified size (or less).
-func Chunks[S ~[]E, E any](s S, size int) []S {
-	chunks := make([]S, 0)
-
-	for i := 0; i < len(s); i += size {
-		end := i + size
-
-		if end > len(s) {
-			end = len(s)
-		}
-
-		chunks = append(chunks, s[i:end])
-	}
-
-	return chunks
+	return slices.ContainsFunc(s, f)
 }
 
 // AppendUnique appends unique (not already in the slice) values to a slice.
@@ -122,11 +112,8 @@ func AppendUnique[S ~[]E, E comparable](s S, vs ...E) S {
 	for _, v := range vs {
 		var exists bool
 
-		for _, e := range s {
-			if e == v {
-				exists = true
-				break
-			}
+		if slices.Contains(s, v) {
+			exists = true
 		}
 
 		if !exists {
@@ -150,7 +137,7 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 }
 
 type signed interface {
-	~int | ~int32 | ~int64
+	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
 // Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
@@ -177,4 +164,14 @@ func Range[T signed](start, stop, step T) []T {
 	}
 
 	return v
+}
+
+type stringable interface {
+	~string | ~[]byte | ~[]rune
+}
+
+func Strings[S ~[]E, E stringable](s S) []string {
+	return ApplyToAll(s, func(e E) string {
+		return string(e)
+	})
 }

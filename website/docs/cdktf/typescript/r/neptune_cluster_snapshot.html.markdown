@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbClusterIdentifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `dbClusterSnapshotIdentifier` - (Required) The Identifier for the snapshot.
 
@@ -54,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kmsKeyId` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `licenseModel` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `sourceDbClusterSnapshotIdentifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storageEncrypted` - Specifies whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
 * `vpcId` - The VPC ID associated with the DB cluster snapshot.
@@ -97,4 +98,4 @@ Using `terraform import`, import `aws_neptune_cluster_snapshot` using the cluste
 % terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9b22118c6b5ba9d2b522df8534493a26e09fc274f5e840772d7cfddb43741365 -->
+<!-- cache-key: cdktf-0.20.8 input-3aa5420b74a29395f44564c9180fd469b952bd8401d2600089eea3e6d2b26740 -->

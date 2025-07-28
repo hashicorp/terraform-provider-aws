@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoUpdate` - (Optional) The option to specify whether you want to apply all the future additions and corrections automatically to the dataview, when you ingest new changesets. The default value is false.
 * `availabilityZoneId` - (Optional) The identifier of the availability zones. If attaching a volume, the volume must be in the same availability zone as the dataview that you are attaching to.
 * `changesetId` - (Optional) A unique identifier of the changeset of the database that you want to use to ingest data.
@@ -135,4 +136,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_dataview.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-database,my-tf-kx-dataview
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a3271854ee031025c68a96f6e5cacafb6953e695fa8365f00a76a6faf3ac92a -->
+<!-- cache-key: cdktf-0.20.8 input-13a58da464ec4731f0d923f073273acf5dccd6c2e823b1889d9b5b4562f00750 -->

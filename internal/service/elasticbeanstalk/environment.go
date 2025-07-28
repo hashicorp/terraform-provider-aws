@@ -5,11 +5,11 @@ package elasticbeanstalk
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -30,9 +30,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,12 +77,12 @@ const (
 )
 
 var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
-func ResourceEnvironment() *schema.Resource {
+func resourceEnvironment() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,
@@ -94,132 +94,132 @@ func ResourceEnvironment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		SchemaVersion: 1,
 		MigrateState:  EnvironmentMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"all_settings": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     settingSchema(),
-				Set:      optionSettingValueHash,
-			},
-			"application": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"autoscaling_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"cname": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cname_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"endpoint_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"launch_configurations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"platform_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"solution_stack_name", "template_name"},
-			},
-			"poll_interval": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd // these are the limits set by AWS
-			},
-			"queues": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     settingSchema(),
-				Set:      optionSettingValueHash,
-			},
-			"solution_stack_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"platform_arn", "template_name"},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
-			},
-			"tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      environmentTierWebServer,
-				ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"version_label": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"wait_for_ready_timeout": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "20m",
-				ValidateDiagFunc: sdktypes.ValidateDuration,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"all_settings": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     settingSchema(),
+					Set:      hashSettingsValue,
+				},
+				"application": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"autoscaling_groups": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"cname": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"cname_prefix": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"endpoint_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"instances": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"launch_configurations": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"load_balancers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"platform_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"solution_stack_name", "template_name"},
+				},
+				"poll_interval": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:mnd // these are the limits set by AWS
+				},
+				"queues": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"setting": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     settingSchema(),
+					Set:      hashSettingsValue,
+				},
+				"solution_stack_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"platform_arn", "template_name"},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"solution_stack_name", "platform_arn"},
+				},
+				"tier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      environmentTierWebServer,
+					ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"version_label": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"wait_for_ready_timeout": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          "20m",
+					ValidateDiagFunc: sdktypes.ValidateDuration,
+				},
+			}
 		},
 	}
 }
 
-func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
@@ -227,7 +227,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &elasticbeanstalk.CreateEnvironmentInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
-		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -237,6 +236,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := d.Get("platform_arn"); v.(string) != "" {
 		input.PlatformArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		input.OptionSettings = expandConfigurationOptionSettings(v.(*schema.Set).List())
 	}
 
 	if v := d.Get("solution_stack_name"); v.(string) != "" {
@@ -252,7 +255,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	tier := d.Get("tier").(string)
-	var tierType string
 
 	if v := d.Get("cname_prefix"); v.(string) != "" {
 		if tier != environmentTierWebServer {
@@ -262,6 +264,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CNAMEPrefix = aws.String(v.(string))
 	}
 
+	var tierType string
 	switch tier {
 	case environmentTierWebServer:
 		tierType = environmentTierTypeStandard
@@ -285,7 +288,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
@@ -307,11 +310,11 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	env, err := FindEnvironmentByID(ctx, conn, d.Id())
+	env, err := findEnvironmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
@@ -333,16 +336,19 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	applicationName := aws.ToString(env.ApplicationName)
 	environmentName := aws.ToString(env.EnvironmentName)
-	configurationSettings, err := findConfigurationSettingsByTwoPartKey(ctx, conn, applicationName, environmentName)
+	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: aws.String(applicationName),
+		EnvironmentName: aws.String(environmentName),
+	}
+	configurationSettings, err := findConfigurationSettings(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
 	}
 
 	d.Set("application", applicationName)
-	arn := aws.ToString(env.EnvironmentArn)
-	d.Set(names.AttrARN, arn)
-	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
+	d.Set(names.AttrARN, env.EnvironmentArn)
+	if err := d.Set("autoscaling_groups", flattenAutoScalingGroups(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting autoscaling_groups: %s", err)
 	}
 	cname := aws.ToString(env.CNAME)
@@ -381,68 +387,46 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("version_label", env.VersionLabel)
 
-	allSettings := &schema.Set{F: optionSettingValueHash}
-	for _, optionSetting := range configurationSettings.OptionSettings {
-		m := map[string]interface{}{}
-
-		if optionSetting.Namespace != nil {
-			m[names.AttrNamespace] = aws.ToString(optionSetting.Namespace)
-		}
-
-		if optionSetting.OptionName != nil {
-			m[names.AttrName] = aws.ToString(optionSetting.OptionName)
-		}
-
-		if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
-			m["resource"] = aws.ToString(optionSetting.ResourceName)
-		}
-
-		if value := aws.ToString(optionSetting.Value); value != "" {
-			switch aws.ToString(optionSetting.OptionName) {
-			case "SecurityGroups":
-				m[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
-			case "Subnets", "ELBSubnets":
-				m[names.AttrValue] = sortValues(value)
-			default:
-				m[names.AttrValue] = value
-			}
-		}
-
-		allSettings.Add(m)
+	var configuredSettings []any
+	if v, ok := d.GetOk("setting"); ok && v.(*schema.Set).Len() > 0 {
+		configuredSettings = v.(*schema.Set).List()
 	}
-	settings := d.Get("setting").(*schema.Set)
+	apiSettings := flattenConfigurationOptionSettings(ctx, meta, configurationSettings.OptionSettings)
+	var settings []any
 
-	// perform the set operation with only name/namespace as keys, excluding value
-	// this is so we override things in the settings resource data key with updated values
-	// from the api.  we skip values we didn't know about before because there are so many
-	// defaults set by the eb api that we would delete many useful defaults.
-	//
-	// there is likely a better way to do this
-	allSettingsKeySet := schema.NewSet(optionSettingKeyHash, allSettings.List())
-	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
-	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
+	for _, apiSetting := range apiSettings {
+		tfMap := apiSetting.(map[string]any)
+		isMatch := func(v any) bool {
+			m := v.(map[string]any)
 
-	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
+			return m[names.AttrNamespace].(string) == tfMap[names.AttrNamespace].(string) &&
+				m[names.AttrName].(string) == tfMap[names.AttrName].(string) &&
+				m["resource"].(string) == tfMap["resource"].(string)
+		}
+		if slices.ContainsFunc(configuredSettings, isMatch) {
+			settings = append(settings, apiSetting)
+		}
+	}
 
-	if err := d.Set("all_settings", allSettings.List()); err != nil {
+	if err := d.Set("all_settings", apiSettings); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting all_settings: %s", err)
 	}
 
-	if err := d.Set("setting", updatedSettings.List()); err != nil {
+	if err := d.Set("setting", settings); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
 	return diags
 }
 
-func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
@@ -476,18 +460,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("setting") {
 			o, n := d.GetChange("setting")
-			if o == nil {
-				o = &schema.Set{F: optionSettingValueHash}
-			}
-			if n == nil {
-				n = &schema.Set{F: optionSettingValueHash}
-			}
-
-			os := o.(*schema.Set)
-			ns := n.(*schema.Set)
-
-			rm := extractOptionSettings(os.Difference(ns))
-			add := extractOptionSettings(ns.Difference(os))
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			add, del := expandConfigurationOptionSettings(ns.Difference(os).List()), expandConfigurationOptionSettings(os.Difference(ns).List())
 
 			// Additions and removals of options are done in a single API call, so we
 			// can't do our normal "remove these" and then later "add these", re-adding
@@ -499,7 +473,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			// found in `rm` but not in `add`
 			var remove []awstypes.ConfigurationOptionSetting
 			if len(add) > 0 {
-				for _, r := range rm {
+				for _, r := range del {
 					var update = false
 					for _, a := range add {
 						// ResourceNames are optional. Some defaults come with it, some do
@@ -513,9 +487,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 								continue
 							}
 						}
-						if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) &&
-							aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
-							log.Printf("[DEBUG] Updating Beanstalk setting (%s::%s) \"%s\" => \"%s\"", *a.Namespace, *a.OptionName, *r.Value, *a.Value)
+						if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) && aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
 							update = true
 							break
 						}
@@ -526,13 +498,13 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 					}
 				}
 			} else {
-				remove = rm
+				remove = del
 			}
 
-			for _, elem := range remove {
+			for _, v := range remove {
 				input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
-					Namespace:  elem.Namespace,
-					OptionName: elem.OptionName,
+					Namespace:  v.Namespace,
+					OptionName: v.OptionName,
 				})
 			}
 
@@ -575,14 +547,14 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
@@ -606,7 +578,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 		TerminateResources: aws.Bool(true),
 	})
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Environment found") {
 		return diags
 	}
 
@@ -621,28 +593,17 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id string) (*awstypes.EnvironmentDescription, error) {
+func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id string) (*awstypes.EnvironmentDescription, error) {
 	input := &elasticbeanstalk.DescribeEnvironmentsInput{
 		EnvironmentIds: []string{id},
 	}
-
-	output, err := conn.DescribeEnvironments(ctx, input)
+	output, err := findEnvironment(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Environments) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Environments); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	environment := output.Environments[0]
-
-	if status := environment.Status; status == awstypes.EnvironmentStatusTerminated {
+	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
 		return nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
@@ -650,13 +611,43 @@ func FindEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 	}
 
 	// Eventual consistency check.
-	if aws.ToString(environment.EnvironmentId) != id {
+	if aws.ToString(output.EnvironmentId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	return &environment, nil
+	return output, nil
+}
+
+func findEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) (*awstypes.EnvironmentDescription, error) {
+	output, err := findEnvironments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEnvironments(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEnvironmentsInput) ([]awstypes.EnvironmentDescription, error) {
+	var output []awstypes.EnvironmentDescription
+
+	err := describeEnvironmentsPages(ctx, conn, input, func(page *elasticbeanstalk.DescribeEnvironmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Environments...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Client, id string, since time.Time) error {
@@ -665,21 +656,10 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Clien
 		Severity:      awstypes.EventSeverityError,
 		StartTime:     aws.Time(since),
 	}
-	var output []awstypes.EventDescription
+	output, err := findEvents(ctx, conn, input)
 
-	pages := elasticbeanstalk.NewDescribeEventsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return err
-		}
-
-		output = append(output, page.Events...)
-	}
-
-	if len(output) == 0 {
-		return nil
+	if err != nil {
+		return err
 	}
 
 	slices.SortFunc(output, func(a, b awstypes.EventDescription) int {
@@ -695,38 +675,32 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Clien
 	var errs []error
 
 	for _, v := range output {
-		errs = append(errs, fmt.Errorf("%s: %s", v.EventDate, aws.ToString(v.Message)))
+		errs = append(errs, fmt.Errorf("%s: %s", aws.ToTime(v.EventDate), aws.ToString(v.Message)))
 	}
 
 	return errors.Join(errs...)
 }
 
-func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, environmentName string) (*awstypes.ConfigurationSettingsDescription, error) {
-	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(applicationName),
-		EnvironmentName: aws.String(environmentName),
+func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeEventsInput) ([]awstypes.EventDescription, error) {
+	var output []awstypes.EventDescription
+
+	pages := elasticbeanstalk.NewDescribeEventsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Events...)
 	}
 
-	output, err := conn.DescribeConfigurationSettings(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.ConfigurationSettings) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.ConfigurationSettings); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.ConfigurationSettings[0], nil
+	return output, nil
 }
 
 func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindEnvironmentByID(ctx, conn, id)
+	return func() (any, string, error) {
+		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -780,62 +754,95 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 	return nil, err
 }
 
-// we use the following two functions to allow us to split out defaults
-// as they become overridden from within the template
-func optionSettingValueHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd[names.AttrNamespace].(string)
-	optionName := rd[names.AttrName].(string)
+func hashSettingsValue(v any) int {
+	tfMap := v.(map[string]any)
+	var str strings.Builder
+
+	str.WriteString(tfMap[names.AttrNamespace].(string))
+	str.WriteRune(':')
+	str.WriteString(tfMap[names.AttrName].(string))
 	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
+	if v, ok := tfMap["resource"].(string); ok {
 		resourceName = v
 	}
-	value, _ := rd[names.AttrValue].(string)
-	value, _ = structure.NormalizeJsonString(value)
-	hk := fmt.Sprintf("%s:%s%s=%s", namespace, optionName, resourceName, sortValues(value))
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingValueHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
-}
-
-func optionSettingKeyHash(v interface{}) int {
-	rd := v.(map[string]interface{})
-	namespace := rd[names.AttrNamespace].(string)
-	optionName := rd[names.AttrName].(string)
-	var resourceName string
-	if v, ok := rd["resource"].(string); ok {
-		resourceName = v
+	str.WriteString(resourceName)
+	str.WriteRune('=')
+	if value := tfMap[names.AttrValue].(string); json.Valid([]byte(value)) {
+		value, _ = structure.NormalizeJsonString(value)
+		str.WriteString(value)
+	} else {
+		values := strings.Split(value, ",")
+		slices.Sort(values)
+		str.WriteString(strings.Join(values, ","))
 	}
-	hk := fmt.Sprintf("%s:%s%s", namespace, optionName, resourceName)
-	log.Printf("[DEBUG] Elastic Beanstalk optionSettingKeyHash(%#v): %s: hk=%s,hc=%d", v, optionName, hk, create.StringHashcode(hk))
-	return create.StringHashcode(hk)
+
+	return create.StringHashcode(str.String())
 }
 
-func sortValues(v string) string {
-	values := strings.Split(v, ",")
-	sort.Strings(values)
-	return strings.Join(values, ",")
-}
+func expandConfigurationOptionSettings(tfList []any) []awstypes.ConfigurationOptionSetting {
+	apiObjects := []awstypes.ConfigurationOptionSetting{}
 
-func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting {
-	settings := []awstypes.ConfigurationOptionSetting{}
+	if tfList == nil {
+		return apiObjects
+	}
 
-	if s != nil {
-		for _, setting := range s.List() {
-			optionSetting := awstypes.ConfigurationOptionSetting{
-				Namespace:  aws.String(setting.(map[string]interface{})[names.AttrNamespace].(string)),
-				OptionName: aws.String(setting.(map[string]interface{})[names.AttrName].(string)),
-				Value:      aws.String(setting.(map[string]interface{})[names.AttrValue].(string)),
-			}
-			if aws.ToString(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" {
-				if v, ok := setting.(map[string]interface{})["resource"].(string); ok && v != "" {
-					optionSetting.ResourceName = aws.String(v)
-				}
-			}
-			settings = append(settings, optionSetting)
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.ConfigurationOptionSetting{
+			Namespace:  aws.String(tfMap[names.AttrNamespace].(string)),
+			OptionName: aws.String(tfMap[names.AttrName].(string)),
+			Value:      aws.String(tfMap[names.AttrValue].(string)),
 		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" {
+			if v, ok := tfMap["resource"].(string); ok && v != "" {
+				apiObject.ResourceName = aws.String(v)
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return settings
+	return apiObjects
+}
+
+func flattenConfigurationOptionSettings(ctx context.Context, meta any, apiObjects []awstypes.ConfigurationOptionSetting) []any {
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if apiObject.Namespace != nil {
+			tfMap[names.AttrNamespace] = aws.ToString(apiObject.Namespace)
+		}
+
+		if apiObject.OptionName != nil {
+			tfMap[names.AttrName] = aws.ToString(apiObject.OptionName)
+		}
+
+		if aws.ToString(apiObject.Namespace) == "aws:autoscaling:scheduledaction" && apiObject.ResourceName != nil {
+			tfMap["resource"] = aws.ToString(apiObject.ResourceName)
+		} else {
+			tfMap["resource"] = ""
+		}
+
+		if value := aws.ToString(apiObject.Value); value != "" {
+			switch aws.ToString(apiObject.OptionName) {
+			case "SecurityGroups":
+				tfMap[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
+			case "Subnets", "ELBSubnets":
+				values := strings.Split(value, ",")
+				slices.Sort(values)
+				tfMap[names.AttrValue] = strings.Join(values, ",")
+			default:
+				tfMap[names.AttrValue] = value
+			}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingValue string) string {
@@ -856,7 +863,43 @@ func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingVa
 		}
 	}
 
-	sort.Strings(legitGroups)
+	slices.Sort(legitGroups)
 
 	return strings.Join(legitGroups, ",")
+}
+
+func flattenAutoScalingGroups(apiObjects []awstypes.AutoScalingGroup) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.AutoScalingGroup) string {
+		return aws.ToString(v.Name)
+	})
+}
+
+func flattenLoadBalancers(apiObjects []awstypes.LoadBalancer) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.LoadBalancer) string {
+		return aws.ToString(v.Name)
+	})
+}
+
+func flattenInstances(apiObjects []awstypes.Instance) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Instance) string {
+		return aws.ToString(v.Id)
+	})
+}
+
+func flattenLaunchConfigurations(apiObjects []awstypes.LaunchConfiguration) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.LaunchConfiguration) string {
+		return aws.ToString(v.Name)
+	})
+}
+
+func flattenQueues(apiObjects []awstypes.Queue) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Queue) string {
+		return aws.ToString(v.URL)
+	})
+}
+
+func flattenTriggers(apiObjects []awstypes.Trigger) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Trigger) string {
+		return aws.ToString(v.Name)
+	})
 }

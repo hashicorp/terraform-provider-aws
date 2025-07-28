@@ -56,6 +56,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceCount` - (Optional) Number of instances to reserve. Default value is `1`.
 * `reservationId` - (Optional) Customer-specified identifier to track this reservation.
 * `tags` - (Optional) Map of tags to assign to the DB reservation. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -68,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Unique identifier for the reservation. same as `reservationId`.
 * `currencyCode` - Currency code for the reserved DB instance.
 * `duration` - Duration of the reservation in seconds.
-* `fixedPrice` – Fixed price charged for this reserved DB instance.
+* `fixedPrice` - Fixed price charged for this reserved DB instance.
 * `dbInstanceClass` - DB instance class for the reserved DB instance.
 * `leaseId` - Unique identifier for the lease associated with the reserved DB instance. Amazon Web Services Support might request the lease ID for an issue related to a reserved DB instance.
 * `multiAz` - Whether the reservation applies to Multi-AZ deployments.
@@ -120,4 +121,4 @@ Using `terraform import`, import RDS DB Instance Reservations using the `instanc
 % terraform import aws_rds_reserved_instance.reservation_instance CustomReservationID
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9dbbdcfda3d089826e7a92e8f50666a47a4fc86a9f471174038919028f7ff28a -->
+<!-- cache-key: cdktf-0.20.8 input-f481435c8f701d78db153a1b9dbdc18a1f04656d30d593ef9a82540043d9662c -->

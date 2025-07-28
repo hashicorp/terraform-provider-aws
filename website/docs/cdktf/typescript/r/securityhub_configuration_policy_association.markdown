@@ -84,6 +84,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policyId` - (Required) The universally unique identifier (UUID) of the configuration policy.
 * `targetId` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 
@@ -132,4 +133,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_configuration_policy_association.example_account_association 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-25377a44fda98bfdaaa528cbf1b8ef2a5407dd6d84d29b7ed90eaf7f13214fbe -->
+<!-- cache-key: cdktf-0.20.8 input-b7354cf2266626f50f63080d102d287f7de8e4484d79e5f32d95ca633906e30e -->

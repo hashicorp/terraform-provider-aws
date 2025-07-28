@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` argument
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `kafka_settings.sasl_mechanism` attribute
+```

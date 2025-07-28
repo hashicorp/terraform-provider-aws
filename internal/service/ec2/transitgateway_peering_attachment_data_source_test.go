@@ -32,6 +32,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *test
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterSameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, "peer_transit_gateway_id"),
@@ -65,6 +66,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t 
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterDifferentAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(transitGatewayResourceName, names.AttrOwnerID, dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "peer_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, names.AttrTransitGatewayID),
@@ -95,6 +97,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_idSameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, "peer_transit_gateway_id"),
@@ -127,6 +130,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *tes
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_iDDifferentAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(transitGatewayResourceName, names.AttrOwnerID, dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "peer_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, names.AttrTransitGatewayID),
@@ -157,6 +161,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T, semapho
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_tagsSameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, "peer_transit_gateway_id"),

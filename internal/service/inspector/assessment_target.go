@@ -21,16 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector_assessment_target")
+// @SDKResource("aws_inspector_assessment_target", name="Assessment Target")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTarget")
+// @Testing(preIdentityVersion="v6.4.0")
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTargetCreate,
 		ReadWithoutTimeout:   resourceAssessmentTargetRead,
 		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -54,7 +54,7 @@ const (
 	ResNameAssessmentTarget = "Assessment Target"
 )
 
-func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -76,7 +76,7 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
@@ -119,7 +119,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 	input := &inspector.DeleteAssessmentTargetInput{

@@ -178,6 +178,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `approval_rule` - (Optional) Set of rules used to include patches in the baseline. Up to 10 approval rules can be specified. See [`approval_rule`](#approval_rule-block) below.
 * `approved_patches_compliance_level` - (Optional) Compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `approved_patches_enable_non_security` - (Optional) Whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
@@ -194,7 +195,7 @@ The following arguments are optional:
 
 The `approval_rule` block supports:
 
-* `approve_after_days` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 100. Conflicts with `approve_until_date`.
+* `approve_after_days` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 360. Conflicts with `approve_until_date`.
 * `approve_until_date` - (Optional) Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approve_after_days`
 * `compliance_level` - (Optional) Compliance level for patches approved by this rule. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enable_non_security` - (Optional) Boolean enabling the application of non-security updates. The default value is `false`. Valid for Linux instances only.
@@ -242,4 +243,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3403922bc06ff4f62f3ffe3bf7e9d76ae029bc21b0161947d37ec181e0694f39 -->
+<!-- cache-key: cdktf-0.20.8 input-963ef56b661a93b6e2c2321f1106477e8ce68ca8933175007241062410ac264b -->

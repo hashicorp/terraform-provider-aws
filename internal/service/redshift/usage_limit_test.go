@@ -39,7 +39,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
 					resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
 					resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -79,7 +79,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 				Config: testAccUsageLimitConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -91,7 +91,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 			{
 				Config: testAccUsageLimitConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -100,7 +100,7 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 				Config: testAccUsageLimitConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccRedshiftUsageLimit_disappears(t *testing.T) {
 
 func testAccCheckUsageLimitDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_usage_limit" {
@@ -167,7 +167,7 @@ func testAccCheckUsageLimitExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Snapshot Copy Grant ID (UsageLimitName) is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindUsageLimitByID(ctx, conn, rs.Primary.ID)
 

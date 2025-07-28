@@ -120,7 +120,7 @@ class MyConvertedCode extends TerraformStack {
       functionName: "mylambda",
       handler: "lambda.lambda_handler",
       role: role.arn,
-      runtime: "python3.7",
+      runtime: "python3.12",
       sourceCodeHash: Token.asString(Fn.filebase64sha256("lambda.zip")),
     });
     const method = new ApiGatewayMethod(this, "method", {
@@ -253,6 +253,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) ID of the associated REST API.
 * `resourceId` - (Required) API resource ID.
 * `httpMethod` - (Required) HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTION`, `ANY`)
@@ -267,7 +268,7 @@ This resource supports the following arguments:
 * `connectionId` - (Optional) ID of the VpcLink used for the integration. **Required** if `connectionType` is `VPC_LINK`
 * `uri` - (Optional) Input's URI. **Required** if `type` is `AWS`, `AWS_PROXY`, `HTTP` or `HTTP_PROXY`.
   For HTTP integrations, the URI must be a fully formed, encoded HTTP(S) URL according to the RFC-3986 specification . For AWS integrations, the URI should be of the form `arn:aws:apigateway:{region}:{subdomain.service|service}:{path|action}/{service_api}`. `region`, `subdomain` and `service` are used to determine the right endpoint.
-  e.g., `arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:012345678901:function:my-func/invocations`. For private integrations, the URI parameter is not used for routing requests to your endpoint, but is used for setting the Host header and for certificate validation.
+  e.g., `arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:123456789012:function:my-func/invocations`. For private integrations, the URI parameter is not used for routing requests to your endpoint, but is used for setting the Host header and for certificate validation.
 * `credentials` - (Optional) Credentials required for the integration. For `AWS` integrations, 2 options are available. To specify an IAM Role for Amazon API Gateway to assume, use the role's ARN. To require that the caller's identity be passed through from the request, specify the string `arn:aws:iam::\*:user/\*`.
 * `requestTemplates` - (Optional) Map of the integration's request templates.
 * `requestParameters` - (Optional) Map of request query string parameters and headers that should be passed to the backend responder.
@@ -321,4 +322,4 @@ Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-I
 % terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-81e6d697f00f0fcc748de8e3839b83773d2165b6d6901935697bcf51a913f03f -->
+<!-- cache-key: cdktf-0.20.8 input-404eee16e7c290e452566f0179d2a4c4c7217dd628a00d15cd31bf928503854f -->

@@ -51,7 +51,7 @@ class MyConvertedCode extends TerraformStack {
               "arn:${" +
                 dataAwsPartitionCurrent.partition +
                 "}:bedrock:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}::foundation-model/anthropic.claude-v2",
             ],
           },
@@ -77,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
                   "arn:${" +
                     dataAwsPartitionCurrent.partition +
                     "}:bedrock:${" +
-                    dataAwsRegionCurrent.name +
+                    dataAwsRegionCurrent.region +
                     "}:${" +
                     current.accountId +
                     "}:agent/*",
@@ -132,14 +132,32 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `agentCollaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customerEncryptionKeyArn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
+* `guardrailConfiguration` - (Optional) Details about the guardrail associated with the agent. See [`guardrailConfiguration` Block](#guardrail_configuration-block) for details.
 * `idleSessionTtlInSeconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 20000 characters.
+* `memoryConfiguration` (Optional) Configurations for the agent's ability to retain the conversational context.
 * `prepareAgent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `promptOverrideConfiguration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`promptOverrideConfiguration` Block](#prompt_override_configuration-block) for details.
 * `skipResourceInUseCheck` - (Optional) Whether the in-use check is skipped when deleting the agent.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `guardrailConfiguration` Block
+
+The `guardrailConfiguration` configuration block supports the following arguments:
+
+* `guardrailIdentifier` - (Optional) Unique identifier of the guardrail.
+* `guardrailVersion` - (Optional) Version of the guardrail.
+
+### `memoryConfiguration` Block
+
+The `memoryConfiguration` configuration block supports the following arguments:
+
+* `enabled_memory_types` - (Required) The type of memory being stored by the agent. See [AWS API documentation](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_MemoryConfiguration.html) for possible values.
+* `storage_days` - (Optional) The number of days the agent is configured to retain the conversational context. Minimum value of 0, maximum value of 30.
 
 ### `promptOverrideConfiguration` Block
 
@@ -153,21 +171,21 @@ The `promptOverrideConfiguration` configuration block supports the following arg
 The `prompt_configurations` configuration block supports the following arguments:
 
 * `base_prompt_template` - (Required) prompt template with which to replace the default prompt template. You can use placeholder variables in the base prompt template to customize the prompt. For more information, see [Prompt template placeholder variables](https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-placeholders.html).
-* `inference_configuration` - (Required) Inference parameters to use when the agent invokes a foundation model in the part of the agent sequence defined by the `prompt_type`. For more information, see [Inference parameters for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html). See [`inference_configuration` Block](#inference_configuration-block) for details.
+* `inferenceConfiguration` - (Required) Inference parameters to use when the agent invokes a foundation model in the part of the agent sequence defined by the `prompt_type`. For more information, see [Inference parameters for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html). See [`inferenceConfiguration` Block](#inference_configuration-block) for details.
 * `parser_mode` - (Required) Whether to override the default parser Lambda function when parsing the raw foundation model output in the part of the agent sequence defined by the `prompt_type`. If you set the argument as `OVERRIDDEN`, the `override_lambda` argument in the [`promptOverrideConfiguration`](#prompt_override_configuration-block) block must be specified with the ARN of a Lambda function. Valid values: `DEFAULT`, `OVERRIDDEN`.
 * `prompt_creation_mode` - (Required) Whether to override the default prompt template for this `prompt_type`. Set this argument to `OVERRIDDEN` to use the prompt that you provide in the `base_prompt_template`. If you leave it as `DEFAULT`, the agent uses a default prompt template. Valid values: `DEFAULT`, `OVERRIDDEN`.
 * `prompt_state` - (Required) Whether to allow the agent to carry out the step specified in the `prompt_type`. If you set this argument to `DISABLED`, the agent skips that step. Valid Values: `ENABLED`, `DISABLED`.
 * `prompt_type` - (Required) Step in the agent sequence that this prompt configuration applies to. Valid values: `PRE_PROCESSING`, `ORCHESTRATION`, `POST_PROCESSING`, `KNOWLEDGE_BASE_RESPONSE_GENERATION`.
 
-### `inference_configuration` Block
+### `inferenceConfiguration` Block
 
-The `inference_configuration` configuration block supports the following arguments:
+The `inferenceConfiguration` configuration block supports the following arguments:
 
 * `maxLength` - (Required) Maximum number of tokens to allow in the generated response.
-* `stop_sequences` - (Required) List of stop sequences. A stop sequence is a sequence of characters that causes the model to stop generating the response.
+* `stopSequences` - (Required) List of stop sequences. A stop sequence is a sequence of characters that causes the model to stop generating the response.
 * `temperature` - (Required) Likelihood of the model selecting higher-probability options while generating a response. A lower value makes the model more likely to choose higher-probability options, while a higher value makes the model more likely to choose lower-probability options.
 * `top_k` - (Required) Number of top most-likely candidates, between 0 and 500, from which the model chooses the next token in the sequence.
-* `top_p` - (Required) Top percentage of the probability distribution of next tokens, between 0 and 1 (denoting 0% and 100%), from which the model chooses the next token in the sequence.
+* `topP` - (Required) Top percentage of the probability distribution of next tokens, between 0 and 1 (denoting 0% and 100%), from which the model chooses the next token in the sequence.
 
 ## Attribute Reference
 
@@ -177,6 +195,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agentId` - Unique identifier of the agent.
 * `agentVersion` - Version of the agent.
 * `id` - Unique identifier of the agent.
+* `preparedAt` - Timestamp of when the agent was last prepared.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -215,4 +234,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-acb4c2d3b81a79eb9e4203112e86e0dbc9c4e32ff252ce91902801ea3f230570 -->
+<!-- cache-key: cdktf-0.20.8 input-a99e781ec67fef057a9939938900924b660de8f6022d71e748011e2b654898a7 -->

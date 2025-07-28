@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,20 +38,22 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -102,7 +105,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -115,7 +118,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -124,7 +127,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -148,7 +151,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 				),
 			},
 			{
@@ -160,7 +163,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "2"),
 				),
 			},
 		},
@@ -183,7 +186,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_supportedIPAddressTypesIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
 				),
 			},
@@ -196,7 +199,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_supportedIPAddressTypesIPv4AndIPv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv6"),
 				),
@@ -221,7 +224,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
 				),
 			},
 			{
@@ -233,14 +236,14 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
 				),
 			},
 			{
 				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
 				),
 			},
 		},
@@ -263,7 +266,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
 				),
 			},
 			{
@@ -275,7 +278,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "2"),
 				),
 			},
 		},
@@ -301,7 +304,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", domainName1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},
@@ -315,8 +318,77 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", domainName2),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpointService_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var svcCfg awstypes.ServiceConfiguration
+	resourceName := "aws_vpc_endpoint_service.test"
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+	supportedRegions := []string{
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsWest2RegionID,
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+			acctest.PreCheckRegion(t, supportedRegions...)
+			acctest.PreCheckAlternateRegion(t, supportedRegions...)
+			acctest.PreCheckThirdRegion(t, supportedRegions...)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "acceptance_required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.ThirdRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.ThirdRegion()),
 				),
 			},
 		},
@@ -445,6 +517,16 @@ resource "aws_vpc_endpoint_service" "test" {
   network_load_balancer_arns = aws_lb.test[*].arn
 }
 `)
+}
+
+func testAccVPCEndpointServiceConfig_crossRegion(rName string, primaryRegion, altRegion string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointServiceConfig_baseNetworkLoadBalancer(rName, 1), fmt.Sprintf(`
+resource "aws_vpc_endpoint_service" "test" {
+  acceptance_required        = false
+  network_load_balancer_arns = aws_lb.test[*].arn
+  supported_regions          = [%[1]q,%[2]q]
+}
+`, primaryRegion, altRegion))
 }
 
 func testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName string, count int) string {

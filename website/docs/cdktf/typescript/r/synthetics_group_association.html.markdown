@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `groupName` - (Required) Name of the group that the canary will be associated with.
 * `canaryArn` - (Required) ARN of the canary.
 
@@ -83,4 +84,4 @@ Using `terraform import`, import CloudWatch Synthetics Group Association using t
 % terraform import aws_synthetics_group_association.example arn:aws:synthetics:us-west-2:123456789012:canary:tf-acc-test-abcd1234,examplename
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-586109c93710a862721820ba7c1a1a3dc69aaa17f27c7d2609f2031c6672b318 -->
+<!-- cache-key: cdktf-0.20.8 input-2c5ab784846b3e6de6ec8e8722c24c9a4e4637014d43ab79bfe6f754d98bed8e -->

@@ -300,6 +300,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the application.
 * `runtimeEnvironment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`.
 * `serviceExecutionRole` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
@@ -569,4 +570,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using the 
 % terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-285a8300a0be803744a942b4b82c971baa2718e2a1bae6de5e6ef6e2cab2fe72 -->
+<!-- cache-key: cdktf-0.20.8 input-b006f14d031c2b81ca72cdde68397c9451271dbf61000ccf22eeb3955fb6f33c -->

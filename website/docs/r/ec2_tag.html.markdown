@@ -42,6 +42,7 @@ resource "aws_ec2_tag" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_id` - (Required) The ID of the EC2 resource to manage the tag for.
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.

@@ -64,14 +64,14 @@ class MyConvertedCode(TerraformStack):
         data_aws_region_current.override_logical_id("current")
         aws_shield_protection_example = ShieldProtection(self, "example_3",
             name="example",
-            resource_arn="arn:aws:ec2:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
+            resource_arn="arn:aws:ec2:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_shield_protection_example.override_logical_id("example")
         aws_shield_protection_group_example = ShieldProtectionGroup(self, "example_4",
             aggregation="MEAN",
             depends_on=[aws_shield_protection_example],
-            members=["arn:aws:ec2:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
+            members=["arn:aws:ec2:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}"
             ],
             pattern="ARBITRARY",
             protection_group_id="example"
@@ -145,4 +145,4 @@ Using `terraform import`, import Shield protection group resources using their p
 % terraform import aws_shield_protection_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->
+<!-- cache-key: cdktf-0.20.8 input-cfec216f9581447d6e30878f341ecb5c3b16c629ab1504623b774474a5e69871 -->

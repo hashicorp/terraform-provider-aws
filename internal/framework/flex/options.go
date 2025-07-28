@@ -3,6 +3,8 @@
 
 package flex
 
+import "slices"
+
 var (
 	DefaultIgnoredFieldNames = []string{
 		"Tags", // Resource tags are handled separately.
@@ -18,6 +20,10 @@ type AutoFlexOptions struct {
 	// or more fields on an AWS data structure
 	fieldNamePrefix string
 
+	// fieldNameSuffix specifies a common suffix which may be applied to one
+	// or more fields on an AWS data structure
+	fieldNameSuffix string
+
 	// ignoredFieldNames stores names which expanders and flatteners will
 	// not read from or write to
 	ignoredFieldNames []string
@@ -31,6 +37,17 @@ type AutoFlexOptions struct {
 func WithFieldNamePrefix(s string) AutoFlexOptionsFunc {
 	return func(o *AutoFlexOptions) {
 		o.fieldNamePrefix = s
+	}
+}
+
+// WithFieldNameSuffix specifies a suffix to be accounted for when
+// matching field names between Terraform and AWS data structures
+//
+// Use this option to improve fuzzy matching of field names during AutoFlex
+// expand/flatten operations.
+func WithFieldNameSuffix(s string) AutoFlexOptionsFunc {
+	return func(o *AutoFlexOptions) {
+		o.fieldNameSuffix = s
 	}
 }
 
@@ -62,10 +79,5 @@ func WithNoIgnoredFieldNames() AutoFlexOptionsFunc {
 
 // isIgnoredField returns true if s is in the list of ignored field names
 func (o *AutoFlexOptions) isIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(o.ignoredFieldNames, s)
 }

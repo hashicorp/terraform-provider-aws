@@ -62,11 +62,11 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypeOfferingsInput{
+	input := ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int32(5),
 	}
 
-	_, err := conn.DescribeInstanceTypeOfferings(ctx, input)
+	_, err := conn.DescribeInstanceTypeOfferings(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -89,7 +89,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 }
 
 func testAccInstanceTypeOfferingsDataSourceConfig_location() string {
-	return acctest.ConfigAvailableAZsNoOptIn() + `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "location"
@@ -98,5 +98,5 @@ data "aws_ec2_instance_type_offerings" "test" {
 
   location_type = "availability-zone"
 }
-`
+`)
 }

@@ -100,7 +100,7 @@ func sweepDRTAccessRoleARNAssociations(region string) error {
 	if v := aws.ToString(output.RoleArn); v != "" {
 		log.Printf("[INFO] Deleting Shield DRT Role ARN Association: %s", v)
 		sweepResources = append(sweepResources, framework.NewSweepResource(newDRTAccessRoleARNAssociationResource, client,
-			framework.NewAttribute(names.AttrID, client.AccountID),
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		))
 	}
 
@@ -137,7 +137,7 @@ func sweepProactiveEngagements(region string) error {
 	if output.Subscription.ProactiveEngagementStatus != "" {
 		log.Printf("[INFO] Deleting Shield Proactive Engagement")
 		sweepResources = append(sweepResources, framework.NewSweepResource(newProactiveEngagementResource, client,
-			framework.NewAttribute(names.AttrID, client.AccountID),
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		))
 	}
 

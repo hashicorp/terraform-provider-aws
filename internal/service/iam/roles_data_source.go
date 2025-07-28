@@ -48,7 +48,7 @@ func dataSourceRoles() *schema.Resource {
 	}
 }
 
-func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -80,7 +80,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	var arns, nms []string
 

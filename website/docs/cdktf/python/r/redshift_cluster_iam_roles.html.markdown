@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required) The name of the Redshift Cluster IAM Roles.
 * `iam_role_arns` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
 * `default_iam_role_arn` - (Optional) The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
@@ -73,4 +74,4 @@ Using `terraform import`, import Redshift Cluster IAM Roless using the `cluster_
 % terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-91240022530f469d269e463be72eba257c8ec52cf957eb83d56ddf8c04d98dc9 -->
+<!-- cache-key: cdktf-0.20.8 input-ce4a486cf010df1204adfdcdf32c77c32ccd00a01fe077b54dcf9395da9aad3d -->

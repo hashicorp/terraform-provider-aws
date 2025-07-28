@@ -1,0 +1,3 @@
+```release-note:note
+provider: Restore the `godebug tlskyber=0` directive in `go.mod`. This disables the experimental the post-quantum key exchange mechanism `X25519Kyber768Draft00`, fixing failed or hanging network connections to various AWS services. This fixes a regression introduced in [v5.90.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5900-march--6-2025)
+```

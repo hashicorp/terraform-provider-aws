@@ -34,10 +34,10 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
 			},
 			{
@@ -49,10 +49,10 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName, "test update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test update"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
 			},
 		},

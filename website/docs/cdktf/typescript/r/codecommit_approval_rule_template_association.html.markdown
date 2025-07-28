@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `approvalRuleTemplateName` - (Required) The name for the approval rule template.
 * `repositoryName` - (Required) The name of the repository that you want to associate with the template.
 
@@ -84,4 +85,4 @@ Using `terraform import`, import CodeCommit approval rule template associations 
 % terraform import aws_codecommit_approval_rule_template_association.example approver-rule-for-example,MyExampleRepo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-800a49692194ca7d70016b5efe848036ee2107aa5291a82d90a63cd527264967 -->
+<!-- cache-key: cdktf-0.20.8 input-0502d56ee1716b31a8c3d45bb59c3e5f991481107e7456de5f4a325a5612bbef -->

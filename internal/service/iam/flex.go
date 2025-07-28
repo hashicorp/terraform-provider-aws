@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func expandStringListKeepEmpty(configured []interface{}) []*string {
+func expandStringListKeepEmpty(configured []any) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
 		if val, ok := v.(string); ok {

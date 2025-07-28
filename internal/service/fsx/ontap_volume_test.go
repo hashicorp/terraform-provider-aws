@@ -6,6 +6,7 @@ package fsx_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -37,7 +38,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
@@ -47,12 +48,12 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_virtual_machine_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "ONTAP"),
 				),
@@ -111,8 +112,8 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_aggregate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.0", "aggr1"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.1", "aggr2"),
 				),
@@ -132,12 +133,12 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.0", "aggr1"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.1", "aggr2"),
-					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.total_constituents", fmt.Sprint(ConstituentsPerAggregate*2)),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(ConstituentsPerAggregate*204800)),
+					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.total_constituents", strconv.Itoa(ConstituentsPerAggregate*2)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(ConstituentsPerAggregate*204800)),
 				),
 			},
 		},
@@ -378,7 +379,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size1)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(size1)),
 				),
 			},
 			{
@@ -397,7 +398,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(size2)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", strconv.Itoa(size2)),
 				),
 			},
 			{
@@ -406,7 +407,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeRecreated(&volume2, &volume3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size3)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", strconv.FormatInt(size3, 10)),
 				),
 			},
 			{
@@ -415,7 +416,7 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume4),
 					testAccCheckONTAPVolumeNotRecreated(&volume3, &volume4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", fmt.Sprint(size4)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes", strconv.FormatInt(size4, 10)),
 				),
 			},
 		},
@@ -439,22 +440,22 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "YEARS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "YEARS"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "30"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "YEARS"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", acctest.CtFalse),
 				),
@@ -523,7 +524,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy1)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy1),
 				),
 			},
 			{
@@ -542,7 +543,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy2)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy2),
 				),
 			},
 		},
@@ -608,7 +609,7 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -627,7 +628,7 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -637,7 +638,7 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckONTAPVolumeNotRecreated(&volume2, &volume3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -682,7 +683,7 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.name", "SNAPSHOT_ONLY"),
-					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "tiering_policy.0.cooling_period", "10"),
 				),
 			},
 			{
@@ -768,7 +769,7 @@ func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),

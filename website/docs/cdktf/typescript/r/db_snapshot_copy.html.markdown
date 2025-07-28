@@ -63,11 +63,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `copyTags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destinationRegion` - (Optional) The Destination region to place snapshot copy.
 * `kmsKeyId` - (Optional) KMS key ID.
 * `optionGroupName`- (Optional) The name of an option group to associate with the copy of the snapshot.
 * `presignedUrl` - (Optional) he URL that contains a Signature Version 4 signed request.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `sourceDbSnapshotIdentifier` - (Required) Snapshot identifier of the source snapshot.
 * `targetCustomAvailabilityZone` - (Optional) The external custom Availability Zone.
 * `targetDbSnapshotIdentifier` - (Required) The Identifier for the snapshot.
@@ -88,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kmsKeyId` - The ARN for the KMS encryption key.
 * `licenseModel` - License model information for the restored DB instance.
 * `optionGroupName` - Provides the option group name for the DB snapshot.
-* `sharedAccounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
+* `sharedAccounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `sourceDbSnapshotIdentifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `sourceRegion` - The region that the DB snapshot was created in or copied from.
 * `storageType` - Specifies the storage type associated with DB snapshot.
@@ -129,4 +131,4 @@ Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot ident
 % terraform import aws_db_snapshot_copy.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-87679e3d8354206f97dd29326004a5f1a2bdfd8a1fdffc339cd45861c2e6ad96 -->
+<!-- cache-key: cdktf-0.20.8 input-dc9a17db42e29592482d865e5355dd4b8f08b76fe78bf099d139b40d9a2f0008 -->

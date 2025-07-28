@@ -5,7 +5,6 @@ package customerprofiles
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,11 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customerprofiles_domain")
+// @SDKResource("aws_customerprofiles_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
@@ -201,8 +199,6 @@ func ResourceDomain() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -256,7 +252,7 @@ func exportingConfigSchema() *schema.Schema {
 	}
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
@@ -279,11 +275,11 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("matching"); ok {
-		input.Matching = expandMatching(v.([]interface{}))
+		input.Matching = expandMatching(v.([]any))
 	}
 
 	if v, ok := d.GetOk("rule_based_matching"); ok {
-		input.RuleBasedMatching = expandRuleBasedMatching(v.([]interface{}))
+		input.RuleBasedMatching = expandRuleBasedMatching(v.([]any))
 	}
 
 	output, err := conn.CreateDomain(ctx, input)
@@ -297,7 +293,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
@@ -313,7 +309,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Customer Profiles Domain: (%s) %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
@@ -326,7 +322,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
@@ -348,11 +344,11 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("matching") {
-			input.Matching = expandMatching(d.Get("matching").([]interface{}))
+			input.Matching = expandMatching(d.Get("matching").([]any))
 		}
 
 		if d.HasChange("rule_based_matching") {
-			input.RuleBasedMatching = expandRuleBasedMatching(d.Get("rule_based_matching").([]interface{}))
+			input.RuleBasedMatching = expandRuleBasedMatching(d.Get("rule_based_matching").([]any))
 		}
 
 		_, err := conn.UpdateDomain(ctx, input)
@@ -365,14 +361,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
-	_, err := conn.DeleteDomain(ctx, &customerprofiles.DeleteDomainInput{
+	input := customerprofiles.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDomain(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -410,12 +407,12 @@ func FindDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, 
 	return output, nil
 }
 
-func expandMatching(tfMap []interface{}) *types.MatchingRequest {
+func expandMatching(tfMap []any) *types.MatchingRequest {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -427,26 +424,26 @@ func expandMatching(tfMap []interface{}) *types.MatchingRequest {
 	}
 
 	if v, ok := tfList["auto_merging"]; ok {
-		apiObject.AutoMerging = expandAutoMerging(v.([]interface{}))
+		apiObject.AutoMerging = expandAutoMerging(v.([]any))
 	}
 
 	if v, ok := tfList["exporting_config"]; ok {
-		apiObject.ExportingConfig = expandExportingConfig(v.([]interface{}))
+		apiObject.ExportingConfig = expandExportingConfig(v.([]any))
 	}
 
 	if v, ok := tfList["job_schedule"]; ok {
-		apiObject.JobSchedule = expandJobSchedule(v.([]interface{}))
+		apiObject.JobSchedule = expandJobSchedule(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandAutoMerging(tfMap []interface{}) *types.AutoMerging {
+func expandAutoMerging(tfMap []any) *types.AutoMerging {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -458,11 +455,11 @@ func expandAutoMerging(tfMap []interface{}) *types.AutoMerging {
 	}
 
 	if v, ok := tfList["conflict_resolution"]; ok {
-		apiObject.ConflictResolution = expandConflictResolution(v.([]interface{}))
+		apiObject.ConflictResolution = expandConflictResolution(v.([]any))
 	}
 
 	if v, ok := tfList["consolidation"]; ok {
-		apiObject.Consolidation = expandConsolidation(v.([]interface{}))
+		apiObject.Consolidation = expandConsolidation(v.([]any))
 	}
 
 	if v, ok := tfList["min_allowed_confidence_score_for_merging"]; ok {
@@ -472,12 +469,12 @@ func expandAutoMerging(tfMap []interface{}) *types.AutoMerging {
 	return apiObject
 }
 
-func expandConflictResolution(tfMap []interface{}) *types.ConflictResolution {
+func expandConflictResolution(tfMap []any) *types.ConflictResolution {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -495,12 +492,12 @@ func expandConflictResolution(tfMap []interface{}) *types.ConflictResolution {
 	return apiObject
 }
 
-func expandConsolidation(tfMap []interface{}) *types.Consolidation {
+func expandConsolidation(tfMap []any) *types.Consolidation {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -508,18 +505,18 @@ func expandConsolidation(tfMap []interface{}) *types.Consolidation {
 	apiObject := &types.Consolidation{}
 
 	if v, ok := tfList["matching_attributes_list"]; ok {
-		apiObject.MatchingAttributesList = expandMatchingAttributesList(v.([]interface{}))
+		apiObject.MatchingAttributesList = expandMatchingAttributesList(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandExportingConfig(tfMap []interface{}) *types.ExportingConfig {
+func expandExportingConfig(tfMap []any) *types.ExportingConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -527,18 +524,18 @@ func expandExportingConfig(tfMap []interface{}) *types.ExportingConfig {
 	apiObject := &types.ExportingConfig{}
 
 	if v, ok := tfList["s3_exporting"]; ok {
-		apiObject.S3Exporting = expandS3ExportingConfig(v.([]interface{}))
+		apiObject.S3Exporting = expandS3ExportingConfig(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandS3ExportingConfig(tfMap []interface{}) *types.S3ExportingConfig {
+func expandS3ExportingConfig(tfMap []any) *types.S3ExportingConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -556,12 +553,12 @@ func expandS3ExportingConfig(tfMap []interface{}) *types.S3ExportingConfig {
 	return apiObject
 }
 
-func expandJobSchedule(tfMap []interface{}) *types.JobSchedule {
+func expandJobSchedule(tfMap []any) *types.JobSchedule {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -579,12 +576,12 @@ func expandJobSchedule(tfMap []interface{}) *types.JobSchedule {
 	return apiObject
 }
 
-func expandRuleBasedMatching(tfMap []interface{}) *types.RuleBasedMatchingRequest {
+func expandRuleBasedMatching(tfMap []any) *types.RuleBasedMatchingRequest {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -596,15 +593,15 @@ func expandRuleBasedMatching(tfMap []interface{}) *types.RuleBasedMatchingReques
 	}
 
 	if v, ok := tfList["attribute_types_selector"]; ok {
-		apiObject.AttributeTypesSelector = expandAttributesTypesSelector(v.([]interface{}))
+		apiObject.AttributeTypesSelector = expandAttributesTypesSelector(v.([]any))
 	}
 
 	if v, ok := tfList["conflict_resolution"]; ok {
-		apiObject.ConflictResolution = expandConflictResolution(v.([]interface{}))
+		apiObject.ConflictResolution = expandConflictResolution(v.([]any))
 	}
 
 	if v, ok := tfList["exporting_config"]; ok {
-		apiObject.ExportingConfig = expandExportingConfig(v.([]interface{}))
+		apiObject.ExportingConfig = expandExportingConfig(v.([]any))
 	}
 
 	if v, ok := tfList["matching_rules"]; ok {
@@ -622,12 +619,12 @@ func expandRuleBasedMatching(tfMap []interface{}) *types.RuleBasedMatchingReques
 	return apiObject
 }
 
-func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSelector {
+func expandAttributesTypesSelector(tfMap []any) *types.AttributeTypesSelector {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -639,21 +636,21 @@ func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSel
 	}
 
 	if v, ok := tfList[names.AttrAddress]; ok {
-		apiObject.Address = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.Address = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := tfList["email_address"]; ok {
-		apiObject.EmailAddress = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.EmailAddress = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := tfList["phone_number"]; ok {
-		apiObject.PhoneNumber = flex.ExpandStringValueList(v.([]interface{}))
+		apiObject.PhoneNumber = flex.ExpandStringValueList(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandMatchingAttributesList(tfMap []interface{}) [][]string {
+func expandMatchingAttributesList(tfMap []any) [][]string {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -664,13 +661,13 @@ func expandMatchingAttributesList(tfMap []interface{}) [][]string {
 		if row == nil {
 			continue
 		}
-		result = append(result, flex.ExpandStringValueList(row.([]interface{})))
+		result = append(result, flex.ExpandStringValueList(row.([]any)))
 	}
 
 	return result
 }
 
-func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
+func expandMatchingRules(tfMap []any) []types.MatchingRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -682,12 +679,12 @@ func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
 			continue
 		}
 
-		matchingRule := object.(map[string]interface{})
+		matchingRule := object.(map[string]any)
 
 		apiObject := types.MatchingRule{}
 
 		if v, ok := matchingRule[names.AttrRule]; ok {
-			apiObject.Rule = flex.ExpandStringValueList(v.([]interface{}))
+			apiObject.Rule = flex.ExpandStringValueList(v.([]any))
 		}
 
 		apiArray = append(apiArray, apiObject)
@@ -696,12 +693,12 @@ func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
 	return apiArray
 }
 
-func flattenMatching(apiObject *types.MatchingResponse) []interface{} {
+func flattenMatching(apiObject *types.MatchingResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AutoMerging; v != nil {
 		tfMap["auto_merging"] = flattenAutoMerging(v)
@@ -719,15 +716,15 @@ func flattenMatching(apiObject *types.MatchingResponse) []interface{} {
 		tfMap["job_schedule"] = flattenJobSchedule(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []interface{} {
+func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AttributeTypesSelector; v != nil {
 		tfMap["attribute_types_selector"] = flattenAttributeTypesSelector(v)
@@ -759,15 +756,15 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []inte
 
 	tfMap[names.AttrStatus] = types.IdentityResolutionJobStatus(apiObject.Status)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAutoMerging(apiObject *types.AutoMerging) []interface{} {
+func flattenAutoMerging(apiObject *types.AutoMerging) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConflictResolution; v != nil {
 		tfMap["conflict_resolution"] = flattenConflictResolution(v)
@@ -785,15 +782,15 @@ func flattenAutoMerging(apiObject *types.AutoMerging) []interface{} {
 		tfMap["min_allowed_confidence_score_for_merging"] = aws.ToFloat64(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenConflictResolution(apiObject *types.ConflictResolution) []interface{} {
+func flattenConflictResolution(apiObject *types.ConflictResolution) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["conflict_resolving_model"] = apiObject.ConflictResolvingModel
 
@@ -801,43 +798,43 @@ func flattenConflictResolution(apiObject *types.ConflictResolution) []interface{
 		tfMap["source_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenConsolidation(apiObject *types.Consolidation) []interface{} {
+func flattenConsolidation(apiObject *types.Consolidation) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.MatchingAttributesList; v != nil {
 		tfMap["matching_attributes_list"] = v
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExportingConfig(apiObject *types.ExportingConfig) []interface{} {
+func flattenExportingConfig(apiObject *types.ExportingConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3Exporting; v != nil {
 		tfMap["s3_exporting"] = flattenS3Exporting(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenS3Exporting(apiObject *types.S3ExportingConfig) []interface{} {
+func flattenS3Exporting(apiObject *types.S3ExportingConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.S3BucketName; v != nil {
 		tfMap[names.AttrS3BucketName] = aws.ToString(v)
@@ -847,15 +844,15 @@ func flattenS3Exporting(apiObject *types.S3ExportingConfig) []interface{} {
 		tfMap["s3_key_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenJobSchedule(apiObject *types.JobSchedule) []interface{} {
+func flattenJobSchedule(apiObject *types.JobSchedule) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["day_of_the_week"] = apiObject.DayOfTheWeek
 
@@ -863,15 +860,15 @@ func flattenJobSchedule(apiObject *types.JobSchedule) []interface{} {
 		tfMap["time"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []interface{} {
+func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Address; v != nil {
 		tfMap[names.AttrAddress] = flex.FlattenStringValueList(v)
@@ -887,19 +884,19 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 		tfMap["phone_number"] = flex.FlattenStringValueList(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
+func flattenMatchingRules(apiObject []types.MatchingRule) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, matchingRule := range apiObject {
 		if v := matchingRule.Rule; v != nil {
-			tfMap := map[string]interface{}{}
+			tfMap := map[string]any{}
 			tfMap[names.AttrRule] = flex.FlattenStringValueList(v)
 			tfList = append(tfList, tfMap)
 		}
@@ -910,6 +907,6 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 
 // CreateDomainOutput does not have an ARN attribute which is needed for Tagging, therefore we construct it.
 // https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonconnectcustomerprofiles.html#amazonconnectcustomerprofiles-resources-for-iam-policies
-func buildDomainARN(conn *conns.AWSClient, domainName string) string {
-	return fmt.Sprintf("arn:%s:profile:%s:%s:domains/%s", conn.Partition, conn.Region, conn.AccountID, domainName)
+func domainARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
+	return c.RegionalARN(ctx, "profile", "domains/"+domainName) // nosemgrep:ci.literal-profile-string-constant
 }

@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `account_alias` - Alias associated with the AWS account.
 * `id` - Alias associated with the AWS account.
 
-<!-- cache-key: cdktf-0.20.1 input-f455bf9fcf364a77caee2097f0080546bcaeac3c0d78e42f7561ab85f7ca2ecf -->
+<!-- cache-key: cdktf-0.20.8 input-9cc998867b1932988436e31b65bf97ce022fd2a8fcc9bef4a6713334bd2e9310 -->

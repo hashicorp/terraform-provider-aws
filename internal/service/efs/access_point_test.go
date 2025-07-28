@@ -39,11 +39,11 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFileSystemID, fsResourceName, names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`access-point/fsap-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`access-point/fsap-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/"),
 				),
 			},
@@ -72,9 +72,9 @@ func TestAccEFSAccessPoint_Root_directory(t *testing.T) {
 				Config: testAccAccessPointConfig_rootDirectory(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "0"),
 				),
 			},
 			{
@@ -102,9 +102,9 @@ func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
 				Config: testAccAccessPointConfig_rootDirectoryCreationInfo(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_uid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.permissions", "755"),
@@ -135,10 +135,10 @@ func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
 				Config: testAccAccessPointConfig_posixUser(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.%", "0"),
 				),
 			},
 			{
@@ -166,10 +166,10 @@ func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 				Config: testAccAccessPointConfig_posixUserSecondaryGids(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.#", acctest.Ct1)),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.#", "1")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -196,7 +196,7 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -209,7 +209,7 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 				Config: testAccAccessPointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -218,7 +218,7 @@ func TestAccEFSAccessPoint_tags(t *testing.T) {
 				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

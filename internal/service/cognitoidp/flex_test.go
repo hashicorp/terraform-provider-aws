@@ -28,8 +28,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: true,
@@ -43,8 +43,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: false,
@@ -58,8 +58,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: false,
@@ -73,8 +73,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("non-existent"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: false,
@@ -88,8 +88,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: false,
@@ -104,7 +104,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 					MaxLength: aws.String("999"),
-					MinLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MinLength: aws.String("10"),
 				},
 			},
 			Expected: false,
@@ -118,7 +118,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"), // nosemgrep:ci.literal-10-string-test-constant
+					MaxLength: aws.String("10"),
 					MinLength: aws.String("999"),
 				},
 			},
@@ -143,7 +143,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Mutable:                aws.Bool(true),
 				Name:                   aws.String("updated_at"),
 				NumberAttributeConstraints: &awstypes.NumberAttributeConstraintsType{
-					MinValue: aws.String("0"), // nosemgrep:ci.literal-0-string-test-constant
+					MinValue: aws.String("0"),
 				},
 				Required: aws.Bool(false),
 			},
@@ -152,7 +152,6 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 			output := userPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
@@ -191,7 +190,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"), // nosemgrep:ci.literal-0-string-test-constant
+					MinLength: aws.String("0"),
 				},
 			},
 			want: true,
@@ -207,7 +206,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 						MaxLength: aws.String("2048"),
-						MinLength: aws.String("0"), // nosemgrep:ci.literal-0-string-test-constant
+						MinLength: aws.String("0"),
 					},
 				},
 			},
@@ -219,7 +218,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"), // nosemgrep:ci.literal-0-string-test-constant
+					MinLength: aws.String("0"),
 				},
 			},
 			want: false,
@@ -247,7 +246,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"), // nosemgrep:ci.literal-0-string-test-constant
+					MinLength: aws.String("0"),
 				},
 			},
 			want: false,
@@ -255,7 +254,6 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			got := skipFlatteningStringAttributeContraints(tc.configured, tc.input)

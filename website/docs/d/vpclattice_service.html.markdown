@@ -22,9 +22,9 @@ data "aws_vpclattice_service" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC lattice services.
-The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Service name.
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
 
@@ -36,7 +36,9 @@ This data source exports the following attributes in addition to the arguments a
 * `auth_type` - Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - Amazon Resource Name (ARN) of the certificate.
 * `custom_domain_name` - Custom domain name of the service.
-* `dns_entry` - DNS name of the service.
+* `dns_entry` - List of objects with DNS names.
+    * `domain_name` - DNS name for the service.
+    * `hosted_zone_id` - Hosted zone ID where the DNS name is registered.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.

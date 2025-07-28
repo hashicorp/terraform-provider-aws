@@ -123,6 +123,14 @@ To further understand the necessary data conversions used throughout the Terrafo
 
     Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
 
+### Default Values
+
+If an AWS API sets a default value on the server side, no default should be set on the provider side.
+Instead, the argument should be marked as `Optional` and `Computed`.
+This avoids potential future conflicts if a server side default value changes.
+
+As a general rule, provider side default values should be avoided unless strictly necessary for a resource to function properly.
+
 ### Zero Value Mapping
 
 !!! note
@@ -207,10 +215,79 @@ For example, to include `Tags`, call
 diags := flex.Expand(ctx, source, &target, flex.WithNoIgnoredFieldNames())
 ```
 
+AutoFlex is able to convert single-element lists from Terraform blocks into single struct or pointer values in AWS API structs.
+
+#### Customizing Struct Field Flexing
+
+The flexing of individual struct fields can be customized by using Go struct tags, with the namespace `autoflex`.
+
+Tag values are comma-separated lists of options, with a leading comma.
+
+The option `legacy` can be used when migrating a resource or data source from the Terraform Plugin SDK to the Terraform Plugin Framework.
+This will preserve certain behaviors from the Plugin SDK, such as treating zero-values, i.e. the empty string or a numeric zero, equivalently to `null` values.
+This is equivalent to calling the `fwflex.<Type><To/From>FrameworkLegacy` functions.
+
+For example, from the struct `resourceManagedUserPoolClientModel` for the Cognito IDP Managed User Pool Client:
+
+```go
+type resourceManagedUserPoolClientModel struct {
+	AccessTokenValidity                      types.Int64  `tfsdk:"access_token_validity" autoflex:",legacy"`
+	AllowedOauthFlows                        types.Set    `tfsdk:"allowed_oauth_flows"`
+	...
+	ClientSecret                             types.String `tfsdk:"client_secret"`
+	DefaultRedirectUri                       types.String `tfsdk:"default_redirect_uri" autoflex:",legacy"`
+	...
+	ID                                       types.String `tfsdk:"id"`
+	IdTokenValidity                          types.Int64  `tfsdk:"id_token_validity" autoflex:",legacy"`
+	LogoutUrls                               types.Set    `tfsdk:"logout_urls"`
+	...
+}
+```
+
+The option `omitempty` can be used with `string` values to store a `null` value when an empty string is returned.
+
+For example, from the struct `refreshOnDayModel` for the QuickSight Refresh Schedule:
+
+```go
+type refreshOnDayModel struct {
+	DayOfMonth types.String `tfsdk:"day_of_month"`
+	DayOfWeek  types.String `tfsdk:"day_of_week" autoflex:",omitempty"`
+}
+```
+
+To completely ignore a field, use the tag value `-`.
+
+For example, from the struct `scheduleModel` for the QuickSight Refresh Schedule:
+
+```go
+type scheduleModel struct {
+	RefreshType        types.String                                           `tfsdk:"refresh_type"`
+	ScheduleFrequency  fwtypes.ListNestedObjectValueOf[refreshFrequencyModel] `tfsdk:"schedule_frequency"`
+	StartAfterDateTime types.String                                           `tfsdk:"start_after_date_time" autoflex:"-"`
+}
+```
+
+To ignore a field when flattening, but include it when expanding, use the option `noflatten`.
+
+For example, from the struct `dataSourceReservedCacheNodeOfferingModel` for the ElastiCache Reserved Cache Node Offering:
+
+```go
+type dataSourceReservedCacheNodeOfferingModel struct {
+	CacheNodeType      types.String            `tfsdk:"cache_node_type"`
+	Duration           fwtypes.RFC3339Duration `tfsdk:"duration" autoflex:",noflatten"`
+	FixedPrice         types.Float64           `tfsdk:"fixed_price"`
+	OfferingID         types.String            `tfsdk:"offering_id"`
+	OfferingType       types.String            `tfsdk:"offering_type"`
+	ProductDescription types.String            `tfsdk:"product_description"`
+}
+```
+
+#### Overriding Default Behavior
+
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
 The AWS implementation uses an interface as the common type, along with various concrete implementations.
-Because the Terraform schema does not support union types (see https://github.com/hashicorp/terraform/issues/32587 for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
+Because the Terraform schema does not support union types (see [this issue](https://github.com/hashicorp/terraform/issues/32587) for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
 
 To override flattening behavior, implement the interface `flex.Flattener` on the model.
 The function should have a pointer receiver, as it will modify the struct in-place.
@@ -369,6 +446,9 @@ func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result 
 }
 ```
 
+#### Troubleshooting
+
+AutoFlex can output detailed logging as it flattens or expands a value.
 To turn on logging for AutoFlex, use the environment variable `TF_LOG_AWS_AUTOFLEX` to set the logging level.
 Valid values are `ERROR`, `WARN`, `INFO`, `DEBUG`, and `TRACE`.
 By default, AutoFlex logging is set to `ERROR`.
@@ -557,7 +637,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
 
     ```go
     input := service.ExampleOperationInput{
-        AttributeName: aws.String(plan.AttributeName.ValueBool())
+        AttributeName: plan.AttributeName.ValueBoolPointer()
     }
     ```
     
@@ -577,7 +657,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsUnknown() && !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Bool(plan.AttributeName.ValueBool())
+        input.AttributeName = plan.AttributeName.ValueBoolPointer()
     }
     ```
     
@@ -621,7 +701,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Float64(plan.AttributeName.ValueFloat64())
+        input.AttributeName = plan.AttributeName.ValueFloat64Pointer()
     }
     ```
     
@@ -657,7 +737,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.Int64(plan.AttributeName.ValueInt64())
+        input.AttributeName = plan.AttributeName.ValueInt64Pointer()
     }
     ```
     
@@ -946,7 +1026,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     input := service.ExampleOperationInput{}
     
     if !plan.AttributeName.IsNull() {
-        input.AttributeName = aws.String(plan.AttributeName.ValueString())
+        input.AttributeName = plan.AttributeName.ValueStringPointer()
     }
     ```
     
@@ -1038,7 +1118,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     func expandStructure(tfList []structureData) *service.Structure {
         // ...
 
-        apiObject.NestedAttributeName = aws.Bool(tfObj.NestedAttributeName.ValueBool())
+        apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueBoolPointer()
 
         // ...
     }
@@ -1051,7 +1131,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Bool(tfObj.NestedAttributeName.ValueBool())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueBoolPointer()
         }
 
         // ...
@@ -1107,7 +1187,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.BoolValue(v)
+            tfMap["nested_attribute_name"] = aws.ToBool(v)
         }
     
         // ...
@@ -1124,7 +1204,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Float64(tfObj.NestedAttributeName.ValueFloat64())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueFloat64Pointer()
         }
 
         // ...
@@ -1166,7 +1246,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Float64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToFloat64(v)
         }
     
         // ...
@@ -1183,7 +1263,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.Int64(tfObj.NestedAttributeName.ValueInt64())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueInt64Pointer()
         }
 
         // ...
@@ -1225,7 +1305,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Int64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToInt64(v)
         }
     
         // ...
@@ -1598,7 +1678,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
 
         if !tfObj.NestedAttributeName.IsUnknown() && !tfObj.NestedAttributeName.IsNull() {
-            apiObject.NestedAttributeName = aws.String(tfObj.NestedAttributeName.ValueString())
+            apiObject.NestedAttributeName = tfObj.NestedAttributeName.ValueStringPointer()
         }
 
         // ...
@@ -1640,7 +1720,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValue(v)
+            tfMap["nested_attribute_name"] = aws.ToString(v)
         }
     
         // ...
@@ -1716,7 +1796,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.TimeValue(v).Format(time.RFC3339)
+            tfMap["nested_attribute_name"] = aws.ToTime(v).Format(time.RFC3339)
         }
     
         // ...
@@ -1801,7 +1881,7 @@ This helps prevent an immediate plan difference after resource import unless the
 Below is a listing of relevant terms and descriptions for data handling and conversion in the Terraform AWS Provider to establish common conventions throughout this documentation.
 This list is not exhaustive of all concepts of Terraform Plugins, the Terraform AWS Provider, or the data handling that occurs during Terraform runs, but these should generally provide enough context about the topics discussed here.
 
-- **AWS Go SDK**: Library that converts Go code into AWS Service API compatible operations and data types. See [AWS SDK For Go Versions](aws-go-sdk-versions.md) for information on which version to use.
+- **AWS Go SDK**: Library that converts Go code into AWS Service API compatible operations and data types.
 - **AWS Go SDK Model**: AWS Go SDK compatible format of AWS Service API Model.
 - **AWS Go SDK Service**: AWS Service API Go code generated from the AWS Go SDK Model. Generated by the AWS Go SDK code.
 - **AWS Service API**: Logical boundary of an AWS service by API endpoint. Some large AWS services may be marketed with many different product names under the same service API (e.g., VPC functionality is part of the EC2 API) and vice-versa where some services may be marketed with one product name but are split into multiple service APIs (e.g., Single Sign-On functionality is split into the Identity Store and SSO Admin APIs).
