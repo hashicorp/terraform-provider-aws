@@ -305,7 +305,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 	})
 }
 
-func TestAccAthenaDatabase_disppears(t *testing.T) {
+func TestAccAthenaDatabase_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbName := sdkacctest.RandString(8)

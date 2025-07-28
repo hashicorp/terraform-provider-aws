@@ -215,7 +215,14 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId)); err != nil {
+	err = executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId))
+
+	// "reason: FAILED: SemanticException [Error 10072]: Database does not exist: ...".
+	if errs.Contains(err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
