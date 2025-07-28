@@ -134,8 +134,6 @@ func testAccCheckTransitGatewayPeeringDestroy(ctx context.Context) resource.Test
 
 func testAccTransitGatewayPeeringConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -163,6 +161,8 @@ resource "aws_networkmanager_core_network" "test" {
     Name = %[1]q
   }
 }
+
+data "aws_region" "current" {}
 
 resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
