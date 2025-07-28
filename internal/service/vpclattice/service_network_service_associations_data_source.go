@@ -68,18 +68,18 @@ func (d *dataSourceServiceNetworkServiceAssociations) Schema(ctx context.Context
 						names.AttrID:           schema.StringAttribute{Computed: true},
 						"service_arn":          schema.StringAttribute{Computed: true},
 						"service_id":           schema.StringAttribute{Computed: true},
-						"service_name":         schema.StringAttribute{Computed: true},
+						names.AttrServiceName:  schema.StringAttribute{Computed: true},
 						"service_network_arn":  schema.StringAttribute{Computed: true},
 						"service_network_id":   schema.StringAttribute{Computed: true},
 						"service_network_name": schema.StringAttribute{Computed: true},
-						"status":               schema.StringAttribute{Computed: true},
+						names.AttrStatus:       schema.StringAttribute{Computed: true},
 					},
 					Blocks: map[string]schema.Block{
 						"dns_entry": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"domain_name":    schema.StringAttribute{Computed: true},
-									"hosted_zone_id": schema.StringAttribute{Computed: true},
+									names.AttrDomainName:   schema.StringAttribute{Computed: true},
+									names.AttrHostedZoneID: schema.StringAttribute{Computed: true},
 								},
 							},
 						},
@@ -117,7 +117,6 @@ func (d *dataSourceServiceNetworkServiceAssociations) Read(ctx context.Context, 
 			return
 		}
 		associations = items
-
 	} else if !data.ServiceIdentifier.IsNull() {
 		sID := data.ServiceIdentifier.ValueString()
 		data.ID = types.StringValue(sID)

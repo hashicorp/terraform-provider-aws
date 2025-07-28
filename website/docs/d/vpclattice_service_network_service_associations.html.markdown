@@ -30,11 +30,11 @@ data "aws_vpclattice_service_network_service_associations" "test_svc" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `service_network_identifier` - (Optional) This is the Id or ARN of the VPC Lattice Service Network for which you want to list the Service Network Service Associations. Use either `service_network_identifier` or `service_identifier` but not both.
-
 * `service_identifier` - (Optional) This is the Id or ARN of the VPC Lattice Service for which you want to list the Service Network Service Associations. Use either `service_identifier` or `service_network_identifier` but not both.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
