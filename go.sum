@@ -65,8 +65,8 @@ github.com/aws/aws-sdk-go-v2/service/appfabric v1.12.5 h1:D7Z5KU/EM5qWQFN3HfyAek
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.12.5/go.mod h1:VpQYfYZ/soTePqhubIKGLrabQ0hZEnxbntaecYxj5gs=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.46.5 h1:F9zD4SUgiszgEDWyjNmnH3qp08R1LAHmMgTE84YmwiE=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.46.5/go.mod h1:XOP7zCYEuaECIrY2btMFhAfdj/uMspEXzw0iqcpUKkk=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.31.5 h1:O9Ds98wVrmTHpsf3q2DDC03WKe6kjUJiQrdqkePuRLs=
-github.com/aws/aws-sdk-go-v2/service/appintegrations v1.31.5/go.mod h1:q/8E6+EDYsDoYNUNky5VI7HWEa6VYqfsBJnDRAoSd5k=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.32.0 h1:/0Wn6lX/7M3kirTolK5Bfftj6RPmSeuZae94W2CYk04=
+github.com/aws/aws-sdk-go-v2/service/appintegrations v1.32.0/go.mod h1:q/8E6+EDYsDoYNUNky5VI7HWEa6VYqfsBJnDRAoSd5k=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.36.5 h1:LwEyJAUm31WRS7S33zgzySjMBVy5a7oxfKDBwSkhoKI=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.36.5/go.mod h1:dSjtTMrvXBbmRTbhyVxf45HhOkafNmjkpssAZ1wRUvg=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.30.7 h1:j8dX25hyRV+iRh5KVSkWZnwhqJMuYZ39OTeE92EhIGM=
@@ -101,8 +101,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.45.1 h1:tS0DD3PKU2dwn9lcOqP
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.45.1/go.mod h1:pmybD02MldOa11kASmpD/d3KNfOIPlhUeDytFBHyoK4=
 github.com/aws/aws-sdk-go-v2/service/billing v1.2.5 h1:2WiMCFgUZselxcSKUWAr+AGXI+W8WnbVbGmQB/Gzrz8=
 github.com/aws/aws-sdk-go-v2/service/billing v1.2.5/go.mod h1:SyZ4Fk3kulPJ7HA8Uzn44BJpqZOLbnR2EKBLjuwdru8=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.31.3 h1:cpVpdA8XypTrWohAH6vK4IV+BeqRui41Y550nNKTyk8=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.31.3/go.mod h1:FDOSS+QWfpUmU9QPLaeXHAGZM49P68QpZX6MwXWWDsg=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.32.0 h1:S1WiIiZKbCf/zLWO+dQzmu8igwabvfEgG96auIUvcZw=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.32.0/go.mod h1:FDOSS+QWfpUmU9QPLaeXHAGZM49P68QpZX6MwXWWDsg=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.10.5 h1:IJb9QoEbj7PDnjWPJ0vYJ59lfYm2WBmj8vQ5kpBWJEM=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.10.5/go.mod h1:kNTARm186iJzKWjg00K9DMT/UdAkgCfiBcz8wzAuhOA=
 github.com/aws/aws-sdk-go-v2/service/chime v1.36.5 h1:/XPY8Cz4Ahdgnp+BvISZ+z2esh7KHgz98W3CgocVLWY=
@@ -163,8 +163,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.7 h1:IzgWqs5/pfrPiu7LP5Qbz
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.36.7/go.mod h1:LhJGbrl0FT6FWarYoi9J79R3C/W9NDES64tqkqW2sKk=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.3 h1:+9OiMP022lO5zOV2HLB6Le9baY7bAHwsn5yptUr4b0I=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.43.3/go.mod h1:otyQdGmdQ0OSksAu16KsMFNn3aVBifKNo7M30sW3u+M=
-github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1 h1:OOs/qP85+2yNmx9oPmTj0kvw+QZQjQAlQFxgZiLbxRU=
-github.com/aws/aws-sdk-go-v2/service/configservice v1.53.1/go.mod h1:NFUJlgaWRCcQfVXzGOlRA1W4U6Oq6HcW7Q4f2pBH+6U=
+github.com/aws/aws-sdk-go-v2/service/configservice v1.53.2 h1:Ll0QMFSLykglMTYff+1MNcU3dY2TawSjZP/zeC7w+G8=
+github.com/aws/aws-sdk-go-v2/service/configservice v1.53.2/go.mod h1:NFUJlgaWRCcQfVXzGOlRA1W4U6Oq6HcW7Q4f2pBH+6U=
 github.com/aws/aws-sdk-go-v2/service/connect v1.131.1 h1:kQX9yr5uYeQPv/PdCtw+iLUltEz1tUYOJAtehBjaaZU=
 github.com/aws/aws-sdk-go-v2/service/connect v1.131.1/go.mod h1:TSGHpIRxxjWpqQRn/FInBotVOPOv7wOQJad9ucm6iWU=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.26.1 h1:1TlYiaR1ucS9NlU+l4f8p+5Ue8NFUUQaDbD2qxkeSag=
@@ -215,8 +215,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3 h1:9Gbovj4JEBh7mJLuklQd6vC99hBu
 github.com/aws/aws-sdk-go-v2/service/dsql v1.5.3/go.mod h1:lvCLAW4tB0TN7OMWJvvFQoNjI2gkvwdifzFUaCbWnZI=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1 h1:UoEWyfuQ/yNOuDENk5nn+AgNCH2Y5yzQEv6YbTyhIV8=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.44.1/go.mod h1:K1I47BjiTRX00pBxfJLYK80QFRcf6blev2wbjgC5Cyc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0 h1:TE8LEu5sTuH2fR9Buv8BNXafOSm+CDrQA3DmYSaWX00=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.235.0/go.mod h1:K7qdQFo+lbGM48aPEyoPfy/VN/xNOA4o8GGczfSXNcQ=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.236.0 h1:p9VAk1AO/UDMq4sYtsxMbZqoJIXtCZmLolsPTc3rP/w=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.236.0/go.mod h1:K7qdQFo+lbGM48aPEyoPfy/VN/xNOA4o8GGczfSXNcQ=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0 h1:oyXvdONSO/VmFwEupTO+P5AFFghpNyM2MeYi7FARciM=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.46.0/go.mod h1:uDcrAwhZkHtPAFst5Wx7WSAhMi8BvVegEkc0Kg16vUM=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.33.3 h1:LMfbTe/cLbps56wpZdx2PqZE246xHCX46vVkKJqao98=
@@ -325,8 +325,8 @@ github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.8 h1:sF6q8nqvsJ7zt
 github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.32.8/go.mod h1:bfPH7r7U3pjmdGrRbUqIqsfCjeu/KG+vQBg3Aw7FAy8=
 github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.5 h1:d3lO7iUNdoF+lbLYCFwbD0SQ8Zd0M4oJ3ALttm/FItA=
 github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.28.5/go.mod h1:v3jvcFqxoWHlqhqhJTmibV48IEEKkRFAUjbm8zc6e2E=
-github.com/aws/aws-sdk-go-v2/service/kms v1.41.3 h1:P0mjq/4mqTRA8SlS/4jL946RBW287kkKI/fazTTDJ3E=
-github.com/aws/aws-sdk-go-v2/service/kms v1.41.3/go.mod h1:79gw7fH6dqzJz3a5qwDnQv5GDPs8b6eJIb9hJ+/c/YU=
+github.com/aws/aws-sdk-go-v2/service/kms v1.41.4 h1:VDzxyStHJ5CKFaj40ti8hLuv+sMARPKTe0jnLZh6Bj4=
+github.com/aws/aws-sdk-go-v2/service/kms v1.41.4/go.mod h1:79gw7fH6dqzJz3a5qwDnQv5GDPs8b6eJIb9hJ+/c/YU=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.9 h1:96GHpMH0wRQjIJDm5CSydrJISpo1pb/gQ3wxQUoI7kQ=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.41.9/go.mod h1:JU1i9CAOApPBr5HgP2Nq7Zg0NvvcuNCk91dhJC5Cs/A=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.73.0 h1:5rog6aSAcNved2uO45dU+Xeag3UJKfhLJlQi9tjz7h4=
@@ -357,8 +357,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.76.3 h1:ph0Gv2WyvJY5bzCR5roO7z
 github.com/aws/aws-sdk-go-v2/service/medialive v1.76.3/go.mod h1:gNuH7zUKAYsWqDHvvyF/+LnkDr/Z5QFcalC4zXHEaa4=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.5 h1:klwgqTZc0aB0kcd2Ien9YhZuv36e2MqBeDigVb6+yDk=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.35.5/go.mod h1:T15mNv74STicQFcFoCxnGu9y5bY1lx1Mvt+1N94P5Lc=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.25.1 h1:CJiqnEs64sxg+uQW8afC1HWuo+ABMUXhxcRoefkZU/k=
-github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.25.1/go.mod h1:Jb0NeEA2mWV7QbyWacJefEp7011+W7mt6ylfYQhI0vw=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.26.0 h1:PK7hfuZ/JnGFsDbIHEZPD8ls3GAANd67ORhPxA27g8g=
+github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.26.0/go.mod h1:Jb0NeEA2mWV7QbyWacJefEp7011+W7mt6ylfYQhI0vw=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.5 h1:txOIuyPfXrkcY+Mzj6gZ6cjLY/phiVyi78lgyOpDQpk=
 github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.35.5/go.mod h1:8J3ni6CF08h2o2TbZDZ1fkUth/SW9X+2n8rYtZ1CwTI=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.25.5 h1:kSbSJ37X/51hBD8X0jdaesPLJac67NPsD1OZoi/OZqE=
@@ -499,8 +499,8 @@ github.com/aws/aws-sdk-go-v2/service/signer v1.27.5 h1:yo3BtPzeKzL3RO2HtunAZsFR5
 github.com/aws/aws-sdk-go-v2/service/signer v1.27.5/go.mod h1:nqPdGD4r25YJPmnEUtvGElCQL9XV2bFcV5qTEpFhva4=
 github.com/aws/aws-sdk-go-v2/service/sns v1.34.8 h1:8o7NvBkjmMaX1Cv4vztOx83aFDV6uiU8VM9pTVochng=
 github.com/aws/aws-sdk-go-v2/service/sns v1.34.8/go.mod h1:FjsDzsEw55AFHFERIaeE82KqpwA2GUYhtA7yvcVCHnM=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.38.9 h1:cTcsKveUzuJi5zt5YyE0quVFWB1fyk1MTUHvhdfojdo=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.38.9/go.mod h1:TmYkwanFzsU2TkM0xCt15u3KMzf0wVmx0GhZOsxhVKo=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.38.10 h1:f8DaKfXPawd2U9lEKVZKpGyOaR0Z/RsveDu5stN4mbo=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.38.10/go.mod h1:TmYkwanFzsU2TkM0xCt15u3KMzf0wVmx0GhZOsxhVKo=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.60.2 h1:ZvLR/SUQGk8sR+bHl8vXT00zgJ+U1fHDzrlokzz9DDo=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.60.2/go.mod h1:H5QEq6SthlWMh8PXfSupp6uTg7iaJ3J36Cf15CPG5zE=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.27.5 h1:iUpZGKfTToz+jrG/KWruR/30Vfj2xI0Ea+4kAlCMuoQ=
