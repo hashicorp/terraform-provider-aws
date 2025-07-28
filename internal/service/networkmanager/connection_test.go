@@ -24,7 +24,7 @@ func TestAccNetworkManagerConnection_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:       testAccConnection_basic,
 		acctest.CtDisappears:  testAccConnection_disappears,
-		"tags":                testAccConnection_tags,
+		"tags":                testAccNetworkManagerConnection_tagsSerial,
 		"descriptionAndLinks": testAccConnection_descriptionAndLinks,
 	}
 
