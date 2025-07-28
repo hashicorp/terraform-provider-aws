@@ -147,384 +147,386 @@ func resourceTable() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceTableMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attribute": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attribute": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ScalarAttributeType](),
+							},
 						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ScalarAttributeType](),
+					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
+				},
+				"billing_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.BillingModeProvisioned,
+					ValidateDiagFunc: enum.Validate[awstypes.BillingMode](),
+				},
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"global_secondary_index": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hash_key": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"on_demand_throughput": onDemandThroughputSchema(),
+							"projection_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"read_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"warm_throughput": warmThroughputSchema(),
+							"write_capacity": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
-			},
-			"billing_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.BillingModeProvisioned,
-				ValidateDiagFunc: enum.Validate[awstypes.BillingMode](),
-			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"global_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hash_key": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"on_demand_throughput": onDemandThroughputSchema(),
-						"projection_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"warm_throughput": warmThroughputSchema(),
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-					},
+				"hash_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"import_table": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_compression_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
-						},
-						"input_format": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
-						},
-						"input_format_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"csv": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"delimiter": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"header_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+				"import_table": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"input_compression_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputCompressionType](),
+							},
+							"input_format": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.InputFormat](),
+							},
+							"input_format_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"csv": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"delimiter": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"header_list": {
+														Type:     schema.TypeSet,
+														Optional: true,
+														Elem:     &schema.Schema{Type: schema.TypeString},
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"s3_bucket_source": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"bucket_owner": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
+							"s3_bucket_source": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Required: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucket: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"bucket_owner": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"key_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"local_secondary_index": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"projection_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+				"local_secondary_index": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"projection_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
+					Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
 				},
-				Set: sdkv2.SimpleSchemaSetFunc(names.AttrName),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"on_demand_throughput": onDemandThroughputSchema(),
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"recovery_period_in_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 35),
-							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-								return !d.Get("point_in_time_recovery.0.enabled").(bool)
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"on_demand_throughput": onDemandThroughputSchema(),
+				"point_in_time_recovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"recovery_period_in_days": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(1, 35),
+								DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+									return !d.Get("point_in_time_recovery.0.enabled").(bool)
+								},
 							},
 						},
 					},
 				},
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"read_capacity": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"on_demand_throughput"},
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"consistency_mode": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.MultiRegionConsistencyEventual,
-							ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-							// update is equivalent of force a new *replica*, not table
-						},
-						"point_in_time_recovery": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						names.AttrPropagateTags: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"region_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							// update is equivalent of force a new *replica*, not table
-						},
-						names.AttrStreamARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"stream_label": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				"range_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
 				},
-			},
-			"restore_date_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidUTCTimestamp,
-			},
-			"restore_source_table_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"import_table", "restore_source_name"},
-			},
-			"restore_source_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
-			},
-			"restore_to_latest_time": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
+				"read_capacity": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"on_demand_throughput"},
 				},
-			},
-			names.AttrStreamARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_view_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				StateFunc:    sdkv2.ToUpperSchemaStateFunc,
-				ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.StreamViewType](), ""), false),
-			},
-			"table_class": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  awstypes.TableClassStandard,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return old == "" && new == string(awstypes.TableClassStandard)
-				},
-				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// AWS requires the attribute name to be set when disabling TTL but
-								// does not return it so it causes a diff.
-								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
-									return true
-								}
-								return false
+				"replica": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"consistency_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.MultiRegionConsistencyEventual,
+								ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+								// update is equivalent of force a new *replica*, not table
+							},
+							"point_in_time_recovery": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							names.AttrPropagateTags: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"region_name": {
+								Type:     schema.TypeString,
+								Required: true,
+								// update is equivalent of force a new *replica*, not table
+							},
+							names.AttrStreamARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"stream_label": {
+								Type:     schema.TypeString,
+								Computed: true,
 							},
 						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+					},
+				},
+				"restore_date_time": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidUTCTimestamp,
+				},
+				"restore_source_table_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"import_table", "restore_source_name"},
+				},
+				"restore_source_name": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"import_table", "restore_source_table_arn"},
+				},
+				"restore_to_latest_time": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"server_side_encryption": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"warm_throughput": warmThroughputSchema(),
-			"write_capacity": {
-				Type:          schema.TypeInt,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"on_demand_throughput"},
-			},
+				names.AttrStreamARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"stream_label": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_view_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					StateFunc:    sdkv2.ToUpperSchemaStateFunc,
+					ValidateFunc: validation.StringInSlice(append(enum.Values[awstypes.StreamViewType](), ""), false),
+				},
+				"table_class": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  awstypes.TableClassStandard,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "" && new == string(awstypes.TableClassStandard)
+					},
+					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"ttl": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+									// AWS requires the attribute name to be set when disabling TTL but
+									// does not return it so it causes a diff.
+									if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+										return true
+									}
+									return false
+								},
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+						},
+					},
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				},
+				"warm_throughput": warmThroughputSchema(),
+				"write_capacity": {
+					Type:          schema.TypeInt,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"on_demand_throughput"},
+				},
+			}
 		},
 	}
 }
