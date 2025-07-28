@@ -28,7 +28,8 @@ import (
 
 // @SDKResource("aws_networkmanager_vpc_attachment", name="VPC Attachment")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.VpcAttachment")
+// @Testing(skipEmptyTags=true)
 func resourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,
