@@ -661,7 +661,7 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]any)) > 0 {
-		input.OpenZFSConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+		input.OpenZFSConfiguration.FinalBackupTags = svcTags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())

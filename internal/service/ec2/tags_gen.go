@@ -3,8 +3,8 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -39,13 +39,13 @@ func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optF
 	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	listTags := keyValueTags(ctx, output.Tags)
 
 	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
 	}
 
 	return listTags.KeyValue(key), nil
@@ -63,6 +63,7 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 			},
 		},
 	}
+
 	var output []awstypes.TagDescription
 
 	pages := ec2.NewDescribeTagsPaginator(conn, &input)
@@ -70,12 +71,10 @@ func listTags(ctx context.Context, conn *ec2.Client, identifier string, optFns .
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
-			return tftags.New(ctx, nil), err
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
-		for _, v := range page.Tags {
-			output = append(output, v)
-		}
+		output = append(output, page.Tags...)
 	}
 
 	return keyValueTags(ctx, output), nil
@@ -87,7 +86,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).EC2Client(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -99,8 +98,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns ec2 service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns ec2 service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -147,7 +146,7 @@ func keyValueTags(ctx context.Context, tags any) tftags.KeyValueTags {
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -176,13 +175,13 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	if len(removedTags) > 0 {
 		input := ec2.DeleteTagsInput{
 			Resources: []string{identifier},
-			Tags:      Tags(removedTags),
+			Tags:      svcTags(removedTags),
 		}
 
 		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -191,13 +190,13 @@ func updateTags(ctx context.Context, conn *ec2.Client, identifier string, oldTag
 	if len(updatedTags) > 0 {
 		input := ec2.CreateTagsInput{
 			Resources: []string{identifier},
-			Tags:      Tags(updatedTags),
+			Tags:      svcTags(updatedTags),
 		}
 
 		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

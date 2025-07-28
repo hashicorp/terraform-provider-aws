@@ -88,6 +88,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The calculated unique identifier for the association.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `read` - (Default `5m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
@@ -113,4 +121,4 @@ Using `terraform import`, import Route 53 VPC Association Authorizations using t
 % terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5538910c15da1bdf9d215131a092f3a81fc71383f121c9a24ab62a7757345a40 -->
+<!-- cache-key: cdktf-0.20.8 input-0c1597e04dec517e07d2f118c0ae295de44a60efd604f8ba59a1d58aee1e90a5 -->

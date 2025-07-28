@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -165,7 +164,8 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 
 func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	rule, err := findTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, d.Get("traffic_mirror_filter_id").(string), d.Id())
 
@@ -179,14 +179,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  "traffic-mirror-filter-rule/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, trafficMirrorFilterRuleARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, rule.Description)
 	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
 	if rule.DestinationPortRange != nil {
@@ -323,6 +316,10 @@ func resourceTrafficMirrorFilterRuleImport(ctx context.Context, d *schema.Resour
 	d.SetId(parts[1])
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func trafficMirrorFilterRuleARN(ctx context.Context, c *conns.AWSClient, trafficMirrorFilterRuleID string) string {
+	return c.RegionalARN(ctx, names.EC2, "traffic-mirror-filter-rule/"+trafficMirrorFilterRuleID)
 }
 
 func expandTrafficMirrorPortRangeRequest(tfMap map[string]any) *awstypes.TrafficMirrorPortRangeRequest {

@@ -37,6 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the queue to match.
 
 ## Attribute Reference
@@ -47,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `url` - URL of the queue.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-ad251ed3bcc7c77a93f2281dcdea74a3baac18c00c7ed39d9216027958d5e43c -->
+<!-- cache-key: cdktf-0.20.8 input-92330fa3960c07b6598e42dc4769d52249c99a4fbe5a107d10fd68b42e09d003 -->

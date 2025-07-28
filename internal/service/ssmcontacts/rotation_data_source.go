@@ -22,17 +22,17 @@ import (
 // @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
-func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceRotation{}
+func newRotationDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &rotationDataSource{}
 
 	return d, nil
 }
 
-type dataSourceRotation struct {
-	framework.DataSourceWithConfigure
+type rotationDataSource struct {
+	framework.DataSourceWithModel[rotationDataSourceModel]
 }
 
-func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *rotationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -48,11 +48,7 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"recurrence": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[dsRecurrenceData](ctx),
-				ElementType: fwtypes.NewObjectTypeOf[dsRecurrenceData](ctx),
-				Computed:    true,
-			},
+			"recurrence": framework.DataSourceComputedListOfObjectAttribute[dsRecurrenceData](ctx),
 			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -65,9 +61,9 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 	}
 }
 
-func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *rotationDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().SSMContactsClient(ctx)
-	var data dataSourceRotationData
+	var data rotationDataSourceModel
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
@@ -120,9 +116,10 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceRotationData struct {
+type rotationDataSourceModel struct {
+	framework.WithRegionModel
 	ARN        fwtypes.ARN                                       `tfsdk:"arn"`
-	ContactIds fwtypes.ListValueOf[types.String]                 `tfsdk:"contact_ids"`
+	ContactIds fwtypes.ListOfString                              `tfsdk:"contact_ids"`
 	ID         types.String                                      `tfsdk:"id"`
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`

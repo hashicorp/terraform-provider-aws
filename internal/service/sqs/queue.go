@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,6 +79,10 @@ var (
 			Optional:     true,
 			Computed:     true,
 			ValidateFunc: validation.IntBetween(60, 86_400),
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				// Only valid for encrypted queues, not returned by SQS
+				return !d.Get("sqs_managed_sse_enabled").(bool) && d.Get("kms_master_key_id").(string) == ""
+			},
 		},
 		"kms_master_key_id": {
 			Type:          schema.TypeString,
@@ -231,7 +236,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	input.Attributes = flex.ExpandStringyValueMap(attributes)
 
 	// create is 2 phase: 1. create, 2. wait for propagation
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutCreate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
 		return conn.CreateQueue(ctx, input)
@@ -277,7 +282,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func(ctx context.Context) (map[types.QueueAttributeName]string, error) {
 		return findQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
@@ -296,7 +301,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = queueAttributeMap.APIAttributesToResourceData(outputRaw.(map[types.QueueAttributeName]string), d)
+	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -541,6 +546,14 @@ func statusQueueAttributeState(ctx context.Context, conn *sqs.Client, url string
 
 					// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
 					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds && e == strconv.Itoa(defaultQueueKMSDataKeyReusePeriodSeconds) {
+						continue
+					}
+
+					sse, sseOK := got[types.QueueAttributeNameSqsManagedSseEnabled]
+					kmsMaster, kmsOK := got[types.QueueAttributeNameKmsMasterKeyId]
+					if k == types.QueueAttributeNameKmsDataKeyReusePeriodSeconds &&
+						((!sseOK || (sseOK && sse == "false")) && (!kmsOK || (kmsOK && kmsMaster == ""))) {
+						// API won't set if not encrypted
 						continue
 					}
 

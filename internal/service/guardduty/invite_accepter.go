@@ -60,7 +60,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	masterAccountID := d.Get("master_account_id").(string)
 
 	inputLI := &guardduty.ListInvitationsInput{}
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*awstypes.Invitation, error) {
 		return findInvitation(ctx, conn, inputLI, func(v *awstypes.Invitation) bool {
 			return aws.ToString(v.AccountId) == masterAccountID
 		})
@@ -70,7 +70,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Invitation (%s): %s", masterAccountID, err)
 	}
 
-	invitationID := aws.ToString(outputRaw.(*awstypes.Invitation).InvitationId)
+	invitationID := aws.ToString(output.InvitationId)
 	inputAI := &guardduty.AcceptInvitationInput{
 		DetectorId:   aws.String(detectorID),
 		InvitationId: aws.String(invitationID),

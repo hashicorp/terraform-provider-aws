@@ -44,17 +44,17 @@ const (
 )
 
 // @SDKResource("aws_comprehend_document_classifier", name="Document Classifier")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
+// @Testing(preCheck="testAccPreCheck")
 func ResourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
 		ReadWithoutTimeout:   resourceDocumentClassifierRead,
 		UpdateWithoutTimeout: resourceDocumentClassifierUpdate,
 		DeleteWithoutTimeout: resourceDocumentClassifierDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -537,11 +537,12 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	})
 
 	var tobe string
-	if action == create.ErrActionCreating {
+	switch action {
+	case create.ErrActionCreating:
 		tobe = "to be created"
-	} else if action == create.ErrActionUpdating {
+	case create.ErrActionUpdating:
 		tobe = "to be updated"
-	} else {
+	default:
 		tobe = "to complete action"
 	}
 

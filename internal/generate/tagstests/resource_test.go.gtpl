@@ -11,21 +11,28 @@
 {{ range .InitCodeBlocks -}}
 {{ .Code }}
 {{- end }}
+{{- if .UseAlternateAccount -}}
+	providers := make(map[string]*schema.Provider)
+{{ end }}
 {{ end }}
 
 {{ define "Test" -}}
-resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
 {{- end }}
 
 {{ define "TestCaseSetup" -}}
 {{ template "TestCaseSetupNoProviders" . -}}
-{{ if not .AlternateRegionProvider }}
+{{ if and (not .AlternateRegionProvider) (not .UseAlternateAccount) }}
 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 {{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
-	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
+	PreCheck:     func() { acctest.PreCheck(ctx, t)
+		{{- range .PreChecks }}
+		{{ .Code }}
+		{{- end -}}
+	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
@@ -130,6 +137,7 @@ package {{ .ProviderPackage }}_test
 import (
 	{{ if .OverrideIdentifier }}
 	"context"
+	"unique"
 	{{- end }}
 	"testing"
 
@@ -188,12 +196,14 @@ func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 func {{ template "testname" . }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -229,7 +239,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -244,7 +256,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -285,7 +299,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -301,7 +317,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -340,7 +358,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -358,7 +378,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -387,7 +409,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -411,12 +435,14 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -463,7 +489,9 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -479,7 +507,9 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			{{ if eq .Implementation "sdk" -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -487,8 +517,14 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},
@@ -498,12 +534,14 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -540,7 +578,9 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -554,7 +594,9 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 			{{ if eq .Implementation "sdk" -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -562,8 +604,14 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 					acctest.CtResourceTags: nil,
 					{{ template "AdditionalTfVars" . }}
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{{- end }}
 		},
@@ -573,12 +621,14 @@ func {{ template "testname" . }}_tags_EmptyMap(t *testing.T) {
 func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -608,7 +658,9 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -644,7 +696,9 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -667,12 +721,14 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -713,7 +769,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -728,7 +786,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -754,7 +814,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -775,12 +837,14 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -815,7 +879,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -861,7 +927,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -877,7 +945,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -913,7 +983,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -936,12 +1008,14 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -976,7 +1050,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1017,7 +1093,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1037,14 +1115,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1077,9 +1157,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1095,9 +1177,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1133,9 +1217,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1152,9 +1238,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1190,9 +1278,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1211,9 +1301,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1242,9 +1334,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1265,14 +1359,16 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1313,9 +1409,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1333,9 +1431,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1381,9 +1481,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1402,9 +1504,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1433,9 +1537,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1456,14 +1562,16 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1502,9 +1610,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1522,9 +1632,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1569,9 +1681,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1591,9 +1705,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			{{- end }}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1632,9 +1748,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1657,14 +1775,16 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1699,9 +1819,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1734,9 +1856,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1757,14 +1881,16 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1796,9 +1922,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1834,9 +1962,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1859,14 +1989,16 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1910,9 +2042,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1938,14 +2072,16 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -1983,9 +2119,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2009,14 +2147,16 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2069,9 +2209,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2097,14 +2239,16 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 {{ end }}
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2159,9 +2303,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2184,14 +2330,16 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2224,9 +2372,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2244,14 +2394,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2286,9 +2438,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2329,9 +2483,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2351,14 +2507,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2393,9 +2551,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 			},
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2428,9 +2588,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 			{{ if not .NoImport -}}
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2448,15 +2610,17 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2482,7 +2646,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2508,9 +2672,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 			// 2: Update ignored tag only
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2536,7 +2702,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2562,9 +2728,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 			// 3: Update both tags
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2590,7 +2758,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtProviderKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtProviderValue1Again{{ else }}acctest.CtProviderValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2620,15 +2788,17 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2659,7 +2829,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2717,9 +2887,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 			// 2: Update ignored tag
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2750,7 +2922,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtResourceKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtResourceValue1Updated{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2807,9 +2979,11 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 			// 3: Update both tags
 			{
 				{{ if .AlternateRegionProvider -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else if .UseAlternateAccount -}}
+					ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 				{{ else -}}
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_ignore/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
@@ -2840,7 +3014,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					{{ template "expectFullResourceTags" . }}(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					{{ template "expectFullResourceTags" . }}(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
                         acctest.CtResourceKey1: knownvalue.StringExact({{ if or .TagsUpdateForceNew .TagsUpdateGetTagsIn }}acctest.CtResourceValue1Again{{ else }}acctest.CtResourceValue1{{ end }}), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
@@ -2911,12 +3085,12 @@ func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(
 {{- end }}
 
 {{ if .OverrideIdentifier }}
-func {{ template "expectFullResourceTags" . }}(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(context.Background()), resourceAddress, &types.ServicePackageResourceTags{
+func {{ template "expectFullResourceTags" . }}(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tf{{ .ProviderPackage }}.ServicePackage(ctx), resourceAddress, unique.Make(types.ServicePackageResourceTags{
 		IdentifierAttribute: {{ .OverrideIdentifierAttribute }},
 		{{ if ne .OverrideResourceType "" -}}
 		ResourceType:        "{{ .OverrideResourceType }}",
 		{{- end }}
-	}, knownValue)
+	}), knownValue)
 }
 {{ end }}

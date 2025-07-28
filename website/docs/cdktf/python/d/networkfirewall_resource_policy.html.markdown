@@ -33,6 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) The Amazon Resource Name (ARN) that identifies the resource policy.
 
 ## Attribute Reference
@@ -44,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy
 
-<!-- cache-key: cdktf-0.20.8 input-107f955d750a5b8827c396d72211b79ae4ad8c3cde0654c3353f405a454c633b -->
+<!-- cache-key: cdktf-0.20.8 input-8e7abd2d3562dce7bdec718e561d4fa2e059c5e4c4d74746219b58e33f3a2494 -->

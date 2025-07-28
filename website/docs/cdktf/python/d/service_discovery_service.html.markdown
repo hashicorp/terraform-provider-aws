@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the service.
 * `namespace_id` - (Required) ID of the namespace that the service belongs to.
 
@@ -81,4 +82,4 @@ The `health_check_custom_config` configuration block supports the following argu
 
 * `failure_threshold` -  The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
 
-<!-- cache-key: cdktf-0.20.8 input-ca4c3a8f65675cfbb78530e61a0b943f6407f2807372bf295786f7f517fe0f6e -->
+<!-- cache-key: cdktf-0.20.8 input-107c015712278777b503c4a241878d50297ce8be267df04aa895229fc26bda91 -->

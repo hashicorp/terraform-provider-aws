@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,13 +63,25 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_kinesisBatchSize(rName, "null"),
+				Config: testAccEventSourceMappingConfig_kinesisBatchSize(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -86,6 +99,11 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceNameUpdated, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceNameUpdated, names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -196,13 +214,25 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_sqsBatchSize(rName, "null"),
+				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -221,6 +251,11 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceNameUpdated, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -253,13 +288,25 @@ func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, "null"),
+				Config: testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -322,7 +369,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, false, ""),
 			},
 			{
 				ResourceName:            resourceName,
@@ -331,7 +378,14 @@ func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName),
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, "KEYS_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
+				),
+			},
+			// https://github.com/hashicorp/terraform-provider-aws/issues/13662.
+			{
+				Config: testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, "NEW_AND_OLD_IMAGES"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, mappingResourceName, &conf),
 				),
@@ -887,13 +941,25 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_msk(rName, "null"),
+				Config: testAccEventSourceMappingConfig_msk(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -912,6 +978,11 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -985,14 +1056,26 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			// Verify also that bootstrap broker order does not matter.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_selfManagedKafka(rName, "null", "test2:9092,test1:9092"),
+				Config: testAccEventSourceMappingConfig_selfManagedKafka(rName, "null", "test2:9092,test1:9092"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1121,13 +1204,25 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "queues.*", "test"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_activeMQ(rName, "null"),
+				Config: testAccEventSourceMappingConfig_activeMQ(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1164,13 +1259,25 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "queues.*", "test"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "2"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
 			// value, but then moves to not providing the value, that we don't consider this
 			// a diff.
 			{
-				PlanOnly: true,
-				Config:   testAccEventSourceMappingConfig_rabbitMQ(rName, "null"),
+				Config: testAccEventSourceMappingConfig_rabbitMQ(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1705,15 +1812,15 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool) string {
-	var streamStatus string
-	var streamViewType string
+func testAccEventSourceMappingConfig_dynamoDBStreamBase(rName string, streamEnabled bool, streamViewType string) string {
+	var streamStatusAttribute string
+	var streamViewTypeAttribute string
 	if streamEnabled {
-		streamStatus = "stream_enabled   = true"
-		streamViewType = "stream_view_type = \"KEYS_ONLY\""
+		streamStatusAttribute = "stream_enabled   = true"
+		streamViewTypeAttribute = `stream_view_type = "` + streamViewType + `"`
 	} else {
-		streamStatus = ""
-		streamViewType = ""
+		streamStatusAttribute = ""
+		streamViewTypeAttribute = ""
 	}
 
 	return fmt.Sprintf(`
@@ -1763,6 +1870,7 @@ resource "aws_dynamodb_table" "test" {
     name = "TestTableHashKey"
     type = "S"
   }
+
   %[2]s
   %[3]s
 }
@@ -1774,7 +1882,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   runtime       = "nodejs18.x"
 }
-`, rName, streamStatus, streamViewType)
+`, rName, streamStatusAttribute, streamViewTypeAttribute)
 }
 
 func testAccEventSourceMappingConfig_kafkaBase(rName string) string {
@@ -1924,11 +2032,13 @@ resource "aws_security_group" "test" {
 resource "aws_mq_broker" "test" {
   broker_name             = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.17.6"
-  host_instance_type      = "mq.t2.micro"
+  engine_version          = "5.18"
+  host_instance_type      = "mq.t3.micro"
   security_groups         = [aws_security_group.test.id]
   authentication_strategy = "simple"
   storage_type            = "efs"
+
+  auto_minor_version_upgrade = true
 
   logs {
     general = true
@@ -2010,11 +2120,12 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name             = %[1]q
-  engine_type             = "RabbitMQ"
-  engine_version          = "3.8.11"
-  host_instance_type      = "mq.t3.micro"
-  authentication_strategy = "simple"
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = "3.13"
+  host_instance_type = "mq.t3.micro"
+
+  auto_minor_version_upgrade = true
 
   logs {
     general = true
@@ -2134,7 +2245,9 @@ resource "aws_docdb_cluster" "test" {
 func testAccEventSourceMappingConfig_sqsKMSKeyARN(rName, pattern string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "%[1]s"
+  description             = "%[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -2670,8 +2783,8 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true), `
+func testAccEventSourceMappingConfig_dynamoDBStreamEnabled(rName, streamViewType string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBStreamBase(rName, true, streamViewType), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true

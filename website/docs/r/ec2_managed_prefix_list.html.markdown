@@ -52,6 +52,7 @@ resource "aws_ec2_managed_prefix_list" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required, Forces new resource) Address family (`IPv4` or `IPv6`) of this prefix list.
 * `entry` - (Optional) Configuration block for prefix list entry. Detailed below. Different entries may have overlapping CIDR blocks, but a particular CIDR should not be duplicated.
 * `max_entries` - (Required) Maximum number of entries that this prefix list can contain.

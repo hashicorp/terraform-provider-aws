@@ -36,6 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `indexName` - (Required) Name of the place index resource.
 
 ## Attribute Reference
@@ -50,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the place index.
 * `updateTime` - Timestamp for when the place index resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-6bb9def3cfd4a1197d25303ba5cc4f3cedb296a92274d37e9697b77dc7cadbf8 -->
+<!-- cache-key: cdktf-0.20.8 input-c7842b21f89dc6a2da8067ac766c46cb0628322e401e8276994c3ec01bf888c8 -->

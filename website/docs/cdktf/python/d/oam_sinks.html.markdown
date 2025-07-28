@@ -31,10 +31,16 @@ class MyConvertedCode(TerraformStack):
         DataAwsOamSinks(self, "example")
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of ARN of the Sinks.
 
-<!-- cache-key: cdktf-0.20.8 input-b46f5566657905f2a09bc4770daf56461626b99543a0e965bfb54b6891ad7156 -->
+<!-- cache-key: cdktf-0.20.8 input-7ac3fd609769f757e3be5e31f1438718b5b92fd141a178b5359257a56d48b0cc -->

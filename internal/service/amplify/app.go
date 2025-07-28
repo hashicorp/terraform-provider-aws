@@ -185,6 +185,11 @@ func resourceApp() *schema.Resource {
 					},
 				},
 			},
+			"compute_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"custom_headers": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -259,6 +264,22 @@ func resourceApp() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			"job_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"build_compute_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.BuildComputeType](),
+						},
+					},
+				},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -346,6 +367,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.CacheConfig = expandCacheConfig(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("compute_role_arn"); ok {
+		input.ComputeRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("custom_headers"); ok {
 		input.CustomHeaders = aws.String(v.(string))
 	}
@@ -382,6 +407,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.IamServiceRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("job_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.JobConfig = expandJobConfig(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("oauth_token"); ok {
 		input.OauthToken = aws.String(v.(string))
 	}
@@ -394,13 +423,15 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Repository = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateApp(ctx, &input)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateApp(ctx, &input)
+	}, "role provided cannot be assumed")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify App (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.App.AppId))
+	d.SetId(aws.ToString(outputRaw.(*amplify.CreateAppOutput).App.AppId))
 
 	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
@@ -437,6 +468,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 			return sdkdiag.AppendErrorf(diags, "setting cache_config: %s", err)
 		}
 	}
+	d.Set("compute_role_arn", app.ComputeRoleArn)
 	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
@@ -449,6 +481,13 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("enable_branch_auto_deletion", app.EnableBranchAutoDeletion)
 	d.Set("environment_variables", aws.StringMap(app.EnvironmentVariables))
 	d.Set("iam_service_role_arn", app.IamServiceRoleArn)
+	if app.JobConfig != nil {
+		if err := d.Set("job_config", []any{flattenJobConfig(app.JobConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting job_config: %s", err)
+		}
+	} else {
+		d.Set("job_config", nil)
+	}
 	d.Set(names.AttrName, app.Name)
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
@@ -508,6 +547,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			}
 		}
 
+		if d.HasChange("compute_role_arn") {
+			input.ComputeRoleArn = aws.String(d.Get("compute_role_arn").(string))
+		}
+
 		if d.HasChange("custom_headers") {
 			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
 		}
@@ -553,6 +596,12 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 		if d.HasChange("iam_service_role_arn") {
 			input.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+		}
+
+		if d.HasChange("job_config") {
+			if v, ok := d.Get("job_config").([]any); ok && len(v) > 0 && v[0] != nil {
+				input.JobConfig = expandJobConfig(v[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -802,6 +851,20 @@ func expandCustomRules(tfList []any) []types.CustomRule {
 	return apiObjects
 }
 
+func expandJobConfig(tfMap map[string]any) *types.JobConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.JobConfig{}
+
+	if v, ok := tfMap["build_compute_type"].(string); ok && v != "" {
+		apiObject.BuildComputeType = types.BuildComputeType(v)
+	}
+
+	return apiObject
+}
+
 func flattenCustomRule(apiObject types.CustomRule) map[string]any {
 	tfMap := map[string]any{}
 
@@ -836,6 +899,18 @@ func flattenCustomRules(apiObjects []types.CustomRule) []any {
 	}
 
 	return tfList
+}
+
+func flattenJobConfig(apiObject *types.JobConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["build_compute_type"] = string(apiObject.BuildComputeType)
+
+	return tfMap
 }
 
 func flattenProductionBranch(apiObject *types.ProductionBranch) map[string]any {

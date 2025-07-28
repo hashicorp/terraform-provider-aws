@@ -41,6 +41,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
@@ -249,6 +250,43 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 	})
 }
 
+func TestAccEventsBus_deadLetterConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_deadLetterConfig1(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", "aws_sqs_queue.test1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBusConfig_deadLetterConfig2(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", "aws_sqs_queue.test2", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
@@ -373,10 +411,12 @@ data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test1" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "key_policy" {
@@ -452,4 +492,34 @@ resource "aws_cloudwatch_event_bus" "test" {
   kms_key_identifier = aws_kms_key.test2.arn
 }
 `, name))
+}
+
+func testAccBusConfig_deadLetterConfig1(name string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test1" {
+  name = "%[1]s-test1"
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  dead_letter_config {
+    arn = aws_sqs_queue.test1.arn
+  }
+}
+`, name)
+}
+
+func testAccBusConfig_deadLetterConfig2(name string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test2" {
+  name = "%[1]s-test2"
+}
+
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  dead_letter_config {
+    arn = aws_sqs_queue.test2.arn
+  }
+}
+`, name)
 }

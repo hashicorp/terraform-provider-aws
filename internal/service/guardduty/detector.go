@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,7 +26,10 @@ import (
 
 // @SDKResource("aws_guardduty_detector", name="Detector")
 // @Tags(identifierAttribute="arn")
-func ResourceDetector() *schema.Resource {
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(generator=false)
+func resourceDetector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDetectorCreate,
 		ReadWithoutTimeout:   resourceDetectorRead,
@@ -46,10 +50,11 @@ func ResourceDetector() *schema.Resource {
 				Computed: true,
 			},
 			"datasources": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				MaxItems:   1,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "datasources is deprecated. Use aws_guardduty_detector_feature resources instead.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kubernetes": {
@@ -132,9 +137,10 @@ func ResourceDetector() *schema.Resource {
 			// finding_publishing_frequency is marked as Computed:true since
 			// GuardDuty member accounts inherit setting from master account
 			"finding_publishing_frequency": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FindingPublishingFrequency](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -174,7 +180,7 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	gdo, err := FindDetectorByID(ctx, conn, d.Id())
+	gdo, err := findDetectorByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
@@ -484,7 +490,7 @@ func flattenS3LogsConfigurationResult(apiObject *awstypes.S3LogsConfigurationRes
 	return tfMap
 }
 
-func FindDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
+func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*guardduty.GetDetectorOutput, error) {
 	input := &guardduty.GetDetectorInput{
 		DetectorId: aws.String(id),
 	}

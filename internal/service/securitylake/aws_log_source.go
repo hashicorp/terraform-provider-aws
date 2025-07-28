@@ -38,7 +38,7 @@ func newAWSLogSourceResource(context.Context) (resource.ResourceWithConfigure, e
 }
 
 type awsLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[awsLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 }
@@ -272,6 +272,7 @@ func findAWSLogSourceBySourceName(ctx context.Context, conn *securitylake.Client
 }
 
 type awsLogSourceResourceModel struct {
+	framework.WithRegionModel
 	ID     types.String                                             `tfsdk:"id"`
 	Source fwtypes.ListNestedObjectValueOf[awsLogSourceSourceModel] `tfsdk:"source"`
 }

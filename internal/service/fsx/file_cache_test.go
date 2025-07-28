@@ -631,6 +631,7 @@ func testAccFileCacheConfig_kmsKeyID1(rName string) string {
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {
@@ -658,6 +659,7 @@ func testAccFileCacheConfig_kmsKeyID2(rName string) string {
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {

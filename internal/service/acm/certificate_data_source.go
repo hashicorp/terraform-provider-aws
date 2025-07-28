@@ -122,8 +122,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 1 * time.Minute
 	)
-	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
-		func() ([]awstypes.CertificateSummary, error) {
+	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout,
+		func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 			output, err := findCertificates(ctx, conn, &input, f)
 			switch {
 			case err != nil:
@@ -164,7 +164,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
 			}
 
-			if !tags.ContainsAll(KeyValueTags(ctx, tagsToMatch)) {
+			if !tags.ContainsAll(keyValueTags(ctx, tagsToMatch)) {
 				continue
 			}
 		}

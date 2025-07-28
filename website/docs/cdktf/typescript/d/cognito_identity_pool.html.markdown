@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identityPoolName` - (Required)  The Cognito Identity Pool name.
 
 ## Attribute Reference
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportedLoginProviders` - Key-Value pairs mapping provider names to provider app IDs.
 * `tags` - A map of tags to assigned to the Identity Pool.
 
-<!-- cache-key: cdktf-0.20.8 input-6bbe3d8309c3b6b61d82ed31432b903fb83ab96fbd1ea591aba2ca68e658f68f -->
+<!-- cache-key: cdktf-0.20.8 input-fe6fd895598fc3078a60cbe65f57d77453e85c0d8915e244beb5e1a0b6969dcb -->

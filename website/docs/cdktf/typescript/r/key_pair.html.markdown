@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `keyName` - (Optional) The name for the key pair. If neither `keyName` nor `keyNamePrefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
 * `keyNamePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `keyName`. If neither `keyName` nor `keyNamePrefix` is provided, Terraform will create a unique key name using the prefix `terraform-`.
 * `publicKey` - (Required) The public key material.
@@ -95,4 +96,4 @@ Using `terraform import`, import Key Pairs using the `keyName`. For example:
 
 ~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.
 
-<!-- cache-key: cdktf-0.20.8 input-bc4b2bf30b41e8b680f59b0e745bd630e891fca6baac140b343a76369eb3e8aa -->
+<!-- cache-key: cdktf-0.20.8 input-2d5b9a919919188a55815230f7ef8313f298eb6827fc618c8a8bece269766d53 -->

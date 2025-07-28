@@ -30,6 +30,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"dateFilters":        testAccAutomationRule_dateFilters,
 			"mapFilters":         testAccAutomationRule_mapFilters,
 			"tags":               testAccAutomationRule_tags,
+			"Identity":           testAccSecurityHubAutomationRule_IdentitySerial,
 		},
 		"ActionTarget": {
 			acctest.CtBasic:      testAccActionTarget_basic,

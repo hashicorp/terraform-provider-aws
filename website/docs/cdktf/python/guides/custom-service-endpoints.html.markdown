@@ -209,6 +209,7 @@ class MyConvertedCode(TerraformStack):
 |EMR Serverless|`emrserverless`|`AWS_ENDPOINT_URL_EMR_SERVERLESS`|`emr_serverless`|
 |EventBridge|`events`(or `eventbridge` or `cloudwatchevents`)|`AWS_ENDPOINT_URL_EVENTBRIDGE`|`eventbridge`|
 |CloudWatch Evidently|`evidently`(or `cloudwatchevidently`)|`AWS_ENDPOINT_URL_EVIDENTLY`|`evidently`|
+|Elastic VMware|`evs`|`AWS_ENDPOINT_URL_EVS`|`evs`|
 |FinSpace|`finspace`|`AWS_ENDPOINT_URL_FINSPACE`|`finspace`|
 |Kinesis Firehose|`firehose`|`AWS_ENDPOINT_URL_FIREHOSE`|`firehose`|
 |FIS (Fault Injection Simulator)|`fis`|`AWS_ENDPOINT_URL_FIS`|`fis`|
@@ -231,8 +232,6 @@ class MyConvertedCode(TerraformStack):
 |CloudWatch Internet Monitor|`internetmonitor`|`AWS_ENDPOINT_URL_INTERNETMONITOR`|`internetmonitor`|
 |Invoicing|`invoicing`|`AWS_ENDPOINT_URL_INVOICING`|`invoicing`|
 |IoT Core|`iot`|`AWS_ENDPOINT_URL_IOT`|`iot`|
-|IoT Analytics|`iotanalytics`|`AWS_ENDPOINT_URL_IOTANALYTICS`|`iotanalytics`|
-|IoT Events|`iotevents`|`AWS_ENDPOINT_URL_IOT_EVENTS`|`iot_events`|
 |IVS (Interactive Video)|`ivs`|`AWS_ENDPOINT_URL_IVS`|`ivs`|
 |IVS (Interactive Video) Chat|`ivschat`|`AWS_ENDPOINT_URL_IVSCHAT`|`ivschat`|
 |Managed Streaming for Kafka|`kafka`(or `msk`)|`AWS_ENDPOINT_URL_KAFKA`|`kafka`|
@@ -272,10 +271,11 @@ class MyConvertedCode(TerraformStack):
 |Network Firewall|`networkfirewall`|`AWS_ENDPOINT_URL_NETWORK_FIREWALL`|`network_firewall`|
 |Network Manager|`networkmanager`|`AWS_ENDPOINT_URL_NETWORKMANAGER`|`networkmanager`|
 |CloudWatch Network Monitor|`networkmonitor`|`AWS_ENDPOINT_URL_NETWORKMONITOR`|`networkmonitor`|
+|User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
+|User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
-|OpsWorks|`opsworks`|`AWS_ENDPOINT_URL_OPSWORKS`|`opsworks`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
 |OpenSearch Ingestion|`osis`(or `opensearchingestion`)|`AWS_ENDPOINT_URL_OSIS`|`osis`|
 |Outposts|`outposts`|`AWS_ENDPOINT_URL_OUTPOSTS`|`outposts`|
@@ -329,7 +329,6 @@ class MyConvertedCode(TerraformStack):
 |SFN (Step Functions)|`sfn`(or `stepfunctions`)|`AWS_ENDPOINT_URL_SFN`|`sfn`|
 |Shield|`shield`|`AWS_ENDPOINT_URL_SHIELD`|`shield`|
 |Signer|`signer`|`AWS_ENDPOINT_URL_SIGNER`|`signer`|
-|SDB (SimpleDB)|`simpledb`(or `sdb`)|`AWS_ENDPOINT_URL_SIMPLEDB`|`simpledb`|
 |SNS (Simple Notification)|`sns`|`AWS_ENDPOINT_URL_SNS`|`sns`|
 |SQS (Simple Queue)|`sqs`|`AWS_ENDPOINT_URL_SQS`|`sqs`|
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|
@@ -355,7 +354,6 @@ class MyConvertedCode(TerraformStack):
 |WAF Classic Regional|`wafregional`|`AWS_ENDPOINT_URL_WAF_REGIONAL`|`waf_regional`|
 |WAF|`wafv2`|`AWS_ENDPOINT_URL_WAFV2`|`wafv2`|
 |Well-Architected Tool|`wellarchitected`|`AWS_ENDPOINT_URL_WELLARCHITECTED`|`wellarchitected`|
-|WorkLink|`worklink`|`AWS_ENDPOINT_URL_WORKLINK`|`worklink`|
 |WorkSpaces|`workspaces`|`AWS_ENDPOINT_URL_WORKSPACES`|`workspaces`|
 |WorkSpaces Web|`workspacesweb`|`AWS_ENDPOINT_URL_WORKSPACES_WEB`|`workspaces_web`|
 |X-Ray|`xray`|`AWS_ENDPOINT_URL_XRAY`|`xray`|
@@ -458,4 +456,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7b4792ab176c16f174d183613f2375533beb97cc77ccb4894d601d3404c9495e -->
+<!-- cache-key: cdktf-0.20.8 input-7a47e42bbb4a9158aaec4ecb5fa52437ae8285a712c7cfb40b7f737ca462976e -->

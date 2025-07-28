@@ -104,6 +104,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `name` - (Required) The name of the event data store.
 - `billingMode` - (Optional) The billing mode for the event data store. The valid values are `EXTENDABLE_RETENTION_PRICING` and `FIXED_RETENTION_PRICING`. Defaults to `EXTENDABLE_RETENTION_PRICING`.
 - `suspend` - (Optional) Specifies whether to stop ingesting new events into the event data store. If set to `true`, ingestion is suspended while maintaining the ability to query existing events. If set to `false`, ingestion is active.
@@ -174,4 +175,4 @@ Using `terraform import`, import event data stores using their `arn`. For exampl
 % terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e01aa175cb632c503cf9995e1aecfc59c9c01434c5b4a17cfc8d0bbe6226427b -->
+<!-- cache-key: cdktf-0.20.8 input-7242b8fcc10d227d3c28295bbd27b082efb5b29052bab39f49543335ead22bfe -->

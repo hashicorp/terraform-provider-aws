@@ -3,9 +3,9 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -34,10 +34,10 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 	)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
-	return KeyValueTags(ctx, output.TagList), nil
+	return keyValueTags(ctx, output.TagList), nil
 }
 
 // ListTags lists elasticache service tags and set them in Context.
@@ -46,7 +46,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -58,8 +58,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns elasticache service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns elasticache service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -74,8 +74,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from elasticache service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from elasticache service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -89,7 +89,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -100,7 +100,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets elasticache service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -110,7 +110,7 @@ func createTags(ctx context.Context, conn *elasticache.Client, identifier string
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
+	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates elasticache service tags.
@@ -138,7 +138,7 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 		)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -147,7 +147,7 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 	if len(updatedTags) > 0 {
 		input := elasticache.AddTagsToResourceInput{
 			ResourceName: aws.String(identifier),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
 		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
@@ -158,7 +158,7 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 		)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

@@ -228,7 +228,10 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccActivityConfig_kmsBase() string {
 	return `
-resource "aws_kms_key" "kms_key_for_sfn" {}
+resource "aws_kms_key" "kms_key_for_sfn" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 `
 }
 

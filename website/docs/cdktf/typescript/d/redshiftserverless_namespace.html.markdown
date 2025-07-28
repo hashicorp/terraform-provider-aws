@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespaceName` - (Required) The name of the namespace.
 
 ## Attribute Reference
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `logExports` - The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespaceId` - The Redshift Namespace ID.
 
-<!-- cache-key: cdktf-0.20.8 input-353587d87083acd6cf58b7bf04d05a60c67f4c8fc0953c115222a623d6c4455b -->
+<!-- cache-key: cdktf-0.20.8 input-9a5bcfd6cdd97b75b0b4d4f12a64b3e7e9f61d2af64161c6cb38a2919cee3bc6 -->

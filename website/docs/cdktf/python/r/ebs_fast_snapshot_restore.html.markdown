@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Required) Availability zone in which to enable fast snapshot restores.
 * `snapshot_id` - (Required) ID of the snapshot.
 
@@ -80,4 +81,4 @@ Using `terraform import`, import EC2 (Elastic Compute Cloud) EBS Fast Snapshot R
 % terraform import aws_ebs_fast_snapshot_restore.example us-west-2a,snap-abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-877c5de11f4dd5af1e5e7252aa01b12e7a15d5cf11c41dffd83651d37b7fa8f9 -->
+<!-- cache-key: cdktf-0.20.8 input-be289e7b8efcb204c1afe4f782d388173ecde431c84320cc65d336b067e40124 -->

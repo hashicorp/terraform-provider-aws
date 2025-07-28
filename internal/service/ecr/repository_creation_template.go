@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -94,17 +95,14 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
 			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
+					validation.StringLenBetween(2, 256),
 					validation.StringMatch(
 						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
@@ -114,17 +112,7 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_policy": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"repository_policy":    sdkv2.IAMPolicyDocumentSchemaOptional(),
 			names.AttrResourceTags: tftags.TagsSchema(),
 		},
 	}
@@ -172,7 +160,7 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 	}
 
 	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	output, err := conn.CreateRepositoryCreationTemplate(ctx, input)
@@ -234,7 +222,7 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }
@@ -289,7 +277,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrResourceTags) {
-		input.ResourceTags = Tags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
+		input.ResourceTags = svcTags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
 	}
 
 	_, err := conn.UpdateRepositoryCreationTemplate(ctx, input)

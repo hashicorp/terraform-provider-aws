@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowWrites` - (Optional) Whether to allow write operations for a datashare.
 
 ## Attribute Reference
@@ -88,4 +89,4 @@ Using `terraform import`, import Redshift Data Share Authorization using the `id
 % terraform import aws_redshift_data_share_authorization.example arn:aws:redshift:us-west-2:123456789012:datashare:3072dae5-022b-4d45-9cd3-01f010aae4b2/example_share,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-708937aa53df47e6404ff9b53e5029015912cb0bb93ab93016ed1a327189d22c -->
+<!-- cache-key: cdktf-0.20.8 input-4e9bc75a1148a9db46c77c6ec1791a1de808ca37b868d6541f2d3ac67a92f642 -->

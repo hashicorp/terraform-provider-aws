@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_global_network"
 description: |-
-  Retrieve information about a global network.
+  Provides details about an existing Network Manager global network.
 ---
 
 # Data Source: aws_networkmanager_global_network
 
-Retrieve information about a global network.
+Provides details about an existing Network Manager global network.
 
 ## Example Usage
 
@@ -19,6 +19,8 @@ data "aws_networkmanager_global_network" "example" {
 ```
 
 ## Argument Reference
+
+This data source supports the following arguments:
 
 * `global_network_id` - (Required) ID of the specific global network to retrieve.
 

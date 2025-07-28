@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
-// @Testing(noImport=true)
+// @NoImport
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -826,16 +826,16 @@ func grantHash(v any) int {
 	}
 
 	if v, ok := m[names.AttrID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m[names.AttrType]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if v, ok := m[names.AttrURI]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		fmt.Fprintf(&buf, "%s-", v.(string))
 	}
 	if p, ok := m[names.AttrPermissions]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
+		fmt.Fprintf(&buf, "%v-", p.(*schema.Set).List())
 	}
 	return create.StringHashcode(buf.String())
 }

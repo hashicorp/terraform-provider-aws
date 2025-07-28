@@ -271,6 +271,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `badgeEnabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badgeUrl` attribute when enabled.
 * `buildBatchConfig` - (Optional) Defines the batch build options for the project.
@@ -355,11 +356,10 @@ The following arguments are optional:
 
 * `certificate` - (Optional) ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
 * `computeType` - (Required) Information about the compute resources the build project will use. Valid values:
-  `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
-  `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. `BUILD_GENERAL1_SMALL` is only valid
-  if `type` is set to `LINUX_CONTAINER`. When `type` is set to `LINUX_GPU_CONTAINER`, `computeType` must be
-  `BUILD_GENERAL1_LARGE`. When `type` is set to `LINUX_LAMBDA_CONTAINER` or `ARM_LAMBDA_CONTAINER`, `computeType` must
-  be `BUILD_LAMBDA_XGB`.`
+  `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
+  `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. For additional information, see
+  the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+* `dockerServer` - (Optional) Configuration block. Detailed below.
 * `fleet` - (Optional) Configuration block. Detailed below.
 * `environmentVariable` - (Optional) Configuration block. Detailed below.
 * `imagePullCredentialsType` - (Optional) Type of credentials AWS CodeBuild uses to pull images in your build. Valid
@@ -373,10 +373,15 @@ The following arguments are optional:
 * `privilegedMode` - (Optional) Whether to enable running the Docker daemon inside a Docker container. Defaults to
   `false`.
 * `registryCredential` - (Optional) Configuration block. Detailed below.
-* `type` - (Required) Type of build environment to use for related builds. Valid values: `LINUX_CONTAINER`,
-  `LINUX_GPU_CONTAINER`, `WINDOWS_CONTAINER` (deprecated), `WINDOWS_SERVER_2019_CONTAINER`, `ARM_CONTAINER`,
-  `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`. For additional information, see
+* `type` - (Required) Type of build environment to use for related builds. Valid values: `WINDOWS_CONTAINER` (deprecated), `LINUX_CONTAINER`,
+  `LINUX_GPU_CONTAINER`, `ARM_CONTAINER`, `WINDOWS_SERVER_2019_CONTAINER`, `WINDOWS_SERVER_2022_CONTAINER`,
+  `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`, `LINUX_EC2`, `ARM_EC2`, `WINDOWS_EC2`, `MAC_ARM`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+
+#### environment: docker_server
+
+* `computeType` - (Required) Compute type for the Docker server. Valid values: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, and `BUILD_GENERAL1_2XLARGE`.
+* `securityGroupIds` - (Optional) List of security group IDs to assign to the Docker server.
 
 #### environment: fleet
 
@@ -604,4 +609,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47f06598dc7a7111bdc1a4fa111b3efa0e2882558a6397d4c38641f5eea636e4 -->
+<!-- cache-key: cdktf-0.20.8 input-1d285dc6a0e8eca612fbf8753268b7c675daa832eb2074da37080085292d4b33 -->

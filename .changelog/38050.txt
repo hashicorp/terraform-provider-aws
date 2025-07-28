@@ -1,0 +1,8 @@
+```release-note:breaking-change
+resource/aws_batch_compute_environment: Rename `compute_environment_name` to `name`
+resource/aws_batch_compute_environment: Rename `compute_environment_name_prefix` to `name_prefix`
+```
+
+```release-note:breaking-change
+resource/aws_batch_compute_environment_data_source: Rename `compute_environment_name` to `name`
+```

@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fairshare_policy` - (Optional) A fairshare policy block specifies the `computeReservation`, `share_delay_seconds`, and `shareDistribution` of the scheduling policy. The `fairshare_policy` block is documented below.
 * `name` - (Required) Specifies the name of the scheduling policy.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -109,4 +110,4 @@ Using `terraform import`, import Batch Scheduling Policy using the `arn`. For ex
 % terraform import aws_batch_scheduling_policy.test_policy arn:aws:batch:us-east-1:123456789012:scheduling-policy/sample
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c7708019f2dc1954cf5d6a36c441a8ca9c516d4c4eb0c1825e47bb64113b9003 -->
+<!-- cache-key: cdktf-0.20.8 input-2cdce2569ce0605cd6a6b86df04c6674bf76d8ac06e3dd097823b39f9faf6825 -->

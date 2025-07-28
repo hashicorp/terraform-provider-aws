@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_redshiftserverless_workgroup: Add `track_name` argument
+```
+
+```release-note:enhancement
+data-source/aws_redshiftserverless_workgroup: Add `track_name` attribute
+```

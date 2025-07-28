@@ -287,6 +287,38 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 	})
 }
 
+func testAccEnabler_codeRepository(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName := "aws_inspector2_enabler.test"
+	resourceTypes := []types.ResourceScanType{types.ResourceScanTypeCodeRepository}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnablerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnablerConfig_basic(resourceTypes),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnablerExists(ctx, resourceName, resourceTypes),
+					testAccCheckEnablerID(ctx, resourceName, resourceTypes),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "account_ids.*", "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeCodeRepository)),
+				),
+			},
+		},
+	})
+}
+
 func testAccEnabler_memberAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -524,7 +556,6 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_types.*", string(types.ResourceScanTypeLambda)),
 				),
-				// PlanOnly: true,
 			},
 		},
 	})

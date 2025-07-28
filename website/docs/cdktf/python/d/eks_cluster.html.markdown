@@ -39,6 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -94,10 +97,10 @@ This data source exports the following attributes in addition to the arguments a
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `security_group_ids` – List of security group IDs
-    * `subnet_ids` – List of subnet IDs
-    * `vpc_id` – The VPC associated with your cluster.
+    * `security_group_ids` - List of security group IDs
+    * `subnet_ids` - List of subnet IDs
+    * `vpc_id` - The VPC associated with your cluster.
 * `zonal_shift_config` - Contains Zonal Shift Configuration.
     * `enabled` - Whether zonal shift is enabled.
 
-<!-- cache-key: cdktf-0.20.8 input-bfc1820b5d496a8bf6afc407d9dfcf5fb0f38224aa1464b69a5f962e938f3448 -->
+<!-- cache-key: cdktf-0.20.8 input-93df8db96794e7d6414f330960e63d0313b6dfaf0ba8aa4ccbefcd9beb1e1cfa -->

@@ -395,7 +395,6 @@ func resourceUserPool() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
@@ -605,6 +604,22 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advanced_security_additional_flows": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"custom_auth_mode": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
+									},
+								},
+							},
+						},
 						"advanced_security_mode": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -632,12 +647,14 @@ func resourceUserPool() *schema.Resource {
 			"username_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"case_sensitive": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -828,14 +845,8 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if v, ok := d.GetOk("user_pool_add_ons"); ok {
-		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-			input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-			if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-				input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-			}
-		}
+	if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+		input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("verification_message_template"); ok {
@@ -1057,6 +1068,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"email_verification_message",
 		"email_verification_subject",
 		"lambda_config",
+		names.AttrName,
 		"password_policy",
 		"sign_in_policy",
 		"sms_authentication_message",
@@ -1140,6 +1152,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
 		}
 
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("password_policy"); ok {
 			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				passwordPolicy := expandPasswordPolicyType(v)
@@ -1185,14 +1201,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		if v, ok := d.GetOk("user_pool_add_ons"); ok {
-			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
-				input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-				if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-					input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-				}
-			}
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("verification_message_template"); ok {
@@ -1836,6 +1846,38 @@ func expandSignInPolicyType(tfMap map[string]any) *awstypes.SignInPolicyType {
 	return apiObject
 }
 
+func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.UserPoolAddOnsType{}
+
+	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["advanced_security_mode"].(string); ok {
+		apiObject.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v)
+	}
+
+	return apiObject
+}
+
+func expandAdvancedSecurityAdditionalFlowType(tfMap map[string]any) *awstypes.AdvancedSecurityAdditionalFlowsType {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AdvancedSecurityAdditionalFlowsType{}
+
+	if v, ok := tfMap["custom_auth_mode"].(string); ok {
+		apiObject.CustomAuthMode = awstypes.AdvancedSecurityEnabledModeType(v)
+	}
+
+	return apiObject
+}
+
 func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
 	if apiObject == nil {
 		return []any{}
@@ -1843,7 +1885,22 @@ func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
 
 	tfMap := make(map[string]any)
 
+	tfMap["advanced_security_additional_flows"] = flattenAdvancedSecurityAdditionalFlowType(apiObject.AdvancedSecurityAdditionalFlows)
 	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
+
+	return []any{tfMap}
+}
+
+func flattenAdvancedSecurityAdditionalFlowType(apiObject *awstypes.AdvancedSecurityAdditionalFlowsType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.CustomAuthMode; v != "" {
+		tfMap["custom_auth_mode"] = v
+	}
 
 	return []any{tfMap}
 }
@@ -2520,11 +2577,11 @@ func resourceUserPoolSchemaHash(v any) int {
 		return 0
 	}
 
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
-	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))
-	buf.WriteString(fmt.Sprintf("%t-", m["mutable"].(bool)))
-	buf.WriteString(fmt.Sprintf("%t-", m["required"].(bool)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrName].(string))
+	fmt.Fprintf(&buf, "%s-", m["attribute_data_type"].(string))
+	fmt.Fprintf(&buf, "%t-", m["developer_only_attribute"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["mutable"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["required"].(bool))
 
 	if v, ok := m["string_attribute_constraints"]; ok {
 		data := v.([]any)
@@ -2534,11 +2591,11 @@ func resourceUserPoolSchemaHash(v any) int {
 			m, _ := data[0].(map[string]any)
 			if ok {
 				if l, ok := m["min_length"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 
 				if l, ok := m["max_length"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 			}
 		}
@@ -2552,11 +2609,11 @@ func resourceUserPoolSchemaHash(v any) int {
 			m, _ := data[0].(map[string]any)
 			if ok {
 				if l, ok := m["min_value"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 
 				if l, ok := m["max_value"]; ok && l.(string) != "" {
-					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+					fmt.Fprintf(&buf, "%s-", l.(string))
 				}
 			}
 		}

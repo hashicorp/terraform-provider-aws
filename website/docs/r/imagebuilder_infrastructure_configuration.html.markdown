@@ -46,11 +46,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description for the configuration.
 * `instance_metadata_options` - (Optional) Configuration block with instance metadata options for the HTTP requests that pipeline builds use to launch EC2 build and test instances. Detailed below.
 * `instance_types` - (Optional) Set of EC2 Instance Types.
 * `key_pair` - (Optional) Name of EC2 Key Pair.
 * `logging` - (Optional) Configuration block with logging settings. Detailed below.
+* `placement` - (Optional) Configuration block with placement settings that define where the instances that are launched from your image will run. Detailed below.
 * `resource_tags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `security_group_ids` - (Optional) Set of EC2 Security Group identifiers.
 * `sns_topic_arn` - (Optional) Amazon Resource Name (ARN) of SNS Topic.
@@ -62,6 +64,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `http_put_response_hop_limit` - The number of hops that an instance can traverse to reach its destonation.
 * `http_tokens` - Whether a signed token is required for instance metadata retrieval requests. Valid values: `required`, `optional`.
 
@@ -79,7 +82,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `s3_key_prefix` - (Optional) Prefix to use for S3 logs. Defaults to `/`.
+
+### placement
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `availability_zone` - (Optional) Availability Zone where your build and test instances will launch.
+* `host_id` - (Optional) ID of the Dedicated Host on which build and test instances run. Conflicts with `host_resource_group_arn`.
+* `host_resource_group_arn` - (Optional) ARN of the host resource group in which to launch build and test instances. Conflicts with `host_id`.
+* `tenancy` - (Optional) Placement tenancy of the instance. Valid values: `default`, `dedicated` and `host`.
 
 ## Attribute Reference
 

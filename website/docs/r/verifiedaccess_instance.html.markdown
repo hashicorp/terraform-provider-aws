@@ -32,12 +32,22 @@ resource "aws_verifiedaccess_instance" "example" {
 }
 ```
 
+### With `cidr_endpoints_custom_subdomain`
+
+```terraform
+resource "aws_verifiedaccess_instance" "example" {
+  cidr_endpoints_custom_subdomain = "test.example.com"
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description for the AWS Verified Access Instance.
 * `fips_enabled` - (Optional, Forces new resource) Enable or disable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.
+* `cidr_endpoints_custom_subdomain` - (Optional) The custom subdomain for the CIDR endpoints.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

@@ -68,7 +68,7 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
+					validation.StringLenBetween(2, 256),
 					validation.StringMatch(
 						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
@@ -122,7 +122,7 @@ func dataSourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("repository_policy", policy)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }

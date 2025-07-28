@@ -18,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_notebook_instance_lifecycle_configuration", name="Notebook Instance Lifecycle Configuration")
+// @Tags(identifierAttribute="arn")
 func resourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationCreate,
@@ -38,25 +40,24 @@ func resourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-
 			"on_create": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
-
 			"on_start": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -74,6 +75,7 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d
 
 	createOpts := &sagemaker.CreateNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(name),
+		Tags:                                getTagsIn(ctx),
 	}
 
 	// on_create is technically a list of NotebookInstanceLifecycleHook elements, but the list has to be length 1
@@ -141,24 +143,27 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
-		NotebookInstanceLifecycleConfigName: aws.String(d.Get(names.AttrName).(string)),
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
+			NotebookInstanceLifecycleConfigName: aws.String(d.Get(names.AttrName).(string)),
+		}
+
+		if v, ok := d.GetOk("on_create"); ok {
+			onCreateHook := awstypes.NotebookInstanceLifecycleHook{Content: aws.String(v.(string))}
+			updateOpts.OnCreate = []awstypes.NotebookInstanceLifecycleHook{onCreateHook}
+		}
+
+		if v, ok := d.GetOk("on_start"); ok {
+			onStartHook := awstypes.NotebookInstanceLifecycleHook{Content: aws.String(v.(string))}
+			updateOpts.OnStart = []awstypes.NotebookInstanceLifecycleHook{onStartHook}
+		}
+
+		_, err := conn.UpdateNotebookInstanceLifecycleConfig(ctx, updateOpts)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance Lifecycle Configuration: %s", err)
+		}
 	}
 
-	if v, ok := d.GetOk("on_create"); ok {
-		onCreateHook := awstypes.NotebookInstanceLifecycleHook{Content: aws.String(v.(string))}
-		updateOpts.OnCreate = []awstypes.NotebookInstanceLifecycleHook{onCreateHook}
-	}
-
-	if v, ok := d.GetOk("on_start"); ok {
-		onStartHook := awstypes.NotebookInstanceLifecycleHook{Content: aws.String(v.(string))}
-		updateOpts.OnStart = []awstypes.NotebookInstanceLifecycleHook{onStartHook}
-	}
-
-	_, err := conn.UpdateNotebookInstanceLifecycleConfig(ctx, updateOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Notebook Instance Lifecycle Configuration: %s", err)
-	}
 	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
 

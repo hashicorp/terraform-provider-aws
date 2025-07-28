@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_type: Set the default version of an extension to the newly created version. This fixes `CFNRegistryException: Version '...' is the default version and cannot be deregistered` errors when deregistering an extension and the [`create_before_destroy` meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) is `true`
+```

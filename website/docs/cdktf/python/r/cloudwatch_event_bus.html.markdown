@@ -62,12 +62,16 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 The following arguments are required:
 
 * `name` - (Required) Name of the new event bus. The names of custom event buses can't contain the / character. To create a partner event bus, ensure that the `name` matches the `event_source_name`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `dead_letter_config` - (Optional) Configuration details of the Amazon SQS queue for EventBridge to use as a dead-letter queue (DLQ). This block supports the following arguments:
+    * `arn` - (Optional) The ARN of the SQS queue specified as the target for the dead-letter queue.
 * `description` - (Optional) Event bus description.
 * `event_source_name` - (Optional) Partner event source that the new event bus will be matched with. Must match `name`.
 * `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt events on this event bus. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
@@ -106,4 +110,4 @@ Using `terraform import`, import EventBridge event buses using the name of the e
 % terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5bce83b24545a08c858c24112891176fe8b5151d2f0d3398de3ecac30fde60c6 -->
+<!-- cache-key: cdktf-0.20.8 input-3f21b0e794eb065ee5cb5f49d0bb1e2fa44076f576497d700e7d08174b5a95c0 -->

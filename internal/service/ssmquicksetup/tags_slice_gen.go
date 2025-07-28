@@ -4,6 +4,7 @@ package ssmquicksetup
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmquicksetup/types"
@@ -23,7 +24,7 @@ func listTags(ctx context.Context, conn *ssmquicksetup.Client, identifier string
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return KeyValueTagsSlice(ctx, output.Tags), nil
@@ -35,7 +36,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSMQuickSetupClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {

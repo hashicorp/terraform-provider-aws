@@ -44,7 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that identifies the Origin Access Control.
 * `description` - (Optional) The description of the Origin Access Control. Defaults to "Managed by Terraform" if omitted.
@@ -92,4 +92,4 @@ Using `terraform import`, import CloudFront Origin Access Control using the `id`
 % terraform import aws_cloudfront_origin_access_control.example E327GJI25M56DG
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-84119df9c0ef5c39534bc354c0c23ee74e64c5021ca3de5e9ec9b153da78cc57 -->
+<!-- cache-key: cdktf-0.20.8 input-5aa2855cff7a38bae11728591aea9dd9a2e1707f2092c2c204ca60acf793379d -->

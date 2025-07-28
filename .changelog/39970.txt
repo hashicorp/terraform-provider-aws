@@ -1,3 +1,0 @@
-```release-notes:enhancement
-resource/aws_bedrockagent_agent: Add `memory_configuration` configuration block
-```

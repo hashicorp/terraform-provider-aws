@@ -992,7 +992,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []any) *types.EcsPara
 		}
 
 		if len(tags) > 0 {
-			ecsParameters.Tags = Tags(tags.IgnoreAWS())
+			ecsParameters.Tags = svcTags(tags.IgnoreAWS())
 		}
 
 		ecsParameters.EnableExecuteCommand = tfMap["enable_execute_command"].(bool)
@@ -1226,7 +1226,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config[names.AttrTags] = keyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
 	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
 	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)

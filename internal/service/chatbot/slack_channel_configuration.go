@@ -49,7 +49,7 @@ func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type slackChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[slackChannelConfigurationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -399,6 +399,7 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
 	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
 	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`

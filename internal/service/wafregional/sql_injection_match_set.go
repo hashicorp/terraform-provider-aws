@@ -265,11 +265,11 @@ func resourceSQLInjectionMatchSetTupleHash(v any) int {
 		ftm := ftms[0].(map[string]any)
 
 		if v, ok := ftm["data"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+			fmt.Fprintf(&buf, "%s-", strings.ToLower(v.(string)))
 		}
-		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType].(string)))
+		fmt.Fprintf(&buf, "%s-", ftm[names.AttrType].(string))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+	fmt.Fprintf(&buf, "%s-", m["text_transformation"].(string))
 
 	return create.StringHashcode(buf.String())
 }

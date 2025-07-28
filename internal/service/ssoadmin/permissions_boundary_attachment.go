@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_permissions_boundary_attachment", name="Permissions Boundary Attachment")
-func ResourcePermissionsBoundaryAttachment() *schema.Resource {
+func resourcePermissionsBoundaryAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionsBoundaryAttachmentCreate,
 		ReadWithoutTimeout:   resourcePermissionsBoundaryAttachmentRead,
@@ -137,7 +137,7 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionsBoundaryByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Permissions Boundary Attachment (%s) not found, removing from state", d.Id())
@@ -209,7 +209,7 @@ func PermissionsBoundaryAttachmentParseResourceID(id string) (string, string, er
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected PERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, permissionsBoundaryAttachmentIDSeparator)
 }
 
-func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
+func findPermissionsBoundaryByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (*awstypes.PermissionsBoundary, error) {
 	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),

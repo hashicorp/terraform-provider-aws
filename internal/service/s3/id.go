@@ -25,20 +25,16 @@ func createResourceID(bucket, expectedBucketOwner string) string {
 
 // parseResourceID is a generic method for parsing an ID string
 // for a bucket name and accountID if provided.
-func parseResourceID(id string) (bucket, expectedBucketOwner string, err error) {
+func parseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, resourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
-		bucket = parts[0]
-		return
+		return parts[0], "", nil
 	}
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		bucket = parts[0]
-		expectedBucketOwner = parts[1]
-		return
+		return parts[0], parts[1], nil
 	}
 
-	err = fmt.Errorf("unexpected format for ID (%s), expected BUCKET or BUCKET%sEXPECTED_BUCKET_OWNER", id, resourceIDSeparator)
-	return
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected BUCKET or BUCKET%[2]sEXPECTED_BUCKET_OWNER", id, resourceIDSeparator)
 }
