@@ -130,7 +130,7 @@ The following arguments are required:
 
 * `agent_id` - (Required) ID if the agent to associate the collaborator.
 * `collaboration_instruction` - (Required) Instruction to give the collaborator.
-* `collbaorator_name` - (Required) Name of this collaborator.
+* `collaborator_name` - (Required) Name of this collaborator.
 
 The following arguments are optional:
 
@@ -183,4 +183,4 @@ Using `terraform import`, import Bedrock Agents Agent Collaborator using a comma
 % terraform import aws_bedrockagent_agent_collaborator.example 9LSJO0BFI8,DRAFT,AG3TN4RQIY
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a6e5d8ef0f73cbf19f7f8e59472af2f54c598e9109b075c768d19998717d3181 -->
+<!-- cache-key: cdktf-0.20.8 input-e55d5ed8bf79e67f007ed0e46d96c501034c7594c635e5641300e32fa92dfe08 -->
