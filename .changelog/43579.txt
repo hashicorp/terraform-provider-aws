@@ -1,0 +1,3 @@
+```release-note:fix
+resource/aws_secretsmanager_secret_version: Fix secretsmanager Version read when secret version is defined as Write Only 
+```
