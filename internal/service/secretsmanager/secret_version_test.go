@@ -295,7 +295,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret", 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					testAccCheckSecretVersionExistsWriteOnly(ctx, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
@@ -303,7 +303,7 @@ func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
 			{
 				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret2", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					testAccCheckSecretVersionExistsWriteOnly(ctx, resourceName, &version),
 					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret2"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
@@ -352,6 +352,27 @@ func testAccCheckSecretVersionExists(ctx context.Context, n string, v *secretsma
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		output, err := tfsecretsmanager.FindSecretVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckSecretVersionExistsWriteOnly(ctx context.Context, n string, v *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
+
+		output, err := tfsecretsmanager.FindSecretVersionWriteOnly(ctx, conn, rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"])
 
 		if err != nil {
 			return err

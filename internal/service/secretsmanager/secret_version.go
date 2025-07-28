@@ -169,7 +169,27 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	// Check if the secret is write-only
+	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
+	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
+	diags = append(diags, di...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if secretStringWO != "" {
+		hasWriteOnly = true
+	}
+
+	// If the secret is write-only, we use DescribeSecret to avoid any reads on the secret value
+	var output *secretsmanager.GetSecretValueOutput
+
+	if hasWriteOnly {
+		// Use DescribeSecret to get the version stages, set all other keys to nil
+		output, err = findSecretVersionWriteOnly(ctx, conn, secretID, versionID)
+	} else {
+		output, err = findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Version (%s) not found, removing from state", d.Id())
@@ -189,16 +209,6 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("version_stages", output.VersionStages)
 
 	// unset secret_string if the value is configured as write-only
-	hasWriteOnly := flex.HasWriteOnlyValue(d, "secret_string_wo")
-	secretStringWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("secret_string_wo"))
-	diags = append(diags, di...)
-	if diags.HasError() {
-		return diags
-	}
-
-	if secretStringWO != "" {
-		hasWriteOnly = true
-	}
 
 	if hasWriteOnly {
 		d.Set("has_secret_string_wo", true)
@@ -403,4 +413,21 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 	}
 
 	return findSecretVersion(ctx, conn, input)
+}
+
+func findSecretVersionWriteOnly(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretsmanager.GetSecretValueOutput, error) {
+	output, err := findSecretByID(ctx, conn, secretID)
+	if err != nil {
+		return nil, err
+	}
+
+	secretVersionOutput := &secretsmanager.GetSecretValueOutput{
+		VersionStages: output.VersionIdsToStages[versionID],
+		ARN:           output.ARN,
+		VersionId:     aws.String(versionID),
+		SecretString:  nil,
+		SecretBinary:  nil,
+	}
+
+	return secretVersionOutput, nil
 }
