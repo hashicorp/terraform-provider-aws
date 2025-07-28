@@ -33,42 +33,42 @@ func TestParseWebACLARN(t *testing.T) {
 		expectError   bool
 	}{
 		"valid regional ARN": {
-			arn:           "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/test-web-acl/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/test-web-acl/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "test-web-acl",
 			expectedScope: "REGIONAL",
 			expectError:   false,
 		},
 		"valid CloudFront ARN with global region": {
-			arn:           "arn:aws:wafv2:global:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws:wafv2:global:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "test-web-acl",
 			expectedScope: "CLOUDFRONT",
 			expectError:   false,
 		},
-		"valid CloudFront ARN with us-east-1 region": {
-			arn:           "arn:aws:wafv2:us-east-1:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012",
+		"valid CloudFront ARN with specific region": {
+			arn:           "arn:aws:wafv2:us-east-1:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "test-web-acl",
 			expectedScope: "CLOUDFRONT",
 			expectError:   false,
 		},
 		"web ACL name with hyphens": {
-			arn:           "arn:aws:wafv2:us-west-2:123456789012:regional/webacl/my-test-web-acl-name/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws:wafv2:us-west-2:123456789012:regional/webacl/my-test-web-acl-name/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "my-test-web-acl-name",
 			expectedScope: "REGIONAL",
 			expectError:   false,
 		},
 		"web ACL name with underscores": {
-			arn:           "arn:aws:wafv2:eu-west-1:123456789012:regional/webacl/my_test_web_acl_name/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws:wafv2:eu-west-1:123456789012:regional/webacl/my_test_web_acl_name/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "my_test_web_acl_name",
 			expectedScope: "REGIONAL",
 			expectError:   false,
 		},
 		"invalid ARN - too few parts": {
-			arn:         "arn:aws:wafv2:us-east-1:123456789012",
+			arn:         "arn:aws:wafv2:us-east-1:123456789012", //lintignore:AWSAT003,AWSAT005
 			expectError: true,
 		},
 		"invalid ARN - empty": {
@@ -80,22 +80,22 @@ func TestParseWebACLARN(t *testing.T) {
 			expectError: true,
 		},
 		"invalid resource format - too few parts": {
-			arn:         "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/test-web-acl",
+			arn:         "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/test-web-acl", //lintignore:AWSAT003,AWSAT005
 			expectError: true,
 		},
 		"invalid resource format - wrong resource type": {
-			arn:         "arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/test-rule-group/12345678-1234-1234-1234-123456789012",
+			arn:         "arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/test-rule-group/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectError: true,
 		},
 		"different AWS partition": {
-			arn:           "arn:aws-us-gov:wafv2:us-gov-east-1:123456789012:regional/webacl/test-web-acl/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws-us-gov:wafv2:us-gov-east-1:123456789012:regional/webacl/test-web-acl/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "test-web-acl",
 			expectedScope: "REGIONAL",
 			expectError:   false,
 		},
 		"different AWS partition with CloudFront": {
-			arn:           "arn:aws-cn:wafv2:global:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012",
+			arn:           "arn:aws-cn:wafv2:global:123456789012:global/webacl/test-web-acl/12345678-1234-1234-1234-123456789012", //lintignore:AWSAT003,AWSAT005
 			expectedID:    "12345678-1234-1234-1234-123456789012",
 			expectedName:  "test-web-acl",
 			expectedScope: "CLOUDFRONT",
