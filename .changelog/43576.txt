@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_delivery_destination: Fix update failure of `destination_resource_arn` when tags are set
+```
