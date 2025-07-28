@@ -43,10 +43,10 @@ func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "dev.standard1.small"),
 					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
 					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "VSCode"),
 				),
@@ -75,10 +75,10 @@ func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 				Config: testAccDevEnvironmentConfig_withRepositories(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "dev.standard1.small"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "dev.standard1.small"),
 					resource.TestCheckResourceAttr(resourceName, "persistent_storage.0.size", "16"),
 					resource.TestCheckResourceAttr(resourceName, "ides.0.name", "PyCharm"),
 					resource.TestCheckResourceAttr(resourceName, "ides.0.runtime", "public.ecr.aws/jetbrains/py"),
@@ -129,11 +129,12 @@ func testAccCheckDevEnvironmentDestroy(ctx context.Context) resource.TestCheckFu
 			spaceName := rs.Primary.Attributes["space_name"]
 			projectName := rs.Primary.Attributes["project_name"]
 
-			_, err := conn.GetDevEnvironment(ctx, &codecatalyst.GetDevEnvironmentInput{
+			input := codecatalyst.GetDevEnvironmentInput{
 				Id:          aws.String(rs.Primary.ID),
 				SpaceName:   aws.String(spaceName),
 				ProjectName: aws.String(projectName),
-			})
+			}
+			_, err := conn.GetDevEnvironment(ctx, &input)
 			if errs.IsA[*types.AccessDeniedException](err) {
 				continue
 			}
@@ -162,11 +163,12 @@ func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvir
 		projectName := rs.Primary.Attributes["project_name"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
-		resp, err := conn.GetDevEnvironment(ctx, &codecatalyst.GetDevEnvironmentInput{
+		input := codecatalyst.GetDevEnvironmentInput{
 			Id:          aws.String(rs.Primary.ID),
 			SpaceName:   aws.String(spaceName),
 			ProjectName: aws.String(projectName),
-		})
+		}
+		resp, err := conn.GetDevEnvironment(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevEnvironment, rs.Primary.ID, err)
@@ -204,7 +206,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		}
 	}()
 
-	_, err := conn.VerifySession(ctx, &codecatalyst.VerifySessionInput{})
+	input := codecatalyst.VerifySessionInput{}
+	_, err := conn.VerifySession(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

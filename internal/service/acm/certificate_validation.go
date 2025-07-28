@@ -21,9 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_acm_certificate_validation")
+// @SDKResource("aws_acm_certificate_validation", name="Certificate Validation")
 func resourceCertificateValidation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateValidationCreate,
@@ -35,7 +36,7 @@ func resourceCertificateValidation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,12 +51,12 @@ func resourceCertificateValidation() *schema.Resource {
 	}
 }
 
-func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	arn := d.Get("certificate_arn").(string)
+	arn := d.Get(names.AttrCertificateARN).(string)
 	certificate, err := findCertificateByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -105,12 +106,12 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCertificateValidationRead(ctx, d, meta)...)
 }
 
-func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	arn := d.Get("certificate_arn").(string)
+	arn := d.Get(names.AttrCertificateARN).(string)
 	certificate, err := findCertificateValidationByARN(ctx, conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -123,7 +124,7 @@ func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 	}
 
-	d.Set("certificate_arn", certificate.CertificateArn)
+	d.Set(names.AttrCertificateARN, certificate.CertificateArn)
 
 	return diags
 }
@@ -146,13 +147,13 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 }
 
 func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
-		input := &acm.DescribeCertificateInput{
+		input := acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
 
-		output, err := findCertificate(ctx, conn, input)
+		output, err := findCertificate(ctx, conn, &input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

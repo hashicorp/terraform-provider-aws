@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required, Forces new resource) A text description of the HSM configuration to be created.
 * `hsmConfigurationIdentifier` - (Required, Forces new resource) The identifier to be assigned to the new Amazon Redshift HSM configuration.
 * `hsmIpAddress` - (Required, Forces new resource) The IP address that the Amazon Redshift cluster must use to access the HSM.
@@ -87,4 +88,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsmConf
 % terraform import aws_redshift_hsm_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bd8a362c2861dd8693c1edee0bfc416d38b5b6843e0fe94fad4b67e8798aa729 -->
+<!-- cache-key: cdktf-0.20.8 input-1de6df038dec5cae6000149356f4206bebed04cb35601f6fe4b545ee8a606d94 -->

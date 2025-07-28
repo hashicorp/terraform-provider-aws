@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration block
@@ -61,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `clusterArns` - Set of cluster ARNs of the matched RDS clusters.
 * `clusterIdentifiers` - Set of ARNs of cluster identifiers of the matched RDS clusters.
 
-<!-- cache-key: cdktf-0.20.1 input-68d8e0fc72c3359db6eb2f1e2e9009c536890e2e4f69c85c40a8c65401ddc632 -->
+<!-- cache-key: cdktf-0.20.8 input-da313096f603a948e498045d8651b482ec96ee0ed593bd2bef428ce73761c446 -->

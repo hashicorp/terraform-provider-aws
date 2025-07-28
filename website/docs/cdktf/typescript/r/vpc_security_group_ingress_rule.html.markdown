@@ -14,10 +14,9 @@ Manages an inbound (ingress) rule for a security group.
 
 When specifying an inbound rule for your security group in a VPC, the configuration must include a source for the traffic.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a [Security Group resource](security_group.html) with `ingress` and `egress` rules defined in-line and a [Security Group Rule resource](security_group_rule.html) which manages one or more `ingress` or
-`egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID.
-The `aws_vpc_security_group_ingress_rule` resource has been added to address these limitations and should be used for all new security group rules.
-You should not use the `aws_vpc_security_group_ingress_rule` resource in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
+~> **NOTE:** Using [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and `aws_vpc_security_group_ingress_rule` resources is the current best practice. Avoid using the [`aws_security_group_rule`](security_group_rule.html) resource and the `ingress` and `egress` arguments of the [`aws_security_group`](security_group.html) resource for configuring in-line rules, as they struggle with managing multiple CIDR blocks, and tags and descriptions due to the historical lack of unique IDs.
+
+!> **WARNING:** You should not use the [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and `aws_vpc_security_group_ingress_rule` resources in conjunction with the [`aws_security_group`](security_group.html) resource with _in-line rules_ (using the `ingress` and `egress` arguments of `aws_security_group`) or the [`aws_security_group_rule`](security_group_rule.html) resource. Doing so may cause rule conflicts, perpetual differences, and result in rules being overwritten.
 
 ## Example Usage
 
@@ -61,8 +60,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidrIpv4` - (Optional) The source IPv4 CIDR range.
 * `cidrIpv6` - (Optional) The source IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
@@ -73,6 +71,8 @@ This resource supports the following arguments:
 * `securityGroupId` - (Required) The ID of the security group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
+
+~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
 
 ## Attribute Reference
 
@@ -114,4 +114,4 @@ Using `terraform import`, import security group ingress rules using the `securit
 % terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c4b8c67d93120b6032155440c89ed05d055826ef935a62f3a67bfd67a6ef33d7 -->
+<!-- cache-key: cdktf-0.20.8 input-c1416cf32b27999d870855d27eb3ab85a0e2df5a8a496e06aa9b44de65cb0d65 -->

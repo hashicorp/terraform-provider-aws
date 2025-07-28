@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `retention_period_in_days` - (Required) The number of days AWS Config stores historical information.
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ Using `terraform import`, import the AWS Config retention configuration using th
 % terraform import aws_config_retention_configuration.example default
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-88006c84e252788c1b1b45524f16429e26ae45e417e3388435149648cc3849f4 -->
+<!-- cache-key: cdktf-0.20.8 input-0bbfa696f9bcb9acafbd863fd97ff389ac32e0ca1fb5137c17e9437d5827068c -->

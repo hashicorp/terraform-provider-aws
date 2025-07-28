@@ -97,7 +97,7 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		val         interface{}
+		val         any
 		expectedErr *regexp.Regexp
 	}{
 		{
@@ -174,6 +174,33 @@ func TestValidAccountID(t *testing.T) {
 	}
 }
 
+func TestValidRegionName(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"mx-central-1",
+		"us-isof-south-1",
+	}
+	for _, v := range validNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid AWS Region: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid",
+		"k@rea-central-1",
+		"ca-west-123",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidRegionName(v, "region")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid AWS Region", v)
+		}
+	}
+}
+
 func TestValidARN(t *testing.T) {
 	t.Parallel()
 
@@ -184,24 +211,25 @@ func TestValidARN(t *testing.T) {
 	}
 
 	validNames := []string{
-		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
-		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
-		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
-		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
-		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
-		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
-		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // lintignore:AWSAT003,AWSAT005 // Lambda function
-		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // lintignore:AWSAT003,AWSAT005 // Lambda func qualifier
-		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                       // lintignore:AWSAT003,AWSAT005 // China EC2 ARN
-		"arn:aws-cn:s3:::bucket/object",                                                    // lintignore:AWSAT005          // China S3 ARN
-		"arn:aws-iso:ec2:us-iso-east-1:123456789012:instance/i-12345678",                   // lintignore:AWSAT003,AWSAT005 // C2S EC2 ARN
-		"arn:aws-iso:s3:::bucket/object",                                                   // lintignore:AWSAT005          // C2S S3 ARN
-		"arn:aws-iso-b:ec2:us-isob-east-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // SC2S EC2 ARN
-		"arn:aws-iso-b:s3:::bucket/object",                                                 // lintignore:AWSAT005          // SC2S S3 ARN
-		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
-		"arn:aws-us-gov:s3:::bucket/object",                                                // lintignore:AWSAT005          // GovCloud S3 ARN
-		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                  // lintignore:AWSAT005          // Cloudwatch Alarm
+		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment",                                        // lintignore:AWSAT003,AWSAT005 // Beanstalk
+		"arn:aws:iam::123456789012:user/David",                                                                                    // lintignore:AWSAT005          // IAM User
+		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                                                        // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                                                       // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
+		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                                                          // lintignore:AWSAT003,AWSAT005 // RDS
+		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                                                                      // lintignore:AWSAT005          // S3 object
+		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                                                                    // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                                                         // lintignore:AWSAT003,AWSAT005 // Lambda function
+		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",                                               // lintignore:AWSAT003,AWSAT005 // Lambda func qualifier
+		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                                                              // lintignore:AWSAT003,AWSAT005 // China EC2 ARN
+		"arn:aws-cn:s3:::bucket/object",                                                                                           // lintignore:AWSAT005          // China S3 ARN
+		"arn:aws-iso:ec2:us-iso-east-1:123456789012:instance/i-12345678",                                                          // lintignore:AWSAT003,AWSAT005 // C2S EC2 ARN
+		"arn:aws-iso:s3:::bucket/object",                                                                                          // lintignore:AWSAT005          // C2S S3 ARN
+		"arn:aws-iso-b:ec2:us-isob-east-1:123456789012:instance/i-12345678",                                                       // lintignore:AWSAT003,AWSAT005 // SC2S EC2 ARN
+		"arn:aws-iso-b:s3:::bucket/object",                                                                                        // lintignore:AWSAT005          // SC2S S3 ARN
+		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                                                       // lintignore:AWSAT003,AWSAT005 // GovCloud EC2 ARN
+		"arn:aws-us-gov:s3:::bucket/object",                                                                                       // lintignore:AWSAT005          // GovCloud S3 ARN
+		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                                                         // lintignore:AWSAT005          // CloudWatch Alarm
+		"arn:aws:imagebuilder:eu-central-1:aws-marketplace:component/crowdstrike-falcon-install-linux-prod-nhzsem4gwwfja/1.2.2/1", // lintignore:AWSAT003,AWSAT005 // EC2 image builder marketplace subscription ARN
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")
@@ -413,7 +441,6 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.Value, func(t *testing.T) {
 			t.Parallel()
 
@@ -710,7 +737,7 @@ func TestFloatGreaterThan(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		Value                  interface{}
+		Value                  any
 		ValidateFunc           schema.SchemaValidateFunc
 		ExpectValidationErrors bool
 	}{
@@ -778,17 +805,97 @@ func TestValidServicePrincipal(t *testing.T) {
 	}
 }
 
-func TestMapLenBetween(t *testing.T) {
+func TestMapKeyNoMatch(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
+		wantErr bool
+	}{
+		{
+			name: "two invalid keys",
+			value: map[string]any{
+				"Ka": "V1",
+				"K2": "V2",
+				"Kb": "V3",
+				"Kc": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]any{
+				"Ka": "V1",
+				"Kb": "V2",
+			},
+		},
+	}
+	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeAtMost(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "too long",
-			value: map[string]interface{}{
+			value: map[string]any{
+				"K1": "V1",
+				"K2": "V2",
+				"K3": "V3",
+				"K4": "V4",
+				"K5": "V5",
+			},
+			wantErr: true,
+		},
+		{
+			name: "ok",
+			value: map[string]any{
+				"K1": "V1",
+				"K2": "V2",
+			},
+		},
+	}
+	f := MapSizeAtMost(4)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(testCase.value, cty.Path{})
+			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMapSizeBetween(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		value   any
+		wantErr bool
+	}{
+		{
+			name: "too long",
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 				"K3": "V3",
@@ -799,22 +906,21 @@ func TestMapLenBetween(t *testing.T) {
 		},
 		{
 			name: "too short",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 			},
 			wantErr: true,
 		},
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 			},
 		},
 	}
-	f := MapLenBetween(2, 4)
+	f := MapSizeBetween(2, 4)
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -831,19 +937,19 @@ func TestMapKeysAre(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		value   interface{}
+		value   any
 		wantErr bool
 	}{
 		{
 			name: "ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K1": "V1",
 				"K2": "V2",
 			},
 		},
 		{
 			name: "not ok",
-			value: map[string]interface{}{
+			value: map[string]any{
 				"K3": "V3",
 			},
 			wantErr: true,
@@ -851,12 +957,47 @@ func TestMapKeysAre(t *testing.T) {
 	}
 	f := MapKeysAre(validation.ToDiagFunc(validation.StringInSlice([]string{"K1", "K2"}, false)))
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
 			diags := f(testCase.value, cty.Path{})
 			if got, want := diags.HasError(), testCase.wantErr; got != want {
+				t.Errorf("got = %v, want = %v", got, want)
+			}
+		})
+	}
+}
+
+func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		value    any
+		wantDiag bool
+	}{
+		{
+			name:  "exact match",
+			value: "foo",
+		},
+		{
+			name:  "no match",
+			value: "baz",
+		},
+		{
+			name:     "case insensitive match",
+			value:    "FOO",
+			wantDiag: true,
+		},
+	}
+
+	f := CaseInsensitiveMatchDeprecation([]string{"foo", "bar"})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			diags := f(tt.value, cty.Path{})
+			if got, want := len(diags) > 0, tt.wantDiag; got != want {
 				t.Errorf("got = %v, want = %v", got, want)
 			}
 		})

@@ -277,6 +277,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `executionRoleArn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policyDetails` - (Required) See the [`policyDetails` configuration](#policy-details-arguments) block. Max of 1.
@@ -371,8 +372,8 @@ This resource supports the following arguments:
 #### Share Rule arguments
 
 * `targetAccounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
-* `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `intervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `unshareInterval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
+* `unshareIntervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 
@@ -433,4 +434,4 @@ Using `terraform import`, import DLM lifecycle policies using their policy ID. F
 % terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd52275658ea26bb97d5ff6b8e5c283dfc879cf7239a8546704deb3cc7ac57ec -->
+<!-- cache-key: cdktf-0.20.8 input-95580c7ce592298e74aa8e1ed4e7bef24b09e416c6aa5ddea8292f33df6fa844 -->

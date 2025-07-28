@@ -391,6 +391,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Configuration name.
 * `resourceAccessRoleArn` - (Required) ARN of IAM Role used by service to invoke processors and sinks specified by configuration elements.
 * `elements` - (Required) Collection of processors and sinks to transform media and deliver data.
@@ -508,4 +509,4 @@ Using `terraform import`, import Chime SDK Media Pipelines Media Insights Pipeli
 % terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->
+<!-- cache-key: cdktf-0.20.8 input-0a18be5893da6e873515d8b22b9a8a24b4522a45ca98b00d7628e52280bc55e4 -->

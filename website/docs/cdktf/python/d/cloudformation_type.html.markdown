@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the CloudFormation Type. For example, `arn:aws:cloudformation:us-west-2::type/resource/AWS-EC2-VPC`.
 * `type` - (Optional) CloudFormation Registry Type. For example, `RESOURCE`.
 * `type_name` - (Optional) CloudFormation Type name. For example, `AWS::EC2::VPC`.
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source_url` - URL of the source code for the CloudFormation Type.
 * `visibility` - Scope of the CloudFormation Type.
 
-<!-- cache-key: cdktf-0.20.1 input-dbfea51aa26b3fcf5acdfa155004e8f1f27058ce9b62acf8eba0a37e7a8775f5 -->
+<!-- cache-key: cdktf-0.20.8 input-bd8cda9b792c48a7233ff69b48303eaf710a1d3dd12491eaa6f71759fd368807 -->

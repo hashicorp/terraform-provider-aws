@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
+func testAccCustomModelDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -24,7 +24,7 @@ func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_bedrock_custom_model.test"
 	var v bedrock.GetModelCustomizationJobOutput
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fsxFilesystemArn` - (Required) The Amazon Resource Name (ARN) for the FSx for Lustre file system.
 * `securityGroupArns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for Lustre file system.
 * `subdirectory` - (Optional) Subdirectory to perform actions as source or destination.
@@ -86,4 +87,4 @@ Using `terraform import`, import `aws_datasync_location_fsx_lustre_file_system` 
 % terraform import aws_datasync_location_fsx_lustre_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:476956259333:file-system/fs-08e04cd442c1bb94a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ff1125dfd4d4a7819d78cada4fa2e6a9cacc0dbd81f2b217268a7544a6a5415d -->
+<!-- cache-key: cdktf-0.20.8 input-a6a435412159e0590b34d756ba51fc35e19fc896b9a45c546a885d5f9da75d09 -->

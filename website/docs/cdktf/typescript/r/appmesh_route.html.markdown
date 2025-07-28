@@ -193,6 +193,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.
 * `meshName` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -405,4 +406,4 @@ Using `terraform import`, import App Mesh virtual routes using `meshName` and `v
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-80e17b52a5e66a8d0e459a22b8228d6395a8847cf0270d3e66fc0d8a47b1bb28 -->
+<!-- cache-key: cdktf-0.20.8 input-aae20c8ef6acd6b71b7e2f1b54df83a088e5125374e89be2d56aa3a6c58297f7 -->

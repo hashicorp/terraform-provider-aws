@@ -6,14 +6,12 @@ package waf
 import (
 	"fmt"
 	"log"
-	"sync"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
@@ -133,907 +131,635 @@ func RegisterSweepers() {
 func sweepByteMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListByteMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listByteMatchSetsPages(ctx, conn, input, func(page *waf.ListByteMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, byteMatchSet := range page.ByteMatchSets {
-			r := ResourceByteMatchSet()
+		for _, v := range page.ByteMatchSets {
+			id := aws.ToString(v.ByteMatchSetId)
+			r := resourceByteMatchSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(byteMatchSet.ByteMatchSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Byte Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in byte_match_tuples attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Byte Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Byte Match Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Byte Match Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Byte Match Set for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Byte Match Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Byte Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Byte Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Byte Match Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepGeoMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListGeoMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listGeoMatchSetsPages(ctx, conn, input, func(page *waf.ListGeoMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, geoMatchSet := range page.GeoMatchSets {
-			r := ResourceGeoMatchSet()
+		for _, v := range page.GeoMatchSets {
+			id := aws.ToString(v.GeoMatchSetId)
+			r := resourceGeoMatchSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(geoMatchSet.GeoMatchSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Geo Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in geo_match_constraint attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Geo Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Geo Match Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Geo Match Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Geo Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Geo Match Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepIPSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListIPSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listIPSetsPages(ctx, conn, input, func(page *waf.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, ipSet := range page.IPSets {
-			r := ResourceIPSet()
+		for _, v := range page.IPSets {
+			id := aws.ToString(v.IPSetId)
+			r := resourceIPSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(ipSet.IPSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF IP Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in ip_set_descriptors attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF IP Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF IP Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF IP Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF IP Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF IP Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRateBasedRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListRateBasedRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRateBasedRulesPages(ctx, conn, input, func(page *waf.ListRateBasedRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, rule := range page.Rules {
-			r := ResourceRateBasedRule()
+		for _, v := range page.Rules {
+			id := aws.ToString(v.RuleId)
+			r := resourceRateBasedRule()
 			d := r.Data(nil)
-
-			id := aws.StringValue(rule.RuleId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Rate Based Rule %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in predicates attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Rate Based Rule (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rate Based Rule for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rate Based Rules: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Rate Based Rules (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Rate Based Rules (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListRegexMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRegexMatchSetsPages(ctx, conn, input, func(page *waf.ListRegexMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, regexMatchSet := range page.RegexMatchSets {
-			r := ResourceRegexMatchSet()
+		for _, v := range page.RegexMatchSets {
+			id := aws.ToString(v.RegexMatchSetId)
+			r := resourceRegexMatchSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(regexMatchSet.RegexMatchSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regex Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in regex_match_tuple attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Regex Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Regex Match Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Match Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Match Set for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Regex Match Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regex Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regex Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regex Match Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRegexPatternSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListRegexPatternSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRegexPatternSetsPages(ctx, conn, input, func(page *waf.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, regexPatternSet := range page.RegexPatternSets {
-			r := ResourceRegexPatternSet()
+		for _, v := range page.RegexPatternSets {
+			id := aws.ToString(v.RegexPatternSetId)
+			r := resourceRegexPatternSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(regexPatternSet.RegexPatternSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regex Pattern Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in regex_pattern_strings attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Regex Pattern Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Regex Pattern Set for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Pattern Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Pattern Set for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Regex Pattern Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regex Pattern Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regex Pattern Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regex Pattern Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListRuleGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRuleGroupsPages(ctx, conn, input, func(page *waf.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, ruleGroup := range page.RuleGroups {
-			r := ResourceRuleGroup()
+		for _, v := range page.RuleGroups {
+			id := aws.ToString(v.RuleGroupId)
+			r := resourceRuleGroup()
 			d := r.Data(nil)
-
-			id := aws.StringValue(ruleGroup.RuleGroupId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Rule Group %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in activated_rule attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Rule Group (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rule Group for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rule Groups: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rule Group for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Rule Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Rule Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRulesPages(ctx, conn, input, func(page *waf.ListRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, rule := range page.Rules {
-			if rule == nil {
+		for _, v := range page.Rules {
+			id := aws.ToString(v.RuleId)
+			r := resourceRule()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Rule %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
 				continue
 			}
 
-			r := ResourceRule()
-			d := r.Data(nil)
-
-			id := aws.StringValue(rule.RuleId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in predicates attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Rule (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Rules for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rules: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rules for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Rule sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Rule sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Rules (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Rules (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepSizeConstraintSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListSizeConstraintSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listSizeConstraintSetsPages(ctx, conn, input, func(page *waf.ListSizeConstraintSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, sizeConstraintSet := range page.SizeConstraintSets {
-			r := ResourceSizeConstraintSet()
+		for _, v := range page.SizeConstraintSets {
+			id := aws.ToString(v.SizeConstraintSetId)
+			r := resourceSizeConstraintSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(sizeConstraintSet.SizeConstraintSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Size Constraint Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in size_constraints attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Size Constraint Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Size Constraint Sets for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Size Constraint Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Size Constraint Sets for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Size Constraint Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Size Constraint Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Size Constraint Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Size Constraint Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepSQLInjectionMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListSqlInjectionMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listSQLInjectionMatchSetsPages(ctx, conn, input, func(page *waf.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, sqlInjectionMatchSet := range page.SqlInjectionMatchSets {
-			r := ResourceSQLInjectionMatchSet()
+		for _, v := range page.SqlInjectionMatchSets {
+			id := aws.ToString(v.SqlInjectionMatchSetId)
+			r := resourceSQLInjectionMatchSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(sqlInjectionMatchSet.SqlInjectionMatchSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF SQL Injection Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in sql_injection_match_tuples attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF SQL Injection Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF SQL Injection Matches for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF SQL Injection Matches: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF SQL Injection Matches for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF SQL Injection Match sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF SQL Injection Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF SQL Injection Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF SQL Injection Match Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListWebACLsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listWebACLsPages(ctx, conn, input, func(page *waf.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, webACL := range page.WebACLs {
-			if webACL == nil {
+		for _, v := range page.WebACLs {
+			id := aws.ToString(v.WebACLId)
+			r := resourceWebACL()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Web ACL %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
 				continue
 			}
 
-			r := ResourceWebACL()
-			d := r.Data(nil)
-
-			id := aws.StringValue(webACL.WebACLId)
-			d.SetId(id)
-
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in rules argument
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					readErr := fmt.Errorf("error reading WAF Web ACL (%s): %w", id, err)
-					log.Printf("[ERROR] %s", readErr)
-					return readErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Web ACLs for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Web ACLs: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Web ACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFWeb ACLs (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepXSSMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.WAFConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
+	conn := client.WAFClient(ctx)
 	input := &waf.ListXssMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listXSSMatchSetsPages(ctx, conn, input, func(page *waf.ListXssMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, xssMatchSet := range page.XssMatchSets {
-			r := ResourceXSSMatchSet()
+		for _, v := range page.XssMatchSets {
+			id := aws.ToString(v.XssMatchSetId)
+			r := resourceXSSMatchSet()
 			d := r.Data(nil)
-
-			id := aws.StringValue(xssMatchSet.XssMatchSetId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF XSS Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in xss_match_tuples attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF XSS Match Set (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF XSS Match Sets for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF XSS Match Sets: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF XSS Match Sets for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF XSS Match Set sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF XSS Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF XSS Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF XSS Match Sets (%s): %w", region, err)
+	}
+
+	return nil
 }

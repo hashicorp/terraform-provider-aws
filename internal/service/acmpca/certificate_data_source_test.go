@@ -27,14 +27,14 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_arn(domain),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_authority_arn", resourceName, "certificate_authority_arn"),
 				),
 			},
@@ -82,8 +82,8 @@ data "aws_partition" "current" {}
 
 const testAccCertificateDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate" "test" {
-  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
-  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
+  arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
+  certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"
 }
 
 data "aws_caller_identity" "current" {}

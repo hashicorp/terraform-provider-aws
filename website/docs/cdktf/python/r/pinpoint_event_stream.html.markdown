@@ -77,6 +77,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `role_arn` - (Required) The IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
@@ -110,4 +111,4 @@ Using `terraform import`, import Pinpoint Event Stream using the `application-id
 % terraform import aws_pinpoint_event_stream.stream application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-781c351d9404f1abba2f962888a231281d00739d19baa3253947f07c74cba124 -->
+<!-- cache-key: cdktf-0.20.8 input-51726110fc86e77022876e01924d4d342556148163ba3425b92331efd5249bf9 -->

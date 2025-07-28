@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_dms_replication_task: Allows leaving `replication_task_settings` unset to use default settings.
+```
+
+```release-note:bug
+resource/aws_dms_replication_task: Suppresses differences in partial `replication_task_settings` JSON documents.
+```
+
+```release-note:bug
+resource/aws_dms_replication_task: Adds validation to `replication_task_settings` to disallow `Logging.CloudWatchLogGroup` and `Logging.CloudWatchLogStream`.
+```
+
+```release-note:bug
+resource/aws_dms_replication_config: Suppresses differences in partial `replication_settings` JSON documents.
+```
+
+```release-note:bug
+resource/aws_dms_replication_config: Adds validation to `replication_settings` to disallow `Logging.CloudWatchLogGroup` and `Logging.CloudWatchLogStream`.
+```

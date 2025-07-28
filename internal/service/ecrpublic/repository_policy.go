@@ -21,9 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecrpublic_repository_policy")
+// @SDKResource("aws_ecrpublic_repository_policy", name="Repository Policy")
 func ResourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPolicyPut,
@@ -35,13 +36,13 @@ func ResourceRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -50,7 +51,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,24 +64,24 @@ const (
 	policyPutTimeout = 2 * time.Minute
 )
 
-func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	repositoryName := d.Get("repository_name").(string)
+	repositoryName := d.Get(names.AttrRepositoryName).(string)
 	input := &ecrpublic.SetRepositoryPolicyInput{
 		PolicyText:     aws.String(policy),
 		RepositoryName: aws.String(repositoryName),
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.SetRepositoryPolicy(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -103,7 +104,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRepositoryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
@@ -119,7 +120,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading ECR Public Repository Policy (%s): %s", d.Id(), err)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(output.PolicyText))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyText))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -131,14 +132,14 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policyToSet, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("registry_id", output.RegistryId)
-	d.Set("repository_name", output.RepositoryName)
+	d.Set(names.AttrRepositoryName, output.RepositoryName)
 
 	return diags
 }
 
-func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 

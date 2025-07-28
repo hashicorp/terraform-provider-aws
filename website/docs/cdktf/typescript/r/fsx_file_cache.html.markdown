@@ -74,6 +74,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `copyTagsToDataRepositoryAssociations` - A boolean flag indicating whether tags for the cache should be copied to data repository associations. This value defaults to false.
 * `dataRepositoryAssociation` - See the [`dataRepositoryAssociation` configuration](#data-repository-association-arguments) block. Max of 8.
 A list of up to 8 configurations for data repository associations (DRAs) to be created during the cache creation. The DRAs link the cache to either an Amazon S3 data repository or a Network File System (NFS) data repository that supports the NFSv3 protocol. The DRA configurations must meet the following requirements: 1) All configurations on the list must be of the same data repository type, either all S3 or all NFS. A cache can't link to different data repository types at the same time. 2) An NFS DRA must link to an NFS file system that supports the NFSv3 protocol. DRA automatic import and automatic export is not supported.
@@ -161,4 +162,4 @@ Using `terraform import`, import Amazon File Cache cache using the resource `id`
 % terraform import aws_fsx_file_cache.example fc-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1859ea99cb9d6d35c3bafa1903ea724f9611978baf76d96694a45ea873f2f1c0 -->
+<!-- cache-key: cdktf-0.20.8 input-d855e13e9f2ad65a2d50e6da6ce5f9db4d6bd12721048e5a8485186ef970834a -->

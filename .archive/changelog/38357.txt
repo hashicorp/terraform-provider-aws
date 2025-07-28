@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_eks_addon: Add `pod_identity_association` argument
+```
+```release-note:bug
+resource/aws_eks_addon: Handle `ResourceNotFound` exceptions during resource destruction
+```

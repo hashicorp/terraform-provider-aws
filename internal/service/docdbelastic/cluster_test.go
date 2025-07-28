@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdbelastic/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdocdbelastic "github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,16 +48,17 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 				),
 			},
 			{
@@ -122,28 +125,28 @@ func TestAccDocDBElasticCluster_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -174,32 +177,50 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_update(rName, 4),
+				Config: testAccClusterConfig_update(rName, 4, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_update(rName, 4, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "docdb-elastic", regexache.MustCompile(`cluster/`+verify.UUIDRegexPattern+`$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_password", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "Tue:04:00-Tue:04:30"),
 				),
 			},
 		},
@@ -296,7 +317,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -310,7 +331,7 @@ resource "aws_docdbelastic_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_update(rName string, shardCapacity int) string {
+func testAccClusterConfig_update(rName string, shardCapacity, backupRetentionPeriod int) string {
 	return acctest.ConfigCompose(
 		testAccClusterBaseConfig(rName),
 		fmt.Sprintf(`
@@ -323,7 +344,8 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
+  backup_retention_period      = %[3]d
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -334,7 +356,7 @@ resource "aws_docdbelastic_cluster" "test" {
     aws_subnet.test[1].id
   ]
 }
-`, rName, shardCapacity))
+`, rName, shardCapacity, backupRetentionPeriod))
 }
 
 func testAccClusterConfig_tags1(rName, key1, value1 string) string {
@@ -350,7 +372,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id
@@ -381,7 +403,7 @@ resource "aws_docdbelastic_cluster" "test" {
   admin_user_password = "testpassword"
   auth_type           = "PLAIN_TEXT"
 
-  preferred_maintenance_window = "tue:04:00-tue:04:30"
+  preferred_maintenance_window = "Tue:04:00-Tue:04:30"
 
   vpc_security_group_ids = [
     aws_security_group.test.id

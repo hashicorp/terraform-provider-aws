@@ -5,28 +5,26 @@ package appconfig
 
 import (
 	"context"
-	"errors"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	ResExtension = "Extension"
 )
 
 // @SDKResource("aws_appconfig_extension", name="Extension")
 // @Tags(identifierAttribute="arn")
-func ResourceExtension() *schema.Resource {
+func resourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,
 		ReadWithoutTimeout:   resourceExtensionRead,
@@ -38,67 +36,72 @@ func ResourceExtension() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"action_point": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"point": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appconfig.ActionPoint_Values(), false),
-						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"description": {
+									names.AttrDescription: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
+						"point": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ActionPoint](),
+						},
 					},
 				},
 			},
-			"description": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"parameter": {
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"required": {
 							Type:     schema.TypeBool,
@@ -107,245 +110,271 @@ func ResourceExtension() *schema.Resource {
 					},
 				},
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
-
-	in := appconfig.CreateExtensionInput{
-		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
-		Name:    aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := appconfig.CreateExtensionInput{
+		Actions: expandActionPoints(d.Get("action_point").(*schema.Set).List()),
+		Name:    aws.String(name),
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		in.Parameters = expandExtensionParameters(v.(*schema.Set).List())
+	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
+		input.Parameters = expandParameters(v.(*schema.Set).List())
 	}
 
-	out, err := conn.CreateExtensionWithContext(ctx, &in)
+	output, err := conn.CreateExtension(ctx, &input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Extension (%s): %s", name, err)
 	}
 
-	if out == nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
-	}
-
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
-func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
-
-	out, err := FindExtensionById(ctx, conn, d.Id())
+	output, err := findExtensionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtension, d.Id())
+		log.Printf("[WARN] AppConfig Extension (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Extension (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("action_point", flattenExtensionActionPoints(out.Actions))
-	d.Set("description", out.Description)
-	d.Set("parameter", flattenExtensionParameters(out.Parameters))
-	d.Set("name", out.Name)
-	d.Set("version", out.VersionNumber)
+	if err := d.Set("action_point", flattenActionPoints(output.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action_point: %s", err)
+	}
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrName, output.Name)
+	if err := d.Set(names.AttrParameter, flattenParameters(output.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	}
+	d.Set(names.AttrVersion, output.VersionNumber)
 
 	return diags
 }
 
-func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
-	requestUpdate := false
-
-	in := &appconfig.UpdateExtensionInput{
-		ExtensionIdentifier: aws.String(d.Id()),
-	}
-
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("action_point") {
-		in.Actions = expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List())
-		requestUpdate = true
-	}
-
-	if d.HasChange("parameter") {
-		in.Parameters = expandExtensionParameters(d.Get("parameter").(*schema.Set).List())
-		requestUpdate = true
-	}
-
-	if requestUpdate {
-		out, err := conn.UpdateExtensionWithContext(ctx, in)
-
-		if err != nil {
-			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := appconfig.UpdateExtensionInput{
+			ExtensionIdentifier: aws.String(d.Id()),
 		}
 
-		if out == nil {
-			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
+		if d.HasChange("action_point") {
+			input.Actions = expandActionPoints(d.Get("action_point").(*schema.Set).List())
+		}
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange(names.AttrParameter) {
+			input.Parameters = expandParameters(d.Get(names.AttrParameter).(*schema.Set).List())
+		}
+
+		_, err := conn.UpdateExtension(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Extension (%s): %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
-func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
-
-	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
+	log.Printf("[INFO] Deleting AppConfig Extension: %s", d.Id())
+	input := appconfig.DeleteExtensionInput{
 		ExtensionIdentifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteExtension(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Extension (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandExtensionActions(actionsListRaw interface{}) []*appconfig.Action {
-	var actions []*appconfig.Action
-	for _, actionRaw := range actionsListRaw.(*schema.Set).List() {
-		actionMap, ok := actionRaw.(map[string]interface{})
+func findExtensionByID(ctx context.Context, conn *appconfig.Client, id string) (*appconfig.GetExtensionOutput, error) {
+	input := &appconfig.GetExtensionInput{
+		ExtensionIdentifier: aws.String(id),
+	}
 
+	return findExtension(ctx, conn, input)
+}
+
+func findExtension(ctx context.Context, conn *appconfig.Client, input *appconfig.GetExtensionInput) (*appconfig.GetExtensionOutput, error) {
+	output, err := conn.GetExtension(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandActions(tfList []any) []awstypes.Action {
+	var apiObjects []awstypes.Action
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		action := &appconfig.Action{
-			Description: aws.String(actionMap["description"].(string)),
-			Name:        aws.String(actionMap["name"].(string)),
-			RoleArn:     aws.String(actionMap["role_arn"].(string)),
-			Uri:         aws.String(actionMap["uri"].(string)),
+		apiObject := awstypes.Action{
+			Description: aws.String(tfMap[names.AttrDescription].(string)),
+			Name:        aws.String(tfMap[names.AttrName].(string)),
+			RoleArn:     aws.String(tfMap[names.AttrRoleARN].(string)),
+			Uri:         aws.String(tfMap[names.AttrURI].(string)),
 		}
 
-		actions = append(actions, action)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return actions
+	return apiObjects
 }
 
-func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][]*appconfig.Action {
-	if len(actionsPointListRaw) == 0 {
-		return map[string][]*appconfig.Action{}
+func expandActionPoints(tfList []any) map[string][]awstypes.Action {
+	if len(tfList) == 0 {
+		return map[string][]awstypes.Action{}
 	}
 
-	actionsMap := make(map[string][]*appconfig.Action)
-	for _, actionPointRaw := range actionsPointListRaw {
-		actionPointMap := actionPointRaw.(map[string]interface{})
-		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap["action"])
-	}
+	apiObjects := make(map[string][]awstypes.Action)
 
-	return actionsMap
-}
-
-func expandExtensionParameters(rawParameters []interface{}) map[string]*appconfig.Parameter {
-	if rawParameters == nil {
-		return nil
-	}
-
-	parameters := make(map[string]*appconfig.Parameter)
-
-	for _, rawParameterMap := range rawParameters {
-		parameterMap, ok := rawParameterMap.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		parameter := &appconfig.Parameter{
-			Description: aws.String(parameterMap["description"].(string)),
-			Required:    aws.Bool(parameterMap["required"].(bool)),
-		}
-		parameters[parameterMap["name"].(string)] = parameter
+		apiObjects[tfMap["point"].(string)] = expandActions(tfMap[names.AttrAction].(*schema.Set).List())
 	}
 
-	return parameters
+	return apiObjects
 }
 
-func flattenExtensionActions(actions []*appconfig.Action) []interface{} {
-	var rawActions []interface{}
-	for _, action := range actions {
-		rawAction := map[string]interface{}{
-			"name":        aws.StringValue(action.Name),
-			"description": aws.StringValue(action.Description),
-			"role_arn":    aws.StringValue(action.RoleArn),
-			"uri":         aws.StringValue(action.Uri),
-		}
-		rawActions = append(rawActions, rawAction)
-	}
-	return rawActions
-}
-
-func flattenExtensionActionPoints(actionPointsMap map[string][]*appconfig.Action) []interface{} {
-	if len(actionPointsMap) == 0 {
+func expandParameters(tfList []any) map[string]awstypes.Parameter {
+	if tfList == nil {
 		return nil
 	}
 
-	var rawActionPoints []interface{}
-	for actionPoint, actions := range actionPointsMap {
-		rawActionPoint := map[string]interface{}{
-			"point":  actionPoint,
-			"action": flattenExtensionActions(actions),
+	apiObjects := make(map[string]awstypes.Parameter)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
 		}
-		rawActionPoints = append(rawActionPoints, rawActionPoint)
+
+		apiObjects[tfMap[names.AttrName].(string)] = awstypes.Parameter{
+			Description: aws.String(tfMap[names.AttrDescription].(string)),
+			Required:    tfMap["required"].(bool),
+		}
 	}
 
-	return rawActionPoints
+	return apiObjects
 }
 
-func flattenExtensionParameters(parameters map[string]*appconfig.Parameter) []interface{} {
-	if len(parameters) == 0 {
+func flattenActions(apiObjects []awstypes.Action) []any {
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrDescription: aws.ToString(apiObject.Description),
+			names.AttrName:        aws.ToString(apiObject.Name),
+			names.AttrRoleARN:     aws.ToString(apiObject.RoleArn),
+			names.AttrURI:         aws.ToString(apiObject.Uri),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenActionPoints(apiObjects map[string][]awstypes.Action) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var rawParameters []interface{}
-	for key, parameter := range parameters {
-		rawParameter := map[string]interface{}{
-			"name":        key,
-			"description": aws.StringValue(parameter.Description),
-			"required":    aws.BoolValue(parameter.Required),
-		}
+	var tfList []any
 
-		rawParameters = append(rawParameters, rawParameter)
+	for k, v := range apiObjects {
+		rawActionPoint := map[string]any{
+			names.AttrAction: flattenActions(v),
+			"point":          k,
+		}
+		tfList = append(tfList, rawActionPoint)
 	}
 
-	return rawParameters
+	return tfList
+}
+
+func flattenParameters(apiObjects map[string]awstypes.Parameter) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for k, v := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrDescription: aws.ToString(v.Description),
+			names.AttrName:        k,
+			"required":            v.Required,
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

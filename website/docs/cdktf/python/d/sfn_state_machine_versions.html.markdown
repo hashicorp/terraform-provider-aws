@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `statemachine_arn` - (Required) ARN of the State Machine.
 
 ## Attribute Reference
@@ -45,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `statemachine_versions` - ARN List identifying the statemachine versions.
 
-<!-- cache-key: cdktf-0.20.1 input-824fd2b5bdeae5b7a6a3535a32c61238432e8f9bb78e071234ecee4baa02e255 -->
+<!-- cache-key: cdktf-0.20.8 input-07393cd92815b603ccb69901a18b98137ff7a66174dec994c3b01f707ed69d09 -->

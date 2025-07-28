@@ -275,6 +275,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy. Must be between 1 and 255 characters in length.
 * `policyType` - (Optional) Policy type. Valid values are `StepScaling` and `TargetTrackingScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
 * `resourceId` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html)
@@ -497,4 +498,4 @@ Using `terraform import`, import Application AutoScaling Policy using the `servi
 % terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fbf0b558db12d5a4ee505edd94d9a657fd67e6fe4b86ba032dbf944c9b850975 -->
+<!-- cache-key: cdktf-0.20.8 input-2743c6c027c30780d655bad04c00aa7e64161c9de89bbec5f6090657d7402e8c -->

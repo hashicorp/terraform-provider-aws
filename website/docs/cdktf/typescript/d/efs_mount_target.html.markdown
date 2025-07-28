@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPointId` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `fileSystemId` and `mountTargetId` are not included.
 * `fileSystemId` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `accessPointId` and `mountTargetId` are not included.
 * `mountTargetId` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `accessPointId` and `fileSystemId` are not included.
@@ -63,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availabilityZoneId` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
 * `ownerId` - AWS account ID that owns the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->
+<!-- cache-key: cdktf-0.20.8 input-a4a76136977d94530467ac347e3eb3dcdee34d2341329168d290bff5f94117fc -->

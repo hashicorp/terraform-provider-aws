@@ -20,12 +20,14 @@ data "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Specify the exact name of the desired autoscaling group.
 
 ## Attribute Reference
 
-~> **NOTE:** Some values are not always set and may not be available for
-interpolation.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
@@ -80,6 +82,7 @@ interpolation.
                 * `instance_generations` - List of instance generation names.
                 * `local_storage` - Indicates whether instance types with instance store volumes are included, excluded, or required.
                 * `local_storage_types` - List of local storage type names.
+                * `max_spot_price_as_percentage_of_optimal_on_demand_price` - Price protection threshold for Spot Instances.
                 * `memory_gib_per_vcpu` - List of objects describing the minimum and maximum amount of memory (GiB) per vCPU.
                     * `min` - Minimum.
                     * `max` - Maximum.
@@ -130,3 +133,6 @@ interpolation.
     * `min_size` - Minimum number of instances to maintain in the warm pool.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warm_pool_size` - Current size of the warm pool.
+
+~> **NOTE:** Some values are not always set and may not be available for
+interpolation.

@@ -123,6 +123,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) ID of the associated REST API
 * `resourceId` - (Required) API resource ID
 * `httpMethod` - (Required) HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
@@ -174,4 +175,4 @@ Using `terraform import`, import `aws_api_gateway_method` using `REST-API-ID/RES
 % terraform import aws_api_gateway_method.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d5fc57c36d3feff79723b5c6ed0551e4895d96864eaac47e1cfecf484fd84f98 -->
+<!-- cache-key: cdktf-0.20.8 input-6c3f4021b757e16ab96211285003821b5d20d3bece66cc6c6288a63e869cfdde -->

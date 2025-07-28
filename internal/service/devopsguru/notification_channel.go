@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,27 +30,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Notification Channel")
-func newResourceNotificationChannel(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceNotificationChannel{}, nil
+// @FrameworkResource("aws_devopsguru_notification_channel", name="Notification Channel")
+func newNotificationChannelResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &notificationChannelResource{}, nil
 }
 
 const (
 	ResNameNotificationChannel = "Notification Channel"
 )
 
-type resourceNotificationChannel struct {
-	framework.ResourceWithConfigure
+type notificationChannelResource struct {
+	framework.ResourceWithModel[notificationChannelResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_devopsguru_notification_channel"
-}
-
-func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *notificationChannelResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
@@ -60,28 +57,28 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"message_types": schema.ListAttribute{
+						"message_types": schema.SetAttribute{
 							Optional:    true,
-							CustomType:  fwtypes.ListOfStringType,
+							CustomType:  fwtypes.SetOfStringType,
 							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
 							},
-							Validators: []validator.List{
-								listvalidator.ValueStringsAre(
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(
 									enum.FrameworkValidate[awstypes.NotificationMessageType](),
 								),
 							},
 						},
-						"severities": schema.ListAttribute{
+						"severities": schema.SetAttribute{
 							Optional:    true,
-							CustomType:  fwtypes.ListOfStringType,
+							CustomType:  fwtypes.SetOfStringType,
 							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
 							},
-							Validators: []validator.List{
-								listvalidator.ValueStringsAre(
+							Validators: []validator.Set{
+								setvalidator.ValueStringsAre(
 									enum.FrameworkValidate[awstypes.InsightSeverity](),
 								),
 							},
@@ -97,7 +94,7 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.ARNType,
 							PlanModifiers: []planmodifier.String{
@@ -111,10 +108,10 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceNotificationChannel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *notificationChannelResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var plan resourceNotificationChannelData
+	var plan notificationChannelResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -149,10 +146,10 @@ func (r *resourceNotificationChannel) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceNotificationChannel) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *notificationChannelResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceNotificationChannelData
+	var state notificationChannelResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,21 +174,21 @@ func (r *resourceNotificationChannel) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceNotificationChannel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *notificationChannelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *notificationChannelResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DevOpsGuruClient(ctx)
 
-	var state resourceNotificationChannelData
+	var state notificationChannelResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &devopsguru.RemoveNotificationChannelInput{
-		Id: aws.String(state.ID.ValueString()),
+		Id: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.RemoveNotificationChannel(ctx, in)
@@ -205,10 +202,6 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 		)
 		return
 	}
-}
-
-func (r *resourceNotificationChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.NotificationChannel, error) {
@@ -234,15 +227,16 @@ func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, i
 	}
 }
 
-type resourceNotificationChannelData struct {
+type notificationChannelResourceModel struct {
+	framework.WithRegionModel
 	Filters fwtypes.ListNestedObjectValueOf[filtersData] `tfsdk:"filters"`
 	ID      types.String                                 `tfsdk:"id"`
 	Sns     fwtypes.ListNestedObjectValueOf[snsData]     `tfsdk:"sns"`
 }
 
 type filtersData struct {
-	MessageTypes fwtypes.ListValueOf[types.String] `tfsdk:"message_types"`
-	Severities   fwtypes.ListValueOf[types.String] `tfsdk:"severities"`
+	MessageTypes fwtypes.SetValueOf[types.String] `tfsdk:"message_types"`
+	Severities   fwtypes.SetValueOf[types.String] `tfsdk:"severities"`
 }
 
 type snsData struct {

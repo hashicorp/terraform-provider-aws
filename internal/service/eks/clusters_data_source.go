@@ -11,15 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_clusters")
+// @SDKDataSource("aws_eks_clusters", name="Clusters")
 func dataSourceClusters() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClustersRead,
 
 		Schema: map[string]*schema.Schema{
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -28,7 +29,7 @@ func dataSourceClusters() *schema.Resource {
 	}
 }
 
-func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -45,8 +46,8 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 		clusters = append(clusters, page.Clusters...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("names", clusters)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrNames, clusters)
 
 	return diags
 }

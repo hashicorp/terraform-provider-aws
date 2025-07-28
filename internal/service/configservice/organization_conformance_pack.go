@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_conformance_pack", name="Organization Conformance Pack")
@@ -46,7 +47,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +90,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -123,11 +124,11 @@ func resourceOrganizationConformancePack() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(name),
 	}
@@ -156,7 +157,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (any, error) {
 		return conn.PutOrganizationConformancePack(ctx, input)
 	})
 
@@ -173,7 +174,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceOrganizationConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -189,19 +190,19 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Organization Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", pack.OrganizationConformancePackArn)
+	d.Set(names.AttrARN, pack.OrganizationConformancePackArn)
 	d.Set("delivery_s3_bucket", pack.DeliveryS3Bucket)
 	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
 	d.Set("excluded_accounts", pack.ExcludedAccounts)
 	if err = d.Set("input_parameter", flattenConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
-	d.Set("name", pack.OrganizationConformancePackName)
+	d.Set(names.AttrName, pack.OrganizationConformancePackName)
 
 	return diags
 }
 
-func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -246,7 +247,7 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 	return append(diags, resourceOrganizationConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -254,7 +255,7 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 		timeout = 5 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Conformance Pack: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteOrganizationConformancePack(ctx, &configservice.DeleteOrganizationConformancePackInput{
 			OrganizationConformancePackName: aws.String(d.Id()),
 		})
@@ -363,7 +364,7 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (any, error) {
 			return pages.NextPage(ctx)
 		})
 
@@ -427,7 +428,7 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 }
 
 func statusOrganizationConformancePack(ctx context.Context, conn *configservice.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOrganizationConformancePackStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

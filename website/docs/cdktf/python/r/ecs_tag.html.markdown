@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         example = BatchComputeEnvironment(self, "example",
-            compute_environment_name="example",
+            name="example",
             service_role=Token.as_string(aws_iam_role_example.arn),
             type="UNMANAGED"
         )
@@ -49,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the ECS resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
@@ -84,4 +85,4 @@ Using `terraform import`, import `aws_ecs_tag` using the ECS resource identifier
 % terraform import aws_ecs_tag.example arn:aws:ecs:us-east-1:123456789012:cluster/example,Name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f495a4add8be734874309797134ad568af10ab0883471ac6917e03b469e68e0 -->
+<!-- cache-key: cdktf-0.20.8 input-2a4a88a13fee58fffd5e1fd73e81330ec318d80108b0562550df3bbff63ec1af -->

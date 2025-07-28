@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delegated_admin_account` - (Optional) Identifier for the delegated administrator account.
 * `deregister_on_destroy` - (Optional) Flag to deregister AuditManager in the account upon destruction. Defaults to `false` (ie. AuditManager will remain active in the account, even if this resource is removed).
 * `kms_key` - (Optional) KMS key identifier.
@@ -90,4 +91,4 @@ Using `terraform import`, import Audit Manager Account Registration resources us
 % terraform import aws_auditmanager_account_registration.example us-east-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b8a8e96a39604df1b10232cf4a3d5b9b1cb58ec03eaacfe07b1799eb42bf2279 -->
+<!-- cache-key: cdktf-0.20.8 input-899642bafeeb264894a258bb945473b5bac7104beced5d0da0fb5cc154992857 -->

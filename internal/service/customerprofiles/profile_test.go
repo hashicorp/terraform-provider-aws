@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCustomerProfilesProfile_full(t *testing.T) {
@@ -36,7 +37,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "account_number", accountNumber),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "Low Profile Customer"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.%", "10"),
@@ -109,7 +110,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 				Config: testAccProfileConfig_fullUpdated(rName, accountNumberUpdated, emailUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "High Profile Customer"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_1", "123 Sample St"),
@@ -209,7 +210,7 @@ func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
+		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
 		return err
 	}
@@ -224,7 +225,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
+			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -248,7 +249,7 @@ func testAccProfileImportStateIdFunc(resourceName string) resource.ImportStateId
 			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["domain_name"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.ID), nil
 	}
 }
 

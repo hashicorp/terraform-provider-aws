@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func sourceParametersSchema() *schema.Schema {
-	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1}):(\d{12}):secret:.+)$`), "")
+	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(`^(^arn:aws([a-z]|\-)*:secretsmanager:([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2}):(\d{12}):secret:.+)$`), "")
 
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -106,7 +107,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -161,7 +162,7 @@ func sourceParametersSchema() *schema.Schema {
 					DiffSuppressFunc: suppressEmptyConfigurationBlock("source_parameters.0.filter_criteria"),
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 5,
@@ -205,7 +206,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -444,7 +445,7 @@ func sourceParametersSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"basic_auth": {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verifySecretsManagerARN,
 										},
 										"client_certificate_tls_auth": {
@@ -497,7 +498,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"security_groups": {
+										names.AttrSecurityGroups: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 5,
@@ -509,7 +510,7 @@ func sourceParametersSchema() *schema.Schema {
 												),
 											},
 										},
-										"subnets": {
+										names.AttrSubnets: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 16,
@@ -562,107 +563,107 @@ func sourceParametersSchema() *schema.Schema {
 	}
 }
 
-func expandPipeSourceParameters(tfMap map[string]interface{}) *types.PipeSourceParameters {
+func expandPipeSourceParameters(tfMap map[string]any) *types.PipeSourceParameters {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.PipeSourceParameters{}
 
-	if v, ok := tfMap["activemq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ActiveMQBrokerParameters = expandPipeSourceActiveMQBrokerParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["activemq_broker_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ActiveMQBrokerParameters = expandPipeSourceActiveMQBrokerParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["dynamodb_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DynamoDBStreamParameters = expandPipeSourceDynamoDBStreamParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dynamodb_stream_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DynamoDBStreamParameters = expandPipeSourceDynamoDBStreamParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	if v, ok := tfMap["filter_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.KinesisStreamParameters = expandPipeSourceKinesisStreamParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_stream_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisStreamParameters = expandPipeSourceKinesisStreamParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ManagedStreamingKafkaParameters = expandPipeSourceManagedStreamingKafkaParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ManagedStreamingKafkaParameters = expandPipeSourceManagedStreamingKafkaParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["rabbitmq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RabbitMQBrokerParameters = expandPipeSourceRabbitMQBrokerParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["rabbitmq_broker_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RabbitMQBrokerParameters = expandPipeSourceRabbitMQBrokerParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["self_managed_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SelfManagedKafkaParameters = expandPipeSourceSelfManagedKafkaParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["self_managed_kafka_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SelfManagedKafkaParameters = expandPipeSourceSelfManagedKafkaParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SqsQueueParameters = expandPipeSourceSQSQueueParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sqs_queue_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SqsQueueParameters = expandPipeSourceSQSQueueParameters(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUpdatePipeSourceParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceParameters {
+func expandUpdatePipeSourceParameters(tfMap map[string]any) *types.UpdatePipeSourceParameters {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.UpdatePipeSourceParameters{}
 
-	if v, ok := tfMap["activemq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ActiveMQBrokerParameters = expandUpdatePipeSourceActiveMQBrokerParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["activemq_broker_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ActiveMQBrokerParameters = expandUpdatePipeSourceActiveMQBrokerParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["dynamodb_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DynamoDBStreamParameters = expandUpdatePipeSourceDynamoDBStreamParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dynamodb_stream_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DynamoDBStreamParameters = expandUpdatePipeSourceDynamoDBStreamParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["filter_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]interface{}))
+	if v, ok := tfMap["filter_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.FilterCriteria = expandFilterCriteria(v[0].(map[string]any))
 	} else {
 		apiObject.FilterCriteria = &types.FilterCriteria{}
 	}
 
-	if v, ok := tfMap["kinesis_stream_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.KinesisStreamParameters = expandUpdatePipeSourceKinesisStreamParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_stream_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisStreamParameters = expandUpdatePipeSourceKinesisStreamParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.ManagedStreamingKafkaParameters = expandUpdatePipeSourceManagedStreamingKafkaParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["managed_streaming_kafka_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ManagedStreamingKafkaParameters = expandUpdatePipeSourceManagedStreamingKafkaParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["rabbitmq_broker_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.RabbitMQBrokerParameters = expandUpdatePipeSourceRabbitMQBrokerParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["rabbitmq_broker_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.RabbitMQBrokerParameters = expandUpdatePipeSourceRabbitMQBrokerParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["self_managed_kafka_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SelfManagedKafkaParameters = expandUpdatePipeSourceSelfManagedKafkaParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["self_managed_kafka_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SelfManagedKafkaParameters = expandUpdatePipeSourceSelfManagedKafkaParameters(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sqs_queue_parameters"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SqsQueueParameters = expandUpdatePipeSourceSQSQueueParameters(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sqs_queue_parameters"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SqsQueueParameters = expandUpdatePipeSourceSQSQueueParameters(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandFilterCriteria(tfMap map[string]interface{}) *types.FilterCriteria {
+func expandFilterCriteria(tfMap map[string]any) *types.FilterCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.FilterCriteria{}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]any); ok && len(v) > 0 {
 		apiObject.Filters = expandFilters(v)
 	}
 
 	return apiObject
 }
 
-func expandFilter(tfMap map[string]interface{}) *types.Filter {
+func expandFilter(tfMap map[string]any) *types.Filter {
 	if tfMap == nil {
 		return nil
 	}
@@ -676,7 +677,7 @@ func expandFilter(tfMap map[string]interface{}) *types.Filter {
 	return apiObject
 }
 
-func expandFilters(tfList []interface{}) []types.Filter {
+func expandFilters(tfList []any) []types.Filter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -684,7 +685,7 @@ func expandFilters(tfList []interface{}) []types.Filter {
 	var apiObjects []types.Filter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -702,7 +703,7 @@ func expandFilters(tfList []interface{}) []types.Filter {
 	return apiObjects
 }
 
-func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *types.PipeSourceActiveMQBrokerParameters {
+func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]any) *types.PipeSourceActiveMQBrokerParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -713,8 +714,8 @@ func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *typ
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -728,7 +729,7 @@ func expandPipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceActiveMQBrokerParameters {
+func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]any) *types.UpdatePipeSourceActiveMQBrokerParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -739,8 +740,8 @@ func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
@@ -750,7 +751,7 @@ func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandMQBrokerAccessCredentials(tfMap map[string]interface{}) types.MQBrokerAccessCredentials {
+func expandMQBrokerAccessCredentials(tfMap map[string]any) types.MQBrokerAccessCredentials {
 	if tfMap == nil {
 		return nil
 	}
@@ -766,7 +767,7 @@ func expandMQBrokerAccessCredentials(tfMap map[string]interface{}) types.MQBroke
 	return nil
 }
 
-func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *types.PipeSourceDynamoDBStreamParameters {
+func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]any) *types.PipeSourceDynamoDBStreamParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -777,8 +778,8 @@ func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *typ
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dead_letter_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -808,7 +809,7 @@ func expandPipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceDynamoDBStreamParameters {
+func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]any) *types.UpdatePipeSourceDynamoDBStreamParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -819,8 +820,8 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dead_letter_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]any))
 	} else {
 		apiObject.DeadLetterConfig = &types.DeadLetterConfig{}
 	}
@@ -848,21 +849,21 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfig {
+func expandDeadLetterConfig(tfMap map[string]any) *types.DeadLetterConfig {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.DeadLetterConfig{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *types.PipeSourceKinesisStreamParameters {
+func expandPipeSourceKinesisStreamParameters(tfMap map[string]any) *types.PipeSourceKinesisStreamParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -873,8 +874,8 @@ func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *type
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dead_letter_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -910,7 +911,7 @@ func expandPipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *type
 	return apiObject
 }
 
-func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceKinesisStreamParameters {
+func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]any) *types.UpdatePipeSourceKinesisStreamParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -921,8 +922,8 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["dead_letter_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["dead_letter_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DeadLetterConfig = expandDeadLetterConfig(v[0].(map[string]any))
 	} else {
 		apiObject.DeadLetterConfig = &types.DeadLetterConfig{}
 	}
@@ -950,7 +951,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 	return apiObject
 }
 
-func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{}) *types.PipeSourceManagedStreamingKafkaParameters {
+func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]any) *types.PipeSourceManagedStreamingKafkaParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -965,8 +966,8 @@ func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{
 		apiObject.ConsumerGroupID = aws.String(v)
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -984,7 +985,7 @@ func expandPipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceManagedStreamingKafkaParameters {
+func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]any) *types.UpdatePipeSourceManagedStreamingKafkaParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -995,8 +996,8 @@ func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]inte
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMSKAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
@@ -1006,7 +1007,7 @@ func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]inte
 	return apiObject
 }
 
-func expandMSKAccessCredentials(tfMap map[string]interface{}) types.MSKAccessCredentials {
+func expandMSKAccessCredentials(tfMap map[string]any) types.MSKAccessCredentials {
 	if tfMap == nil {
 		return nil
 	}
@@ -1030,7 +1031,7 @@ func expandMSKAccessCredentials(tfMap map[string]interface{}) types.MSKAccessCre
 	return nil
 }
 
-func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *types.PipeSourceRabbitMQBrokerParameters {
+func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]any) *types.PipeSourceRabbitMQBrokerParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1041,8 +1042,8 @@ func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *typ
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -1060,7 +1061,7 @@ func expandPipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceRabbitMQBrokerParameters {
+func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]any) *types.UpdatePipeSourceRabbitMQBrokerParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1071,8 +1072,8 @@ func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandMQBrokerAccessCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
@@ -1082,7 +1083,7 @@ func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}
 	return apiObject
 }
 
-func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *types.PipeSourceSelfManagedKafkaParameters {
+func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]any) *types.PipeSourceSelfManagedKafkaParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1101,8 +1102,8 @@ func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *t
 		apiObject.ConsumerGroupID = aws.String(v)
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandSelfManagedKafkaAccessConfigurationCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandSelfManagedKafkaAccessConfigurationCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok && v != 0 {
@@ -1121,14 +1122,14 @@ func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *t
 		apiObject.TopicName = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vpc"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSelfManagedKafkaParameters {
+func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]any) *types.UpdatePipeSourceSelfManagedKafkaParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1139,8 +1140,8 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Credentials = expandSelfManagedKafkaAccessConfigurationCredentials(v[0].(map[string]interface{}))
+	if v, ok := tfMap["credentials"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Credentials = expandSelfManagedKafkaAccessConfigurationCredentials(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["maximum_batching_window_in_seconds"].(int); ok {
@@ -1151,8 +1152,8 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 		apiObject.ServerRootCaCertificate = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
+	if v, ok := tfMap["vpc"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]any))
 	} else {
 		apiObject.Vpc = &types.SelfManagedKafkaAccessConfigurationVpc{}
 	}
@@ -1160,7 +1161,7 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 	return apiObject
 }
 
-func expandSelfManagedKafkaAccessConfigurationCredentials(tfMap map[string]interface{}) types.SelfManagedKafkaAccessConfigurationCredentials {
+func expandSelfManagedKafkaAccessConfigurationCredentials(tfMap map[string]any) types.SelfManagedKafkaAccessConfigurationCredentials {
 	if tfMap == nil {
 		return nil
 	}
@@ -1200,25 +1201,25 @@ func expandSelfManagedKafkaAccessConfigurationCredentials(tfMap map[string]inter
 	return nil
 }
 
-func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) *types.SelfManagedKafkaAccessConfigurationVpc {
+func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]any) *types.SelfManagedKafkaAccessConfigurationVpc {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.SelfManagedKafkaAccessConfigurationVpc{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroup = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandPipeSourceSQSQueueParameters(tfMap map[string]interface{}) *types.PipeSourceSqsQueueParameters {
+func expandPipeSourceSQSQueueParameters(tfMap map[string]any) *types.PipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1236,7 +1237,7 @@ func expandPipeSourceSQSQueueParameters(tfMap map[string]interface{}) *types.Pip
 	return apiObject
 }
 
-func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]interface{}) *types.UpdatePipeSourceSqsQueueParameters {
+func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]any) *types.UpdatePipeSourceSqsQueueParameters {
 	if tfMap == nil {
 		return nil
 	}
@@ -1254,64 +1255,64 @@ func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]interface{}) *typ
 	return apiObject
 }
 
-func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]interface{} {
+func flattenPipeSourceParameters(apiObject *types.PipeSourceParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ActiveMQBrokerParameters; v != nil {
-		tfMap["activemq_broker_parameters"] = []interface{}{flattenPipeSourceActiveMQBrokerParameters(v)}
+		tfMap["activemq_broker_parameters"] = []any{flattenPipeSourceActiveMQBrokerParameters(v)}
 	}
 
 	if v := apiObject.DynamoDBStreamParameters; v != nil {
-		tfMap["dynamodb_stream_parameters"] = []interface{}{flattenPipeSourceDynamoDBStreamParameters(v)}
+		tfMap["dynamodb_stream_parameters"] = []any{flattenPipeSourceDynamoDBStreamParameters(v)}
 	}
 
 	if v := apiObject.FilterCriteria; v != nil {
-		tfMap["filter_criteria"] = []interface{}{flattenFilterCriteria(v)}
+		tfMap["filter_criteria"] = []any{flattenFilterCriteria(v)}
 	}
 
 	if v := apiObject.KinesisStreamParameters; v != nil {
-		tfMap["kinesis_stream_parameters"] = []interface{}{flattenPipeSourceKinesisStreamParameters(v)}
+		tfMap["kinesis_stream_parameters"] = []any{flattenPipeSourceKinesisStreamParameters(v)}
 	}
 
 	if v := apiObject.ManagedStreamingKafkaParameters; v != nil {
-		tfMap["managed_streaming_kafka_parameters"] = []interface{}{flattenPipeSourceManagedStreamingKafkaParameters(v)}
+		tfMap["managed_streaming_kafka_parameters"] = []any{flattenPipeSourceManagedStreamingKafkaParameters(v)}
 	}
 
 	if v := apiObject.RabbitMQBrokerParameters; v != nil {
-		tfMap["rabbitmq_broker_parameters"] = []interface{}{flattenPipeSourceRabbitMQBrokerParameters(v)}
+		tfMap["rabbitmq_broker_parameters"] = []any{flattenPipeSourceRabbitMQBrokerParameters(v)}
 	}
 
 	if v := apiObject.SelfManagedKafkaParameters; v != nil {
-		tfMap["self_managed_kafka_parameters"] = []interface{}{flattenPipeSourceSelfManagedKafkaParameters(v)}
+		tfMap["self_managed_kafka_parameters"] = []any{flattenPipeSourceSelfManagedKafkaParameters(v)}
 	}
 
 	if v := apiObject.SqsQueueParameters; v != nil {
-		tfMap["sqs_queue_parameters"] = []interface{}{flattenPipeSourceSQSQueueParameters(v)}
+		tfMap["sqs_queue_parameters"] = []any{flattenPipeSourceSQSQueueParameters(v)}
 	}
 
 	return tfMap
 }
 
-func flattenFilterCriteria(apiObject *types.FilterCriteria) map[string]interface{} {
+func flattenFilterCriteria(apiObject *types.FilterCriteria) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Filters; v != nil {
-		tfMap["filter"] = flattenFilters(v)
+		tfMap[names.AttrFilter] = flattenFilters(v)
 	}
 
 	return tfMap
 }
 
-func flattenFilter(apiObject types.Filter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenFilter(apiObject types.Filter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Pattern; v != nil {
 		tfMap["pattern"] = aws.ToString(v)
@@ -1320,12 +1321,12 @@ func flattenFilter(apiObject types.Filter) map[string]interface{} {
 	return tfMap
 }
 
-func flattenFilters(apiObjects []types.Filter) []interface{} {
+func flattenFilters(apiObjects []types.Filter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenFilter(apiObject))
@@ -1334,19 +1335,19 @@ func flattenFilters(apiObjects []types.Filter) []interface{} {
 	return tfList
 }
 
-func flattenPipeSourceActiveMQBrokerParameters(apiObject *types.PipeSourceActiveMQBrokerParameters) map[string]interface{} {
+func flattenPipeSourceActiveMQBrokerParameters(apiObject *types.PipeSourceActiveMQBrokerParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		tfMap["credentials"] = []interface{}{flattenMQBrokerAccessCredentials(v)}
+		tfMap["credentials"] = []any{flattenMQBrokerAccessCredentials(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1360,12 +1361,12 @@ func flattenPipeSourceActiveMQBrokerParameters(apiObject *types.PipeSourceActive
 	return tfMap
 }
 
-func flattenMQBrokerAccessCredentials(apiObject types.MQBrokerAccessCredentials) map[string]interface{} {
+func flattenMQBrokerAccessCredentials(apiObject types.MQBrokerAccessCredentials) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*types.MQBrokerAccessCredentialsMemberBasicAuth); ok {
 		if v := apiObject.Value; v != "" {
@@ -1376,19 +1377,19 @@ func flattenMQBrokerAccessCredentials(apiObject types.MQBrokerAccessCredentials)
 	return tfMap
 }
 
-func flattenPipeSourceDynamoDBStreamParameters(apiObject *types.PipeSourceDynamoDBStreamParameters) map[string]interface{} {
+func flattenPipeSourceDynamoDBStreamParameters(apiObject *types.PipeSourceDynamoDBStreamParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.DeadLetterConfig; v != nil {
-		tfMap["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
+		tfMap["dead_letter_config"] = []any{flattenDeadLetterConfig(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1418,19 +1419,19 @@ func flattenPipeSourceDynamoDBStreamParameters(apiObject *types.PipeSourceDynamo
 	return tfMap
 }
 
-func flattenPipeSourceKinesisStreamParameters(apiObject *types.PipeSourceKinesisStreamParameters) map[string]interface{} {
+func flattenPipeSourceKinesisStreamParameters(apiObject *types.PipeSourceKinesisStreamParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.DeadLetterConfig; v != nil {
-		tfMap["dead_letter_config"] = []interface{}{flattenDeadLetterConfig(v)}
+		tfMap["dead_letter_config"] = []any{flattenDeadLetterConfig(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1464,12 +1465,12 @@ func flattenPipeSourceKinesisStreamParameters(apiObject *types.PipeSourceKinesis
 	return tfMap
 }
 
-func flattenPipeSourceManagedStreamingKafkaParameters(apiObject *types.PipeSourceManagedStreamingKafkaParameters) map[string]interface{} {
+func flattenPipeSourceManagedStreamingKafkaParameters(apiObject *types.PipeSourceManagedStreamingKafkaParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
@@ -1480,7 +1481,7 @@ func flattenPipeSourceManagedStreamingKafkaParameters(apiObject *types.PipeSourc
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		tfMap["credentials"] = []interface{}{flattenMSKAccessCredentials(v)}
+		tfMap["credentials"] = []any{flattenMSKAccessCredentials(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1498,12 +1499,12 @@ func flattenPipeSourceManagedStreamingKafkaParameters(apiObject *types.PipeSourc
 	return tfMap
 }
 
-func flattenMSKAccessCredentials(apiObject types.MSKAccessCredentials) map[string]interface{} {
+func flattenMSKAccessCredentials(apiObject types.MSKAccessCredentials) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*types.MSKAccessCredentialsMemberClientCertificateTlsAuth); ok {
 		if v := apiObject.Value; v != "" {
@@ -1520,19 +1521,19 @@ func flattenMSKAccessCredentials(apiObject types.MSKAccessCredentials) map[strin
 	return tfMap
 }
 
-func flattenPipeSourceRabbitMQBrokerParameters(apiObject *types.PipeSourceRabbitMQBrokerParameters) map[string]interface{} {
+func flattenPipeSourceRabbitMQBrokerParameters(apiObject *types.PipeSourceRabbitMQBrokerParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		tfMap["credentials"] = []interface{}{flattenMQBrokerAccessCredentials(v)}
+		tfMap["credentials"] = []any{flattenMQBrokerAccessCredentials(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1550,12 +1551,12 @@ func flattenPipeSourceRabbitMQBrokerParameters(apiObject *types.PipeSourceRabbit
 	return tfMap
 }
 
-func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelfManagedKafkaParameters) map[string]interface{} {
+func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelfManagedKafkaParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AdditionalBootstrapServers; v != nil {
 		tfMap["additional_bootstrap_servers"] = v
@@ -1570,7 +1571,7 @@ func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelf
 	}
 
 	if v := apiObject.Credentials; v != nil {
-		tfMap["credentials"] = []interface{}{flattenSelfManagedKafkaAccessConfigurationCredentials(v)}
+		tfMap["credentials"] = []any{flattenSelfManagedKafkaAccessConfigurationCredentials(v)}
 	}
 
 	if v := apiObject.MaximumBatchingWindowInSeconds; v != nil {
@@ -1590,18 +1591,18 @@ func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelf
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenSelfManagedKafkaAccessConfigurationVPC(v)}
+		tfMap["vpc"] = []any{flattenSelfManagedKafkaAccessConfigurationVPC(v)}
 	}
 
 	return tfMap
 }
 
-func flattenSelfManagedKafkaAccessConfigurationCredentials(apiObject types.SelfManagedKafkaAccessConfigurationCredentials) map[string]interface{} {
+func flattenSelfManagedKafkaAccessConfigurationCredentials(apiObject types.SelfManagedKafkaAccessConfigurationCredentials) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*types.SelfManagedKafkaAccessConfigurationCredentialsMemberBasicAuth); ok {
 		if v := apiObject.Value; v != "" {
@@ -1630,30 +1631,30 @@ func flattenSelfManagedKafkaAccessConfigurationCredentials(apiObject types.SelfM
 	return tfMap
 }
 
-func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedKafkaAccessConfigurationVpc) map[string]interface{} {
+func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedKafkaAccessConfigurationVpc) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroup; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap
 }
 
-func flattenPipeSourceSQSQueueParameters(apiObject *types.PipeSourceSqsQueueParameters) map[string]interface{} {
+func flattenPipeSourceSQSQueueParameters(apiObject *types.PipeSourceSqsQueueParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BatchSize; v != nil {
 		tfMap["batch_size"] = aws.ToInt32(v)
@@ -1666,15 +1667,15 @@ func flattenPipeSourceSQSQueueParameters(apiObject *types.PipeSourceSqsQueuePara
 	return tfMap
 }
 
-func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]interface{} {
+func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap

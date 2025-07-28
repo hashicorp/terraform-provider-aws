@@ -4,7 +4,6 @@
 package sync
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -59,7 +58,7 @@ func (s Semaphore) Notify() {
 	select {
 	case <-s:
 	default:
-		log.Println("[WARN] Notifying semaphore without Wait")
+		// log.Println("[WARN] Notifying semaphore without Wait")
 	}
 }
 

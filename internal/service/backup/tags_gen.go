@@ -3,12 +3,11 @@ package backup
 
 import (
 	"context"
-	"fmt"
 	"maps"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/aws/aws-sdk-go/service/backup/backupiface"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -20,36 +19,34 @@ import (
 // listTags lists backup service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn backupiface.BackupAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &backup.ListTagsInput{
+func listTags(ctx context.Context, conn *backup.Client, identifier string, optFns ...func(*backup.Options)) (tftags.KeyValueTags, error) {
+	input := backup.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output := make(map[string]*string)
 
-	err := conn.ListTagsPagesWithContext(ctx, input, func(page *backup.ListTagsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	output := make(map[string]string)
+
+	pages := backup.NewListTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
 		}
 
 		maps.Copy(output, page.Tags)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists backup service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).BackupConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).BackupClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -59,23 +56,23 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]*string handling
+// map[string]string handling
 
-// Tags returns backup service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
+// svcTags returns backup service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
 }
 
-// KeyValueTags creates tftags.KeyValueTags from backup service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from backup service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns backup service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -84,16 +81,16 @@ func getTagsIn(ctx context.Context) map[string]*string {
 }
 
 // setTagsOut sets backup service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]*string) {
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
 // updateTags updates backup service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn backupiface.BackupAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *backup.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*backup.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -102,30 +99,30 @@ func updateTags(ctx context.Context, conn backupiface.BackupAPI, identifier stri
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Backup)
 	if len(removedTags) > 0 {
-		input := &backup.UntagResourceInput{
+		input := backup.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeyList:  aws.StringSlice(removedTags.Keys()),
+			TagKeyList:  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Backup)
 	if len(updatedTags) > 0 {
-		input := &backup.TagResourceInput{
+		input := backup.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags),
+			Tags:        svcTags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -135,5 +132,5 @@ func updateTags(ctx context.Context, conn backupiface.BackupAPI, identifier stri
 // UpdateTags updates backup service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).BackupConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).BackupClient(ctx), identifier, oldTags, newTags)
 }

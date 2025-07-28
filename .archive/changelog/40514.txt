@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Prevent perpetual diff which triggers resource replacement on `at_rest_encryption_enabled` when `engine` is `valkey`.
+```

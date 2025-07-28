@@ -37,9 +37,12 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addon_name` - (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `cluster_name` – (Required) Name of the EKS Cluster.
+* `cluster_name` - (Required) Name of the EKS Cluster.
 
 ## Attribute Reference
 
@@ -50,8 +53,11 @@ This data source exports the following attributes in addition to the arguments a
 * `configuration_values` - Configuration values for the addon with a single JSON string.
 * `service_account_role_arn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.
+* `pod_identity_association` - Pod identity association for the EKS add-on.
+    * `role_arn` - ARN of the IAM role associated with the EKS add-on.
+    * `service_account` - Service account associated with the EKS add-on.
 * `id` - EKS Cluster name and EKS add-on name separated by a colon (`:`).
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.1 input-e89700b62df039f36c49f7f24832619d2b205441f8e47870c78f8a6f079765fb -->
+<!-- cache-key: cdktf-0.20.8 input-b54fac47241325647b80ddbccc7121f84a56ba2cb0b4ea76c643cf130a17f237 -->

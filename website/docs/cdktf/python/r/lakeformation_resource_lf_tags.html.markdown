@@ -96,7 +96,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `lf_tag` – (Required) Set of LF-tags to attach to the resource. See below.
+* `lf_tag` - (Required) Set of LF-tags to attach to the resource. See below.
 
 Exactly one of the following is required:
 
@@ -106,13 +106,14 @@ Exactly one of the following is required:
 
 The following arguments are optional:
 
-* `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `catalog_id` - (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 
 ### lf_tag
 
 The following arguments are required:
 
-* `key` – (Required) Key name for an existing LF-tag.
+* `key` - (Required) Key name for an existing LF-tag.
 * `value` - (Required) Value from the possible values for the LF-tag.
 
 The following argument is optional:
@@ -123,7 +124,7 @@ The following argument is optional:
 
 The following argument is required:
 
-* `name` – (Required) Name of the database resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the database resource. Unique to the Data Catalog.
 
 The following argument is optional:
 
@@ -133,12 +134,13 @@ The following argument is optional:
 
 The following argument is required:
 
-* `database_name` – (Required) Name of the database for the table. Unique to a Data Catalog.
+* `database_name` - (Required) Name of the database for the table. Unique to a Data Catalog.
 * `name` - (Required, at least one of `name` or `wildcard`) Name of the table.
 * `wildcard` - (Required, at least one of `name` or `wildcard`) Whether to use a wildcard representing every table under a database. Defaults to `false`.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 
 ### table_with_columns
@@ -146,12 +148,13 @@ The following arguments are optional:
 The following arguments are required:
 
 * `column_names` - (Required, at least one of `column_names` or `wildcard`) Set of column names for the table.
-* `database_name` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
-* `name` – (Required) Name of the table resource.
+* `database_name` - (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
+* `name` - (Required) Name of the table resource.
 * `wildcard` - (Required, at least one of `column_names` or `wildcard`) Whether to use a column wildcard. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
 * `excluded_column_names` - (Optional) Set of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
@@ -159,4 +162,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-c545a08beff672f6286efb5bcffb1247151c3c8aba0ba2aa227296062430ce8a -->
+<!-- cache-key: cdktf-0.20.8 input-b9e6e6d21ebb0327a4900996db0d2e7640947433807763530aff404d705d3907 -->

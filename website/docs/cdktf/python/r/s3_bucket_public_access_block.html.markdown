@@ -14,6 +14,8 @@ Manages S3 bucket-level Public Access Block configuration. For more information 
 
 -> This resource cannot be used with S3 directory buckets.
 
+~> Setting `skip_destroy` to `true` means that the AWS Provider will not destroy a public access block, even when running `terraform destroy`. The configuration is thus an intentional dangling resource that is not managed by Terraform and will remain in-place in your AWS account.
+
 ## Example Usage
 
 ```python
@@ -47,9 +49,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) S3 Bucket to which this Public Access Block configuration should be applied.
 * `block_public_acls` - (Optional) Whether Amazon S3 should block public ACLs for this bucket. Defaults to `false`. Enabling this setting does not affect existing policies or ACLs. When set to `true` causes the following behavior:
-    * PUT Bucket acl and PUT Object acl calls will fail if the specified ACL allows public access.
+    * PUT Bucket ACL and PUT Object ACL calls will fail if the specified ACL allows public access.
     * PUT Object calls will fail if the request includes an object ACL.
 * `block_public_policy` - (Optional) Whether Amazon S3 should block public bucket policies for this bucket. Defaults to `false`. Enabling this setting does not affect the existing bucket policy. When set to `true` causes Amazon S3 to:
     * Reject calls to PUT Bucket policy if the specified bucket policy allows public access.
@@ -57,6 +60,7 @@ This resource supports the following arguments:
     * Ignore public ACLs on this bucket and any objects that it contains.
 * `restrict_public_buckets` - (Optional) Whether Amazon S3 should restrict public bucket policies for this bucket. Defaults to `false`. Enabling this setting does not affect the previously stored bucket policy, except that public and cross-account access within the public bucket policy, including non-public delegation to specific accounts, is blocked. When set to `true`:
     * Only the bucket owner and AWS Services can access this buckets if it has a public policy.
+* `skip_destroy` - (Optional) Whether to retain the public access block upon destruction. If set to `true`, the resource is simply removed from state instead. This may be desirable in certain scenarios to prevent the removal of a public access block before deletion of the associated bucket.
 
 ## Attribute Reference
 
@@ -89,4 +93,4 @@ Using `terraform import`, import `aws_s3_bucket_public_access_block` using the b
 % terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-57aca43437d3baccafd0295a3b17a5e714bee976d7cb3f139b488240cf5b921a -->
+<!-- cache-key: cdktf-0.20.8 input-bd43df664e3914c56c85483d9189abab41acce8fcff0d888e7c1ecf318bbbf55 -->

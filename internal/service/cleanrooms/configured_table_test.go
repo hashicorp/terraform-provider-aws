@@ -38,15 +38,15 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "name", TEST_NAME),
-					resource.TestCheckResourceAttr(resourceName, "description", TEST_DESCRIPTION),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": rName,
-						"table_name":    rName,
+						names.AttrDatabaseName: rName,
+						names.AttrTableName:    rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
 				),
@@ -103,8 +103,8 @@ func TestAccCleanRoomsConfiguredTable_mutableProperties(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(rName, "updated description", "updated tag", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableIsTheSame(resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", "updated tag"),
 				),
 			},
@@ -172,8 +172,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": secondDatabaseName,
-						"table_name":    TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: secondDatabaseName,
+						names.AttrTableName:    TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -207,8 +207,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyDatabase(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": secondDatabaseName,
-						"table_name":    TEST_FIRST_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: secondDatabaseName,
+						names.AttrTableName:    TEST_FIRST_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -242,8 +242,8 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
-						"database_name": firstDatabaseName,
-						"table_name":    TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrDatabaseName: firstDatabaseName,
+						names.AttrTableName:    TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -275,9 +275,10 @@ func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+			input := cleanrooms.GetConfiguredTableInput{
 				ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetConfiguredTable(ctx, &input)
 
 			if err == nil {
 				return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, errors.New("not destroyed"))
@@ -300,9 +301,10 @@ func testAccCheckConfiguredTableExists(ctx context.Context, name string, configu
 		}
 
 		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := client.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+		input := cleanrooms.GetConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := client.GetConfiguredTable(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, err)
@@ -349,7 +351,7 @@ func checkConfiguredTableIsTheSame(name string, configuredTable *cleanrooms.GetC
 
 const TEST_ALLOWED_COLUMNS = "[\"my_column_1\",\"my_column_2\"]"
 const TEST_ANALYSIS_METHOD = "DIRECT_QUERY"
-const TEST_DATABASE_NAME = "database"
+const TEST_DATABASE_NAME = names.AttrDatabase
 const TEST_TABLE_NAME = "table"
 
 func testAccConfiguredTableConfig_basic(name string, description string, tagValue string, rName string) string {

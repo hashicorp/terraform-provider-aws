@@ -66,6 +66,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `lambdaFunctionArn` - (Required) Amazon Resource Name (ARN) of the rule Lambda Function
 * `name` - (Required) The name of the rule
 * `triggerTypes` - (Required) List of notification types that trigger AWS Config to run an evaluation for the rule. Valid values: `ConfigurationItemChangeNotification`, `OversizedConfigurationItemChangeNotification`, and `ScheduledNotification`
@@ -124,4 +125,4 @@ Using `terraform import`, import Config Organization Custom Rules using the name
 % terraform import aws_config_organization_custom_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-33094f531130f32ecdf884f7220da12125657cf545f1554a9e4e90b73a4d1db1 -->
+<!-- cache-key: cdktf-0.20.8 input-734e4f85f6f87d770eb9f161ea7394da5f97a5a9acebda784473e066e5e0d423 -->

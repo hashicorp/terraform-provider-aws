@@ -12,6 +12,8 @@ description: |-
 
 Provides a AWS Transfer User resource. Managing SSH keys can be accomplished with the [`aws_transfer_ssh_key` resource](/docs/providers/aws/r/transfer_ssh_key.html).
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```typescript
@@ -102,6 +104,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serverId` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `userName` - (Required) The name used for log in to your SFTP server.
 * `homeDirectory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
@@ -182,4 +185,4 @@ Using `terraform import`, import Transfer Users using the `serverId` and `userNa
 % terraform import aws_transfer_user.bar s-12345678/test-username
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20283ed3a3e6abff667008f255442da0f4606486f3db71039d382ec9cd99e4b2 -->
+<!-- cache-key: cdktf-0.20.8 input-533e8cb734f778bdc51afaac6f2bae27b45cc8efc1ef8aa3669a0b5151be847c -->

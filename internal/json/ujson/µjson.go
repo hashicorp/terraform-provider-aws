@@ -78,7 +78,8 @@ import "fmt"
 //   - must not modify any slice it receives.
 func Walk(input []byte, callback func(level int, key, value []byte) bool) error {
 	var key []byte
-	i, si, ei, st, sst := 0, 0, 0, 0, 1024
+	var si int
+	i, ei, st, sst := 0, 0, 0, 1024
 
 	// trim the last newline
 	if len(input) > 0 && input[len(input)-1] == '\n' {

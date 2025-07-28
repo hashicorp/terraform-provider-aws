@@ -41,8 +41,8 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_basic(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 			{
@@ -113,14 +113,14 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 		},
@@ -184,7 +184,7 @@ resource "aws_ssoadmin_application" "test" {
 }
 
 resource "aws_ssoadmin_application_assignment_configuration" "test" {
-  application_arn     = aws_ssoadmin_application.test.application_arn
+  application_arn     = aws_ssoadmin_application.test.arn
   assignment_required = %[3]t
 }
 `, rName, testAccApplicationProviderARN, assignmentRequired)

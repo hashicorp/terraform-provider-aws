@@ -15,11 +15,11 @@ Note that currently only one policy may be applied to a repository.
 ## Example Usage
 
 ```terraform
-resource "aws_ecr_repository" "foo" {
-  name = "bar"
+resource "aws_ecr_repository" "example" {
+  name = "example-repo"
 }
 
-data "aws_iam_policy_document" "foopolicy" {
+data "aws_iam_policy_document" "example" {
   statement {
     sid    = "new policy"
     effect = "Allow"
@@ -48,9 +48,9 @@ data "aws_iam_policy_document" "foopolicy" {
   }
 }
 
-resource "aws_ecr_repository_policy" "foopolicy" {
-  repository = aws_ecr_repository.foo.name
-  policy     = data.aws_iam_policy_document.foopolicy.json
+resource "aws_ecr_repository_policy" "example" {
+  repository = aws_ecr_repository.example.name
+  policy     = data.aws_iam_policy_document.example.json
 }
 ```
 
@@ -58,6 +58,7 @@ resource "aws_ecr_repository_policy" "foopolicy" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 

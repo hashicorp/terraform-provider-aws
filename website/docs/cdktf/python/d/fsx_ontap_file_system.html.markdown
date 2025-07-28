@@ -35,20 +35,23 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `automatic_backup_retention_days` - The number of days to retain automatic backups.
 * `daily_automatic_backup_start_time` - The preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - The file system deployment type.
 * `disk_iops_configuration` - The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system, specifying the number of provisioned IOPS and the provision mode. See [Disk IOPS](#disk-iops) Below.
-* `dns_name` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
+* `dns_name` - DNS name for the file system.
+
+  **Note:** This attribute does not apply to FSx for ONTAP file systems and is consequently not set. You can access your FSx for ONTAP file system and volumes via a [Storage Virtual Machine (SVM)](fsx_ontap_storage_virtual_machine.html) using its DNS name or IP address.
 * `endpoint_ip_address_range` - (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system exist.
 * `endpoints` - The Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [FileSystemEndpoints](#file-system-endpoints) below.
 * `ha_pairs` - The number of HA pairs for the file system.
@@ -82,4 +85,4 @@ In addition to all arguments above, the following attributes are exported:
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - IP addresses of the file system endpoint.
 
-<!-- cache-key: cdktf-0.20.1 input-61ee4666c4715dc5142dd755e5c30e597669f668aa73e98d4ecdf85468818540 -->
+<!-- cache-key: cdktf-0.20.8 input-17c51b20fd22b46b4f19504556832c4775ff8652c471859ecb2278f8af4f3f81 -->

@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -32,16 +32,15 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-			expected: fwtypes.ARNValueMust("arn:aws:rds:us-east-1:123456789012:db:test"),             // lintignore:AWSAT003,AWSAT005
+			expected: fwtypes.ARNValue("arn:aws:rds:us-east-1:123456789012:db:test"),                 // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
-			expected: fwtypes.ARNUnknown(),
+			expected: fwtypes.ARNValue("not ok"),
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -59,48 +58,41 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestARNTypeValidate(t *testing.T) {
+func TestARNValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.ARN
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+		"null value": {
+			val: fwtypes.ARNNull(),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"unknown value": {
+			val: fwtypes.ARNUnknown(),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"valid arn": {
+			val: fwtypes.ARNValue("arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
 		},
-		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
+		"invalid arn": {
+			val:         fwtypes.ARNValue("not ok"), // lintignore:AWSAT003,AWSAT005
 			expectError: true,
 		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
 
-			diags := fwtypes.ARNType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
 	}
@@ -128,7 +120,6 @@ func TestARNToStringValue(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

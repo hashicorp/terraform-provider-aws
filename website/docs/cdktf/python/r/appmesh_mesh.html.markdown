@@ -61,18 +61,14 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
+    * `egress_filter`- (Optional) Egress filter rules for the service mesh.
+        * `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`. Valid values are `ALLOW_ALL` and `DROP_ALL`.
+    * `service_discovery`- (Optional) The service discovery information for the service mesh.
+        * `ip_preference` - (Optional) The IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-The `spec` object supports the following:
-
-* `egress_filter`- (Optional) Egress filter rules for the service mesh.
-
-The `egress_filter` object supports the following:
-
-* `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`.
-Valid values are `ALLOW_ALL` and `DROP_ALL`.
 
 ## Attribute Reference
 
@@ -111,4 +107,4 @@ Using `terraform import`, import App Mesh service meshes using the `name`. For e
 % terraform import aws_appmesh_mesh.simple simpleapp
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3173e5025bf46613bb3d81fd897c112506cd0123d7fe3d3c9ffea66ee2187a85 -->
+<!-- cache-key: cdktf-0.20.8 input-316fec3c48738e2773cf563b11d58c876d3533eb471e583b5637886054b43e47 -->

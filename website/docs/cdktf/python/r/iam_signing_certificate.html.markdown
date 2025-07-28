@@ -63,9 +63,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `certificate_body` – (Required) The contents of the signing certificate in PEM-encoded format.
-* `status` – (Optional)  The status you want to assign to the certificate. `Active` means that the certificate can be used for programmatic calls to Amazon Web Services `Inactive` means that the certificate cannot be used.
-* `user_name` – (Required) The name of the user the signing certificate is for.
+* `certificate_body` - (Required) The contents of the signing certificate in PEM-encoded format.
+* `status` - (Optional)  The status you want to assign to the certificate. `Active` means that the certificate can be used for programmatic calls to Amazon Web Services `Inactive` means that the certificate cannot be used.
+* `user_name` - (Required) The name of the user the signing certificate is for.
 
 ## Attribute Reference
 
@@ -99,4 +99,4 @@ Using `terraform import`, import IAM Signing Certificates using the `id`. For ex
 % terraform import aws_iam_signing_certificate.certificate IDIDIDIDID:user-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5dd149e4ec34690d2d3d0ad3b6a7ed2784cb04247b33fd1ab71da3b19a32535c -->
+<!-- cache-key: cdktf-0.20.8 input-531d1ef996bcbe671fa9df1bfbafb81227565448289235b53c611f0c51d89948 -->

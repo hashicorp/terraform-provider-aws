@@ -22,6 +22,13 @@ resource "aws_db_instance_role_association" "example" {
   db_instance_identifier = aws_db_instance.example.identifier
   feature_name           = "S3_INTEGRATION"
   role_arn               = aws_iam_role.example.arn
+
+  # Only necessary where the instance identifier is a known string value; ensuring recreation when the instance is replaced. Requires Terraform 1.2 or later.
+  lifecycle {
+    replace_triggered_by = [
+      aws_db_instance.example.id
+    ]
+  }
 }
 ```
 
@@ -29,6 +36,7 @@ resource "aws_db_instance_role_association" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Required) DB Instance Identifier to associate with the IAM Role.
 * `feature_name` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Instance.
@@ -38,6 +46,13 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - DB Instance Identifier and IAM Role ARN separated by a comma (`,`)
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

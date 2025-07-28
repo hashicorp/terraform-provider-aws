@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `assetId` - (Optional) The ID of the Outpost hardware asset on which to allocate the Dedicated Hosts. This parameter is supported only if you specify OutpostArn. If you are allocating the Dedicated Hosts in a Region, omit this parameter.
 * `autoPlacement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availabilityZone` - (Required) The Availability Zone in which to allocate the Dedicated Host.
@@ -58,6 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Dedicated Host.
 * `ownerId` - The ID of the AWS account that owns the Dedicated Host.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 
@@ -87,4 +96,4 @@ Using `terraform import`, import hosts using the host `id`. For example:
 % terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d7c66a25dca67846d4d6fca617b72c9903de5c7710e0dff44f2f8ae2633bebb -->
+<!-- cache-key: cdktf-0.20.8 input-69043782b6d79f4e1477dff2107561bbaf348997af802ef8733af0e0a0f666d4 -->

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_route53domains_registered_domain
 
-Provides a resource to manage a domain that has been [registered](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/registrar-tld-list.html) and associated with the current AWS account.
+Provides a resource to manage a domain that has been [registered](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/registrar-tld-list.html) and associated with the current AWS account. To register, renew and deregister a domain use the [`aws_route53domains_domain` resource](route53domains_domain.html) instead.
 
 **This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
 
@@ -36,9 +36,7 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
-
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
@@ -54,9 +52,11 @@ This argument supports the following arguments:
 * `tech_privacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transfer_lock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
 
+~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
+
 ### Contact Blocks
 
-The `admin_contact`, `registrant_contact` and `tech_contact` blocks support the following:
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.

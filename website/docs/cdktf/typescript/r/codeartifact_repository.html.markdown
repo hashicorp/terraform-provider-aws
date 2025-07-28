@@ -116,6 +116,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain that contains the created repository.
 * `repository` - (Required) The name of the repository to create.
 * `domainOwner` - (Optional) The account number of the AWS account that owns the domain.
@@ -173,4 +174,4 @@ Using `terraform import`, import CodeArtifact Repository using the CodeArtifact 
 % terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->
+<!-- cache-key: cdktf-0.20.8 input-ea7a3231d8fc3a592c64a971dfc5e87436ddc7fd5a8933d9892b8f0913217ed7 -->

@@ -81,6 +81,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bypassPolicyLockoutSafetyCheck` - (Optional) A flag to indicate whether to bypass the `aws_efs_file_system_policy` lockout safety check. The policy lockout safety check determines whether the policy in the request will prevent the principal making the request will be locked out from making future `PutFileSystemPolicy` requests on the file system. Set `bypassPolicyLockoutSafetyCheck` to `true` only when you intend to prevent the principal that is making the request from making a subsequent `PutFileSystemPolicy` request on the file system. The default value is `false`.
 
 ## Attribute Reference
@@ -117,4 +118,4 @@ Using `terraform import`, import the EFS file system policies using the `id`. Fo
 % terraform import aws_efs_file_system_policy.foo fs-6fa144c6
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-51ce0e6776bd5a12b73f8fd6edc2135ed20119de727978bb7a52e39fe7641ce6 -->
+<!-- cache-key: cdktf-0.20.8 input-f6957050b986c7fa50d0330a25ad4cbecd5b973709ed58bee39ef794c43ab0b5 -->

@@ -8,6 +8,6 @@ var (
 	ResourceConnectorProfile = resourceConnectorProfile
 	ResourceFlow             = resourceFlow
 
-	FindConnectorProfileByARN = findConnectorProfileByARN
-	FindFlowByARN             = findFlowByARN
+	FindConnectorProfileByName = findConnectorProfileByName
+	FindFlowByName             = findFlowByName
 )

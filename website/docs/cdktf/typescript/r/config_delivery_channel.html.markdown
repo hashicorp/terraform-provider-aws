@@ -95,6 +95,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the delivery channel. Defaults to `default`. Changing it recreates the resource.
 * `s3BucketName` - (Required) The name of the S3 bucket used to store the configuration history.
 * `s3KeyPrefix` - (Optional) The prefix for the specified S3 bucket.
@@ -140,4 +141,4 @@ Using `terraform import`, import Delivery Channel using the name. For example:
 % terraform import aws_config_delivery_channel.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-54435b5e17865652d2b4e1be7bdaf36c37288ea5a996a242391550ce3763b0a2 -->
+<!-- cache-key: cdktf-0.20.8 input-3ffa39d322594d03ce7df8f1781222ee6945c3466bc7f31ee5b671367befedea -->

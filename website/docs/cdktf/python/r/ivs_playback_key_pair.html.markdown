@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Playback Key Pair name.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -84,4 +85,4 @@ Using `terraform import`, import IVS (Interactive Video) Playback Key Pair using
 % terraform import aws_ivs_playback_key_pair.example arn:aws:ivs:us-west-2:326937407773:playback-key/KDJRJNQhiQzA
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d629869f9647ea4bb2e6762ea0a06ac8cf1d19444905446ee0e3f95d7b62b08 -->
+<!-- cache-key: cdktf-0.20.8 input-3e6fc77fc0837291a4d49927d42c7ac79eda8cc5bec78311802e20b7b8aab30d -->

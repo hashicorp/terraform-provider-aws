@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func TestAccIAMAccessKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.AccessKeyMetadata
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -60,7 +60,7 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 
 func TestAccIAMAccessKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.AccessKeyMetadata
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -84,7 +84,7 @@ func TestAccIAMAccessKey_disappears(t *testing.T) {
 
 func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.AccessKeyMetadata
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +119,7 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 
 func TestAccIAMAccessKey_status(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.AccessKeyMetadata
+	var conf awstypes.AccessKeyMetadata
 	resourceName := "aws_iam_access_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -130,10 +130,10 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
 			{
@@ -143,17 +143,17 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"encrypted_secret", "key_fingerprint", "pgp_key", "secret", "ses_smtp_password_v4", "encrypted_ses_smtp_password_v4"},
 			},
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeActive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeActive)),
 				),
 			},
 			{
-				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
+				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "status", iam.StatusTypeInactive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
 				),
 			},
 		},
@@ -162,10 +162,10 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 
 func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_access_key" {
+			if rs.Type != "aws_iam_access_key" {
 				continue
 			}
 
@@ -186,14 +186,14 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccessKeyExists(ctx context.Context, n string, v *iam.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(ctx context.Context, n string, v *awstypes.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 
@@ -207,14 +207,14 @@ func testAccCheckAccessKeyExists(ctx context.Context, n string, v *iam.AccessKey
 	}
 }
 
-func testAccCheckAccessKeyAttributes(accessKeyMetadata *iam.AccessKeyMetadata, status string) resource.TestCheckFunc {
+func testAccCheckAccessKeyAttributes(accessKeyMetadata *awstypes.AccessKeyMetadata, status string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.Contains(*accessKeyMetadata.UserName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad username: %s", *accessKeyMetadata.UserName)
 		}
 
-		if *accessKeyMetadata.Status != status {
-			return fmt.Errorf("Bad status: %s", *accessKeyMetadata.Status)
+		if string(accessKeyMetadata.Status) != status {
+			return fmt.Errorf("Bad status: %s", string(accessKeyMetadata.Status))
 		}
 
 		return nil

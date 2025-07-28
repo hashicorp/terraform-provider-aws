@@ -53,7 +53,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		_, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
@@ -63,7 +63,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, n string) resourc
 
 func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_invitation_accepter" {
@@ -97,7 +97,7 @@ resource "aws_detective_graph" "test" {}
 
 resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.test.id
+  graph_arn     = aws_detective_graph.test.graph_arn
   email_address = %[1]q
   message       = "This is a message of the invite"
 }

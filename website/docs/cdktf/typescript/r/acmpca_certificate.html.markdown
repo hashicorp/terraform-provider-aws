@@ -33,35 +33,25 @@ import { AcmpcaCertificate } from "./.gen/providers/aws/acmpca-certificate";
 import { AcmpcaCertificateAuthority } from "./.gen/providers/aws/acmpca-certificate-authority";
 import { CertRequest } from "./.gen/providers/tls/cert-request";
 import { PrivateKey } from "./.gen/providers/tls/private-key";
-interface MyConfig {
-  certificateAuthorityConfiguration: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     /*The following providers are missing schema information and might need manual adjustments to synthesize correctly: tls.
     For a more precise conversion please use the --provider flag in convert.*/
     const example = new AcmpcaCertificateAuthority(this, "example", {
-      permanentDeletionTimeInDays: 7,
-      private_certificate_configuration: [
-        {
-          key_algorithm: "RSA_4096",
-          signing_algorithm: "SHA512WITHRSA",
-          subject: [
-            {
-              common_name: "example.com",
-            },
-          ],
+      certificateAuthorityConfiguration: {
+        keyAlgorithm: "RSA_4096",
+        signingAlgorithm: "SHA512WITHRSA",
+        subject: {
+          commonName: "example.com",
         },
-      ],
-      certificateAuthorityConfiguration:
-        config.certificateAuthorityConfiguration,
+      },
+      permanentDeletionTimeInDays: 7,
     });
     const key = new PrivateKey(this, "key", {
       algorithm: "RSA",
     });
     const csr = new CertRequest(this, "csr", {
-      key_algorithm: "RSA",
       private_key_pem: key.privateKeyPem,
       subject: [
         {
@@ -93,6 +83,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateAuthorityArn` - (Required) ARN of the certificate authority.
 * `certificateSigningRequest` - (Required) Certificate Signing Request in PEM format.
 * `signingAlgorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.
@@ -146,4 +137,4 @@ Using `terraform import`, import ACM PCA Certificates using their ARN. For examp
 % terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3b19b04277da26192985928a772fc7a153a2937210c9952942adad77721165c9 -->
+<!-- cache-key: cdktf-0.20.8 input-ff1375f49a49b3e299d9115dc001de81061fa8c925114c3949860e50be08037f -->

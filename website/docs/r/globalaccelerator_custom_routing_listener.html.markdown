@@ -26,7 +26,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_custom_routing_listener" "example" {
-  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.example.id
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.example.arn
 
   port_range {
     from_port = 80

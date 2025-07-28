@@ -1,3 +1,0 @@
-```release-note:bug
-resource/instance_profile: Detect when the associated `role` no longer exists
-```

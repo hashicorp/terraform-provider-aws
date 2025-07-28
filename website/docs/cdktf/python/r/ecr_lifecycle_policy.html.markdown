@@ -33,13 +33,15 @@ from imports.aws.ecr_repository import EcrRepository
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        foo = EcrRepository(self, "foo",
-            name="bar"
+        example = EcrRepository(self, "example",
+            name="example-repo"
         )
-        EcrLifecyclePolicy(self, "foopolicy",
+        aws_ecr_lifecycle_policy_example = EcrLifecyclePolicy(self, "example_1",
             policy="{\n    \"rules\": [\n        {\n            \"rulePriority\": 1,\n            \"description\": \"Expire images older than 14 days\",\n            \"selection\": {\n                \"tagStatus\": \"untagged\",\n                \"countType\": \"sinceImagePushed\",\n                \"countUnit\": \"days\",\n                \"countNumber\": 14\n            },\n            \"action\": {\n                \"type\": \"expire\"\n            }\n        }\n    ]\n}\n\n",
-            repository=foo.name
+            repository=example.name
         )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_ecr_lifecycle_policy_example.override_logical_id("example")
 ```
 
 ### Policy on tagged image
@@ -57,21 +59,24 @@ from imports.aws.ecr_repository import EcrRepository
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        foo = EcrRepository(self, "foo",
-            name="bar"
+        example = EcrRepository(self, "example",
+            name="example-repo"
         )
-        EcrLifecyclePolicy(self, "foopolicy",
+        aws_ecr_lifecycle_policy_example = EcrLifecyclePolicy(self, "example_1",
             policy="{\n    \"rules\": [\n        {\n            \"rulePriority\": 1,\n            \"description\": \"Keep last 30 images\",\n            \"selection\": {\n                \"tagStatus\": \"tagged\",\n                \"tagPrefixList\": [\"v\"],\n                \"countType\": \"imageCountMoreThan\",\n                \"countNumber\": 30\n            },\n            \"action\": {\n                \"type\": \"expire\"\n            }\n        }\n    ]\n}\n\n",
-            repository=foo.name
+            repository=example.name
         )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_ecr_lifecycle_policy_example.override_logical_id("example")
 ```
 
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
+* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `policy` argument.
 
 ## Attribute Reference
 
@@ -105,4 +110,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0e4c7e8c7cdaee9fd0d8211aaa75d4db1e461d9cccef8d7c28f406dede927735 -->
+<!-- cache-key: cdktf-0.20.8 input-487ed98978ebc4eddd7f97bad9cf62d8746ef3704442c80acbaac795635f6ad5 -->

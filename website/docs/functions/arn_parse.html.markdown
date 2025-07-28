@@ -8,8 +8,6 @@ description: |-
 
 # Function: arn_parse
 
-~> Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
-
 Parses an ARN into its constituent parts.
 
 See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html) for additional information on Amazon Resource Names.

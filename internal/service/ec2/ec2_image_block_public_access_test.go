@@ -9,13 +9,15 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccImageBlockPublicAccess_basic,
+		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
+		"Identity":      testAccEC2ImageBlockPublicAccess_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -32,14 +34,16 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("unblocked"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "state", "unblocked"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "unblocked"),
 				),
 			},
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("block-new-sharing"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "state", "block-new-sharing"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
 			},
 		},

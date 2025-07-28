@@ -101,28 +101,26 @@ import { SsoadminPermissionSet } from "./.gen/providers/aws/ssoadmin-permission-
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    const example = new IdentitystoreGroup(this, "example", {
-      description: "Admin Group",
-      displayName: "Admin",
-      identityStoreId: Token.asString(
-        Fn.lookupNested(Fn.tolist(ssoInstance.identityStoreIds), ["0"])
-      ),
-    });
-    const dataAwsSsoadminInstancesExample = new DataAwsSsoadminInstances(
+    const example = new DataAwsSsoadminInstances(this, "example", {});
+    const awsIdentitystoreGroupExample = new IdentitystoreGroup(
       this,
       "example_1",
-      {}
+      {
+        description: "Admin Group",
+        displayName: "Admin",
+        identityStoreId: Token.asString(
+          Fn.lookupNested(Fn.tolist(example.identityStoreIds), ["0"])
+        ),
+      }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    dataAwsSsoadminInstancesExample.overrideLogicalId("example");
+    awsIdentitystoreGroupExample.overrideLogicalId("example");
     const awsSsoadminPermissionSetExample = new SsoadminPermissionSet(
       this,
       "example_2",
       {
         instanceArn: Token.asString(
-          Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), [
-            "0",
-          ])
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
         ),
         name: "Example",
       }
@@ -131,10 +129,10 @@ class MyConvertedCode extends TerraformStack {
     awsSsoadminPermissionSetExample.overrideLogicalId("example");
     new SsoadminAccountAssignment(this, "account_assignment", {
       instanceArn: Token.asString(
-        Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), ["0"])
+        Fn.lookupNested(Fn.tolist(example.arns), ["0"])
       ),
       permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
-      principalId: example.groupId,
+      principalId: Token.asString(awsIdentitystoreGroupExample.groupId),
       principalType: "GROUP",
       targetId: "123456789012",
       targetType: "AWS_ACCOUNT",
@@ -143,9 +141,7 @@ class MyConvertedCode extends TerraformStack {
       new SsoadminManagedPolicyAttachment(this, "example_4", {
         dependsOn: [awsSsoadminAccountAssignmentExample],
         instanceArn: Token.asString(
-          Fn.lookupNested(Fn.tolist(dataAwsSsoadminInstancesExample.arns), [
-            "0",
-          ])
+          Fn.lookupNested(Fn.tolist(example.arns), ["0"])
         ),
         managedPolicyArn: "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup",
         permissionSetArn: Token.asString(awsSsoadminPermissionSetExample.arn),
@@ -161,6 +157,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
 * `permissionSetArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set that the admin wants to grant the principal access to.
 * `principalId` - (Required, Forces new resource) An identifier for an object in SSO, such as a user or group. PrincipalIds are GUIDs (For example, `f81d4fae-7dec-11d0-a765-00a0c91e6bf6`).
@@ -213,4 +210,4 @@ Using `terraform import`, import SSO Account Assignments using the `principalId`
 % terraform import aws_ssoadmin_account_assignment.example f81d4fae-7dec-11d0-a765-00a0c91e6bf6,GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9b15b7d22afb6549f6f5bc091648a8db29eefa25070c70021b4b59854866f9a6 -->
+<!-- cache-key: cdktf-0.20.8 input-92515b633334bcc4a3ebf73668c0382588fb749b26743442c083c4cf3575380b -->

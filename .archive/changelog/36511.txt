@@ -1,0 +1,23 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Support up to 12 `ha_pairs`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Increase `storage_capacity` maximum to 1PiB
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Update `throughput_capacity_per_ha_pair` to support all values from `throughput_capacity`
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Add support for specifying 1 ha_pair with `SINGLE_AZ_1` and `MULTI_AZ_1` deployment types
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `aggregate_configuration` configuration block
+```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `size_in_bytes` and `volume_style` arguments
+```

@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -41,12 +44,15 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "rekognition", "collection/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "collection_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -122,25 +128,25 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 				Config: testAccCollectionConfig_tags(rName, tags1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				Config: testAccCollectionConfig_tags(rName, tags2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccCollectionConfig_tags(rName, tags3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -212,10 +218,6 @@ func testAccCollectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_collection" "test" {
   collection_id = %[1]q
-
-  tags = {
-    test = 1
-  }
 }
 `, rName)
 }

@@ -67,6 +67,7 @@ resource "aws_securityhub_configuration_policy_association" "ou_example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy.
 * `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 
@@ -94,7 +95,7 @@ import {
 }
 ```
 
-Using `terraform import`, import an existing Security Hub enabled account using the universally unique identifier (UUID) of the policy. For example:
+Using `terraform import`, import an existing Security Hub enabled account using the target id. For example:
 
 ```console
 % terraform import aws_securityhub_configuration_policy_association.example_account_association 123456789012

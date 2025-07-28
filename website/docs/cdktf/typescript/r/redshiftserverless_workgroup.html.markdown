@@ -44,7 +44,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baseCapacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
+* `pricePerformanceTarget` - (Optional) Price-performance scaling for the workgroup. See `Price Performance Target` below.
 * `configParameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
 * `enhancedVpcRouting` - (Optional) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `maxCapacity` - (Optional) The maximum data-warehouse capacity Amazon Redshift Serverless uses to serve queries, specified in Redshift Processing Units (RPUs).
@@ -52,7 +54,13 @@ The following arguments are optional:
 * `publiclyAccessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `securityGroupIds` - (Optional) An array of security group IDs to associate with the workgroup.
 * `subnetIds` - (Optional) An array of VPC subnet IDs to associate with the workgroup. When set, must contain at least three subnets spanning three Availability Zones. A minimum number of IP addresses is required and scales with the Base Capacity. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/serverless-known-issues.html).
+* `trackName` - (Optional) The name of the track for the workgroup. If it is `current`, you get the most up-to-date certified release version with the latest features, security updates, and performance enhancements. If it is `trailing`, you will be on the previous certified release. For more information, see the following [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/tracks.html).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Price Performance Target
+
+* `enabled` - (Required) Whether to enable price-performance scaling.
+* `level` - (Required) The price-performance scaling level. Valid values are `1` (LOW_COST), `25` (ECONOMICAL), `50` (BALANCED), `75` (RESOURCEFUL), and `100` (HIGH_PERFORMANCE).
 
 ### Config Parameter
 
@@ -128,4 +136,4 @@ Using `terraform import`, import Redshift Serverless Workgroups using the `workg
 % terraform import aws_redshiftserverless_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0490bb42d1dc6d3da952d03962f3546cde5f3fdcdeca4957f9c7f545905349c5 -->
+<!-- cache-key: cdktf-0.20.8 input-cda94414083962fde0d6563f0cbfdc95d13066eb0e0d5cf30249c8661cbac6ac -->

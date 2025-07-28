@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +24,7 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
@@ -34,18 +33,19 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "cache-policy/{id}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_ttl", "31536000"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookie_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", "false"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.header_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.headers.#", "0"),
@@ -69,7 +69,7 @@ func TestAccCloudFrontCachePolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
@@ -92,7 +92,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
@@ -101,20 +101,20 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				Config: testAccCachePolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_ttl", "100"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookie_behavior", "allExcept"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.0.items.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.0.items.*", "test1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", "true"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.header_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.headers.#", "1"),
@@ -139,12 +139,12 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				Config: testAccCachePolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "10"),
 					resource.TestCheckResourceAttr(resourceName, "max_ttl", "99"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookie_behavior", "whitelist"),
@@ -152,8 +152,8 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.0.items.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.0.items.*", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", "false"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.header_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.headers.#", "1"),
@@ -174,7 +174,7 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCachePolicyDestroy(ctx),
@@ -183,18 +183,18 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 				Config: testAccCachePolicyConfig_zeroTTLs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_ttl", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookie_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.cookies_config.0.cookies.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", "false"),
-					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_brotli", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.enable_accept_encoding_gzip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.header_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "parameters_in_cache_key_and_forwarded_to_origin.0.headers_config.0.headers.#", "0"),
@@ -214,7 +214,7 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 
 func testAccCheckCachePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_cache_policy" {
@@ -245,11 +245,7 @@ func testAccCheckCachePolicyExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFront Cache Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		_, err := tfcloudfront.FindCachePolicyByID(ctx, conn, rs.Primary.ID)
 

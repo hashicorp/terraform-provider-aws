@@ -47,11 +47,11 @@ func ResourceKxEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -80,12 +80,12 @@ func ResourceKxEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -102,12 +102,12 @@ func ResourceKxEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func ResourceKxEnvironment() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cidr_block": {
+									names.AttrCIDRBlock: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.IsCIDR,
@@ -136,7 +136,7 @@ func ResourceKxEnvironment() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeInt,
 													Required: true,
 												},
@@ -166,7 +166,7 @@ func ResourceKxEnvironment() *schema.Resource {
 											},
 										},
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 5),
@@ -189,7 +189,7 @@ func ResourceKxEnvironment() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 32),
@@ -198,7 +198,6 @@ func ResourceKxEnvironment() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -206,30 +205,30 @@ const (
 	ResNameKxEnvironment = "Kx Environment"
 )
 
-func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxEnvironmentInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		ClientToken: aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateKxEnvironment(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.EnvironmentId == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxEnvironment, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.EnvironmentId))
@@ -251,7 +250,7 @@ func resourceKxEnvironmentCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -267,13 +266,13 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxEnvironment, d.Id(), err)
 	}
 
-	d.Set("id", out.EnvironmentId)
-	d.Set("arn", out.EnvironmentArn)
-	d.Set("name", out.Name)
-	d.Set("description", out.Description)
-	d.Set("kms_key_id", out.KmsKeyId)
-	d.Set("status", out.Status)
-	d.Set("availability_zones", out.AvailabilityZoneIds)
+	d.Set(names.AttrID, out.EnvironmentId)
+	d.Set(names.AttrARN, out.EnvironmentArn)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZoneIds)
 	d.Set("infrastructure_account_id", out.DedicatedServiceAccountId)
 	d.Set("created_timestamp", out.CreationTimestamp.String())
 	d.Set("last_modified_timestamp", out.UpdateTimestamp.String())
@@ -289,7 +288,7 @@ func resourceKxEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -297,14 +296,14 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &finspace.UpdateKxEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
-		Name:          aws.String(d.Get("name").(string)),
+		Name:          aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChanges("name") || d.HasChanges("description") {
+	if d.HasChanges(names.AttrName) || d.HasChanges(names.AttrDescription) {
 		update = true
 		log.Printf("[DEBUG] Updating FinSpace KxEnvironment (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateKxEnvironment(ctx, in)
@@ -326,7 +325,7 @@ func resourceKxEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKxEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -368,15 +367,15 @@ func updateKxEnvironmentNetwork(ctx context.Context, d *schema.ResourceData, cli
 	updateTransitGatewayConfig := false
 	updateCustomDnsConfig := false
 
-	if v, ok := d.GetOk("transit_gateway_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil &&
+	if v, ok := d.GetOk("transit_gateway_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil &&
 		d.HasChanges("transit_gateway_configuration") {
-		transitGatewayConfigIn.TransitGatewayConfiguration = expandTransitGatewayConfiguration(v.([]interface{}))
+		transitGatewayConfigIn.TransitGatewayConfiguration = expandTransitGatewayConfiguration(v.([]any))
 		updateTransitGatewayConfig = true
 	}
 
-	if v, ok := d.GetOk("custom_dns_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil &&
+	if v, ok := d.GetOk("custom_dns_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil &&
 		d.HasChanges("custom_dns_configuration") {
-		customDnsConfigIn.CustomDNSConfiguration = expandCustomDNSConfigurations(v.([]interface{}))
+		customDnsConfigIn.CustomDNSConfiguration = expandCustomDNSConfigurations(v.([]any))
 		updateCustomDnsConfig = true
 	}
 
@@ -470,7 +469,7 @@ func waitKxEnvironmentDeleted(ctx context.Context, conn *finspace.Client, id str
 }
 
 func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -485,7 +484,7 @@ func statusKxEnvironment(ctx context.Context, conn *finspace.Client, id string) 
 }
 
 func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -500,7 +499,7 @@ func statusTransitGatewayConfiguration(ctx context.Context, conn *finspace.Clien
 }
 
 func statusCustomDNSConfiguration(ctx context.Context, conn *finspace.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findKxEnvironmentByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -545,16 +544,16 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	return out, nil
 }
 
-func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatewayConfiguration {
+func expandTransitGatewayConfiguration(tfList []any) *types.TransitGatewayConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	a := &types.TransitGatewayConfiguration{}
 
-	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
 		a.TransitGatewayID = aws.String(v)
 	}
 
@@ -562,21 +561,21 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 		a.RoutableCIDRSpace = aws.String(v)
 	}
 
-	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkACLConfigurations(v.([]interface{}))
+	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkACLConfigurations(v.([]any))
 	}
 
 	return a
 }
 
-func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.NetworkACLEntry {
+func expandAttachmentNetworkACLConfigurations(tfList []any) []types.NetworkACLEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	var s []types.NetworkACLEntry
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -591,7 +590,7 @@ func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.Netw
 	return s
 }
 
-func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
+func expandAttachmentNetworkACLConfiguration(tfMap map[string]any) *types.NetworkACLEntry {
 	if tfMap == nil {
 		return nil
 	}
@@ -600,30 +599,30 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
 		a.RuleNumber = aws.Int32(int32(v))
 	}
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		a.Protocol = &v
 	}
 	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
 		a.RuleAction = types.RuleAction(v)
 	}
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
 		a.CidrBlock = &v
 	}
-	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.PortRange = expandPortRange(v.([]interface{}))
+	if v, ok := tfMap["port_range"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.PortRange = expandPortRange(v.([]any))
 	}
-	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.IcmpTypeCode = expandIcmpTypeCode(v.([]interface{}))
+	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		a.IcmpTypeCode = expandIcmpTypeCode(v.([]any))
 	}
 
 	return a
 }
 
-func expandPortRange(tfList []interface{}) *types.PortRange {
+func expandPortRange(tfList []any) *types.PortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.PortRange{
 		From: int32(tfMap["from"].(int)),
@@ -631,19 +630,19 @@ func expandPortRange(tfList []interface{}) *types.PortRange {
 	}
 }
 
-func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
+func expandIcmpTypeCode(tfList []any) *types.IcmpTypeCode {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	return &types.IcmpTypeCode{
 		Code: int32(tfMap["code"].(int)),
-		Type: int32(tfMap["type"].(int)),
+		Type: int32(tfMap[names.AttrType].(int)),
 	}
 }
 
-func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
+func expandCustomDNSConfiguration(tfMap map[string]any) *types.CustomDNSServer {
 	if tfMap == nil {
 		return nil
 	}
@@ -661,7 +660,7 @@ func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNS
 	return a
 }
 
-func expandCustomDNSConfigurations(tfList []interface{}) []types.CustomDNSServer {
+func expandCustomDNSConfigurations(tfList []any) []types.CustomDNSServer {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -669,7 +668,7 @@ func expandCustomDNSConfigurations(tfList []interface{}) []types.CustomDNSServer
 	var s []types.CustomDNSServer
 
 	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+		m, ok := r.(map[string]any)
 
 		if !ok {
 			continue
@@ -687,15 +686,15 @@ func expandCustomDNSConfigurations(tfList []interface{}) []types.CustomDNSServer
 	return s
 }
 
-func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfiguration) []interface{} {
+func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.TransitGatewayID; v != nil {
-		m["transit_gateway_id"] = aws.ToString(v)
+		m[names.AttrTransitGatewayID] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoutableCIDRSpace; v != nil {
@@ -706,15 +705,15 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkACLConfigurations(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
+func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntry) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenAttachmentNetworkACLConfiguration(&apiObject))
@@ -723,16 +722,16 @@ func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntr
 	return l
 }
 
-func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
+func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"cidr_block":  aws.ToString(apiObject.CidrBlock),
-		"protocol":    aws.ToString(apiObject.Protocol),
-		"rule_action": apiObject.RuleAction,
-		"rule_number": apiObject.RuleNumber,
+	m := map[string]any{
+		names.AttrCIDRBlock: aws.ToString(apiObject.CidrBlock),
+		names.AttrProtocol:  aws.ToString(apiObject.Protocol),
+		"rule_action":       apiObject.RuleAction,
+		"rule_number":       apiObject.RuleNumber,
 	}
 
 	if v := apiObject.PortRange; v != nil {
@@ -745,38 +744,38 @@ func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) 
 	return m
 }
 
-func flattenPortRange(apiObject *types.PortRange) []interface{} {
+func flattenPortRange(apiObject *types.PortRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"from": apiObject.From,
 		"to":   apiObject.To,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
+func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"type": apiObject.Type,
-		"code": apiObject.Code,
+	m := map[string]any{
+		names.AttrType: apiObject.Type,
+		"code":         apiObject.Code,
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenCustomDNSConfiguration(apiObject *types.CustomDNSServer) map[string]interface{} {
+func flattenCustomDNSConfiguration(apiObject *types.CustomDNSServer) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.CustomDNSServerName; v != nil {
 		m["custom_dns_server_name"] = aws.ToString(v)
@@ -789,12 +788,12 @@ func flattenCustomDNSConfiguration(apiObject *types.CustomDNSServer) map[string]
 	return m
 }
 
-func flattenCustomDNSConfigurations(apiObjects []types.CustomDNSServer) []interface{} {
+func flattenCustomDNSConfigurations(apiObjects []types.CustomDNSServer) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		l = append(l, flattenCustomDNSConfiguration(&apiObject))

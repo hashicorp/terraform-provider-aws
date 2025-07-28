@@ -10,9 +10,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -23,17 +23,17 @@ import (
 
 // instanceProfileUpdateTags updates IAM Instance Profile tags.
 // The identifier is the Instance Profile name.
-func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func instanceProfileUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			TagKeys:             aws.StringSlice(removedTags.Keys()),
+			TagKeys:             removedTags.Keys(),
 		}
 
-		_, err := conn.UntagInstanceProfileWithContext(ctx, input)
+		_, err := conn.UntagInstanceProfile(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -43,10 +43,10 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagInstanceProfileInput{
 			InstanceProfileName: aws.String(identifier),
-			Tags:                Tags(updatedTags),
+			Tags:                svcTags(updatedTags),
 		}
 
-		_, err := conn.TagInstanceProfileWithContext(ctx, input)
+		_, err := conn.TagInstanceProfile(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -56,36 +56,36 @@ func instanceProfileUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	return nil
 }
 
-func instanceProfileCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func instanceProfileCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return instanceProfileUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func instanceProfileKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func instanceProfileKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := instanceProfileTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
-func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func openIDConnectProviderUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			TagKeys:                  aws.StringSlice(removedTags.Keys()),
+			TagKeys:                  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagOpenIDConnectProviderWithContext(ctx, input)
+		_, err := conn.UntagOpenIDConnectProvider(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -95,10 +95,10 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagOpenIDConnectProviderInput{
 			OpenIDConnectProviderArn: aws.String(identifier),
-			Tags:                     Tags(updatedTags),
+			Tags:                     svcTags(updatedTags),
 		}
 
-		_, err := conn.TagOpenIDConnectProviderWithContext(ctx, input)
+		_, err := conn.TagOpenIDConnectProvider(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -108,36 +108,36 @@ func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	return nil
 }
 
-func openIDConnectProviderCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func openIDConnectProviderCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := openIDConnectProviderTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // policyUpdateTags updates IAM Policy tags.
 // The identifier is the Policy ARN.
-func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func policyUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			TagKeys:   aws.StringSlice(removedTags.Keys()),
+			TagKeys:   removedTags.Keys(),
 		}
 
-		_, err := conn.UntagPolicyWithContext(ctx, input)
+		_, err := conn.UntagPolicy(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -147,10 +147,10 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagPolicyInput{
 			PolicyArn: aws.String(identifier),
-			Tags:      Tags(updatedTags),
+			Tags:      svcTags(updatedTags),
 		}
 
-		_, err := conn.TagPolicyWithContext(ctx, input)
+		_, err := conn.TagPolicy(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -160,36 +160,36 @@ func policyUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	return nil
 }
 
-func policyCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func policyCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return policyUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func policyKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func policyKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := policyTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // roleUpdateTags updates IAM role tags.
 // The identifier is the role name.
-func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func roleUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{
 			RoleName: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagRoleWithContext(ctx, input)
+		_, err := conn.UntagRole(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -199,10 +199,10 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagRoleInput{
 			RoleName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
-		_, err := conn.TagRoleWithContext(ctx, input)
+		_, err := conn.TagRole(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -212,36 +212,36 @@ func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return nil
 }
 
-func roleCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func roleCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return roleUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func roleKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func roleKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := roleTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // samlProviderUpdateTags updates IAM SAML Provider tags.
 // The identifier is the SAML Provider ARN.
-func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func samlProviderUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			TagKeys:         aws.StringSlice(removedTags.Keys()),
+			TagKeys:         removedTags.Keys(),
 		}
 
-		_, err := conn.UntagSAMLProviderWithContext(ctx, input)
+		_, err := conn.UntagSAMLProvider(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -251,10 +251,10 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagSAMLProviderInput{
 			SAMLProviderArn: aws.String(identifier),
-			Tags:            Tags(updatedTags),
+			Tags:            svcTags(updatedTags),
 		}
 
-		_, err := conn.TagSAMLProviderWithContext(ctx, input)
+		_, err := conn.TagSAMLProvider(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -264,27 +264,36 @@ func samlProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifie
 	return nil
 }
 
-func samlProviderCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func samlProviderCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return samlProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return samlProviderUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
+
+func samlProviderKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := samlProviderTags(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return keyValueTags(ctx, tags), nil
 }
 
 // serverCertificateUpdateTags updates IAM Server Certificate tags.
 // The identifier is the Server Certificate name.
-func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func serverCertificateUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			TagKeys:               aws.StringSlice(removedTags.Keys()),
+			TagKeys:               removedTags.Keys(),
 		}
 
-		_, err := conn.UntagServerCertificateWithContext(ctx, input)
+		_, err := conn.UntagServerCertificate(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -294,10 +303,10 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagServerCertificateInput{
 			ServerCertificateName: aws.String(identifier),
-			Tags:                  Tags(updatedTags),
+			Tags:                  svcTags(updatedTags),
 		}
 
-		_, err := conn.TagServerCertificateWithContext(ctx, input)
+		_, err := conn.TagServerCertificate(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -307,27 +316,36 @@ func serverCertificateUpdateTags(ctx context.Context, conn iamiface.IAMAPI, iden
 	return nil
 }
 
-func serverCertificateCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func serverCertificateCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return serverCertificateUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return serverCertificateUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
+
+func serverCertificateKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := serverCertificateTags(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return keyValueTags(ctx, tags), nil
 }
 
 // userUpdateTags updates IAM user tags.
 // The identifier is the user name.
-func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func userUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagUserInput{
 			UserName: aws.String(identifier),
-			TagKeys:  aws.StringSlice(removedTags.Keys()),
+			TagKeys:  removedTags.Keys(),
 		}
 
-		_, err := conn.UntagUserWithContext(ctx, input)
+		_, err := conn.UntagUser(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -337,10 +355,10 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagUserInput{
 			UserName: aws.String(identifier),
-			Tags:     Tags(updatedTags),
+			Tags:     svcTags(updatedTags),
 		}
 
-		_, err := conn.TagUserWithContext(ctx, input)
+		_, err := conn.TagUser(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -350,36 +368,36 @@ func userUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return nil
 }
 
-func userCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func userCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return userUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func userKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func userKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := userTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // virtualMFADeviceUpdateTags updates IAM Virtual MFA Device tags.
 // The identifier is the Virtual MFA Device ARN.
-func virtualMFADeviceUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func virtualMFADeviceUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.UntagMFADeviceWithContext(ctx, input)
+		_, err := conn.UntagMFADevice(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -389,10 +407,10 @@ func virtualMFADeviceUpdateTags(ctx context.Context, conn iamiface.IAMAPI, ident
 	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.IAM); len(updatedTags) > 0 {
 		input := &iam.TagMFADeviceInput{
 			SerialNumber: aws.String(identifier),
-			Tags:         Tags(updatedTags),
+			Tags:         svcTags(updatedTags),
 		}
 
-		_, err := conn.TagMFADeviceWithContext(ctx, input)
+		_, err := conn.TagMFADevice(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -402,27 +420,27 @@ func virtualMFADeviceUpdateTags(ctx context.Context, conn iamiface.IAMAPI, ident
 	return nil
 }
 
-func virtualMFADeviceCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, tags []*iam.Tag) error {
+func virtualMFADeviceCreateTags(ctx context.Context, conn *iam.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
 }
 
-func virtualMFADeviceKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+func virtualMFADevicekeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
 	tags, err := virtualMFADeviceTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return keyValueTags(ctx, tags), nil
 }
 
 // updateTags updates iam service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *iam.Client, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
 	switch resourceType {
 	case "InstanceProfile":
 		return instanceProfileUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
@@ -460,16 +478,19 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	)
 	switch resourceType {
 	case "InstanceProfile":
-		tags, err = instanceProfileKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = instanceProfileKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "OIDCProvider":
-		tags, err = openIDConnectProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = openIDConnectProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "Policy":
-		tags, err = policyKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = policyKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "Role":
-		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
+
+	case "SAMLProvider":
+		tags, err = samlProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "ServiceLinkedRole":
 		var roleName string
@@ -477,13 +498,16 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		if err != nil {
 			return err
 		}
-		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), roleName)
+		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), roleName)
+
+	case "ServerCertificate":
+		tags, err = serverCertificateKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "User":
-		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "VirtualMFADevice":
-		tags, err = virtualMFADeviceKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = virtualMFADevicekeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	default:
 		return nil
@@ -503,5 +527,5 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 // UpdateTags updates iam service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier, resourceType, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier, resourceType, oldTags, newTags)
 }

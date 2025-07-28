@@ -66,6 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `authorizer_type` - (Required) Authorizer type. Valid values: `JWT`, `REQUEST`.
 Specify `REQUEST` for a Lambda function using incoming request parameters.
@@ -100,6 +101,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Authorizer identifier.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_authorizer` using the API identifier and authorizer identifier. For example:
@@ -125,4 +132,4 @@ Using `terraform import`, import `aws_apigatewayv2_authorizer` using the API ide
 % terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-322d065b428456a7d1cc59a5a9728d8c2146130eb3756317834d9f82f13b132e -->
+<!-- cache-key: cdktf-0.20.8 input-6b0a1dce01542d8aae546253214809e165635ec50ad7b8415a0f3d0faa0d2c3a -->

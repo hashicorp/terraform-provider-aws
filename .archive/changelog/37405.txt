@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagent_agent: Fix to use the configured `prepare_agent` value (or default value of `true` when omitted) for all create and update operations
+```

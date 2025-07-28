@@ -41,7 +41,7 @@ func TestAccKafkaClusterPolicy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:DescribeCluster","kafka:DescribeClusterV2"`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"kafka:DescribeCluster","kafka:DescribeClusterV2"`)),
 				),
 			},
 		},

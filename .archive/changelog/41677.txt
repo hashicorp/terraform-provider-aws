@@ -1,0 +1,7 @@
+```release-note:note
+data-source/aws_launch_template: `elastic_gpu_specifications` and `elastic_inference_accelerator` are deprecated. AWS no longer supports Elastic Graphics or Elastic Inference.
+```
+
+```release-note:note
+resource/aws_launch_template: `elastic_gpu_specifications` and `elastic_inference_accelerator` are deprecated. AWS no longer supports Elastic Graphics or Elastic Inference.
+```

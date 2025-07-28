@@ -31,7 +31,7 @@ resource "aws_acmpca_certificate" "example" {
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
-  private_certificate_configuration {
+  certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
@@ -48,7 +48,6 @@ resource "tls_private_key" "key" {
 }
 
 resource "tls_cert_request" "csr" {
-  key_algorithm   = "RSA"
   private_key_pem = tls_private_key.key.private_key_pem
 
   subject {
@@ -61,6 +60,7 @@ resource "tls_cert_request" "csr" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
 * `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.

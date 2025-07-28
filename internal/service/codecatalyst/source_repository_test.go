@@ -43,7 +43,7 @@ func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 				Config: testAccSourceRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceRepositoryExists(ctx, resourceName, &sourcerepository),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "tf-cc-aws-provider"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "tf-cc"),
 				),
@@ -126,11 +126,12 @@ func testAccCheckSourceRepositoryExists(ctx context.Context, name string, source
 		projectName := rs.Primary.Attributes["project_name"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
-		resp, err := conn.GetSourceRepository(ctx, &codecatalyst.GetSourceRepositoryInput{
+		input := codecatalyst.GetSourceRepositoryInput{
 			Name:        aws.String(rs.Primary.ID),
 			SpaceName:   aws.String(spaceName),
 			ProjectName: aws.String(projectName),
-		})
+		}
+		resp, err := conn.GetSourceRepository(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameSourceRepository, rs.Primary.ID, err)

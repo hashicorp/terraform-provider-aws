@@ -75,17 +75,26 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peerAccountId` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `peerRegion` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peerTransitGatewayId` - (Required) Identifier of EC2 Transit Gateway to peer with.
+* `options` - (Optional) Describes whether dynamic routing is enabled or disabled for the transit gateway peering request. See [options](#options) below for more details!
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayId` - (Required) Identifier of EC2 Transit Gateway.
+
+### options
+
+The `options` block supports the following:
+
+* `dynamicRouting` - (Optional) Indicates whether dynamic routing is enabled or disabled.. Supports `enable` and `disable`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - EC2 Transit Gateway Attachment identifier
+* `arn` - ARN of the attachment.
+* `id` - EC2 Transit Gateway Attachment identifier.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -122,4 +131,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` us
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-58f6c9437a7c95b8df5161dbac8476475147b7788b6b5351cb7f1a812d59aa51 -->
+<!-- cache-key: cdktf-0.20.8 input-c5deb60526d8d758bef702f0e609bbc1bc899f449b792b59e6c3ac2fad85e480 -->

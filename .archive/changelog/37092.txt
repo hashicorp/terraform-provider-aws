@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kms_custom_key_store: Change `trust_anchor_certificate` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```

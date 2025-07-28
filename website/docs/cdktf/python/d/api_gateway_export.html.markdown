@@ -33,6 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `export_type` - (Required) Type of export. Acceptable values are `oas30` for OpenAPI 3.0.x and `swagger` for Swagger/OpenAPI 2.0.
 * `rest_api_id` - (Required) Identifier of the associated REST API.
 * `stage_name` - (Required) Name of the Stage that will be exported.
@@ -48,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `content_type` - Content-type header value in the HTTP response.
 * `content_disposition` - Content-disposition header value in the HTTP response.
 
-<!-- cache-key: cdktf-0.20.1 input-c510075eea42189371d3ef965a6842b44146a7635515b8e6bc3e2af00098b481 -->
+<!-- cache-key: cdktf-0.20.8 input-7734eafd60f2bf19ef44e597d19531101cd49a7e271dae8b9929b39da2491144 -->

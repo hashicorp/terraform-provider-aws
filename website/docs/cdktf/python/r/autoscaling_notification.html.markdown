@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_names` - (Required) List of AutoScaling Group Names
 * `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here][1]
@@ -73,4 +74,4 @@ This resource exports the following attributes in addition to the arguments abov
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html
 
-<!-- cache-key: cdktf-0.20.1 input-3938cfbc30acbf16d80d3b3f6c56e132af303339229bf6a953b7b328c401cceb -->
+<!-- cache-key: cdktf-0.20.8 input-4c98d3bea1290ed5e6d3cfd72e2466911f0826a645d59f3d66d0c7e4be8cc04c -->

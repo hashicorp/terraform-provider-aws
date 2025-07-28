@@ -52,8 +52,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fleet_name` - (Required) Name of the fleet.
 * `stack_name` (Required) Name of the stack.
 
@@ -88,4 +89,4 @@ Using `terraform import`, import AppStream Stack Fleet Association using the `fl
 % terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d02e772e58ab8d188d62ad200741c9e10f12ac34ac4daa8c08f2dbd2bfc87b0a -->
+<!-- cache-key: cdktf-0.20.8 input-ee0b69a89faf116e79eb4051f528cca2340c87f2afb9dae24a05a350a2e3de48 -->

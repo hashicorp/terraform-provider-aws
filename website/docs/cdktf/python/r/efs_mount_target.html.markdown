@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `file_system_id` - (Required) The ID of the file system for which the mount target is intended.
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
 * `ip_address` - (Optional) The address (within the address range of the specified subnet) at
@@ -104,4 +105,4 @@ Using `terraform import`, import the EFS mount targets using the `id`. For examp
 % terraform import aws_efs_mount_target.alpha fsmt-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7dcbc13dbededd010d6caa93608126170e98da8f59ca6aabaeeb59e86082c8d2 -->
+<!-- cache-key: cdktf-0.20.8 input-4fd2810f3a5f1d0375a7568d3b1334ef7f3c353ee25d5695d5ae12bd6c69bb01 -->

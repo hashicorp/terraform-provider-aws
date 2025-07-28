@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `display_name` - Full friendly name of the contact or escalation plan.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-028dcbba9b9d4f6b9868cfdfa5621e49e88520c35fc79346bd35242d298b06bc -->
+<!-- cache-key: cdktf-0.20.8 input-a02cd6131b65c87f16ffa3bb8159af8a218032fd7aab98af72398c9762b1611e -->

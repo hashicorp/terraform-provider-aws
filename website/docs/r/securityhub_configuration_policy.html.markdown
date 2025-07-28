@@ -58,8 +58,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
   description = "This is an example of disabled configuration policy"
 
   configuration_policy {
-    service_enabled       = false
-    enabled_standard_arns = []
+    service_enabled = false
   }
 
   depends_on = [aws_securityhub_organization_configuration.example]
@@ -122,6 +121,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_policy` - (Required) Defines how Security Hub is configured. See [below](#configuration_policy).
 * `description` - (Optional) The description of the configuration policy.
 * `name` - (Required) The name of the configuration policy.
@@ -130,7 +130,7 @@ This resource supports the following arguments:
 
 The `configuration_policy` block supports the following:
 
-* `enabled_standard_arns` - (Required) A list that defines which security standards are enabled in the configuration policy.
+* `enabled_standard_arns` - (Optional) A list that defines which security standards are enabled in the configuration policy. It must be defined if `service_enabled` is set to true.
 * `security_controls_configuration` - (Optional) Defines which security controls are enabled in the configuration policy and any customizations to parameters affecting them. See [below](#security_controls_configuration).
 * `service_enabled` - (Required) Indicates whether Security Hub is enabled in the policy.
 

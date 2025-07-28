@@ -44,6 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cost_types` - Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `notification` - Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `planned_limit` - Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `tags` - Map of tags assigned to the resource.
 * `time_period_end` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.

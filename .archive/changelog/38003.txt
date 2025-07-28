@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` attribute
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` attribute
+```

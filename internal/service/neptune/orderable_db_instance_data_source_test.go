@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,8 +32,8 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
 				),
@@ -58,8 +58,8 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, licenseModel, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredOption),
 				),
@@ -69,13 +69,13 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneClient(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableDBInstanceOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

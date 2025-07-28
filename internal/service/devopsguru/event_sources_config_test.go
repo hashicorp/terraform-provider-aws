@@ -28,6 +28,7 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,7 +39,7 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourcesConfigExists(ctx, resourceName, &cfg),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "event_sources.0.amazon_code_guru_profiler.*", map[string]string{
-						"status": "ENABLED",
+						names.AttrStatus: "ENABLED",
 					}),
 				),
 			},
@@ -60,6 +61,7 @@ func testAccEventSourcesConfig_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

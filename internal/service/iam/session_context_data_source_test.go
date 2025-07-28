@@ -87,7 +87,6 @@ func TestAssumedRoleRoleSessionName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
@@ -114,9 +113,9 @@ func TestAccIAMSessionContextDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_basic(rName, "/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -138,8 +137,8 @@ func TestAccIAMSessionContextDataSource_withPath(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_basic(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -161,7 +160,7 @@ func TestAccIAMSessionContextDataSource_notAssumedRole(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_notAssumed(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -184,7 +183,7 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleWithPath(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_notAssumed(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -206,7 +205,7 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleUser(t *testing.T) {
 			{
 				Config: testAccSessionContextDataSourceConfig_user(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGlobalARN(dataSourceName, "arn", "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, dataSourceName, names.AttrARN, "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -217,6 +216,10 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleUser(t *testing.T) {
 
 func testAccSessionContextDataSourceConfig_basic(rName, path, sessionID string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
   path = %[2]q
@@ -227,7 +230,7 @@ resource "aws_iam_role" "test" {
     "Statement" = [{
       "Action" = "sts:AssumeRole"
       "Principal" = {
-        "Service" = "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service" = data.aws_service_principal.ec2.name
       }
       "Effect" = "Allow"
     }]
@@ -245,7 +248,9 @@ data "aws_iam_session_context" "test" {
 
 func testAccSessionContextDataSourceConfig_notAssumed(rName, path string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -257,7 +262,7 @@ resource "aws_iam_role" "test" {
     "Statement" = [{
       "Action" = "sts:AssumeRole"
       "Principal" = {
-        "Service" = "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service" = data.aws_service_principal.ec2.name
       }
       "Effect" = "Allow"
     }]

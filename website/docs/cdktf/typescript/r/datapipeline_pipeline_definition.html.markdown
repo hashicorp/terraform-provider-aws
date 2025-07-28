@@ -103,6 +103,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `parameterObject` - (Optional) Configuration block for the parameter objects used in the pipeline definition. See below
 * `parameterValue` - (Optional) Configuration block for the parameter values used in the pipeline definition. See below
 
@@ -171,4 +172,4 @@ Using `terraform import`, import `aws_datapipeline_pipeline_definition` using th
 % terraform import aws_datapipeline_pipeline_definition.example df-1234567890
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-513fb767241e4c9deb0e2e131aa76eae7629b4160098b9555deea889ccb98bd7 -->
+<!-- cache-key: cdktf-0.20.8 input-96cc04cd7938027e5b73d1af7bdb4e7e8f27cf64e2854f90dca4cde42d759528 -->

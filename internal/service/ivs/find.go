@@ -6,19 +6,20 @@ package ivs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.PlaybackKeyPair, error) {
+func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.Client, id string) (*awstypes.PlaybackKeyPair, error) {
 	in := &ivs.GetPlaybackKeyPairInput{
 		Arn: aws.String(id),
 	}
-	out, err := conn.GetPlaybackKeyPairWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+	out, err := conn.GetPlaybackKeyPair(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -36,12 +37,12 @@ func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.IVS, id string) (*iv
 	return out.KeyPair, nil
 }
 
-func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.RecordingConfiguration, error) {
+func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.Client, id string) (*awstypes.RecordingConfiguration, error) {
 	in := &ivs.GetRecordingConfigurationInput{
 		Arn: aws.String(id),
 	}
-	out, err := conn.GetRecordingConfigurationWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+	out, err := conn.GetRecordingConfiguration(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -59,13 +60,13 @@ func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.IVS, id strin
 	return out.RecordingConfiguration, nil
 }
 
-func FindChannelByID(ctx context.Context, conn *ivs.IVS, arn string) (*ivs.Channel, error) {
+func FindChannelByID(ctx context.Context, conn *ivs.Client, arn string) (*awstypes.Channel, error) {
 	in := &ivs.GetChannelInput{
 		Arn: aws.String(arn),
 	}
-	out, err := conn.GetChannelWithContext(ctx, in)
+	out, err := conn.GetChannel(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -82,12 +83,12 @@ func FindChannelByID(ctx context.Context, conn *ivs.IVS, arn string) (*ivs.Chann
 	return out.Channel, nil
 }
 
-func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.IVS, channelArn string) (*ivs.StreamKey, error) {
+func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.Client, channelArn string) (*awstypes.StreamKey, error) {
 	in := &ivs.ListStreamKeysInput{
 		ChannelArn: aws.String(channelArn),
 	}
-	out, err := conn.ListStreamKeysWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+	out, err := conn.ListStreamKeys(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -109,12 +110,12 @@ func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.IVS, channelArn str
 	return findStreamKeyByID(ctx, conn, *streamKeyArn)
 }
 
-func findStreamKeyByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.StreamKey, error) {
+func findStreamKeyByID(ctx context.Context, conn *ivs.Client, id string) (*awstypes.StreamKey, error) {
 	in := &ivs.GetStreamKeyInput{
 		Arn: aws.String(id),
 	}
-	out, err := conn.GetStreamKeyWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+	out, err := conn.GetStreamKey(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

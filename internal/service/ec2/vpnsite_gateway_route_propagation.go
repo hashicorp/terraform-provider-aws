@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,9 +43,9 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 	}
 }
 
-func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -55,16 +55,16 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID))
+	d.SetId(vpnGatewayRoutePropagationCreateID(routeTableID, gatewayID))
 
 	return append(diags, resourceVPNGatewayRoutePropagationRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -79,17 +79,17 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 	return sdkdiag.AppendFromErr(diags, err)
 }
 
-func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
+	routeTableID, gatewayID, err := vpnGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
+	err = findVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) VPN Gateway (%s) route propagation not found, removing from state", routeTableID, gatewayID)

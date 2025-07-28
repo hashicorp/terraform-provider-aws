@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `emailIdentity` - (Required) The name of the email identity.
 
 ## Attribute Reference
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value mapping of resource tags.
 * `verifiedForSendingStatus` - Specifies whether or not the identity is verified.
 
-<!-- cache-key: cdktf-0.20.1 input-7c12091698113e4874168fd26ec7c1c02c1487b040cff1044c5b20751c66d041 -->
+<!-- cache-key: cdktf-0.20.8 input-c1e294b51867a7ba2a3045dac13101c6be5e2c30c9180038dfaf85dc530cbfc0 -->

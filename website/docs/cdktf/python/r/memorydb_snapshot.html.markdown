@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_snapshot"
 description: |-
@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -52,7 +53,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the snapshot.
 * `cluster_configuration` - The configuration of the cluster from which the snapshot was taken.
     * `description` - Description for the cluster.
-    * `engine_version` - Version number of the Redis engine used by the cluster.
+    * `engine` - The engine that will run on cluster nodes.
+    * `engine_version` - Version number of the engine used by the cluster.
     * `maintenance_window` - The weekly time range during which maintenance on the cluster is performed.
     * `name` - Name of the cluster.
     * `node_type` - Compute and memory capacity of the nodes in the cluster.
@@ -99,4 +101,4 @@ Using `terraform import`, import a snapshot using the `name`. For example:
 % terraform import aws_memorydb_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-540eb2f7a447881028486dd90d40cbfa1d108e80be222d8149c4c844371b23d5 -->
+<!-- cache-key: cdktf-0.20.8 input-20908b53b5478faadd81d8dc73a3882f1e858c7ce43e429dbac813dfff8ef353 -->

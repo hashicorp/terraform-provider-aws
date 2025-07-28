@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_configuration_recorder_status", name="Configuration Recorder Status")
@@ -36,7 +37,7 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -44,11 +45,11 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 	}
 }
 
-func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	if d.HasChange("is_enabled") {
 		if d.Get("is_enabled").(bool) {
@@ -79,7 +80,7 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 	return append(diags, resourceConfigurationRecorderStatusRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -96,18 +97,19 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("is_enabled", recorderStatus.Recording)
-	d.Set("name", d.Id())
+	d.Set(names.AttrName, d.Id())
 
 	return diags
 }
 
-func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationRecorderStatusDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	_, err := conn.StopConfigurationRecorder(ctx, &configservice.StopConfigurationRecorderInput{
+	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.StopConfigurationRecorder(ctx, &input)
 
 	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags

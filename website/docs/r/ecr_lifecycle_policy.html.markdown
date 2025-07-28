@@ -19,12 +19,12 @@ Manages an ECR repository lifecycle policy.
 ### Policy on untagged image
 
 ```terraform
-resource "aws_ecr_repository" "foo" {
-  name = "bar"
+resource "aws_ecr_repository" "example" {
+  name = "example-repo"
 }
 
-resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = aws_ecr_repository.foo.name
+resource "aws_ecr_lifecycle_policy" "example" {
+  repository = aws_ecr_repository.example.name
 
   policy = <<EOF
 {
@@ -51,12 +51,12 @@ EOF
 ### Policy on tagged image
 
 ```terraform
-resource "aws_ecr_repository" "foo" {
-  name = "bar"
+resource "aws_ecr_repository" "example" {
+  name = "example-repo"
 }
 
-resource "aws_ecr_lifecycle_policy" "foopolicy" {
-  repository = aws_ecr_repository.foo.name
+resource "aws_ecr_lifecycle_policy" "example" {
+  repository = aws_ecr_repository.example.name
 
   policy = <<EOF
 {
@@ -84,8 +84,9 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
+* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `policy` argument.
 
 ## Attribute Reference
 

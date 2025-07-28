@@ -49,6 +49,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the network profile.
 * `downlinkBandwidthBits` - (Optional) The data throughput rate in bits per second, as an integer from `0` to `104857600`. Default value is `104857600`.
 * `downlinkDelayMs` - (Optional) Delay time for all packets to destination in milliseconds as an integer from `0` to `2000`.
@@ -102,4 +105,4 @@ Using `terraform import`, import DeviceFarm Network Profiles using their ARN. Fo
 % terraform import aws_devicefarm_network_profile.example arn:aws:devicefarm:us-west-2:123456789012:networkprofile:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-82616cb48039f8368ead9b616e986d34cc6658f5bc299c003c202bc94e665131 -->
+<!-- cache-key: cdktf-0.20.8 input-af90a2e96809560d7bcd092d9d9ba1a040ea8a4217265e37f1281228d01891c0 -->

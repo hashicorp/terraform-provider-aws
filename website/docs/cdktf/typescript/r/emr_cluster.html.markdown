@@ -628,6 +628,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additionalInfo` - (Optional) JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `applications` - (Optional) A case-insensitive list of applications for Amazon EMR to install and configure when launching the cluster. For a list of applications available for each Amazon EMR release version, see the [Amazon EMR Release Guide](https://docs.aws.amazon.com/emr/latest/ReleaseGuide/emr-release-components.html).
 * `autoscalingRole` - (Optional) IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
@@ -679,6 +680,7 @@ class MyConvertedCode extends TerraformStack {
 * `logUri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created.
 * `masterInstanceFleet` - (Optional) Configuration block to use an [Instance Fleet](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-fleet.html) for the master node type. Cannot be specified if any `masterInstanceGroup` configuration blocks are set. Detailed below.
 * `masterInstanceGroup` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master).
+* `osReleaseLabel` - (Optional) Amazon Linux release for all nodes in a cluster launch RunJobFlow request. If not specified, Amazon EMR uses the latest validated Amazon Linux release for cluster launch.
 * `placementGroupConfig` - (Optional) The specified placement group configuration for an Amazon EMR cluster.
 * `scaleDownBehavior` - (Optional) Way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `securityConfiguration` - (Optional) Security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `releaseLabel` 4.8.0 or greater.
@@ -686,6 +688,7 @@ class MyConvertedCode extends TerraformStack {
 * `stepConcurrencyLevel` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `releaseLabel` 5.28.0 or greater (default is 1).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminationProtection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
+* `unhealthyNodeReplacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visibleToAllUsers` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
 ### bootstrap_action
@@ -756,7 +759,7 @@ The launch specification for Spot instances in the fleet, which determines the d
 
 * `iops` - (Optional) Number of I/O operations per second (IOPS) that the volume supports.
 * `size` - (Required) Volume size, in gibibytes (GiB).
-* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+* `type` - (Required) Volume type. Valid options are `gp3`, `gp2`, `io1`, `io2`, `standard`, `st1` and `sc1`. See [EBS Volume Types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 * `throughput` - (Optional) The throughput, in mebibyte per second (MiB/s).
 * `volumesPerInstance` - (Optional) Number of EBS volumes with this configuration to attach to each EC2 instance in the instance group (default is 1).
 
@@ -916,4 +919,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b9d18b24d38c79ee9f688a74547cdb740e2cd654a3d3dc2a431681dd4a66d46c -->
+<!-- cache-key: cdktf-0.20.8 input-4188112f4451b512696c3b7465017051554f88a1acfde57b32f8caaab22e186f -->

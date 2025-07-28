@@ -35,9 +35,9 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
@@ -97,8 +97,8 @@ func TestAccS3BucketLogging_update(t *testing.T) {
 				Config: testAccBucketLoggingConfig_update(rName, "tmp/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "tmp/"),
@@ -134,8 +134,8 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionFullControl),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.id", "data.aws_canonical_user_id.current", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", "display_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionRead),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", "display_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
 				),
 			},
 			{
@@ -306,7 +306,7 @@ func TestAccS3BucketLogging_migrate_loggingNoChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
 				),
 			},
@@ -314,7 +314,7 @@ func TestAccS3BucketLogging_migrate_loggingNoChange(t *testing.T) {
 				Config: testAccBucketLoggingConfig_migrate(bucketName, "log/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 				),
@@ -340,7 +340,7 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
-					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
 				),
 			},
@@ -348,7 +348,7 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 				Config: testAccBucketLoggingConfig_migrate(bucketName, "tmp/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "tmp/"),
 				),
@@ -372,9 +372,9 @@ func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
 				Config: testAccBucketLoggingConfig_withExpectedBucketOwner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "expected_bucket_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
@@ -465,9 +465,9 @@ func TestAccS3BucketLogging_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_logging" {
 				continue
 			}
@@ -475,6 +475,10 @@ func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFun
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
@@ -507,6 +511,9 @@ func testAccCheckBucketLoggingExists(ctx context.Context, n string) resource.Tes
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 
@@ -698,7 +705,7 @@ resource "aws_s3_bucket_logging" "test" {
 }
 
 func testAccBucketLoggingConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
   location {

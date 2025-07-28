@@ -27,9 +27,9 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_firehose_config.#", resourceName, "storage_config.0.kinesis_firehose_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn"),
@@ -55,9 +55,9 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.#", resourceName, "storage_config.0.kinesis_stream_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn"),
@@ -82,9 +82,9 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.#", resourceName, "storage_config.0.kinesis_video_stream_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix"),
@@ -114,9 +114,9 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAssociationID, resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.s3_config.#", resourceName, "storage_config.0.s3_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.s3_config.0.bucket_name", resourceName, "storage_config.0.s3_config.0.bucket_name"),
@@ -289,11 +289,11 @@ data "aws_connect_instance_storage_config" "test" {
 
 func testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceStorageConfigDataSourceConfig_base(rName),
-		`
+		testAccInstanceStorageConfigDataSourceConfig_base(rName), `
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -319,7 +319,8 @@ data "aws_connect_instance_storage_config" "test" {
   instance_id    = aws_connect_instance.test.id
   resource_type  = aws_connect_instance_storage_config.test.resource_type
 }
-`)
+`,
+	)
 }
 
 func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string) string {
@@ -329,6 +330,7 @@ func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string)
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "test" {

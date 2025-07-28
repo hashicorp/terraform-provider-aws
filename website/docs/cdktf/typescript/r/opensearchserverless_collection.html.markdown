@@ -68,6 +68,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the collection.
 * `standbyReplicas` - (Optional) Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -122,4 +123,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bbd8832845290d485daf33e5853dfc639ffbd2597086ab9e0dd010a45fc52c34 -->
+<!-- cache-key: cdktf-0.20.8 input-b6fafc742f85674bb2929d23845c56eb1411ef60c0c2fa87c782b808ac82fbc5 -->

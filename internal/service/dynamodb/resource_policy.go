@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -26,7 +27,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Resource Policy")
+// @FrameworkResource("aws_dynamodb_resource_policy", name="Resource Policy")
+// @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
+// @Testing(importIgnore="policy")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -34,12 +38,8 @@ func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type resourcePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_dynamodb_resource_policy"
+	framework.ResourceWithModel[resourcePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -51,11 +51,11 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -96,7 +96,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 	})
 
@@ -113,12 +113,6 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 	var data resourcePolicyResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -190,9 +184,10 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	_, err := conn.DeleteResourcePolicy(ctx, &dynamodb.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(data.ID.ValueString()),
-	})
+	input := dynamodb.DeleteResourcePolicyInput{
+		ResourceArn: data.ID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -231,6 +226,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn str
 }
 
 type resourcePolicyResourceModel struct {
+	framework.WithRegionModel
 	ConfirmRemoveSelfResourceAccess types.Bool        `tfsdk:"confirm_remove_self_resource_access"`
 	ID                              types.String      `tfsdk:"id"`
 	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`
@@ -238,17 +234,12 @@ type resourcePolicyResourceModel struct {
 	RevisionID                      types.String      `tfsdk:"revision_id"`
 }
 
-func (data *resourcePolicyResourceModel) InitFromID() error {
-	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
-	if err != nil {
-		return err
-	}
-
-	data.ResourceARN = v
-
-	return nil
-}
-
 func (data *resourcePolicyResourceModel) setID() {
 	data.ID = data.ResourceARN.StringValue
+}
+
+func (r *resourcePolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	r.WithImportByIdentity.ImportState(ctx, request, response)
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("confirm_remove_self_resource_access"), false)...)
 }

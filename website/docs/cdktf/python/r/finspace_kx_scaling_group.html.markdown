@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. You can add up to 50 tags to a scaling group.
 
 ## Attribute Reference
@@ -58,14 +59,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `created_timestamp` - The timestamp at which the scaling group was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `last_modified_timestamp` - Last timestamp at which the scaling group was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 * `status` - The status of scaling group.
-    * `CREATING` – The scaling group creation is in progress.
-    * `CREATE_FAILED` – The scaling group creation has failed.
-    * `ACTIVE` – The scaling group is active.
-    * `UPDATING` – The scaling group is in the process of being updated.
-    * `UPDATE_FAILED` – The update action failed.
-    * `DELETING` – The scaling group is in the process of being deleted.
-    * `DELETE_FAILED` – The system failed to delete the scaling group.
-    * `DELETED` – The scaling group is successfully deleted.
+    * `CREATING` - The scaling group creation is in progress.
+    * `CREATE_FAILED` - The scaling group creation has failed.
+    * `ACTIVE` - The scaling group is active.
+    * `UPDATING` - The scaling group is in the process of being updated.
+    * `UPDATE_FAILED` - The update action failed.
+    * `DELETING` - The scaling group is in the process of being deleted.
+    * `DELETE_FAILED` - The system failed to delete the scaling group.
+    * `DELETED` - The scaling group is successfully deleted.
 * `status_reason` - The error message when a failed state occurs.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
@@ -102,4 +103,4 @@ Using `terraform import`, import an AWS FinSpace Kx Scaling Group using the `id`
 % terraform import aws_finspace_kx_scaling_group.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-scalinggroup
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-67e16416dfe971126ea2b848067b2d42aa4ab0bafac9e3fea6cd772114a1f9b3 -->
+<!-- cache-key: cdktf-0.20.8 input-aeb17916616be41669877194cf4b932edf9ee75039986acaa7f2b6e24cf9d070 -->

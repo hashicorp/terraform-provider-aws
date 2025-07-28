@@ -55,6 +55,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias_prefix` - (Optional) Limits results to workspaces with aliases that begin with this value.
 
 ## Attribute Reference
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - List of ARNs of the matched Prometheus workspaces.
 * `workspace_ids` - List of workspace IDs of the matched Prometheus workspaces.
 
-<!-- cache-key: cdktf-0.20.1 input-80acf7908c27226d8c0361ef362e87dbc25d3955952bacb62b20968912d47d8e -->
+<!-- cache-key: cdktf-0.20.8 input-a31e96f25186ee5e95a7d695350ba7186b9e7f6bc4d25ce96850b63c1119b19c -->

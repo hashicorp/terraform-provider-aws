@@ -35,12 +35,12 @@ class MyConvertedCode(TerraformStack):
             identity_provider_type="SERVICE_MANAGED"
         )
         TransferTag(self, "hostname",
-            key="aws:transfer:customHostname",
+            key="transfer:customHostname",
             resource_arn=example.arn,
             value="example.com"
         )
         TransferTag(self, "zone_id",
-            key="aws:transfer:route53HostedZoneId",
+            key="transfer:route53HostedZoneId",
             resource_arn=example.arn,
             value="/hostedzone/MyHostedZoneId"
         )
@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the Transfer Family resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
@@ -85,4 +86,4 @@ Using `terraform import`, import `aws_transfer_tag` using the Transfer Family re
 % terraform import aws_transfer_tag.example arn:aws:transfer:us-east-1:123456789012:server/s-1234567890abcdef0,Name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e2764988d2c43be249db77ec49fff55b3d8ec29f4531f3fe791ef9e27ae5b2a6 -->
+<!-- cache-key: cdktf-0.20.8 input-dbff2d9c3045148139dd50b19e3b850f040e43d426f0e86074715746bb3c41ac -->

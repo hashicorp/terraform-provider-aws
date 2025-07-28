@@ -82,8 +82,9 @@ The following arguments are required:
 * `platform` - (Required) Platform of the component.
 * `version` - (Required) Version of the component.
 
-The following attributes are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `change_description` - (Optional) Change description of the component.
 * `data` - (Optional) Inline YAML string with data of the component. Exactly one of `data` and `uri` can be specified. Terraform will only perform drift detection of its value when present in a configuration.
 * `description` - (Optional) Description of the component.
@@ -133,4 +134,4 @@ Using `terraform import`, import `aws_imagebuilder_components` resources using t
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.1 input-7920aa22e67cfcf51eafb7a57251408d3c0e3878496f0aa735aa73051dd90d92 -->
+<!-- cache-key: cdktf-0.20.8 input-25bf4f55882d86994806e97f5fe035a9ab6c89dccd4fa5fafdbd8d493ece2a84 -->

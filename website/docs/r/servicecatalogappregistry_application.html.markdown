@@ -31,9 +31,7 @@ resource "aws_servicecatalogappregistry_application" "example" {
 resource "aws_s3_bucket" "bucket" {
   bucket = "example-bucket"
 
-  tags = {
-    awsApplication = aws_servicecatalogappregistry_application.example.arn
-  }
+  tags = aws_servicecatalogappregistry_application.example.application_tag
 }
 ```
 
@@ -45,14 +43,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the application.
+* `tags` - (Optional) A map of tags assigned to the Application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `application_tag` - A map with a single tag key-value pair used to associate resources with the application. This attribute can be passed directly into the `tags` argument of another resource, or merged into a map of existing tags.
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `id` - Identifier of the application.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

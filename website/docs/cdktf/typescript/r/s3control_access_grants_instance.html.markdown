@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) The AWS account ID for the S3 Access Grants instance. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `identityCenterArn` - (Optional) The ARN of the AWS IAM Identity Center instance associated with the S3 Access Grants instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -106,4 +107,4 @@ Using `terraform import`, import S3 Access Grants instances using the `accountId
 % terraform import aws_s3control_access_grants_instance.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b93dc63072425c740c37ee25cbe238215ca8b10e57f9a55f7f1d1276607f9789 -->
+<!-- cache-key: cdktf-0.20.8 input-9dd4d5d48e0c866ab92d0cf0398918adeb4449ab6211982b399abf24a9b55135 -->

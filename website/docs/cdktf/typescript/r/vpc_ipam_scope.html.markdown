@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
@@ -53,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipamId` - The ID of the IPAM for which you're creating this scope.
 * `description` - (Optional) A description for the scope you're creating.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -100,4 +101,4 @@ Using `terraform import`, import IPAMs using the `scope_id`. For example:
 % terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-68c08f61045d93ee20b37304de2497b2ea7ce59df7aaa4d8e18944d3dc0ddf4e -->
+<!-- cache-key: cdktf-0.20.8 input-f8a3b356b43d37fc9f51ab8fd7668de845677242cade22679fec7aa92160e259 -->

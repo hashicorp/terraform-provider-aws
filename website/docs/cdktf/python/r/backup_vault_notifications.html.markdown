@@ -68,6 +68,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_vault_name` - (Required) Name of the backup vault to add notifications for.
 * `sns_topic_arn` - (Required) The Amazon Resource Name (ARN) that specifies the topic for a backup vault’s events
 * `backup_vault_events` - (Required) An array of events that indicate the status of jobs to back up resources to the backup vault.
@@ -104,4 +105,4 @@ Using `terraform import`, import Backup vault notifications using the `name`. Fo
 % terraform import aws_backup_vault_notifications.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-08e7368ad3cd60e158138ba083276c5a2949bfb1492a95cc0bc4ae1150912893 -->
+<!-- cache-key: cdktf-0.20.8 input-9eea9868164286dcbf9669eb5f5999b84ff53875e9a9c9a4b83489d698a6ce07 -->

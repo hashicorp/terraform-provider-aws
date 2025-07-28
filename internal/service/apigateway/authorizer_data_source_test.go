@@ -26,15 +26,15 @@ func TestAccAPIGatewayAuthorizerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthorizerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", dataSourceName, "authorizer_credentials"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_result_ttl_in_seconds", dataSourceName, "authorizer_result_ttl_in_seconds"),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", dataSourceName, "authorizer_uri"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_source", dataSourceName, "identity_source"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_validation_expression", dataSourceName, "identity_validation_expression"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "provider_arns.#", dataSourceName, "provider_arns.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
 			},
 		},

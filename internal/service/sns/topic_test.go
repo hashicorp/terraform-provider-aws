@@ -12,7 +12,10 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
@@ -51,12 +54,13 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(`terraform-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", ""),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "0"),
@@ -67,17 +71,20 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -127,8 +134,9 @@ func TestAccSNSTopic_name(t *testing.T) {
 				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", rName),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -156,61 +164,16 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf(`%s.+$`, rName))),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccSNSTopic_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var attributes map[string]string
-	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTopicConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccTopicConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -261,7 +224,7 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 				Config: testAccTopicConfig_iamRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceAttrJMESPair(resourceName, "policy", "Statement[0].Principal.AWS", "aws_iam_role.example", "arn"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrPolicy, "Statement[0].Principal.AWS", "aws_iam_role.example", names.AttrARN),
 				),
 			},
 			{
@@ -337,20 +300,20 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 				Config: testAccTopicConfig_deliveryStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttrPair(resourceName, "application_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "100"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_failure_feedback_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "90"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_failure_feedback_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "http_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "http_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "80"),
-					resource.TestCheckResourceAttrPair(resourceName, "http_failure_feedback_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "sqs_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "http_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "sqs_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "70"),
-					resource.TestCheckResourceAttrPair(resourceName, "sqs_failure_feedback_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sqs_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "60"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config", "Active"),
 				),
@@ -379,9 +342,9 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 				Config: testAccTopicConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FIFOTopicNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrName, tfsns.FIFOTopicNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 				),
 			},
 			{
@@ -411,8 +374,8 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -440,9 +403,9 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 				Config: testAccTopicConfig_namePrefixFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FIFOTopicNameSuffix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrName, rName, tfsns.FIFOTopicNameSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 				),
 			},
 			{
@@ -470,8 +433,8 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtTrue),
 				),
 			},
 			{
@@ -484,7 +447,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 				),
 			},
 		},
@@ -535,7 +498,7 @@ func TestAccSNSTopic_fifoWithArchivePolicy(t *testing.T) {
 				Config: testAccTopicConfig_fifoArchivePolicy(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, "archive_policy", regexache.MustCompile(`"MessageRetentionPeriod":\s*"30"`)),
 					resource.TestCheckResourceAttrSet(resourceName, "beginning_archive_time"),
 				),
@@ -579,6 +542,43 @@ func TestAccSNSTopic_fifoExpectArchivePolicyError(t *testing.T) {
 			{
 				Config:      testAccTopicConfig_expectArchivePolicyError(rName),
 				ExpectError: regexache.MustCompile(`message archive policy can only be set for FIFO topics`),
+			},
+		},
+	})
+}
+
+func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "Topic"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "Topic"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "MessageGroup"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "MessageGroup"),
+				),
 			},
 		},
 	})
@@ -810,7 +810,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "*"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -839,7 +839,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "${aws_iam_role.example.arn}"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -916,10 +916,10 @@ resource "aws_sns_topic" "test" {
       "Sid": "Stmt1445931846145",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::012345678901:role/wooo"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::123456789012:role/wooo"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -1025,6 +1025,16 @@ resource "aws_sns_topic" "test" {
 `, rName, cbd)
 }
 
+func testAccTopicConfig_fifoThroughputScope(rName string, throughputScope string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name                  = "%[1]s.fifo"
+  fifo_topic            = true
+  fifo_throughput_scope = "%[2]s"
+}
+`, rName, throughputScope)
+}
+
 func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -1055,29 +1065,4 @@ resource "aws_sns_topic" "test" {
 EOF
 }
 `, rName)
-}
-
-func testAccTopicConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tag1Key, tag1Value)
-}
-
-func testAccTopicConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "test" {
-  name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

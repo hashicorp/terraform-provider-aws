@@ -86,6 +86,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the target with.
 * `name` - (Optional) The name of the maintenance window target.
 * `description` - (Optional) The description of the maintenance window target.
@@ -125,4 +126,4 @@ Using `terraform import`, import SSM Maintenance Window targets using `WINDOW_ID
 % terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-23b182db6aa7bfeef9866d68456e0abddd9b0255898371206b63dfe63dfee54e -->
+<!-- cache-key: cdktf-0.20.8 input-8716dd3aed621b76012dead6aa22e71c66c1000751f5bcc3d304bf6e3c8d7174 -->

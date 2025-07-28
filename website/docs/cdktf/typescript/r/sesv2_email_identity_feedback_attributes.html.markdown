@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `emailIdentity` - (Required) The email identity.
 * `emailForwardingEnabled` - (Optional) Sets the feedback forwarding configuration for the identity.
 
@@ -87,4 +88,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Feedback
 % terraform import aws_sesv2_email_identity_feedback_attributes.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a16fc314df24381c673aaaa9609cba3c1505976385baba55655cc1f20a10ac61 -->
+<!-- cache-key: cdktf-0.20.8 input-6bebcae6412e8d5004aed696a4797cb9935c01752dadd2833ad1232eaea8758b -->

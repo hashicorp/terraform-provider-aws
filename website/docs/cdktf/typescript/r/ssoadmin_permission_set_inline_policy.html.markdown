@@ -15,6 +15,8 @@ Provides an IAM inline policy for a Single Sign-On (SSO) Permission Set resource
 ~> **NOTE:** AWS Single Sign-On (SSO) only supports one IAM inline policy per [`aws_ssoadmin_permission_set`](ssoadmin_permission_set.html) resource.
 Creating or updating this resource will automatically [Provision the Permission Set](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_ProvisionPermissionSet.html) to apply the corresponding updates to all assigned accounts.
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `inlinePolicy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```typescript
@@ -83,6 +85,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `inlinePolicy` - (Required) The IAM inline policy to attach to a Permission Set.
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `permissionSetArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
@@ -132,4 +135,4 @@ Using `terraform import`, import SSO Permission Set Inline Policies using the `p
 % terraform import aws_ssoadmin_permission_set_inline_policy.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f84fb52afb87edc6b7246f6e44d458f33af2b054e17ae0d967f945cade307d27 -->
+<!-- cache-key: cdktf-0.20.8 input-9d568eefae6ec48ca027ed9251548f57b9623feef95d16d3b487cfbdf3f06ef3 -->

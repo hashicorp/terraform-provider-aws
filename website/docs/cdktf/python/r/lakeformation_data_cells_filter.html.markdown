@@ -45,8 +45,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `table_data` - (Required) Information about the data cells filter. See [Table Data](#table-data) below for details.
 
 ### Table Data
@@ -56,7 +57,7 @@ The following arguments are required:
 * `table_catalog_id` - (Required) The ID of the Data Catalog.
 * `table_name` - (Required) The name of the table.
 * `column_names` - (Optional) A list of column names and/or nested column attributes.
-* `conlumn_wildcard` - (Optional) A wildcard with exclusions. See [Column Wildcard](#column-wildcard) below for details.
+* `column_wildcard` - (Optional) A wildcard with exclusions. See [Column Wildcard](#column-wildcard) below for details.
 * `row_filter` - (Optional) A PartiQL predicate. See [Row Filter](#row-filter) below for details.
 * `version_id` - (Optional) ID of the data cells filter version.
 
@@ -106,4 +107,4 @@ Using `terraform import`, import Lake Formation Data Cells Filter using the `id`
 % terraform import aws_lakeformation_data_cells_filter.example database_name,name,table_catalog_id,table_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd16d0d38f027596ffc8e33175b92cbae310a9cd530793de889399282c9e67b2 -->
+<!-- cache-key: cdktf-0.20.8 input-bc1efcc4e8b163d3c1be8c5127557cc9319b4546d1fcbbed4ac501bf845a20e2 -->

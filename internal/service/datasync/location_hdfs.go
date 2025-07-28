@@ -8,14 +8,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,17 +28,17 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_hdfs", name="Location HDFS")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationHdfsOutput")
+// @Testing(preCheck="testAccPreCheck")
 func resourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationHDFSCreate,
 		ReadWithoutTimeout:   resourceLocationHDFSRead,
 		UpdateWithoutTimeout: resourceLocationHDFSUpdate,
 		DeleteWithoutTimeout: resourceLocationHDFSDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"agent_arns": {
@@ -47,14 +49,14 @@ func resourceLocationHDFS() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"authentication_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(datasync.HdfsAuthenticationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.HdfsAuthenticationType](),
 			},
 			"block_size": {
 				Type:     schema.TypeInt,
@@ -108,7 +110,7 @@ func resourceLocationHDFS() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IsPortNumber,
@@ -124,16 +126,16 @@ func resourceLocationHDFS() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_transfer_protection": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(datasync.HdfsDataTransferProtection_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HdfsDataTransferProtection](),
 						},
 						"rpc_protection": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(datasync.HdfsRpcProtection_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HdfsRpcProtection](),
 						},
 					},
 				},
@@ -166,30 +168,28 @@ func resourceLocationHDFS() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationHdfsInput{
-		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
+		AgentArns:          flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
+		AuthenticationType: awstypes.HdfsAuthenticationType(d.Get("authentication_type").(string)),
 		NameNodes:          expandHDFSNameNodes(d.Get("name_node").(*schema.Set)),
 		Subdirectory:       aws.String(d.Get("subdirectory").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("block_size"); ok {
-		input.BlockSize = aws.Int64(int64(v.(int)))
+		input.BlockSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("kerberos_keytab"); ok {
@@ -222,32 +222,32 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 		input.KmsKeyProviderUri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.QopConfiguration = expandHDFSQOPConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("qop_configuration"); ok && len(v.([]any)) > 0 {
+		input.QopConfiguration = expandHDFSQOPConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("replication_factor"); ok {
-		input.ReplicationFactor = aws.Int64(int64(v.(int)))
+		input.ReplicationFactor = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("simple_user"); ok {
 		input.SimpleUser = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationHdfsWithContext(ctx, input)
+	output, err := conn.CreateLocationHdfs(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location HDFS: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
 	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	output, err := findLocationHDFSByARN(ctx, conn, d.Id())
 
@@ -261,14 +261,14 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location HDFS (%s): %s", d.Id(), err)
 	}
 
-	uri := aws.StringValue(output.LocationUri)
+	uri := aws.ToString(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
-	d.Set("arn", output.LocationArn)
+	d.Set("agent_arns", output.AgentArns)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("block_size", output.BlockSize)
 	d.Set("kerberos_principal", output.KerberosPrincipal)
@@ -282,30 +282,30 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("replication_factor", output.ReplicationFactor)
 	d.Set("simple_user", output.SimpleUser)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }
 
-func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationHdfsInput{
 			LocationArn: aws.String(d.Id()),
 		}
 
 		if d.HasChange("agent_arns") {
-			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
+			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
 		}
 
 		if d.HasChange("authentication_type") {
-			input.AuthenticationType = aws.String(d.Get("authentication_type").(string))
+			input.AuthenticationType = awstypes.HdfsAuthenticationType(d.Get("authentication_type").(string))
 		}
 
 		if d.HasChange("block_size") {
-			input.BlockSize = aws.Int64(int64(d.Get("block_size").(int)))
+			input.BlockSize = aws.Int32(int32(d.Get("block_size").(int)))
 		}
 
 		if d.HasChanges("kerberos_keytab", "kerberos_keytab_base64") {
@@ -347,11 +347,11 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("qop_configuration") {
-			input.QopConfiguration = expandHDFSQOPConfiguration(d.Get("qop_configuration").([]interface{}))
+			input.QopConfiguration = expandHDFSQOPConfiguration(d.Get("qop_configuration").([]any))
 		}
 
 		if d.HasChange("replication_factor") {
-			input.ReplicationFactor = aws.Int64(int64(d.Get("replication_factor").(int)))
+			input.ReplicationFactor = aws.Int32(int32(d.Get("replication_factor").(int)))
 		}
 
 		if d.HasChange("simple_user") {
@@ -362,7 +362,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
 		}
 
-		_, err := conn.UpdateLocationHdfsWithContext(ctx, input)
+		_, err := conn.UpdateLocationHdfs(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Location HDFS (%s): %s", d.Id(), err)
@@ -372,16 +372,17 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceLocationHDFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location HDFS: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
 	}
 
@@ -392,14 +393,14 @@ func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findLocationHDFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
+func findLocationHDFSByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
 	input := &datasync.DescribeLocationHdfsInput{
 		LocationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLocationHdfsWithContext(ctx, input)
+	output, err := conn.DescribeLocationHdfs(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -417,13 +418,13 @@ func findLocationHDFSByARN(ctx context.Context, conn *datasync.DataSync, arn str
 	return output, nil
 }
 
-func expandHDFSNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
-	nameNodes := make([]*datasync.HdfsNameNode, 0)
+func expandHDFSNameNodes(l *schema.Set) []awstypes.HdfsNameNode {
+	nameNodes := make([]awstypes.HdfsNameNode, 0)
 	for _, m := range l.List() {
-		raw := m.(map[string]interface{})
-		nameNode := &datasync.HdfsNameNode{
+		raw := m.(map[string]any)
+		nameNode := awstypes.HdfsNameNode{
 			Hostname: aws.String(raw["hostname"].(string)),
-			Port:     aws.Int64(int64(raw["port"].(int))),
+			Port:     aws.Int32(int32(raw[names.AttrPort].(int))),
 		}
 		nameNodes = append(nameNodes, nameNode)
 	}
@@ -431,13 +432,13 @@ func expandHDFSNameNodes(l *schema.Set) []*datasync.HdfsNameNode {
 	return nameNodes
 }
 
-func flattenHDFSNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface{} {
-	dataResources := make([]map[string]interface{}, 0, len(nodes))
+func flattenHDFSNameNodes(nodes []awstypes.HdfsNameNode) []map[string]any {
+	dataResources := make([]map[string]any, 0, len(nodes))
 
 	for _, raw := range nodes {
-		item := make(map[string]interface{})
-		item["hostname"] = aws.StringValue(raw.Hostname)
-		item["port"] = aws.Int64Value(raw.Port)
+		item := make(map[string]any)
+		item["hostname"] = aws.ToString(raw.Hostname)
+		item[names.AttrPort] = aws.ToInt32(raw.Port)
 
 		dataResources = append(dataResources, item)
 	}
@@ -445,30 +446,30 @@ func flattenHDFSNameNodes(nodes []*datasync.HdfsNameNode) []map[string]interface
 	return dataResources
 }
 
-func expandHDFSQOPConfiguration(l []interface{}) *datasync.QopConfiguration {
+func expandHDFSQOPConfiguration(l []any) *awstypes.QopConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	qopConfig := &datasync.QopConfiguration{
-		DataTransferProtection: aws.String(m["data_transfer_protection"].(string)),
-		RpcProtection:          aws.String(m["rpc_protection"].(string)),
+	qopConfig := &awstypes.QopConfiguration{
+		DataTransferProtection: awstypes.HdfsDataTransferProtection(m["data_transfer_protection"].(string)),
+		RpcProtection:          awstypes.HdfsRpcProtection(m["rpc_protection"].(string)),
 	}
 
 	return qopConfig
 }
 
-func flattenHDFSQOPConfiguration(qopConfig *datasync.QopConfiguration) []interface{} {
+func flattenHDFSQOPConfiguration(qopConfig *awstypes.QopConfiguration) []any {
 	if qopConfig == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
-		"data_transfer_protection": aws.StringValue(qopConfig.DataTransferProtection),
-		"rpc_protection":           aws.StringValue(qopConfig.RpcProtection),
+	m := map[string]any{
+		"data_transfer_protection": string(qopConfig.DataTransferProtection),
+		"rpc_protection":           string(qopConfig.RpcProtection),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

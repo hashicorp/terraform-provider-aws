@@ -57,8 +57,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
--> Unless specified otherwise, all fields can contain up to 1024 characters of free-form text.
-
 The following arguments are required:
 
 * `displayName` - (Required) The name that is typically displayed when the user is referenced.
@@ -68,6 +66,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addresses` - (Optional) Details about the user's address. At most 1 address is allowed. Detailed below.
 * `emails` - (Optional) Details about the user's email. At most 1 email is allowed. Detailed below.
 * `locale` - (Optional) The user's geographical region or location.
@@ -78,6 +77,8 @@ The following arguments are optional:
 * `timezone` - (Optional) The user's time zone.
 * `title` - (Optional) The user's title.
 * `userType` - (Optional) The user type.
+
+-> Unless specified otherwise, all fields can contain up to 1024 characters of free-form text.
 
 ### addresses Configuration Block
 
@@ -105,6 +106,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `formatted` - (Optional) The name that is typically displayed when the name is shown for display.
 * `honorificPrefix` - (Optional) The honorific prefix of the user.
 * `honorificSuffix` - (Optional) The honorific suffix of the user.
@@ -157,4 +159,4 @@ Using `terraform import`, import an Identity Store User using the combination `i
 % terraform import aws_identitystore_user.example d-9c6705e95c/065212b4-9061-703b-5876-13a517ae2a7c
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c1ad083569cd581aba94dd285d2251f01db365c421ea22120e81c2b7c96de33c -->
+<!-- cache-key: cdktf-0.20.8 input-c86b159f04993b8f14a67745d74c6df09382d314149a24597e708d2375d30b43 -->

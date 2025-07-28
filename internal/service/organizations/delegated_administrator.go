@@ -10,37 +10,46 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_organizations_delegated_administrator")
-func ResourceDelegatedAdministrator() *schema.Resource {
+// @SDKResource("aws_organizations_delegated_administrator", name="Delegated Administrator")
+// @IdentityAttribute("service_principal")
+// @IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")
+// @IdAttrFormat("{account_id}/{service_principal}")
+// @ImportIDHandler("delegatedAdministratorImportID")
+// @Testing(identityTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
+// @Testing(serialize=true)
+// @Testing(useAlternateAccount=true)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(generator=false)
+func resourceDelegatedAdministrator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdministratorCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdministratorRead,
 		DeleteWithoutTimeout: resourceDelegatedAdministratorDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +57,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +69,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +79,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,19 +87,19 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 	}
 }
 
-func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	servicePrincipal := d.Get("service_principal").(string)
-	id := DelegatedAdministratorCreateResourceID(accountID, servicePrincipal)
+	id := delegatedAdministratorCreateResourceID(accountID, servicePrincipal)
 	input := &organizations.RegisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
 		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	_, err := conn.RegisterDelegatedAdministratorWithContext(ctx, input)
+	_, err := conn.RegisterDelegatedAdministrator(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Organizations Delegated Administrator (%s): %s", id, err)
@@ -101,15 +110,12 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceDelegatedAdministratorRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := DelegatedAdministratorParseResourceID(d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
 	delegatedAccount, err := findDelegatedAdministratorByTwoPartKey(ctx, conn, accountID, servicePrincipal)
 
@@ -123,34 +129,34 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
-	d.Set("arn", delegatedAccount.Arn)
-	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
-	d.Set("email", delegatedAccount.Email)
+	d.Set(names.AttrAccountID, accountID)
+	d.Set(names.AttrARN, delegatedAccount.Arn)
+	d.Set("delegation_enabled_date", aws.ToTime(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
+	d.Set(names.AttrEmail, delegatedAccount.Email)
 	d.Set("joined_method", delegatedAccount.JoinedMethod)
-	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
-	d.Set("name", delegatedAccount.Name)
+	d.Set("joined_timestamp", aws.ToTime(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
+	d.Set(names.AttrName, delegatedAccount.Name)
 	d.Set("service_principal", servicePrincipal)
-	d.Set("status", delegatedAccount.Status)
+	d.Set(names.AttrStatus, delegatedAccount.Status)
 
 	return diags
 }
 
-func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	accountID, servicePrincipal, err := DelegatedAdministratorParseResourceID(d.Id())
+	accountID := d.Get(names.AttrAccountID).(string)
+	servicePrincipal := d.Get("service_principal").(string)
 
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	log.Printf("[DEBUG] Deleting Organizations Delegated Administrator: %s", d.Id())
-	_, err = conn.DeregisterDelegatedAdministratorWithContext(ctx, &organizations.DeregisterDelegatedAdministratorInput{
+	_, err := conn.DeregisterDelegatedAdministrator(ctx, &organizations.DeregisterDelegatedAdministratorInput{
 		AccountId:        aws.String(accountID),
 		ServicePrincipal: aws.String(servicePrincipal),
 	})
+
+	if errs.IsA[*awstypes.AccountNotRegisteredException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Organizations Delegated Administrator (%s): %s", d.Id(), err)
@@ -159,41 +165,42 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func findDelegatedAdministratorByTwoPartKey(ctx context.Context, conn *organizations.Organizations, accountID, servicePrincipal string) (*organizations.DelegatedAdministrator, error) {
-	input := &organizations.ListDelegatedAdministratorsInput{
+func findDelegatedAdministratorByTwoPartKey(ctx context.Context, conn *organizations.Client, accountID, servicePrincipal string) (*awstypes.DelegatedAdministrator, error) {
+	input := organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	output, err := findDelegatedAdministrators(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range output {
-		if aws.StringValue(v.Id) == accountID {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
+	return findDelegatedAdministrator(ctx, conn, &input, func(v *awstypes.DelegatedAdministrator) bool {
+		return aws.ToString(v.Id) == accountID
+	})
 }
 
-func findDelegatedAdministrators(ctx context.Context, conn *organizations.Organizations, input *organizations.ListDelegatedAdministratorsInput) ([]*organizations.DelegatedAdministrator, error) {
-	var output []*organizations.DelegatedAdministrator
-
-	err := conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		output = append(output, page.DelegatedAdministrators...)
-
-		return !lastPage
-	})
+func findDelegatedAdministrator(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedAdministratorsInput, filter tfslices.Predicate[*awstypes.DelegatedAdministrator]) (*awstypes.DelegatedAdministrator, error) {
+	output, err := findDelegatedAdministrators(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDelegatedAdministrators(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedAdministratorsInput, filter tfslices.Predicate[*awstypes.DelegatedAdministrator]) ([]awstypes.DelegatedAdministrator, error) {
+	var output []awstypes.DelegatedAdministrator
+
+	pages := organizations.NewListDelegatedAdministratorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DelegatedAdministrators {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -201,19 +208,26 @@ func findDelegatedAdministrators(ctx context.Context, conn *organizations.Organi
 
 const delegatedAdministratorResourceIDSeparator = "/"
 
-func DelegatedAdministratorCreateResourceID(accountID, servicePrincipal string) string {
-	parts := []string{accountID, servicePrincipal}
-	id := strings.Join(parts, delegatedAdministratorResourceIDSeparator)
-
-	return id
+func delegatedAdministratorCreateResourceID(accountID, servicePrincipal string) string {
+	return accountID + delegatedAdministratorResourceIDSeparator + servicePrincipal
 }
 
-func DelegatedAdministratorParseResourceID(id string) (string, string, error) {
+type delegatedAdministratorImportID struct{}
+
+func (delegatedAdministratorImportID) Create(d *schema.ResourceData) string {
+	return delegatedAdministratorCreateResourceID(d.Get(names.AttrAccountID).(string), d.Get("service_principal").(string))
+}
+
+func (delegatedAdministratorImportID) Parse(id string) (string, map[string]string, error) {
 	parts := strings.Split(id, delegatedAdministratorResourceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+		result := map[string]string{
+			names.AttrAccountID: parts[0],
+			"service_principal": parts[1],
+		}
+		return id, result, nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
+	return "", nil, fmt.Errorf("unexpected format for ID (%[1]s), expected ACCOUNTID%[2]sSERVICEPRINCIPAL", id, delegatedAdministratorResourceIDSeparator)
 }

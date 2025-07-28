@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `principal_type` - (Optional) Principal type. Setting this argument empty (e.g., `principal_type = ""`) will result in an error. Valid values are `IAM` and `IAM_PATTERN`. Default is `IAM`.
 
@@ -85,4 +86,4 @@ Using `terraform import`, import `aws_servicecatalog_principal_portfolio_associa
 % terraform import aws_servicecatalog_principal_portfolio_association.example en,arn:aws:iam::123456789012:user/Eleanor,port-68656c6c6f,IAM
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e6d6f9fdac81517f3102dae36363cdc0c25088bd03ba2f1ace568fed9c2cef49 -->
+<!-- cache-key: cdktf-0.20.8 input-e36ed0b787fc15a682dcbcd8f20ac35a1f0d0536742e15bf2b228f8d715c9c69 -->

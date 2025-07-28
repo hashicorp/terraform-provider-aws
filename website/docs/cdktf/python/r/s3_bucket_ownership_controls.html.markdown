@@ -44,15 +44,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket that you want to associate this access point with.
 * `rule` - (Required) Configuration block(s) with Ownership Controls rules. Detailed below.
 
 ### rule Configuration Block
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `object_ownership` - (Required) Object ownership. Valid values: `BucketOwnerPreferred`, `ObjectWriter` or `BucketOwnerEnforced`
     * `BucketOwnerPreferred` - Objects uploaded to the bucket change ownership to the bucket owner if the objects are uploaded with the `bucket-owner-full-control` canned ACL.
     * `ObjectWriter` - Uploading account will own the object if the object is uploaded with the `bucket-owner-full-control` canned ACL.
@@ -89,4 +91,4 @@ Using `terraform import`, import S3 Bucket Ownership Controls using S3 Bucket na
 % terraform import aws_s3_bucket_ownership_controls.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1815e6949e67a720f4b115be9bf7db12d26eaec6cd93db780cd1bd71fccb4ed2 -->
+<!-- cache-key: cdktf-0.20.8 input-f48d510b52d97cb90d1bff3e13a39f8e3c569f1e765aa2d738bdfe605152d4cd -->

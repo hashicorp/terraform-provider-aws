@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +24,7 @@ func testAccOrganizationConfigurationFeature_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -37,7 +38,7 @@ func testAccOrganizationConfigurationFeature_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
 				),
 			},
 		},
@@ -51,7 +52,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -66,7 +67,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 				),
 			},
 			{
@@ -77,7 +78,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
-					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
 				),
 			},
 		},
@@ -93,7 +94,7 @@ func testAccOrganizationConfigurationFeature_multiple(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -108,13 +109,13 @@ func testAccOrganizationConfigurationFeature_multiple(t *testing.T) {
 					testAccOrganizationConfigurationFeatureExists(ctx, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, "auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
 					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource3Name, "auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
 				),
 			},
 			{
@@ -125,13 +126,13 @@ func testAccOrganizationConfigurationFeature_multiple(t *testing.T) {
 					testAccOrganizationConfigurationFeatureExists(ctx, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
 					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource3Name, "auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
 				),
 			},
 			{
@@ -142,13 +143,13 @@ func testAccOrganizationConfigurationFeature_multiple(t *testing.T) {
 					testAccOrganizationConfigurationFeatureExists(ctx, resource3Name),
 					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource1Name, "auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
 					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
 					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resource3Name, "auto_enable", "NONE"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
 				),
 			},
 		},
@@ -162,25 +163,20 @@ func testAccOrganizationConfigurationFeatureExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
-		_, err := tfguardduty.FindOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["name"])
+		_, err := tfguardduty.FindOrganizationConfigurationFeatureByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
 }
 
-var testAccOrganizationConfigurationFeatureConfig_base = acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, `
-resource "aws_guardduty_organization_configuration" "test" {
-  depends_on = [aws_guardduty_organization_admin_account.test]
-
-  auto_enable_organization_members = "ALL"
-  detector_id                      = aws_guardduty_detector.test.id
-}
-`)
+var testAccOrganizationConfigurationFeatureConfig_base = testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(types.AutoEnableMembersNone)
 
 func testAccOrganizationConfigurationFeatureConfig_basic(name, autoEnable string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test" {
   depends_on = [aws_guardduty_organization_configuration.test]
 
@@ -192,7 +188,9 @@ resource "aws_guardduty_organization_configuration_feature" "test" {
 }
 
 func testAccOrganizationConfigurationFeatureConfig_additionalConfiguration(featureAutoEnable, additionalConfigurationAutoEnable string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test" {
   depends_on = [aws_guardduty_organization_configuration.test]
 
@@ -209,7 +207,9 @@ resource "aws_guardduty_organization_configuration_feature" "test" {
 }
 
 func testAccOrganizationConfigurationFeatureConfig_multiple(autoEnable1, autoEnable2, autoEnable3 string) string {
-	return acctest.ConfigCompose(testAccOrganizationConfigurationFeatureConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccOrganizationConfigurationFeatureConfig_base,
+		fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration_feature" "test1" {
   depends_on = [aws_guardduty_organization_configuration.test]
 

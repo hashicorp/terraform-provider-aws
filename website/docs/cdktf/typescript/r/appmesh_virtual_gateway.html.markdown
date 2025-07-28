@@ -102,6 +102,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name to use for the virtual gateway. Must be between 1 and 255 characters in length.
 * `meshName` - (Required) Name of the service mesh in which to create the virtual gateway. Must be between 1 and 255 characters in length.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -330,4 +331,4 @@ Using `terraform import`, import App Mesh virtual gateway using `meshName` toget
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-0f019884935cffb4e15faa186fec437bbd1c1ed08bbdf658cac478d98a5253e8 -->
+<!-- cache-key: cdktf-0.20.8 input-81f4fa640ffb488186c672189cd26a0c662bd2c1bc09764fea8d2992db63a101 -->

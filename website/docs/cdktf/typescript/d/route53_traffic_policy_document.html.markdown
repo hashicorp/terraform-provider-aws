@@ -36,11 +36,11 @@ class MyConvertedCode extends TerraformStack {
         {
           id: "my_elb",
           type: "elastic-load-balancer",
-          value: "elb-111111.${" + current.name + "}.elb.amazonaws.com",
+          value: "elb-111111.${" + current.region + "}.elb.amazonaws.com",
         },
         {
           id: "site_down_banner",
-          region: Token.asString(current.name),
+          region: Token.asString(current.region),
           type: "s3-website",
           value: "www.example.com",
         },
@@ -185,7 +185,7 @@ The following arguments are optional:
 ### `endpoint`
 
 * `id` - (Required) ID of an endpoint you want to assign.
-* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elastic-load-balancer`, `s3-website`
+* `type` - (Optional) Type of the endpoint. Valid values are `value`, `cloudfront`, `elastic-load-balancer`, `s3-website`, `application-load-balancer`, `network-load-balancer` and `elastic-beanstalk`
 * `region` - (Optional) To route traffic to an Amazon S3 bucket that is configured as a website endpoint, specify the region in which you created the bucket for `region`.
 * `value` - (Optional) Value of the `type`.
 
@@ -248,4 +248,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.1 input-9fc530bb661507b956e360642cff24bbe3a5634eccad12a1acf054528f189fc9 -->
+<!-- cache-key: cdktf-0.20.8 input-62140bbdd1bfd7ed7367c92c004d73b586b1aef3d973605fc6da26cbd56e520b -->

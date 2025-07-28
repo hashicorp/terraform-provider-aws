@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -30,6 +30,8 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         MemorydbCluster(self, "example",
             acl_name="open-access",
+            engine="redis",
+            engine_version="7.1",
             name="my-cluster",
             node_type="db.t4g.small",
             num_shards=2,
@@ -48,10 +50,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_minor_version_upgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `data_tiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
-* `engine_version` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engine_version` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `final_snapshot_name` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
@@ -59,6 +63,7 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `num_replicas_per_shard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `num_shards` - (Optional) The number of shards in the cluster. Defaults to `1`.
+* `multi_region_cluster_name` - (Optional) The multi region cluster identifier specified on `aws_memorydb_multi_region_cluster`.
 * `parameter_group_name` - (Optional) The name of the parameter group associated with the cluster.
 * `port` - (Optional, Forces new resource) The port number on which each of the nodes accepts connections. Defaults to `6379`.
 * `security_group_ids` - (Optional) Set of VPC Security Group ID-s to associate with this cluster.
@@ -80,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
-* `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
+* `engine_patch_version` - Patch version number of the engine used by the cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
     * `num_nodes` - Number of individual nodes in this shard.
@@ -127,4 +132,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->
+<!-- cache-key: cdktf-0.20.8 input-71331b8be8155eb6708dc73cb936cd42adeefbfe738a292e97844c77abede974 -->

@@ -9,14 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,7 +27,13 @@ import (
 )
 
 // @SDKResource("aws_datasync_location_azure_blob", name="Location Microsoft Azure Blob Storage")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationAzureBlobOutput")
+// @Testing(importIgnore="sas_configuration")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(name="LocationAzureBlob")
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
@@ -34,16 +41,12 @@ func resourceLocationAzureBlob() *schema.Resource {
 		UpdateWithoutTimeout: resourceLocationAzureBlobUpdate,
 		DeleteWithoutTimeout: resourceLocationAzureBlobDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"access_tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      datasync.AzureAccessTierHot,
-				ValidateFunc: validation.StringInSlice(datasync.AzureAccessTier_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AzureAccessTierHot,
+				ValidateDiagFunc: enum.Validate[awstypes.AzureAccessTier](),
 			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
@@ -53,20 +56,20 @@ func resourceLocationAzureBlob() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"authentication_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(datasync.AzureBlobAuthenticationType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AzureBlobAuthenticationType](),
 			},
 			"blob_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      datasync.AzureBlobTypeBlock,
-				ValidateFunc: validation.StringInSlice(datasync.AzureBlobType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AzureBlobTypeBlock,
+				ValidateDiagFunc: enum.Validate[awstypes.AzureBlobType](),
 			},
 			"container_url": {
 				Type:     schema.TypeString,
@@ -103,57 +106,55 @@ func resourceLocationAzureBlob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationAzureBlobInput{
-		AgentArns:          flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
+		AgentArns:          flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
+		AuthenticationType: awstypes.AzureBlobAuthenticationType(d.Get("authentication_type").(string)),
 		ContainerUrl:       aws.String(d.Get("container_url").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_tier"); ok {
-		input.AccessTier = aws.String(v.(string))
+		input.AccessTier = awstypes.AzureAccessTier(v.(string))
 	}
 
 	if v, ok := d.GetOk("blob_type"); ok {
-		input.BlobType = aws.String(v.(string))
+		input.BlobType = awstypes.AzureBlobType(v.(string))
 	}
 
 	if v, ok := d.GetOk("sas_configuration"); ok {
-		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]interface{}))
+		input.SasConfiguration = expandAzureBlobSasConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("subdirectory"); ok {
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationAzureBlobWithContext(ctx, input)
+	output, err := conn.CreateLocationAzureBlob(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location Microsoft Azure Blob Storage: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	output, err := findLocationAzureBlobByARN(ctx, conn, d.Id())
 
@@ -167,8 +168,8 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Microsoft Azure Blob Storage (%s): %s", d.Id(), err)
 	}
 
-	uri := aws.StringValue(output.LocationUri)
-	accountHostName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
+	uri := aws.ToString(output.LocationUri)
+	accountHostName, err := globalIDFromLocationURI(aws.ToString(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -180,52 +181,52 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	containerURL := fmt.Sprintf("https://%s%s", accountHostName, containerName)
 
 	d.Set("access_tier", output.AccessTier)
-	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
-	d.Set("arn", output.LocationArn)
+	d.Set("agent_arns", output.AgentArns)
+	d.Set(names.AttrARN, output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
 	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
 	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }
 
-func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationAzureBlobInput{
 			LocationArn: aws.String(d.Id()),
 		}
 
 		if d.HasChange("access_tier") {
-			input.AccessTier = aws.String(d.Get("access_tier").(string))
+			input.AccessTier = awstypes.AzureAccessTier(d.Get("access_tier").(string))
 		}
 
 		if d.HasChange("agent_arns") {
-			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
+			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
 		}
 
 		if d.HasChange("authentication_type") {
-			input.AuthenticationType = aws.String(d.Get("authentication_type").(string))
+			input.AuthenticationType = awstypes.AzureBlobAuthenticationType(d.Get("authentication_type").(string))
 		}
 
 		if d.HasChange("blob_type") {
-			input.BlobType = aws.String(d.Get("blob_type").(string))
+			input.BlobType = awstypes.AzureBlobType(d.Get("blob_type").(string))
 		}
 
 		if d.HasChange("sas_configuration") {
-			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]interface{}))
+			input.SasConfiguration = expandAzureBlobSasConfiguration(d.Get("sas_configuration").([]any))
 		}
 
 		if d.HasChange("subdirectory") {
 			input.Subdirectory = aws.String(d.Get("subdirectory").(string))
 		}
 
-		_, err := conn.UpdateLocationAzureBlobWithContext(ctx, input)
+		_, err := conn.UpdateLocationAzureBlob(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Location Microsoft Azure Blob Storage (%s): %s", d.Id(), err)
@@ -235,16 +236,17 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocationAzureBlobRead(ctx, d, meta)...)
 }
 
-func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync LocationMicrosoft Azure Blob Storage: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+	input := datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteLocation(ctx, &input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
 	}
 
@@ -255,14 +257,14 @@ func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
+func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
 	input := &datasync.DescribeLocationAzureBlobInput{
 		LocationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLocationAzureBlobWithContext(ctx, input)
+	output, err := conn.DescribeLocationAzureBlob(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -280,14 +282,14 @@ func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, ar
 	return output, nil
 }
 
-func expandAzureBlobSasConfiguration(l []interface{}) *datasync.AzureBlobSasConfiguration {
+func expandAzureBlobSasConfiguration(l []any) *awstypes.AzureBlobSasConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	apiObject := &datasync.AzureBlobSasConfiguration{
+	apiObject := &awstypes.AzureBlobSasConfiguration{
 		Token: aws.String(m["token"].(string)),
 	}
 

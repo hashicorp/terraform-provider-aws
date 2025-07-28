@@ -61,8 +61,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alternateIdentifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `groupId` and `filter`. Detailed below.
-* `filter` - (Optional, **Deprecated** use the `alternateIdentifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
 * `groupId` - (Optional) The identifier for a group in the Identity Store.
 
 -> Exactly one of the above arguments must be provided. Passing both `filter` and `groupId` is allowed for backwards compatibility.
@@ -83,15 +83,6 @@ The `externalId` configuration block supports the following arguments:
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
 
-### `filter` Configuration Block
-
-~> The `filter` configuration block has been deprecated. Use `alternateIdentifier` instead.
-
-The following arguments are supported by the `filter` configuration block:
-
-* `attributePath` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `DisplayName` is the only valid attribute path.
-* `attributeValue` - (Required) Value for an attribute.
-
 ### `uniqueAttribute` Configuration Block
 
 The `uniqueAttribute` configuration block supports the following arguments:
@@ -110,4 +101,4 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - The identifier issued to this resource by an external identity provider.
     * `issuer` - The issuer for an external identifier.
 
-<!-- cache-key: cdktf-0.20.1 input-e2ee8a1f184076e4923473e811d8cdcd0bbfa4b31daf2855f308b2e41de9934b -->
+<!-- cache-key: cdktf-0.20.8 input-d7a828fae59e0a15206b4135ca04ca2dce684a8a2b86d60cb19bc1fedad2056b -->

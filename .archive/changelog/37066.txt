@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_servicecatalog_provisioned_product: Fixes error where tag values are not applied to products when tag values don't change.
+```
+
+```release-note:bug
+resource/aws_servicecatalog_portfolio: Fixes error where deletion fails if resource was deleted out of band.
+```

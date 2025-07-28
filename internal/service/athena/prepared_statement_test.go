@@ -37,8 +37,8 @@ func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 				Config: testAccPreparedStatementConfig_basic(rName, condition),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPreparedStatementExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", condition),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup"),
 				),
@@ -99,8 +99,8 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 				Config: testAccPreparedStatementConfig_update(rName, condition, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPreparedStatementExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", condition),
 				),
 			},
@@ -113,8 +113,8 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 				Config: testAccPreparedStatementConfig_update(rName, updatedCondition, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPreparedStatementExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrHasSuffix(resourceName, "query_statement", updatedCondition),
 				),
 			},
@@ -131,7 +131,7 @@ func testAccCheckPreparedStatementDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes["name"])
+			_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -157,7 +157,7 @@ func testAccCheckPreparedStatementExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
 
-		_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes["name"])
+		_, err := tfathena.FindPreparedStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["workgroup"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

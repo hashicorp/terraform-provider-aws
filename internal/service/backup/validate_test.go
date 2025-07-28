@@ -6,6 +6,8 @@ package backup
 import (
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidReportPlanName(t *testing.T) {
@@ -15,7 +17,7 @@ func TestValidReportPlanName(t *testing.T) {
 		strings.Repeat("W", 256), // <= 256
 	}
 	for _, v := range validNames {
-		_, errors := validReportPlanName(v, "name")
+		_, errors := validReportPlanName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Backup Report Plan name: %q", v, errors)
 		}
@@ -26,7 +28,7 @@ func TestValidReportPlanName(t *testing.T) {
 		strings.Repeat("W", 257), // >= 257
 	}
 	for _, v := range invalidNames {
-		_, errors := validReportPlanName(v, "name")
+		_, errors := validReportPlanName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be a invalid Backup Report Plan name: %q", v, errors)
 		}
@@ -40,7 +42,7 @@ func TestValidFrameworkName(t *testing.T) {
 		strings.Repeat("W", 256), // <= 256
 	}
 	for _, v := range validNames {
-		_, errors := validFrameworkName(v, "name")
+		_, errors := validFrameworkName(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Backup Framework name: %q", v, errors)
 		}
@@ -51,7 +53,7 @@ func TestValidFrameworkName(t *testing.T) {
 		strings.Repeat("W", 257), // >= 257
 	}
 	for _, v := range invalidNames {
-		_, errors := validFrameworkName(v, "name")
+		_, errors := validFrameworkName(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be a invalid Backup Framework name: %q", v, errors)
 		}

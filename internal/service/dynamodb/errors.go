@@ -3,6 +3,16 @@
 
 package dynamodb
 
+import (
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+)
+
 const (
-	errCodeValidationException = "ValidationException"
+	errCodeThrottlingException       = "ThrottlingException"
+	errCodeUnknownOperationException = "UnknownOperationException"
+	errCodeValidationException       = "ValidationException"
+)
+
+var (
+	errCodeTableNotFoundException = (*awstypes.TableNotFoundException)(nil).ErrorCode()
 )

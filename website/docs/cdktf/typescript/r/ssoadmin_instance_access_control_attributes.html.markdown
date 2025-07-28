@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance.
 * `attribute` - (Required) See [AccessControlAttribute](#accesscontrolattribute) for more details.
 
@@ -115,4 +116,4 @@ Using `terraform import`, import SSO Account Assignments using the `instanceArn`
 % terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0555b8646d1cd7133c5af6d918c5eb794a739e08734bb46a2e6ae815ff87af3f -->
+<!-- cache-key: cdktf-0.20.8 input-2eb5f0dbe7a87ef3679a3f19942173ed7f93325432fa06a02980ccce73cdab18 -->

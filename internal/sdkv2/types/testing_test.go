@@ -13,7 +13,7 @@ import (
 )
 
 type testCase struct {
-	val             interface{}
+	val             any
 	f               schema.SchemaValidateDiagFunc
 	expectedSummary *regexp.Regexp
 	expectedDetail  *regexp.Regexp
@@ -23,7 +23,6 @@ func runTestCases(t *testing.T, cases map[string]testCase) {
 	t.Helper()
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the table.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides.
 * `catalogId` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
@@ -76,6 +77,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### storage_descriptor
 
+* `additionalLocations` - List of locations that point to the path where a Delta table is located
 * `bucketColumns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.
@@ -133,4 +135,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the target table.
 * `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.20.1 input-75051df4e1baf806fc38ba02be8ffc0cd92b7709e612f9893478d1569cbd32dd -->
+<!-- cache-key: cdktf-0.20.8 input-c19d3f2a71f47ca32caca19dff6d0604ad37a5023072094a28ae3df0654bde4b -->

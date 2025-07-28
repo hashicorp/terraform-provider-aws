@@ -276,10 +276,12 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`, `FLINK-1_19`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
+* `application_mode` - (Optional) The application's mode. Valid values are `STREAMING`, `INTERACTIVE`.
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `force_stop` - (Optional) Whether to force stop an unresponsive Flink-based application.
@@ -537,4 +539,4 @@ Using `terraform import`, import `aws_kinesisanalyticsv2_application` using the 
 % terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6d238f855d065dc06f35d3883f4979e1a608611ece08c6d5911d2f7d1d7c3396 -->
+<!-- cache-key: cdktf-0.20.8 input-b006f14d031c2b81ca72cdde68397c9451271dbf61000ccf22eeb3955fb6f33c -->

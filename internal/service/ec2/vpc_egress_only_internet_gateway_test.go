@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccVPCEgressOnlyInternetGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.EgressOnlyInternetGateway
+	var v awstypes.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,7 +35,7 @@ func TestAccVPCEgressOnlyInternetGateway_basic(t *testing.T) {
 				Config: testAccVPCEgressOnlyInternetGatewayConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -49,7 +49,7 @@ func TestAccVPCEgressOnlyInternetGateway_basic(t *testing.T) {
 
 func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.EgressOnlyInternetGateway
+	var v awstypes.EgressOnlyInternetGateway
 	resourceName := "aws_egress_only_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -60,11 +60,11 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEgressOnlyInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -73,20 +73,20 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCEgressOnlyInternetGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEgressOnlyInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -95,7 +95,7 @@ func TestAccVPCEgressOnlyInternetGateway_tags(t *testing.T) {
 
 func testAccCheckEgressOnlyInternetGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_egress_only_internet_gateway" {
@@ -119,7 +119,7 @@ func testAccCheckEgressOnlyInternetGatewayDestroy(ctx context.Context) resource.
 	}
 }
 
-func testAccCheckEgressOnlyInternetGatewayExists(ctx context.Context, n string, v *ec2.EgressOnlyInternetGateway) resource.TestCheckFunc {
+func testAccCheckEgressOnlyInternetGatewayExists(ctx context.Context, n string, v *awstypes.EgressOnlyInternetGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,7 +130,7 @@ func testAccCheckEgressOnlyInternetGatewayExists(ctx context.Context, n string, 
 			return fmt.Errorf("No EC2 Egress-only Internet Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindEgressOnlyInternetGatewayByID(ctx, conn, rs.Primary.ID)
 

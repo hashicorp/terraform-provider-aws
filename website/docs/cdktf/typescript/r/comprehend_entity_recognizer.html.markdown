@@ -52,12 +52,16 @@ class MyConvertedCode extends TerraformStack {
             "s3://${" +
             awsS3BucketDocuments.bucket +
             "}/${" +
-            documents.id +
+            documents.key +
             "}",
         },
         entityList: {
           s3Uri:
-            "s3://${" + awsS3BucketEntities.bucket + "}/${" + entities.id + "}",
+            "s3://${" +
+            awsS3BucketEntities.bucket +
+            "}/${" +
+            entities.key +
+            "}",
         },
         entityTypes: [
           {
@@ -91,6 +95,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `modelKmsKeyId` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionName` - (Optional) Name for the version of the Entity Recognizer.
@@ -113,7 +118,7 @@ The following arguments are optional:
 * `annotations` - (Optional) Specifies location of the document annotation data.
   See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
   One of `annotations` or `entityList` is required.
-* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `dataFormat` is `AUGMENTED_MANIFEST`.
   See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -212,4 +217,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a4f330d945c67ebd2c327cc9ed1a4d3cbd7331cc6eefe3c8b6a54590b34a394 -->
+<!-- cache-key: cdktf-0.20.8 input-a322b23d77ddec60dd96293537854094550b4b3142e94fd0a14ebac19e3ef22e -->

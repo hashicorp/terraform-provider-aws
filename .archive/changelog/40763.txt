@@ -1,0 +1,3 @@
+```release-note:new-ephemeral
+aws_cognito_identity_openid_token_for_developer_identity
+```

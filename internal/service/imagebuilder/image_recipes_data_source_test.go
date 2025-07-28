@@ -54,7 +54,7 @@ func TestAccImageBuilderImageRecipesDataSource_filter(t *testing.T) {
 				Config: testAccImageRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},
@@ -97,7 +97,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -127,7 +127,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 

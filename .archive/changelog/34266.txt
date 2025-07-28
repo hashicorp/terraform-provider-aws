@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appstream_fleet: Add `desired_sessions` argument to the `compute_capacity` block.
+```
+
+```release-note:enhancement
+resource/aws_appstream_fleet: Add `max_sessions_per_instance` argument.
+```

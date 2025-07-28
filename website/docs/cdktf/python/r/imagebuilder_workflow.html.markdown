@@ -11,6 +11,8 @@ description: |-
 
 Terraform resource for managing an AWS EC2 Image Builder Workflow.
 
+-> Image Builder manages the workflows for the distribution stage. Therefore, using the DISTRIBUTION workflow type results in an error.
+
 ## Example Usage
 
 ### Basic Usage
@@ -40,11 +42,12 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `name` - (Required) Name of the workflow.
-* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`, `DISTRIBUTION`.
+* `type` - (Required) Type of the workflow. Valid values: `BUILD`, `TEST`.
 * `version` - (Required) Version of the workflow.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `change_description` - (Optional) Change description of the workflow.
 * `data` - (Optional) Inline YAML string with data of the workflow. Exactly one of `data` and `uri` can be specified.
 * `description` - (Optional) Description of the workflow.
@@ -87,4 +90,4 @@ Using `terraform import`, import EC2 Image Builder Workflow using the `example_i
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.1 input-df3dca53e5a160bb4c9e269233107f9f1b21a2706fb1eb2429250d7eac61aa1f -->
+<!-- cache-key: cdktf-0.20.8 input-7fafe9a8255cbdeb4d01e6eebc65914a89be8a55e1bf0237c76a9653a991d0c8 -->

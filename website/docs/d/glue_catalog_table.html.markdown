@@ -23,6 +23,7 @@ data "aws_glue_catalog_table" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the table.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides.
 * `catalog_id` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
@@ -60,6 +61,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### storage_descriptor
 
+* `additional_locations` - List of locations that point to the path where a Delta table is located
 * `bucket_columns` - List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - Whether the data in the table is compressed.

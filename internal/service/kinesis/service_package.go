@@ -14,21 +14,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kinesis.Client, error) {
+func (p *servicePackage) withExtraOptions(_ context.Context, config map[string]any) []func(*kinesis.Options) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return kinesis.NewFromConfig(cfg, func(o *kinesis.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*types.LimitExceededException](err, "simultaneously be in CREATING or DELETING") ||
-				errs.IsAErrorMessageContains[*types.LimitExceededException](err, "Rate exceeded for stream") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return []func(*kinesis.Options){
+		func(o *kinesis.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*types.LimitExceededException](err, "simultaneously be in CREATING or DELETING") ||
+					errs.IsAErrorMessageContains[*types.LimitExceededException](err, "Rate exceeded for stream") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	}
 }

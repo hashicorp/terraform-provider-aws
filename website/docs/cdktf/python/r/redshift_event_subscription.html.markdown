@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift event subscription.
 * `sns_topic_arn` - (Required) The ARN of the SNS topic to send events to.
 * `source_ids` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a `source_type` must also be specified.
@@ -101,4 +102,4 @@ Using `terraform import`, import Redshift Event Subscriptions using the `name`. 
 % terraform import aws_redshift_event_subscription.default redshift-event-sub
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-15f307fc07a5350a90201b05a1ab1284198872ef394e5f0b141e17d35b730070 -->
+<!-- cache-key: cdktf-0.20.8 input-7aec95aef2f670a5b2f0825fe8b84abbd72209749b56b81eaac81719d84ed26c -->

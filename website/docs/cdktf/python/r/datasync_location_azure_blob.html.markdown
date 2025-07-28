@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_tier` - (Optional) The access tier that you want your objects or files transferred into. Valid values: `HOT`, `COOL` and `ARCHIVE`. Default: `HOT`.
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `authentication_type` - (Required) The authentication method DataSync uses to access your Azure Blob Storage. Valid values: `SAS`.
@@ -87,4 +88,4 @@ Using `terraform import`, import `aws_datasync_location_azure_blob` using the Am
 % terraform import aws_datasync_location_azure_blob.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0637d96370b64fc2d6d591d7b71f5801506815f36db9cd6ddafc9ca36bcc9181 -->
+<!-- cache-key: cdktf-0.20.8 input-c39f648dfa529ede9b46939a1d525dd27ef17eaf5601190c30dc87ea091c23cb -->

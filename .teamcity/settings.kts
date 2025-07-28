@@ -11,7 +11,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2023.05"
+version = "2024.03"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -20,16 +20,11 @@ val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
-val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
 
 // Legacy User credentials
 val legacyAWSAccessKeyID = DslContext.getParameter("aws_account.legacy_access_key_id", "")
 val legacyAWSSecretAccessKey = DslContext.getParameter("aws_account.legacy_secret_access_key", "")
-
-// Legacy Alternate User credentials
-val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.legacy_access_key_id", "")
-val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
 
 // Assume Role credentials
 val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
@@ -62,6 +57,7 @@ project {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
+        text("TEST_EXCLUDE_PATTERN", "", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
@@ -73,6 +69,8 @@ project {
 
         if (acmCertificateRootDomain != "") {
             text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.AMPLIFY_DOMAIN_NAME", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
+            text("env.SES_DOMAIN_IDENTITY_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
         }
 
         val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
@@ -80,11 +78,13 @@ project {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
-        val brancRef = DslContext.getParameter("branch_name", "")
-        if (brancRef != "") {
-            text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
+        // Used to specify the default branch in the VCS Root
+        val branchRef = DslContext.getParameter("branch_name", "")
+        if (branchRef != "") {
+            text("BRANCH_NAME", branchRef, display = ParameterDisplay.HIDDEN)
         }
 
+        // Additional role to assume for some acceptance tests
         if (tfAccAssumeRoleArn != "") {
             text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
         }
@@ -95,13 +95,6 @@ project {
         }
         if (legacyAWSSecretAccessKey != "") {
             password("env.AWS_SECRET_ACCESS_KEY", legacyAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
-
-        // Legacy Alternate User credentials
-        if (awsAlternateAccountID != "" || legacyAWSAlternateAccessKeyID != "" || legacyAWSAlternateSecretAccessKey != "") {
-            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", legacyAWSAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", legacyAWSAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
         }
 
         // Assume Role credentials
@@ -116,16 +109,6 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
-
-        // These overrides exist because of the inherited dependency in the existing project structure and can
-        // be removed when this is moved outside of it
-        val isOnPrem = DslContext.getParameter("is_on_prem", "true").equals("true", ignoreCase = true)
-        if (isOnPrem) {
-            // These should be overridden in the base AWS project
-            param("env.GOPATH", "")
-            param("env.GO111MODULE", "") // No longer needed as of Go 1.16
-            param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
-        }
     }
 
     subProject(Services)
@@ -322,6 +305,17 @@ object SetUp : BuildType({
             name = "Pre-Sweeper"
             executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/sweeper.sh").readText()
+        }
+    }
+
+    // For sweeper step
+    failureConditions {
+        failOnText {
+            conditionType = BuildFailureOnText.ConditionType.REGEXP
+            pattern = """Sweeper Tests for region \(([-a-z0-9]+)\) ran unsuccessfully"""
+            failureMessage = """Sweeper failure for region "${'$'}1""""
+            reverse = false
+            reportOnlyFirstMatch = false
         }
     }
 

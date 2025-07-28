@@ -49,9 +49,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Required) The DB Instance Identifier from which to take the snapshot.
 * `db_snapshot_identifier` - (Required) The Identifier for the snapshot.
-* `shared_accounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -106,4 +107,4 @@ Using `terraform import`, import `aws_db_snapshot` using the snapshot identifier
 % terraform import aws_db_snapshot.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-41ad054e1cd5f9035a73439b5851601fe3048ea049009ee39814356714bc4d11 -->
+<!-- cache-key: cdktf-0.20.8 input-6806d24e2a682641f55a0a362e0fed26f5d18918e453181003f542afeab3961f -->

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `ip_address_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `ip_address_type` argument
+```

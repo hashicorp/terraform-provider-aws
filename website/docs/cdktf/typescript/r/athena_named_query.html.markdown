@@ -71,6 +71,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Plain language name for the query. Maximum length of 128.
 * `workgroup` - (Optional) Workgroup to which the query belongs. Defaults to `primary`
 * `database` - (Required) Database to which the query belongs.
@@ -111,4 +112,4 @@ Using `terraform import`, import Athena Named Query using the query ID. For exam
 % terraform import aws_athena_named_query.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-47b0d06df589479137354b1a06a5e12352b544e95a27f4e5bc2dec9fa0224790 -->
+<!-- cache-key: cdktf-0.20.8 input-d782b7210fe016f6804546b60ef7fd7c536563862fd34a2d52ea05e31dd8a8a0 -->

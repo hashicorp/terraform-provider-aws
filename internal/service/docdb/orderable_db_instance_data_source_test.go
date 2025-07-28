@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,8 +33,8 @@ func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, license),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
 				),
 			},
@@ -58,8 +58,8 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, license, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredOption),
 				),
@@ -69,13 +69,13 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("docdb"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
+	_, err := conn.DescribeOrderableDBInstanceOptions(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -110,10 +110,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `projectName` - (Required) The name of the build project.
 * `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `manualCreation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payloadUrl` and `secret` values for the webhook. The `payloadUrl` and `secret` values in the output can be used to manually create a webhook within GitHub.
 * `branchFilter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filterGroup` over `branchFilter`.
 * `filterGroup` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
+* `scopeConfiguration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.
 
 `filterGroup` supports the following:
 
@@ -121,9 +124,15 @@ This resource supports the following arguments:
 
 `filter` supports the following:
 
-* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`. At least one filter group must specify `EVENT` as its type.
-* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
+* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`, `WORKFLOW_NAME`, `TAG_NAME`, `RELEASE_NAME`. At least one filter group must specify `EVENT` as its type.
+* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED`, `WORKFLOW_JOB_QUEUED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
 * `excludeMatchedPattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
+
+`scopeConfiguration` supports the following:
+
+* `name` - (Required) The name of either the enterprise or organization.
+* `scope` - (Required) The type of scope for a GitHub webhook. Valid values for this parameter are: `GITHUB_ORGANIZATION`, `GITHUB_GLOBAL`.
+* `domain` - (Optional) The domain of the GitHub Enterprise organization. Required if your project's source type is GITHUB_ENTERPRISE.
 
 ## Attribute Reference
 
@@ -164,4 +173,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cf2c7457e01d223f33713530c0bde71a1f3d519e66df2997191b2c29539aab1a -->
+<!-- cache-key: cdktf-0.20.8 input-11a1fbb3f051a6bc9b6739cee9f8bd533a6b5bd4bd9e188b41570d3be08adbac -->

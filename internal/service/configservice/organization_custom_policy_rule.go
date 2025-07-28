@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_custom_policy_rule", name="Organization Custom Policy Rule")
@@ -43,7 +44,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +57,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 					ValidateFunc: verify.ValidAccountID,
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -85,7 +86,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -139,11 +140,11 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 	}
 }
 
-func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
@@ -157,7 +158,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.DebugLogDeliveryAccounts = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.OrganizationCustomPolicyRuleMetadata.Description = aws.String(v.(string))
 	}
 
@@ -189,7 +190,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (any, error) {
 		return conn.PutOrganizationConfigRule(ctx, input)
 	})
 
@@ -206,7 +207,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -229,15 +230,15 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	}
 
 	customPolicyRule := configRule.OrganizationCustomPolicyRuleMetadata
-	d.Set("arn", configRule.OrganizationConfigRuleArn)
+	d.Set(names.AttrARN, configRule.OrganizationConfigRuleArn)
 	d.Set("debug_log_delivery_accounts", customPolicyRule.DebugLogDeliveryAccounts)
-	d.Set("description", customPolicyRule.Description)
+	d.Set(names.AttrDescription, customPolicyRule.Description)
 	d.Set("excluded_accounts", configRule.ExcludedAccounts)
 	d.Set("input_parameters", customPolicyRule.InputParameters)
 	d.Set("policy_runtime", customPolicyRule.PolicyRuntime)
 	d.Set("policy_text", policy)
 	d.Set("maximum_execution_frequency", customPolicyRule.MaximumExecutionFrequency)
-	d.Set("name", configRule.OrganizationConfigRuleName)
+	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", customPolicyRule.ResourceIdScope)
 	d.Set("resource_types_scope", customPolicyRule.ResourceTypesScope)
 	d.Set("tag_key_scope", customPolicyRule.TagKeyScope)
@@ -247,7 +248,7 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
@@ -265,7 +266,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.DebugLogDeliveryAccounts = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.OrganizationCustomPolicyRuleMetadata.Description = aws.String(v.(string))
 	}
 
@@ -310,7 +311,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceOrganizationCustomPolicyRuleRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -318,7 +319,7 @@ func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.R
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Policy Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
 		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
 			OrganizationConfigRuleName: aws.String(d.Id()),
 		})

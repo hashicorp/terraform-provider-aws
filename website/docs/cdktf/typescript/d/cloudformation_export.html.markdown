@@ -45,6 +45,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 
 ## Attribute Reference
@@ -54,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `value` - Value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 * `exportingStackId` - ARN of stack that contains the exported output name and value.
 
-<!-- cache-key: cdktf-0.20.1 input-ea221c8f2e1fb315847f21fd305282c9ac5244739898e9391797602940e42bd3 -->
+<!-- cache-key: cdktf-0.20.8 input-3006c418d04d18d46b96f463f302debfc7190546e235756c751a5509745d8918 -->

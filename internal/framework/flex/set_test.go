@@ -7,68 +7,19 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
-
-func TestExpandFrameworkStringSet(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    types.Set
-		expected []*string
-	}
-	tests := map[string]testCase{
-		"null": {
-			input:    types.SetNull(types.StringType),
-			expected: nil,
-		},
-		"unknown": {
-			input:    types.SetUnknown(types.StringType),
-			expected: nil,
-		},
-		"two elements": {
-			input: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("GET"),
-				types.StringValue("HEAD"),
-			}),
-			expected: []*string{aws.String("GET"), aws.String("HEAD")},
-		},
-		"zero elements": {
-			input:    types.SetValueMust(types.StringType, []attr.Value{}),
-			expected: []*string{},
-		},
-		"invalid element type": {
-			input: types.SetValueMust(types.Int64Type, []attr.Value{
-				types.Int64Value(42),
-			}),
-			expected: nil,
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.ExpandFrameworkStringSet(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
 
 func TestExpandFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
 		input    types.Set
-		expected flex.Set[string]
+		expected itypes.Set[string]
 	}
 	tests := map[string]testCase{
 		"null": {
@@ -99,7 +50,6 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -141,7 +91,6 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -183,7 +132,6 @@ func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

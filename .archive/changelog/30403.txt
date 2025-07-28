@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix excessive delay on read
+```
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `transit_encryption_mode` argument
+```
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Changes to the `transit_encryption_enabled` argument can now be done in-place for engine versions > `7.0.5`
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Allow `default_tags` to be set by environment variables
+```

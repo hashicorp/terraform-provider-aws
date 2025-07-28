@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the assessment report.
 
 ## Attribute Reference
@@ -88,4 +89,4 @@ Using `terraform import`, import Audit Manager Assessment Reports using the asse
 % terraform import aws_auditmanager_assessment_report.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6b338b1bd64119b10018fd9c9f0d34c39bf215e8e6866aa5aefd18459615b30e -->
+<!-- cache-key: cdktf-0.20.8 input-ea46f6c707f63588c439a337663c3a53c2ffdcb19258e5efee03fc9db3c63f33 -->

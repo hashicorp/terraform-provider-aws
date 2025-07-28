@@ -12,6 +12,8 @@ description: |-
 
 Provides a AWS Transfer Access resource.
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ### Basic S3
@@ -66,6 +68,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `external_id` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `home_directory` - (Optional) The landing directory (folder) for a user when they log in to the server using their SFTP client.  It should begin with a `/`.  The first item in the path is the name of the home bucket (accessible as `${Transfer:HomeBucket}` in the policy) and the rest is the home directory (accessible as `${Transfer:HomeDirectory}` in the policy). For example, `/example-bucket-1234/username` would set the home bucket to `example-bucket-1234` and the home directory to `username`.
@@ -117,4 +120,4 @@ Using `terraform import`, import Transfer Accesses using the `server_id` and `ex
 % terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ff8299ab25d391a1af99874bcb28fb7deeeece3c742e6251e861258034467d2f -->
+<!-- cache-key: cdktf-0.20.8 input-47e8deff688873d8376ed18677ab8e0794d4fbe01cffa54b64436757cabda375 -->

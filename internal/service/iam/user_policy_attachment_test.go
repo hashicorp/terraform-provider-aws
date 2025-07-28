@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -101,7 +102,7 @@ func TestAccIAMUserPolicyAttachment_disappears(t *testing.T) {
 
 func testAccCheckUserPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_user_policy_attachment" {
@@ -132,7 +133,7 @@ func testAccCheckUserPolicyAttachmentExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, err := tfiam.FindAttachedUserPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.Attributes["policy_arn"])
 
@@ -142,12 +143,12 @@ func testAccCheckUserPolicyAttachmentExists(ctx context.Context, n string) resou
 
 func testAccCheckUserPolicyAttachmentCount(ctx context.Context, userName string, want int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		input := &iam.ListAttachedUserPoliciesInput{
 			UserName: aws.String(userName),
 		}
-		output, err := tfiam.FindAttachedUserPolicies(ctx, conn, input, tfslices.PredicateTrue[*iam.AttachedPolicy]())
+		output, err := tfiam.FindAttachedUserPolicies(ctx, conn, input, tfslices.PredicateTrue[awstypes.AttachedPolicy]())
 
 		if err != nil {
 			return err

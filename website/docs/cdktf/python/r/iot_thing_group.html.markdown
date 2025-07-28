@@ -49,6 +49,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Thing Group.
 * `parent_group_name` - (Optional) The name of the parent Thing Group.
 * `properties` - (Optional) The Thing Group properties. Defined below.
@@ -96,4 +99,4 @@ Using `terraform import`, import IoT Things Groups using the name. For example:
 % terraform import aws_iot_thing_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d40a8b9d3295130dee82fc924f5a78064a2bcbc1d9fdc3faf7a58c297c82b090 -->
+<!-- cache-key: cdktf-0.20.8 input-2d9467132dc7e96697ab235d6baafbe757c76c3d2d259d42abd75fb498012d99 -->

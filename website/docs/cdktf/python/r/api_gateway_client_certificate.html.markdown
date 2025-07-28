@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the client certificate.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -74,4 +75,4 @@ Using `terraform import`, import API Gateway Client Certificates using the id. F
 % terraform import aws_api_gateway_client_certificate.demo ab1cqe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f5e9958abec817b82b925c0b36a7398f6252c227f18c1f61028418cabf76045c -->
+<!-- cache-key: cdktf-0.20.8 input-2966b3e4453ce15a57987f6f7266a4a6c184fb79fe458ef829f96aa1ee04af8d -->

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination` - (Required) The target Region or Availability Zone that the metric subscription is enabled for. For example, `eu-west-1`.
 * `metric` - (Optional) The metric used for the enabled subscription. Valid values: `aggregate-latency`. Default: `aggregate-latency`.
 * `source` - (Required) The source Region or Availability Zone that the metric subscription is enabled for. For example, `us-east-1`.
@@ -50,4 +51,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `period` - The data aggregation time for the subscription.
 
-<!-- cache-key: cdktf-0.20.1 input-9d68b5453f7e730fab6a7906222b20f270436a0a63a8e8c8fed51dab43b1b2e7 -->
+<!-- cache-key: cdktf-0.20.8 input-a367ccb47c6d417579df884439daa2c0d49d91c3b6be5b6b3afbd4446a2f9d04 -->

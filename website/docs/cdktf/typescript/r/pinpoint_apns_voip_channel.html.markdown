@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 * `defaultAuthenticationMethod` - (Optional) The default authentication method used for APNs.
@@ -102,4 +103,4 @@ Using `terraform import`, import Pinpoint APNs VoIP Channel using the `applicati
 % terraform import aws_pinpoint_apns_voip_channel.apns_voip application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ffc83fe4540fc67436e7989e5cf3564705d88e89adc4f3fda68412be44cfc00 -->
+<!-- cache-key: cdktf-0.20.8 input-f4f6482755845607cc492321aca7195490160ecbb71704dcad8236341b37d830 -->

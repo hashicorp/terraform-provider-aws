@@ -104,6 +104,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizer_uri` - (Optional, required for type `TOKEN`/`REQUEST`) Authorizer's Uniform Resource Identifier (URI). This must be a well-formed Lambda function URI in the form of `arn:aws:apigateway:{region}:lambda:path/{service_api}`,
  e.g., `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
 * `name` - (Required) Name of the authorizer
@@ -147,4 +148,4 @@ Using `terraform import`, import AWS API Gateway Authorizer using the `REST-API-
 % terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2079e78abb2de34b252c2d1829bd6d6c7b5e8eea6a54c81a845e12111109c59f -->
+<!-- cache-key: cdktf-0.20.8 input-3cc2b3cebb2ce9b3864f9a61b3be968f37ca18f73b866da140cb765dc5735fe5 -->

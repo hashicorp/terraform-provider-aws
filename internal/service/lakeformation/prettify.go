@@ -15,7 +15,7 @@ import (
 // prettify returns the string representation of a value.
 // replaces the String() method that existed on structs in AWS SDK v1
 // https://github.com/aws/aws-sdk-go/blob/main/aws/awsutil/prettify.go
-func prettify(i interface{}) string {
+func prettify(i any) string {
 	var buf bytes.Buffer
 	prettifyInternal(reflect.ValueOf(i), 0, &buf)
 	return buf.String()
@@ -44,7 +44,7 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 		buf.WriteString("{\n")
 
 		names := []string{}
-		for i := 0; i < v.Type().NumField(); i++ {
+		for i := range v.Type().NumField() {
 			name := v.Type().Field(i).Name
 			f := v.Field(i)
 			if name[0:1] == strings.ToLower(name[0:1]) {
@@ -90,7 +90,7 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 			nl, id, id2 = "\n", strings.Repeat(" ", indent), strings.Repeat(" ", indent+indentValue)
 		}
 		buf.WriteString("[" + nl)
-		for i := 0; i < v.Len(); i++ {
+		for i := range v.Len() {
 			buf.WriteString(id2)
 			prettifyInternal(v.Index(i), indent+indentValue, buf)
 

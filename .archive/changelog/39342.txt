@@ -1,0 +1,6 @@
+```release-note:new-data-source
+aws_bedrock_inference_profile
+```
+```release-note:new-data-source
+aws_bedrock_inference_profiles
+```
