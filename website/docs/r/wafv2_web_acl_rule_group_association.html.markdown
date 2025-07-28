@@ -12,6 +12,8 @@ Associates a WAFv2 Rule Group with a Web ACL by adding a rule that references th
 
 ~> **Note:** This resource creates a rule within the Web ACL that references the entire Rule Group. The rule group's individual rules are evaluated as a unit when requests are processed by the Web ACL.
 
+!> **Warning:** Using this resource will cause the associated Web ACL resource to show configuration drift in the `rule` argument unless you add `lifecycle { ignore_changes = [rule] }` to the Web ACL resource configuration. This is because this resource modifies the Web ACL's rules outside of the Web ACL resource's direct management.
+
 ## Example Usage
 
 ### Basic Usage
@@ -62,6 +64,10 @@ resource "aws_wafv2_web_acl" "example" {
     cloudwatch_metrics_enabled = true
     metric_name                = "example-web-acl"
     sampled_requests_enabled   = true
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
@@ -134,6 +140,10 @@ resource "aws_wafv2_web_acl" "cloudfront_example" {
     cloudwatch_metrics_enabled = true
     metric_name                = "cloudfront-web-acl"
     sampled_requests_enabled   = true
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
