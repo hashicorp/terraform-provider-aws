@@ -24,9 +24,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -171,17 +173,17 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 
 	// Create new rule with rule group reference statement
 	newRule := awstypes.Rule{
-		Name:     aws.String(plan.RuleName.ValueString()),
+		Name:     plan.RuleName.ValueStringPointer(),
 		Priority: plan.Priority.ValueInt32(),
 		Statement: &awstypes.Statement{
 			RuleGroupReferenceStatement: &awstypes.RuleGroupReferenceStatement{
-				ARN: aws.String(plan.RuleGroupARN.ValueString()),
+				ARN: plan.RuleGroupARN.ValueStringPointer(),
 			},
 		},
 		VisibilityConfig: &awstypes.VisibilityConfig{
 			SampledRequestsEnabled:   true,
 			CloudWatchMetricsEnabled: true,
-			MetricName:               aws.String(plan.RuleName.ValueString()),
+			MetricName:               plan.RuleName.ValueStringPointer(),
 		},
 	}
 
@@ -192,18 +194,19 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		plan.OverrideAction = types.StringValue("none") // Set the default in the plan
 	}
 
-	if overrideAction == "none" {
+	switch overrideAction {
+	case "none":
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			None: &awstypes.NoneAction{},
 		}
-	} else if overrideAction == "count" {
+	case "count":
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			Count: &awstypes.CountAction{},
 		}
 	}
 
 	// Add the new rule to existing rules
-	updatedRules := append(webACL.WebACL.Rules, newRule)
+	webACL.WebACL.Rules = append(webACL.WebACL.Rules, newRule)
 
 	// Update the Web ACL
 	updateInput := &wafv2.UpdateWebACLInput{
@@ -211,7 +214,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		Name:                 aws.String(webACLName),
 		Scope:                awstypes.Scope(webACLScope),
 		DefaultAction:        webACL.WebACL.DefaultAction,
-		Rules:                updatedRules,
+		Rules:                webACL.WebACL.Rules,
 		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
 		LockToken:            webACL.LockToken,
 		AssociationConfig:    webACL.WebACL.AssociationConfig,
@@ -295,14 +298,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 	// Get the Web ACL and check if the rule group is associated
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
-		if tfresource.NotFound(err) {
-			resp.Diagnostics.AddWarning(
-				"Web ACL Not Found",
-				"Web ACL was not found, removing from state",
-			)
+		if retry.NotFound(err) {
+			resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 			resp.State.RemoveResource(ctx)
 			return
 		}
+
 		resp.Diagnostics.AddError(
 			"Reading WAFv2 Web ACL Rule Group Association",
 			fmt.Sprintf("Error reading Web ACL: %s", err),
@@ -404,10 +405,11 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 	// Get the Web ACL
 	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Web ACL is already gone, nothing to do
 			return
 		}
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.ID.String(), err),
 			err.Error(),
@@ -501,7 +503,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_arn"), ruleGroupARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)
