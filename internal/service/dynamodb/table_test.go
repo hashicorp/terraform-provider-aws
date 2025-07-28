@@ -4776,6 +4776,11 @@ func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -4791,8 +4796,12 @@ func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12200"),
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4200"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
-
 			{
 				Config: testAccTableConfig_warmThroughput(rName, 6, 6, 12300, 4300),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -4807,12 +4816,16 @@ func TestAccDynamoDBTable_warmThroughput(t *testing.T) {
 				Config: testAccTableConfig_warmThroughput(rName, 6, 6, 12100, 4100),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &confDecreasedThroughput),
-					testAccCheckTableRecreated(&conf, &confDecreasedThroughput),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.read_units_per_second", "12100"),
 					resource.TestCheckResourceAttr(resourceName, "warm_throughput.0.write_units_per_second", "4100"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -5051,16 +5064,6 @@ func testAccCheckTableNotRecreated(i, j *awstypes.TableDescription) resource.Tes
 	return func(s *terraform.State) error {
 		if !i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
 			return errors.New("DynamoDB Table was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTableRecreated(i, j *awstypes.TableDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if i.CreationDateTime.Equal(aws.ToTime(j.CreationDateTime)) {
-			return errors.New("DynamoDB Table was not recreated")
 		}
 
 		return nil
