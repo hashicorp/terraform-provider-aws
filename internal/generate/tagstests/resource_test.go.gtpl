@@ -10,7 +10,7 @@
 {{- end }}
 {{ range .InitCodeBlocks -}}
 {{ .Code }}
-{{- end }}
+{{ end }}
 {{ end }}
 
 {{ define "Test" -}}
@@ -122,10 +122,14 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 
 {{ define "AdditionalTfVars" -}}
 	{{ range $name, $value := .AdditionalTfVars -}}
-	{{ $name }}: config.StringVariable({{ $value }}),
+		{{ if eq $value.Type "string" -}}
+			{{ $name }}: config.StringVariable({{ $value.GoVarName }}),
+		{{- else if eq $value.Type "int" -}}
+			{{ $name }}: config.IntegerVariable({{ $value.GoVarName }}),
+		{{- end }}
 	{{ end -}}
 	{{ if .AlternateRegionProvider -}}
-	"alt_region": config.StringVariable(acctest.AlternateRegion()),
+		"alt_region": config.StringVariable(acctest.AlternateRegion()),
 	{{ end }}
 {{ end }}
 
