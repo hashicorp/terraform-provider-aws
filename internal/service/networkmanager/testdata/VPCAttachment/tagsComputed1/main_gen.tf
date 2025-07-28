@@ -102,12 +102,6 @@ locals {
 
 resource "null_resource" "test" {}
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-
 variable "unknownTagKey" {
   type     = string
   nullable = false
