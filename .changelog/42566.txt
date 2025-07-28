@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_codebuild_fleet: Add `proxy_configuration` argument
+```

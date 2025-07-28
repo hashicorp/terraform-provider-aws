@@ -359,6 +359,59 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildFleet_proxyConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_proxyConfiguration1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.default_behavior", string(types.FleetProxyRuleBehaviorDenyAll)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.effect", string(types.FleetProxyRuleEffectTypeAllow)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.type", string(types.FleetProxyRuleTypeDomain)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.entities.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_proxyConfiguration2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.default_behavior", string(types.FleetProxyRuleBehaviorAllowAll)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.effect", string(types.FleetProxyRuleEffectTypeDeny)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.type", string(types.FleetProxyRuleTypeIp)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.0.entities.#", "1"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_proxyConfiguration3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.default_behavior", string(types.FleetProxyRuleBehaviorDenyAll)),
+					resource.TestCheckResourceAttr(resourceName, "proxy_configuration.0.ordered_proxy_rules.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
@@ -668,4 +721,73 @@ resource "aws_codebuild_fleet" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccFleetConfig_proxyConfiguration1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+
+  proxy_configuration {
+    default_behavior = "DENY_ALL"
+
+    ordered_proxy_rules {
+      effect   = "ALLOW"
+      type     = "DOMAIN"
+      entities = ["example.com", "*.example.org"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccFleetConfig_proxyConfiguration2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+
+  proxy_configuration {
+    default_behavior = "ALLOW_ALL"
+
+    ordered_proxy_rules {
+      effect   = "DENY"
+      type     = "IP"
+      entities = ["192.168.1.0/24"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccFleetConfig_proxyConfiguration3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+
+  proxy_configuration {
+    default_behavior = "DENY_ALL"
+
+    ordered_proxy_rules {
+      effect   = "ALLOW"
+      type     = "DOMAIN"
+      entities = ["example.com", "*.example.org"]
+    }
+
+    ordered_proxy_rules {
+      effect   = "ALLOW"
+      type     = "IP"
+      entities = ["10.0.0.0/8"]
+    }
+  }
+}
+`, rName)
 }
