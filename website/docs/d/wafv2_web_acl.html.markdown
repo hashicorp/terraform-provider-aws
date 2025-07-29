@@ -25,13 +25,13 @@ data "aws_wafv2_web_acl" "example" {
 
 ```terraform
 data "aws_wafv2_web_acl" "alb_example" {
-  resource = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-alb/xxxxx"
-  scope    = "REGIONAL"
+  resource_arn = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-alb/xxxxx"
+  scope        = "REGIONAL"
 }
 
 data "aws_wafv2_web_acl" "cloudfront_example" {
-  resource = "arn:aws:cloudfront::123456789012:distribution/XXX"
-  scope    = "CLOUDFRONT"
+  resource_arn = "arn:aws:cloudfront::123456789012:distribution/XXX"
+  scope        = "CLOUDFRONT"
 }
 ```
 
@@ -40,8 +40,8 @@ data "aws_wafv2_web_acl" "cloudfront_example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional) Name of the WAFv2 Web ACL. Exactly one of `name` or `resource` must be specified.
-* `resource` - (Optional) ARN of the AWS resource associated with the Web ACL. This can be an ARN of an Application Load Balancer, Amazon API Gateway REST API, AWS AppSync GraphQL API, Amazon Cognito user pool, AWS App Runner service, AWS Verified Access instance, or AWS Amplify application. Exactly one of `name` or `resource` must be specified.
+* `name` - (Optional) Name of the WAFv2 Web ACL. Exactly one of `name` or `resource_arn` must be specified.
+* `resource_arn` - (Optional) ARN of the AWS resource associated with the Web ACL. This can be an ARN of an Application Load Balancer, Amazon API Gateway REST API, AWS AppSync GraphQL API, Amazon Cognito user pool, AWS App Runner service, AWS Verified Access instance, or AWS Amplify application. Exactly one of `name` or `resource_arn` must be specified.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attribute Reference

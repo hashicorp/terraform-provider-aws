@@ -204,8 +204,8 @@ resource "aws_wafv2_web_acl_association" "test" {
 }
 
 data "aws_wafv2_web_acl" "test" {
-  resource = aws_lb.test.arn
-  scope    = "REGIONAL"
+  resource_arn = aws_lb.test.arn
+  scope        = "REGIONAL"
 
   depends_on = [aws_wafv2_web_acl_association.test]
 }
@@ -261,8 +261,8 @@ resource "aws_internet_gateway" "test" {
 }
 
 data "aws_wafv2_web_acl" "test" {
-  resource = aws_lb.test.arn
-  scope    = "REGIONAL"
+  resource_arn = aws_lb.test.arn
+  scope        = "REGIONAL"
 }
 `, name)
 }

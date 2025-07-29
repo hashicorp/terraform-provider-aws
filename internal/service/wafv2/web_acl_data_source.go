@@ -37,12 +37,12 @@ func dataSourceWebACL() *schema.Resource {
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ExactlyOneOf: []string{names.AttrName, "resource"},
+					ExactlyOneOf: []string{names.AttrName, names.AttrResourceARN},
 				},
-				"resource": {
+				names.AttrResourceARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ExactlyOneOf: []string{names.AttrName, "resource"},
+					ExactlyOneOf: []string{names.AttrName, names.AttrResourceARN},
 					ValidateFunc: verify.ValidARN,
 				},
 				names.AttrScope: {
@@ -60,7 +60,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	resourceArn := d.Get("resource").(string)
+	resourceArn := d.Get(names.AttrResourceARN).(string)
 	scope := awstypes.Scope(d.Get(names.AttrScope).(string))
 
 	var webACL *awstypes.WebACL
@@ -71,9 +71,9 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 		webACL, err = findWebACLByResourceARN(ctx, conn, resourceArn)
 		if err != nil {
 			if tfresource.NotFound(err) {
-				return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for resource: %s", resourceArn)
+				return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for resource_arn: %s", resourceArn)
 			}
-			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL for resource (%s): %s", resourceArn, err)
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL for resource_arn (%s): %s", resourceArn, err)
 		}
 	} else {
 		// Use existing ListWebACLs + filter by name logic
