@@ -1056,10 +1056,10 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name      = "%[1]s-association"
-  priority       = %[2]d
-  rule_group_arn = aws_wafv2_rule_group.test.arn
-  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  rule_name       = "%[1]s-association"
+  priority        = %[2]d
+  rule_group_arn  = aws_wafv2_rule_group.test.arn
+  web_acl_arn     = aws_wafv2_web_acl.test.arn
   override_action = "none"
 }
 `, rName, priority)
@@ -1120,10 +1120,10 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name      = %[2]q
-  priority       = 10
-  rule_group_arn = aws_wafv2_rule_group.test.arn
-  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  rule_name       = %[2]q
+  priority        = 10
+  rule_group_arn  = aws_wafv2_rule_group.test.arn
+  web_acl_arn     = aws_wafv2_web_acl.test.arn
   override_action = "none"
 }
 `, rName, ruleName)
@@ -1184,10 +1184,10 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name      = "%[1]s-association"
-  priority       = 10
-  rule_group_arn = aws_wafv2_rule_group.test.arn
-  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  rule_name       = "%[1]s-association"
+  priority        = 10
+  rule_group_arn  = aws_wafv2_rule_group.test.arn
+  web_acl_arn     = aws_wafv2_web_acl.test.arn
   override_action = "none"
 }
 `, rName, webACLSuffix)
