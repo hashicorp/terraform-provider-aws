@@ -82,7 +82,7 @@ func resourceBatchStatement() *schema.Resource {
 	}
 }
 
-func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
@@ -99,8 +99,8 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 		input.DbUser = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("sqls"); ok && len(v.([]interface{})) > 0 {
-		input.Sqls = aws.ToStringSlice(flex.ExpandStringList(v.([]interface{})))
+	if v, ok := d.GetOk("sqls"); ok && len(v.([]any)) > 0 {
+		input.Sqls = aws.ToStringSlice(flex.ExpandStringList(v.([]any)))
 	}
 
 	if v, ok := d.GetOk("secret_arn"); ok {
@@ -130,7 +130,7 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceBatchStatementRead(ctx, d, meta)...)
 }
 
-func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
