@@ -235,7 +235,7 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find internal -name "*.go" -type f -exec goimports -w {} \;
+	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
@@ -627,7 +627,7 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m -vet=off
+	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
