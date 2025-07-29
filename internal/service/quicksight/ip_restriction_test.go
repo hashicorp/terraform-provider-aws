@@ -271,7 +271,7 @@ resource "aws_quicksight_ip_restriction" "test" {
 
   vpc_id_restriction_rule_map = {
     (aws_vpc.test[0].id) = "Main VPC"
-	(aws_vpc.test[2].id) = ""
+    (aws_vpc.test[2].id) = ""
   }
 
   vpc_endpoint_id_restriction_rule_map = {
