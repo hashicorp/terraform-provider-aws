@@ -240,7 +240,6 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 	var param awstypes.Parameter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_parameter.test"
-	rVersion := 1234
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
@@ -252,46 +251,13 @@ func TestAccSSMParameter_changeValueToWriteOnly(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(`
-resource "aws_ssm_parameter" "prereq" {
-  name  = "%[1]s-prereq"
-  type  = %[2]q
-  value = %[3]q
-}
-
-data "aws_ssm_parameter" "prereq" {
-  name = aws_ssm_parameter.prereq.name
-}
-
-resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
-  type  = %[2]q
-  value = data.aws_ssm_parameter.prereq.value
-}
-`, rName, "SecureString", "test"),
+				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 				),
 			},
 			{
-				Config: fmt.Sprintf(`
-resource "aws_ssm_parameter" "prereq" {
-  name  = "%[1]s-prereq"
-  type  = %[2]q
-  value = %[3]q
-}
-
-data "aws_ssm_parameter" "prereq" {
-  name = aws_ssm_parameter.prereq.name
-}
-
-resource "aws_ssm_parameter" "test" {
-  name             = %[1]q
-  type             = %[2]q
-  value_wo         = data.aws_ssm_parameter.prereq.value
-  value_wo_version = data.aws_ssm_parameter.prereq.version
-}
-`, rName, "SecureString", "testUpdated", rVersion),
+				Config: testAccParameterConfig_changeValueToWriteOnly2(rName, "SecureString", "testUpdated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					testAccCheckParameterWriteOnlyValueEqual(t, &param, "testUpdated"),
@@ -332,23 +298,7 @@ resource "aws_ssm_parameter" "test" {
 				},
 			},
 			{
-				Config: fmt.Sprintf(`
-resource "aws_ssm_parameter" "prereq" {
-  name  = "%[1]s-prereq"
-  type  = %[2]q
-  value = %[3]q
-}
-
-data "aws_ssm_parameter" "prereq" {
-  name = aws_ssm_parameter.prereq.name
-}
-
-resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
-  type  = %[2]q
-  value = data.aws_ssm_parameter.prereq.value
-}
-`, rName, "SecureString", "test"),
+				Config: testAccParameterConfig_changeValueToWriteOnly1(rName, "SecureString", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
@@ -1753,4 +1703,45 @@ resource "aws_ssm_parameter" "test" {
   value_wo_version = %[3]d
 }
 `, rName, value, valueVersion)
+}
+
+func testAccParameterConfig_changeValueToWriteOnly1(rName, typ, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "prereq" {
+  name  = "%[1]s-prereq"
+  type  = %[2]q
+  value = %[3]q
+}
+
+data "aws_ssm_parameter" "prereq" {
+  name = aws_ssm_parameter.prereq.name
+}
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = %[2]q
+  value = data.aws_ssm_parameter.prereq.value
+}
+`, rName, typ, value)
+}
+
+func testAccParameterConfig_changeValueToWriteOnly2(rName, typ, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "prereq" {
+  name  = "%[1]s-prereq"
+  type  = %[2]q
+  value = %[3]q
+}
+
+data "aws_ssm_parameter" "prereq" {
+  name = aws_ssm_parameter.prereq.name
+}
+
+resource "aws_ssm_parameter" "test" {
+  name             = %[1]q
+  type             = %[2]q
+  value_wo         = data.aws_ssm_parameter.prereq.value
+  value_wo_version = data.aws_ssm_parameter.prereq.version
+}
+`, rName, typ, value)
 }
