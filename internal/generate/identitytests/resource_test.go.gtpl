@@ -252,7 +252,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 
 {{ define "AdditionalTfVars" -}}
 	{{ range $name, $value := .AdditionalTfVars -}}
-	{{ $name }}: config.StringVariable({{ $value }}),
+		{{ if eq $value.Type "string" -}}
+			{{ $name }}: config.StringVariable({{ $value.GoVarName }}),
+		{{- else if eq $value.Type "int" -}}
+			{{ $name }}: config.IntegerVariable({{ $value.GoVarName }}),
+		{{- end }}
 	{{ end -}}
 {{ end }}
 

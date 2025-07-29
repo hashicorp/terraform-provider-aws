@@ -416,7 +416,7 @@ type ResourceDatum struct {
 	PreChecksWithRegion         []codeBlock
 	PreCheckRegions             []string
 	GenerateConfig              bool
-	additionalTfVars            map[string]string
+	additionalTfVars            map[string]tests.TFVar
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
 	ARNNamespace                string
@@ -441,7 +441,7 @@ type ResourceDatum struct {
 	tests.CommonArgs
 }
 
-func (d ResourceDatum) AdditionalTfVars() map[string]string {
+func (d ResourceDatum) AdditionalTfVars() map[string]tests.TFVar {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
@@ -620,7 +620,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	d := ResourceDatum{
 		FileName:              v.fileName,
-		additionalTfVars:      make(map[string]string),
+		additionalTfVars:      make(map[string]tests.TFVar),
 		IsGlobal:              false,
 		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
@@ -806,7 +806,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							`domain := acctest.RandomDomainName()
 %s := acctest.RandomEmailAddress(domain)`, varName),
 					})
-					d.additionalTfVars[varName] = varName
+					d.additionalTfVars[varName] = tests.TFVar{
+						GoVarName: varName,
+						Type:      tests.TFVarTypeString,
+					}
 				}
 				if attr, ok := args.Keyword["domainTfVar"]; ok {
 					varName := "domain"
@@ -821,7 +824,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
 					})
-					d.additionalTfVars[varName] = varName
+					d.additionalTfVars[varName] = tests.TFVar{
+						GoVarName: varName,
+						Type:      tests.TFVarTypeString,
+					}
 				}
 				if attr, ok := args.Keyword["subdomainTfVar"]; ok {
 					parentName := "domain"
@@ -846,8 +852,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
 					})
-					d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
-					d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
+					// d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
+					d.additionalTfVars[parentName] = tests.TFVar{
+						GoVarName: fmt.Sprintf("%s.String()", parentName),
+						Type:      tests.TFVarTypeString,
+					}
+					// d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
+					d.additionalTfVars[varName] = tests.TFVar{
+						GoVarName: fmt.Sprintf("%s.String()", varName),
+						Type:      tests.TFVarTypeString,
+					}
 				}
 				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -1092,8 +1106,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = "certificatePEM"
-		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+		d.additionalTfVars["certificate_pem"] = tests.TFVar{
+			GoVarName: "certificatePEM",
+			Type:      tests.TFVarTypeString,
+		}
+		d.additionalTfVars["private_key_pem"] = tests.TFVar{
+			GoVarName: "privateKeyPEM",
+			Type:      tests.TFVarTypeString,
+		}
 	}
 
 	if d.IsRegionalSingleton() {
