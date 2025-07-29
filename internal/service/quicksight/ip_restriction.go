@@ -146,6 +146,16 @@ func (r *ipRestrictionResource) Read(ctx context.Context, request resource.ReadR
 	}
 
 	// Set attributes for import.
+	// API returns empty maps, not nil.
+	if data.IPRestrictionRuleMap.IsNull() && len(output.IpRestrictionRuleMap) == 0 {
+		output.IpRestrictionRuleMap = nil
+	}
+	if data.VPCEndpointIDRestrictionRuleMap.IsNull() && len(output.VpcEndpointIdRestrictionRuleMap) == 0 {
+		output.VpcEndpointIdRestrictionRuleMap = nil
+	}
+	if data.VPCIDRestrictionRuleMap.IsNull() && len(output.VpcIdRestrictionRuleMap) == 0 {
+		output.VpcIdRestrictionRuleMap = nil
+	}
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
