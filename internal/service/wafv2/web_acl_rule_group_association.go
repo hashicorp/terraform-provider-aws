@@ -116,12 +116,21 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 				},
 				Description: "Override action for the rule group. Valid values are 'none' and 'count'. Defaults to 'none'.",
 			},
-			"rule_action_override": schema.ListNestedAttribute{
-				Optional: true,
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+			"rule_action_override": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionOverrideModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(100),
 				},
-				NestedObject: schema.NestedAttributeObject{
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrName: schema.StringAttribute{
 							Required: true,
@@ -130,34 +139,36 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 							},
 							Description: "Name of the rule to override.",
 						},
-						"action_to_use": schema.ListNestedAttribute{
-							Required: true,
+					},
+					Blocks: map[string]schema.Block{
+						"action_to_use": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[actionToUseModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 								listvalidator.SizeAtLeast(1),
 							},
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"allow": schema.ListNestedAttribute{
-										Optional: true,
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"allow": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[allowActionModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"custom_request_handling": schema.ListNestedAttribute{
-													Optional: true,
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"custom_request_handling": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													NestedObject: schema.NestedAttributeObject{
-														Attributes: map[string]schema.Attribute{
-															"insert_header": schema.ListNestedAttribute{
-																Required: true,
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"insert_header": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtLeast(1),
 																},
-																NestedObject: schema.NestedAttributeObject{
+																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
@@ -180,19 +191,19 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									"block": schema.ListNestedAttribute{
-										Optional: true,
+									"block": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[blockActionModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"custom_response": schema.ListNestedAttribute{
-													Optional: true,
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"custom_response": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customResponseModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													NestedObject: schema.NestedAttributeObject{
+													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"custom_response_body_key": schema.StringAttribute{
 																Optional: true,
@@ -206,9 +217,11 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 																	int32validator.Between(200, 600),
 																},
 															},
-															"response_header": schema.ListNestedAttribute{
-																Optional: true,
-																NestedObject: schema.NestedAttributeObject{
+														},
+														Blocks: map[string]schema.Block{
+															"response_header": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[responseHeaderModel](ctx),
+																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
@@ -231,26 +244,26 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									"captcha": schema.ListNestedAttribute{
-										Optional: true,
+									"captcha": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[captchaActionModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"custom_request_handling": schema.ListNestedAttribute{
-													Optional: true,
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"custom_request_handling": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													NestedObject: schema.NestedAttributeObject{
-														Attributes: map[string]schema.Attribute{
-															"insert_header": schema.ListNestedAttribute{
-																Required: true,
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"insert_header": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtLeast(1),
 																},
-																NestedObject: schema.NestedAttributeObject{
+																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
@@ -273,26 +286,26 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									"challenge": schema.ListNestedAttribute{
-										Optional: true,
+									"challenge": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[challengeActionModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"custom_request_handling": schema.ListNestedAttribute{
-													Optional: true,
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"custom_request_handling": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													NestedObject: schema.NestedAttributeObject{
-														Attributes: map[string]schema.Attribute{
-															"insert_header": schema.ListNestedAttribute{
-																Required: true,
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"insert_header": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtLeast(1),
 																},
-																NestedObject: schema.NestedAttributeObject{
+																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
@@ -315,26 +328,26 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									"count": schema.ListNestedAttribute{
-										Optional: true,
+									"count": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[countActionModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"custom_request_handling": schema.ListNestedAttribute{
-													Optional: true,
+										NestedObject: schema.NestedBlockObject{
+											Blocks: map[string]schema.Block{
+												"custom_request_handling": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
-													NestedObject: schema.NestedAttributeObject{
-														Attributes: map[string]schema.Attribute{
-															"insert_header": schema.ListNestedAttribute{
-																Required: true,
+													NestedObject: schema.NestedBlockObject{
+														Blocks: map[string]schema.Block{
+															"insert_header": schema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
 																Validators: []validator.List{
 																	listvalidator.SizeAtLeast(1),
 																},
-																NestedObject: schema.NestedAttributeObject{
+																NestedObject: schema.NestedBlockObject{
 																	Attributes: map[string]schema.Attribute{
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
@@ -363,17 +376,8 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 						},
 					},
 				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Description: "Action settings to use in place of rule actions configured inside the rule group. You can specify up to 100 overrides.",
 			},
-		},
-		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Delete: true,
-			}),
 		},
 		Description: "Associates a WAFv2 Rule Group with a Web ACL by adding a rule that references the Rule Group.",
 	}
@@ -807,8 +811,14 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 					}
 
 					// Convert the action to use
-					actionToUse := &actionToUseModel{}
 					if override.ActionToUse != nil {
+						actionToUse := &actionToUseModel{
+							Allow:     fwtypes.NewListNestedObjectValueOfNull[allowActionModel](ctx),
+							Block:     fwtypes.NewListNestedObjectValueOfNull[blockActionModel](ctx),
+							Captcha:   fwtypes.NewListNestedObjectValueOfNull[captchaActionModel](ctx),
+							Challenge: fwtypes.NewListNestedObjectValueOfNull[challengeActionModel](ctx),
+							Count:     fwtypes.NewListNestedObjectValueOfNull[countActionModel](ctx),
+						}
 						if override.ActionToUse.Allow != nil {
 							allowModel := &allowActionModel{}
 							if override.ActionToUse.Allow.CustomRequestHandling != nil {
@@ -890,9 +900,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 							}
 							actionToUse.Count = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*countActionModel{countModel})
 						}
-					}
 
-					overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*actionToUseModel{actionToUse})
+						overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*actionToUseModel{actionToUse})
+					} else {
+						// If ActionToUse is nil, set it to null
+						overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfNull[actionToUseModel](ctx)
+					}
 					ruleActionOverrides = append(ruleActionOverrides, overrideModel)
 				}
 				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, ruleActionOverrides)
