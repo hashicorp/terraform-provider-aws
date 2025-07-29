@@ -3,5 +3,5 @@ data-source/aws_verifiedpermissions_policy_store: Add `deletion_protection` attr
 ```
 
 ```release-note:enhancement
-resource/aws_verifiedpermissions_policy_store: Add `deletion_protection` attribute
+resource/aws_verifiedpermissions_policy_store: Add `deletion_protection` argument
 ```
