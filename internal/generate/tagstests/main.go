@@ -405,7 +405,7 @@ type ResourceDatum struct {
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
 	GenerateConfig                   bool
-	additionalTfVars                 map[string]tfVar
+	additionalTfVars                 map[string]tests.TFVar
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
@@ -417,7 +417,7 @@ type ResourceDatum struct {
 	tests.CommonArgs
 }
 
-func (d ResourceDatum) AdditionalTfVars() map[string]tfVar {
+func (d ResourceDatum) AdditionalTfVars() map[string]tests.TFVar {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
@@ -442,18 +442,6 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 type codeBlock struct {
 	Code string
 }
-
-type tfVar struct {
-	GoVarName string
-	Type      tfVarType
-}
-
-type tfVarType string
-
-const (
-	tfVarTypeString tfVarType = "string"
-	tfVarTypeInt    tfVarType = "int"
-)
 
 type commonConfig struct {
 	AdditionalTfVars        []string
@@ -542,7 +530,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		additionalTfVars: make(map[string]tfVar),
+		additionalTfVars: make(map[string]tests.TFVar),
 	}
 	tagged := false
 	skip := false
@@ -638,9 +626,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
 					})
-					d.additionalTfVars[varName] = tfVar{
+					d.additionalTfVars[varName] = tests.TFVar{
 						GoVarName: varName,
-						Type:      tfVarTypeInt,
+						Type:      tests.TFVarTypeInt,
 					}
 				}
 				if attr, ok := args.Keyword["randomIPv4Address"]; ok {
@@ -658,9 +646,9 @@ if err != nil {
 }
 `, varName, attr),
 					})
-					d.additionalTfVars[varName] = tfVar{
+					d.additionalTfVars[varName] = tests.TFVar{
 						GoVarName: varName,
-						Type:      tfVarTypeString,
+						Type:      tests.TFVarTypeString,
 					}
 				}
 				if attr, ok := args.Keyword["existsType"]; ok {
@@ -879,13 +867,13 @@ if err != nil {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = tfVar{
+		d.additionalTfVars["certificate_pem"] = tests.TFVar{
 			GoVarName: "certificatePEM",
-			Type:      tfVarTypeString,
+			Type:      tests.TFVarTypeString,
 		}
-		d.additionalTfVars["private_key_pem"] = tfVar{
+		d.additionalTfVars["private_key_pem"] = tests.TFVar{
 			GoVarName: "privateKeyPEM",
-			Type:      tfVarTypeString,
+			Type:      tests.TFVarTypeString,
 		}
 	}
 

@@ -26,6 +26,18 @@ type CodeBlock struct {
 	Code string
 }
 
+type TFVar struct {
+	GoVarName string
+	Type      TFVarType
+}
+
+type TFVarType string
+
+const (
+	TFVarTypeString TFVarType = "string"
+	TFVarTypeInt    TFVarType = "int"
+)
+
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
 		if b, err := strconv.ParseBool(attr); err != nil {
