@@ -147,7 +147,7 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
-	d.Set("database", d.Get("database").(string))
+	d.Set(names.AttrDatabase, d.Get(names.AttrDatabase).(string))
 	d.Set("db_user", d.Get("db_user").(string))
 
 	var sqls []string
