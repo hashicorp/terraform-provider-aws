@@ -37,11 +37,13 @@ func (d *dataSourceDbServersList) Schema(ctx context.Context, req datasource.Sch
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Required: true,
+				Required:    true,
+				Description: "The cloud exadata infrastructure ID. Mandatory field.",
 			},
 			"db_servers": schema.ListAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dbServerForDbServersListDataSourceModel](ctx),
+				Description: "List of database servers associated with cloud_exadata_infrastructure_id.",
+				Computed:    true,
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[dbServerForDbServersListDataSourceModel](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"id":                      types.StringType,

@@ -47,14 +47,17 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				Required:    true,
 			},
 			"status": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[odbtypes.ResourceStatus](),
-				Computed:   true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
+				Computed:    true,
+				Description: "The status of the database server.",
 			},
 			"status_reason": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Additional information about the current status of the database server.",
 			},
 			"cpu_core_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of CPU cores enabled on the database server.",
 			},
 			"db_node_ids": schema.ListAttribute{
 				Computed:    true,
@@ -62,9 +65,12 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				ElementType: types.StringType,
 			},
 			"db_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The allocated local node storage in GBs on the database server.",
 			},
 			"db_server_patching_details": schema.ObjectAttribute{
+				Description: "The scheduling details for the quarterly maintenance window. Patching and\n" +
+					"system updates take place during the maintenance window.",
 				Computed:   true,
 				CustomType: fwtypes.NewObjectTypeOf[dbNodePatchingDetailsDbServerDataSourceModel](ctx),
 				AttributeTypes: map[string]attr.Type{
@@ -75,53 +81,68 @@ func (d *dataSourceDbServer) Schema(ctx context.Context, req datasource.SchemaRe
 				},
 			},
 			"display_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The display name of the database server.",
 			},
 			"exadata_infrastructure_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The exadata infrastructure ID of the database server.",
 			},
 			"ocid": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The OCID of the database server to retrieve information about.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor.",
 			},
 			"max_cpu_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores available.",
 			},
 			"max_db_node_storage_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total local node storage available in GBs.",
 			},
 			"max_memory_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total memory available in GBs.",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The allocated memory in GBs on the database server.",
 			},
 			"shape": schema.StringAttribute{
 				Computed: true,
+				Description: "// The shape of the database server. The shape determines the amount of CPU,\n" +
+					"storage, and memory resources available.",
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The date and time when the database server was created.",
 			},
 			"vm_cluster_ids": schema.ListAttribute{
 				Computed:    true,
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
+				Description: "The OCID of the VM clusters that are associated with the database server.",
 			},
 			"compute_model": schema.StringAttribute{
-				Computed:   true,
-				CustomType: fwtypes.StringEnumType[odbtypes.ComputeModel](),
+				Computed:    true,
+				CustomType:  fwtypes.StringEnumType[odbtypes.ComputeModel](),
+				Description: " The compute model of the database server.",
 			},
 			"autonomous_vm_cluster_ids": schema.ListAttribute{
 				Computed:    true,
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
+				Description: "The OCID of the autonomous VM clusters that are associated with the database server.",
 			},
 			"autonomous_virtual_machine_ids": schema.ListAttribute{
 				Computed:    true,
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
+				Description: "The list of unique identifiers for the Autonomous VMs associated with this database server.",
 			},
 		},
 	}
