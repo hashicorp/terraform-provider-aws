@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.52.0
-	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.16.3
+	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.34.5
