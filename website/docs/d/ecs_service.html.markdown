@@ -44,11 +44,11 @@ This data source exports the following attributes in addition to the arguments a
 
 The `load_balancer` block exports the following attributes:
 
-* `elb_name` - Name of the load balancer.
+* `advanced_configuration` - Settings for Blue/Green deployment. See [`advanced_configuration` Block](#advanced_configuration-block) for details.
 * `container_name` - Name of the container to associate with the load balancer.
 * `container_port` - Port on the container to associate with the load balancer.
+* `elb_name` - Name of the load balancer.
 * `target_group_arn` - ARN of the target group to associate with the load balancer.
-* `advanced_configuration` - Settings for Blue/Green deployment. See [`advanced_configuration` Block](#advanced_configuration-block) for details.
 
 ### `advanced_configuration` Block
 
