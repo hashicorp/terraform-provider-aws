@@ -358,30 +358,6 @@ const (
 	implementationSDK       implementation = "sdk"
 )
 
-type importAction int
-
-const (
-	importActionNoop importAction = iota
-	importActionUpdate
-	importActionReplace
-)
-
-func (i importAction) String() string {
-	switch i {
-	case importActionNoop:
-		return "NoOp"
-
-	case importActionUpdate:
-		return "Update"
-
-	case importActionReplace:
-		return "Replace"
-
-	default:
-		return ""
-	}
-}
-
 type triBoolean uint
 
 const (
@@ -399,11 +375,6 @@ type ResourceDatum struct {
 	FileName                    string
 	Generator                   string
 	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
-	NoImport                    bool
-	ImportStateID               string
-	importStateIDAttribute      string
-	ImportStateIDFunc           string
-	ImportIgnore                []string
 	Implementation              implementation
 	Serialize                   bool
 	SerializeDelay              bool
@@ -425,7 +396,6 @@ type ResourceDatum struct {
 	HasRegionOverrideTest       bool
 	UseAlternateAccount         bool
 	identityAttributes          []identityAttribute
-	plannableImportAction       importAction
 	identityAttribute           string
 	IdentityDuplicateAttrs      []string
 	IDAttrFormat                string
@@ -442,14 +412,6 @@ func (d ResourceDatum) HasIDAttrDuplicates() bool {
 
 func (d ResourceDatum) IDAttrDuplicates() string {
 	return namesgen.ConstOrQuote(d.idAttrDuplicates)
-}
-
-func (d ResourceDatum) HasImportStateIDAttribute() bool {
-	return d.importStateIDAttribute != ""
-}
-
-func (d ResourceDatum) ImportStateIDAttribute() string {
-	return namesgen.ConstOrQuote(d.importStateIDAttribute)
 }
 
 func (d ResourceDatum) OverrideIdentifier() bool {
@@ -486,14 +448,6 @@ func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 
 func (d ResourceDatum) HasInherentRegion() bool {
 	return d.IsARNIdentity() || d.IsRegionalSingleton()
-}
-
-func (d ResourceDatum) HasImportIgnore() bool {
-	return len(d.ImportIgnore) > 0
-}
-
-func (d ResourceDatum) PlannableResourceAction() string {
-	return d.plannableImportAction.String()
 }
 
 func (d ResourceDatum) IdentityAttribute() string {
@@ -612,7 +566,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
-		plannableImportAction: importActionNoop,
 		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
 	}
 	hasIdentity := false
@@ -804,48 +757,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						},
 					)
 				}
-				if attr, ok := args.Keyword["importIgnore"]; ok {
-					d.ImportIgnore = strings.Split(attr, ";")
-					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
-					}
-					d.plannableImportAction = importActionUpdate
-				}
-				if attr, ok := args.Keyword["importStateId"]; ok {
-					d.ImportStateID = attr
-				}
-				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
-					d.importStateIDAttribute = attr
-				}
-				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
-					d.ImportStateIDFunc = attr
-				}
+
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
-				}
-				if attr, ok := args.Keyword["noImport"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.NoImport = b
-					}
-				}
-				if attr, ok := args.Keyword["plannableImportAction"]; ok {
-					switch attr {
-					case importActionNoop.String():
-						d.plannableImportAction = importActionNoop
-
-					case importActionUpdate.String():
-						d.plannableImportAction = importActionUpdate
-
-					case importActionReplace.String():
-						d.plannableImportAction = importActionReplace
-
-					default:
-						v.errs = append(v.errs, fmt.Errorf("invalid plannableImportAction value: %q at %s. Must be one of %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()}))
-						continue
-					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {

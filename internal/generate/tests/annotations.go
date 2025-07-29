@@ -11,6 +11,7 @@ import (
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 type CommonArgs struct {
@@ -22,6 +23,14 @@ type CommonArgs struct {
 	HasExistsFunc  bool
 	ExistsTypeName string
 	ExistsTakesT   bool
+
+	// Import
+	NoImport               bool
+	ImportStateID          string
+	importStateIDAttribute string
+	ImportStateIDFunc      string
+	ImportIgnore           []string
+	plannableImportAction  importAction
 
 	GoImports         []GoImport
 	InitCodeBlocks    []CodeBlock
@@ -35,10 +44,50 @@ func InitCommonArgs() CommonArgs {
 	}
 }
 
-func (d CommonArgs) AdditionalTfVars() map[string]TFVar {
-	return tfmaps.ApplyToAllKeys(d.AdditionalTfVars_, func(k string) string {
+func (c CommonArgs) HasImportStateIDAttribute() bool {
+	return c.importStateIDAttribute != ""
+}
+
+func (c CommonArgs) ImportStateIDAttribute() string {
+	return namesgen.ConstOrQuote(c.importStateIDAttribute)
+}
+
+func (c CommonArgs) HasImportIgnore() bool {
+	return len(c.ImportIgnore) > 0
+}
+
+func (c CommonArgs) PlannableResourceAction() string {
+	return c.plannableImportAction.String()
+}
+
+func (c CommonArgs) AdditionalTfVars() map[string]TFVar {
+	return tfmaps.ApplyToAllKeys(c.AdditionalTfVars_, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+type importAction int
+
+const (
+	importActionNoop importAction = iota
+	importActionUpdate
+	importActionReplace
+)
+
+func (i importAction) String() string {
+	switch i {
+	case importActionNoop:
+		return "NoOp"
+
+	case importActionUpdate:
+		return "Update"
+
+	case importActionReplace:
+		return "Replace"
+
+	default:
+		return ""
+	}
 }
 
 type GoImport struct {
@@ -110,6 +159,46 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			return fmt.Errorf("invalid existsTakesT value %q: Should be boolean value.", attr)
 		} else {
 			stuff.ExistsTakesT = b
+		}
+	}
+
+	// Import
+	if attr, ok := args.Keyword["importIgnore"]; ok {
+		stuff.ImportIgnore = strings.Split(attr, ";")
+		for i, val := range stuff.ImportIgnore {
+			stuff.ImportIgnore[i] = namesgen.ConstOrQuote(val)
+		}
+		stuff.plannableImportAction = importActionUpdate
+	}
+	if attr, ok := args.Keyword["importStateId"]; ok {
+		stuff.ImportStateID = attr
+	}
+	if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
+		stuff.importStateIDAttribute = attr
+	}
+	if attr, ok := args.Keyword["importStateIdFunc"]; ok {
+		stuff.ImportStateIDFunc = attr
+	}
+	if attr, ok := args.Keyword["noImport"]; ok {
+		if b, err := strconv.ParseBool(attr); err != nil {
+			return fmt.Errorf("invalid noImport value %q: Should be boolean value.", attr)
+		} else {
+			stuff.NoImport = b
+		}
+	}
+	if attr, ok := args.Keyword["plannableImportAction"]; ok {
+		switch attr {
+		case importActionNoop.String():
+			stuff.plannableImportAction = importActionNoop
+
+		case importActionUpdate.String():
+			stuff.plannableImportAction = importActionUpdate
+
+		case importActionReplace.String():
+			stuff.plannableImportAction = importActionReplace
+
+		default:
+			return fmt.Errorf("invalid plannableImportAction value %q: Must be one of %s.", attr, []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()})
 		}
 	}
 

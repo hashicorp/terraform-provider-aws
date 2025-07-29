@@ -388,11 +388,6 @@ type ResourceDatum struct {
 	TypeName                         string
 	FileName                         string
 	Generator                        string
-	NoImport                         bool
-	ImportStateID                    string
-	importStateIDAttribute           string
-	ImportStateIDFunc                string
-	ImportIgnore                     []string
 	Implementation                   implementation
 	Serialize                        bool
 	SerializeDelay                   bool
@@ -411,14 +406,6 @@ type ResourceDatum struct {
 	OverrideResourceType             string
 	UseAlternateAccount              bool
 	tests.CommonArgs
-}
-
-func (d ResourceDatum) HasImportStateIDAttribute() bool {
-	return d.importStateIDAttribute != ""
-}
-
-func (d ResourceDatum) ImportStateIDAttribute() string {
-	return namesgen.ConstOrQuote(d.importStateIDAttribute)
 }
 
 func (d ResourceDatum) OverrideIdentifier() bool {
@@ -618,32 +605,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						generatorSeen = true
 					}
 				}
-				if attr, ok := args.Keyword["importIgnore"]; ok {
-					d.ImportIgnore = strings.Split(attr, ";")
-
-					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
-					}
-				}
-				if attr, ok := args.Keyword["importStateId"]; ok {
-					d.ImportStateID = attr
-				}
-				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
-					d.importStateIDAttribute = attr
-				}
-				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
-					d.ImportStateIDFunc = attr
-				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
-				}
-				if attr, ok := args.Keyword["noImport"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.NoImport = b
-					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
