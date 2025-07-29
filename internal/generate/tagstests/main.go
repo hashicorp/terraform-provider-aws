@@ -405,7 +405,6 @@ type ResourceDatum struct {
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
 	GenerateConfig                   bool
-	InitCodeBlocks                   []codeBlock
 	additionalTfVars                 map[string]tfVar
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
@@ -636,7 +635,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Alias: "sdkacctest",
 						},
 					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
 					})
 					d.additionalTfVars[varName] = tfVar{
@@ -652,7 +651,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Alias: "sdkacctest",
 						},
 					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s, err := sdkacctest.RandIpAddress("%s")
 if err != nil {
 	t.Fatal(err)
@@ -876,7 +875,7 @@ if err != nil {
 				},
 			)
 		}
-		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})

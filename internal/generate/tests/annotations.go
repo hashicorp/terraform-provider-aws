@@ -14,11 +14,16 @@ type CommonArgs struct {
 	CheckDestroyNoop bool
 	DestroyTakesT    bool
 	GoImports        []GoImport
+	InitCodeBlocks   []CodeBlock
 }
 
 type GoImport struct {
 	Path  string
 	Alias string
+}
+
+type CodeBlock struct {
+	Code string
 }
 
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {

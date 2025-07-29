@@ -416,7 +416,6 @@ type ResourceDatum struct {
 	PreChecksWithRegion         []codeBlock
 	PreCheckRegions             []string
 	GenerateConfig              bool
-	InitCodeBlocks              []codeBlock
 	additionalTfVars            map[string]string
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
@@ -802,7 +801,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(
 							`domain := acctest.RandomDomainName()
 %s := acctest.RandomEmailAddress(domain)`, varName),
@@ -819,7 +818,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
 					})
 					d.additionalTfVars[varName] = varName
@@ -841,10 +840,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := acctest.RandomDomain()`, parentName),
 					})
-					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
 					})
 					d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
@@ -1089,7 +1088,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				},
 			)
 		}
-		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+		d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
