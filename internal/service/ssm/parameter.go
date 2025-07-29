@@ -150,7 +150,7 @@ func resourceParameter() *schema.Resource {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
 			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue)
+				return diff.HasChange(names.AttrValue) || diff.HasChange(names.AttrDescription)
 			}),
 			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")

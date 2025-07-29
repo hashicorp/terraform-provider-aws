@@ -49,6 +49,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newKeyRegistrationResource,
+			TypeName: "aws_quicksight_key_registration",
+			Name:     "Key Registration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newNamespaceResource,
 			TypeName: "aws_quicksight_namespace",
 			Name:     "Namespace",

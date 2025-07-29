@@ -262,7 +262,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	// InvalidInputException: CodeBuild is not authorized to perform
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFleet(ctx, input)
 	}, "ot authorized to perform")
 
@@ -398,7 +398,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	input.Tags = getTagsIn(ctx)
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidInputException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidInputException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateFleet(ctx, input)
 	}, "ot authorized to perform")
 

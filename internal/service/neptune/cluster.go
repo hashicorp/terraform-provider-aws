@@ -823,7 +823,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteDBCluster(ctx, input)
 	}, "is not currently in the available state")
 

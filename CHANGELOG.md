@@ -1,4 +1,21 @@
-## 6.6.0 (Unreleased)
+## 6.7.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_quicksight_key_registration` ([#43587](https://github.com/hashicorp/terraform-provider-aws/issues/43587))
+
+ENHANCEMENTS:
+
+* data-source/aws_ebs_volume: Add `volume_initialization_rate` attribute ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
+* data-source/aws_ecs_service: Support `load_balancer` attribute ([#43582](https://github.com/hashicorp/terraform-provider-aws/issues/43582))
+* resource/aws_athena_workgroup: Add `configuration.identity_center_configuration` argument ([#38717](https://github.com/hashicorp/terraform-provider-aws/issues/38717))
+* resource/aws_ebs_volume: Add `volume_initialization_rate` argument ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
+
+BUG FIXES:
+
+* resource/aws_ssm_parameter: Fix `version` not being updated when `description` changes ([#42595](https://github.com/hashicorp/terraform-provider-aws/issues/42595))
+
+## 6.6.0 (July 28, 2025)
 
 FEATURES:
 
@@ -7,8 +24,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_event_bus: Add `log_config` attribute ([#43453](https://github.com/hashicorp/terraform-provider-aws/issues/43453))
+* data-source/aws_ssm_patch_baseline: Add `available_security_updates_compliance_status` argument ([#43560](https://github.com/hashicorp/terraform-provider-aws/issues/43560))
 * feature/aws_bedrock_guardrail: Add `cross_region_config`, `content_policy_config.tier_config`, and `topic_policy_config.tier_config` arguments ([#43517](https://github.com/hashicorp/terraform-provider-aws/issues/43517))
+* resource/aws_athena_database: Add `workgroup` argument ([#36628](https://github.com/hashicorp/terraform-provider-aws/issues/36628))
 * resource/aws_batch_compute_environment: Add `compute_resources.ec2_configuration.image_kubernetes_version` argument ([#43454](https://github.com/hashicorp/terraform-provider-aws/issues/43454))
+* resource/aws_cloudwatch_event_bus: Add `log_config` argument ([#43453](https://github.com/hashicorp/terraform-provider-aws/issues/43453))
 * resource/aws_cognito_resource_server: Allow `name` to be updated in-place ([#41702](https://github.com/hashicorp/terraform-provider-aws/issues/41702))
 * resource/aws_cognito_user_pool: Allow `name` to be updated in-place ([#42639](https://github.com/hashicorp/terraform-provider-aws/issues/42639))
 * resource/aws_globalaccelerator_custom_routing_endpoint_group: Add resource identity support ([#43539](https://github.com/hashicorp/terraform-provider-aws/issues/43539))
@@ -26,10 +47,13 @@ ENHANCEMENTS:
 * resource/aws_inspector_assessment_template: Add resource identity support ([#43542](https://github.com/hashicorp/terraform-provider-aws/issues/43542))
 * resource/aws_inspector_resource_group: Add resource identity support ([#43542](https://github.com/hashicorp/terraform-provider-aws/issues/43542))
 * resource/aws_nat_gateway: Change `secondary_allocation_ids` to Optional and Computed ([#42591](https://github.com/hashicorp/terraform-provider-aws/issues/42591))
+* resource/aws_ssm_patch_baseline: Add `available_security_updates_compliance_status` argument ([#43560](https://github.com/hashicorp/terraform-provider-aws/issues/43560))
+* resource/aws_ssm_service_setting: Support short format (with `/ssm/` prefix) for `setting_id` ([#43562](https://github.com/hashicorp/terraform-provider-aws/issues/43562))
 
 BUG FIXES:
 
 * resource/aws_appsync_api_cache: Fix "missing required field" error during update ([#43523](https://github.com/hashicorp/terraform-provider-aws/issues/43523))
+* resource/aws_cloudwatch_log_delivery_destination: Fix update failure when tags are set ([#43576](https://github.com/hashicorp/terraform-provider-aws/issues/43576))
 * resource/aws_ecs_service: Fix unspecified `test_listener_rule` incorrectly being set as empty string in `load_balancer.advanced_configuration` block ([#43558](https://github.com/hashicorp/terraform-provider-aws/issues/43558))
 
 ## 6.5.0 (July 24, 2025)

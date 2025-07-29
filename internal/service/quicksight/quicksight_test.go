@@ -32,6 +32,10 @@ func TestAccQuickSight_serial(t *testing.T) {
 			acctest.CtBasic:      testAccAccountSubscription_basic,
 			acctest.CtDisappears: testAccAccountSubscription_disappears,
 		},
+		"KeyRegistration": {
+			acctest.CtBasic:      testAccKeyRegistration_basic,
+			acctest.CtDisappears: testAccKeyRegistration_disappears,
+		},
 		"RoleMembership": {
 			acctest.CtBasic:      testAccRoleMembership_basic,
 			acctest.CtDisappears: testAccRoleMembership_disappears,

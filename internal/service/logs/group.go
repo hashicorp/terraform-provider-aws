@@ -243,7 +243,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.OperationAbortedException](ctx, 1*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.OperationAbortedException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteLogGroup(ctx, &input)
 	}, "try again")
 
