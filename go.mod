@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.17.6
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.8.5
