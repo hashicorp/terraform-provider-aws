@@ -192,7 +192,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
+func TestAccXXXNetworkManagerDirectConnectGatewayAttachment_tags_old(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -309,8 +309,6 @@ func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, n str
 
 func testAccDirectConnectGatewayAttachmentConfig_base(rName string, requireAcceptance bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
   amazon_side_asn = 65000
@@ -334,6 +332,8 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
+
+data "aws_region" "current" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
