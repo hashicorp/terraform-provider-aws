@@ -996,6 +996,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
+	}
+
 	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	}
@@ -1021,10 +1025,6 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "ttl", err)
-	}
-
-	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
-		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
 	}
 
 	return diags
