@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshiftdata_batch_statement")
@@ -35,12 +36,12 @@ func resourceBatchStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -86,11 +87,11 @@ func resourceBatchStatementCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
 	input := &redshiftdata.BatchExecuteStatementInput{
-		Database:  aws.String(d.Get("database").(string)),
+		Database:  aws.String(d.Get(names.AttrDatabase).(string)),
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -145,7 +146,7 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Batch Data Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_identifier", sub.ClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
 
