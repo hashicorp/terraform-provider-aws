@@ -8,24 +8,25 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshiftdata "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftDataBatchStatement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshiftdataapiservice.DescribeStatementOutput
+	var v redshiftdata.DescribeStatementOutput
 	resourceName := "aws_redshiftdata_batch_statement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftDataServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -51,13 +52,13 @@ func TestAccRedshiftDataBatchStatement_basic(t *testing.T) {
 
 func TestAccRedshiftDataBatchStatement_workgroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshiftdataapiservice.DescribeStatementOutput
+	var v redshiftdata.DescribeStatementOutput
 	resourceName := "aws_redshiftdata_batch_statement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftDataServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccRedshiftDataBatchStatement_workgroup(t *testing.T) {
 	})
 }
 
-func testAccCheckBatchStatementExists(ctx context.Context, n string, v *redshiftdataapiservice.DescribeStatementOutput) resource.TestCheckFunc {
+func testAccCheckBatchStatementExists(ctx context.Context, n string, v *redshiftdata.DescribeStatementOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -92,7 +93,7 @@ func testAccCheckBatchStatementExists(ctx context.Context, n string, v *redshift
 			return fmt.Errorf("No Redshift Data Statement ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataClient(ctx)
 
 		output, err := tfredshiftdata.FindStatementByID(ctx, conn, rs.Primary.ID)
 
@@ -114,8 +115,8 @@ resource "aws_redshift_cluster" "test" {
   database_name                       = "mydb"
   master_username                     = "foo_test"
   master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
+  node_type                           = "ra3.large"
+  automated_snapshot_retention_period = 1
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
 }
@@ -143,7 +144,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
 resource "aws_redshiftdata_batch_statement" "test" {
   workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
   database       = "dev"
-  sqls           = ["CREATE GROUP group_name;"]
+  sqls           = ["CREATE GROUP group_name;", "CREATE GROUP group_name2;"]
 }
 `, rName)
 }

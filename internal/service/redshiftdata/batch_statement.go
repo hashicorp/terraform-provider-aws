@@ -5,6 +5,9 @@ package redshiftdata
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"log"
-	"time"
 )
 
 // @SDKResource("aws_redshiftdata_batch_statement")
@@ -147,7 +148,17 @@ func resourceBatchStatementRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cluster_identifier", sub.ClusterIdentifier)
 	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	d.Set("sqls", sub.SubStatements)
+
+	var sqls []string
+
+	for _, subStatement := range sub.SubStatements {
+		sqls = append(sqls, aws.ToString(subStatement.QueryString))
+	}
+
+	if err := d.Set("sqls", sqls); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sqls: %s", err)
+	}
+
 	d.Set("secret_arn", sub.SecretArn)
 	d.Set("workgroup_name", sub.WorkgroupName)
 
