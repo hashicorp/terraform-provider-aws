@@ -1054,7 +1054,7 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 									}
 									if len(customResponseList) > 0 {
 										customResponse := &awstypes.CustomResponse{
-											ResponseCode: aws.Int32(customResponseList[0].ResponseCode.ValueInt32()),
+											ResponseCode: customResponseList[0].ResponseCode.ValueInt32Pointer(),
 										}
 										if !customResponseList[0].CustomResponseBodyKey.IsNull() {
 											customResponse.CustomResponseBodyKey = customResponseList[0].CustomResponseBodyKey.ValueStringPointer()
