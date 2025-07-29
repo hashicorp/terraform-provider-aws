@@ -66,6 +66,6 @@ import {
 }
 ```
 
-```bash
+```console
 $ terraform import aws_redshiftdata_batch_statement.example example
 ```
