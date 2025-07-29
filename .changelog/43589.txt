@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket: Fix regression where we stopped accepting 'NoSuchTagSetError' responses from S3-compatible services
+```
+
+```release-note:bug
+resource/aws_s3_object: Fix regression where we stopped accepting 'NoSuchTagSetError' responses from S3-compatible services
+```
