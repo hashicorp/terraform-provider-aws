@@ -425,8 +425,8 @@ github.com/aws/aws-sdk-go-v2/service/rbin v1.23.0 h1:zQ4vQCRBT1bTb3b5Nvzd1S5kZ93
 github.com/aws/aws-sdk-go-v2/service/rbin v1.23.0/go.mod h1:9lt08xzCBRZYiiZNRbd/iBOQ0yMVLDmJhhr1vBW/fLg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.100.0 h1:tv36GhETPIf9IX92SYKMCQeUDlnpAOZ/1Dd9S82YrF0=
 github.com/aws/aws-sdk-go-v2/service/rds v1.100.0/go.mod h1:QjidjpcTEJ3eG6SniuuMtnX4AjuqF3Z4Rhys0xSKWA0=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.54.7 h1:hpaye6DQfYc8yseJm6ppYQVt0BL1viYY5liuKYvuffk=
-github.com/aws/aws-sdk-go-v2/service/redshift v1.54.7/go.mod h1:hJskgFEUic2UbbwAaIO/P63Ik2PP2gIgWWGgPkdOsHo=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.55.0 h1:70T8EpAmUAmh1+iljlPu94NnUKATN9GedtKY0y9I4CY=
+github.com/aws/aws-sdk-go-v2/service/redshift v1.55.0/go.mod h1:ItDt61dKOBnzf5gY/kvu4UaDKNxdp8LntwS7PaaVpfU=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.4 h1:EpVhzHq/6wX13bW5dItlcHnMNaA0OLSeMFFyyAgqQ+M=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.33.4/go.mod h1:awX0pgt4uACOWF/wtjAXNrpBdZskDr+P4DYGrQmbj3g=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.27.5 h1:g7f591GF3JrJ3rE7daW9RUTgRoAua30F0P1OvHW8zSg=
