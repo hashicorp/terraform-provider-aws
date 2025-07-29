@@ -45,6 +45,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
 		return true
 	}
+	// Example (amp): InternalServerErrorException: Internal server error
+	if tfawserr.ErrMessageContains(err, "InternalServerErrorException", "Internal server error") {
+		return true
+	}
 	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
 		return true
