@@ -675,8 +675,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("global", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						if b {
@@ -715,8 +715,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
 					}
@@ -785,8 +785,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("useAlternateAccount", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else if b {
 						d.UseAlternateAccount = true
@@ -796,24 +796,24 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serialize", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.Serialize = b
 					}
 				}
 				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serializeParallelTests", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SerializeParallelTests = b
 					}
 				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serializeDelay", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SerializeDelay = b
@@ -834,23 +834,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid identityRegionOverrideTest value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.HasRegionOverrideTest = b
 					}
 				}
 				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60NullValuesError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0NullValuesError = b
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid v60RefreshError value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
 					}
@@ -864,8 +864,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.PreIdentityVersion = version
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						tlsKey = b

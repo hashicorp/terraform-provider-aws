@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -581,8 +580,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["altRegionProvider"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("altRegionProvider", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.AlternateRegionProvider = b
@@ -621,8 +620,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					)
 				}
 				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("useAlternateAccount", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else if b {
 						d.UseAlternateAccount = true
@@ -637,24 +636,24 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serialize", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.Serialize = b
 					}
 				}
 				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serializeParallelTests", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SerializeParallelTests = b
 					}
 				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("serializeDelay", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SerializeDelay = b
@@ -683,48 +682,48 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				// TODO: should probably be a parameter on @Tags
 				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateForceNew value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("tagsUpdateForceNew", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.TagsUpdateForceNew = b
 					}
 				}
 				if attr, ok := args.Keyword["tagsUpdateGetTagsIn"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateGetTagsIn value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("tagsUpdateGetTagsIn", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.TagsUpdateGetTagsIn = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("skipEmptyTags", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SkipEmptyTags = b
 					}
 				}
 				if attr, ok := args.Keyword["skipNullTags"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid skipNullTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("skipNullTags", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.SkipNullTags = b
 					}
 				}
 				if attr, ok := args.Keyword["noRemoveTags"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid noRemoveTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("noRemoveTags", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						d.NoRemoveTags = b
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tlsKey value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+						v.errs = append(v.errs, err)
 						continue
 					} else {
 						tlsKey = b

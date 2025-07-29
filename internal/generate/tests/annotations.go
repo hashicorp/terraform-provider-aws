@@ -122,8 +122,8 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// DestroyCheck
 	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
-		if b, err := strconv.ParseBool(attr); err != nil {
-			return fmt.Errorf("invalid checkDestroyNoop value: %q: Should be boolean value.", attr)
+		if b, err := ParseBoolAttr("checkDestroyNoop", attr); err != nil {
+			return err
 		} else {
 			stuff.CheckDestroyNoop = b
 			stuff.GoImports = append(stuff.GoImports,
@@ -135,8 +135,8 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["destroyTakesT"]; ok {
-		if b, err := strconv.ParseBool(attr); err != nil {
-			return fmt.Errorf("invalid destroyTakesT value %q: Should be boolean value.", attr)
+		if b, err := ParseBoolAttr("destroyTakesT", attr); err != nil {
+			return err
 		} else {
 			stuff.DestroyTakesT = b
 		}
@@ -144,8 +144,8 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// ExistsCheck
 	if attr, ok := args.Keyword["hasExistsFunction"]; ok {
-		if b, err := strconv.ParseBool(attr); err != nil {
-			return fmt.Errorf("invalid existsFunction value %q: Should be boolean value.", attr)
+		if b, err := ParseBoolAttr("hasExistsFunction", attr); err != nil {
+			return err
 		} else {
 			stuff.HasExistsFunc = b
 		}
@@ -163,8 +163,8 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["existsTakesT"]; ok {
-		if b, err := strconv.ParseBool(attr); err != nil {
-			return fmt.Errorf("invalid existsTakesT value %q: Should be boolean value.", attr)
+		if b, err := ParseBoolAttr("existsTakesT", attr); err != nil {
+			return err
 		} else {
 			stuff.ExistsTakesT = b
 		}
@@ -192,8 +192,8 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	if attr, ok := args.Keyword["noImport"]; ok {
-		if b, err := strconv.ParseBool(attr); err != nil {
-			return fmt.Errorf("invalid noImport value %q: Should be boolean value.", attr)
+		if b, err := ParseBoolAttr("noImport", attr); err != nil {
+			return err
 		} else {
 			stuff.NoImport = b
 		}
@@ -341,6 +341,14 @@ if err != nil {
 	}
 
 	return nil
+}
+
+func ParseBoolAttr(name, value string) (bool, error) {
+	if b, err := strconv.ParseBool(value); err != nil {
+		return b, fmt.Errorf("invalid %s value %q: Should be boolean value.", name, value)
+	} else {
+		return b, nil
+	}
 }
 
 func ParseIdentifierSpec(s string) (string, *GoImport, error) {
