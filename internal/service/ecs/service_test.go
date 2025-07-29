@@ -1157,6 +1157,38 @@ func TestAccECSService_BlueGreenDeployment_updateFailure(t *testing.T) {
 	})
 }
 
+func TestAccECSService_BlueGreenDeployment_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "1"),
+				),
+			},
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_zeroBakeTime(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "desired_count", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_BlueGreenDeployment_waitServiceActive(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -1174,6 +1206,60 @@ func TestAccECSService_BlueGreenDeployment_waitServiceActive(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_BlueGreenDeployment_withoutTestListenerRule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_blueGreenDeployment_withoutTestListenerRule(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.alternate_target_group_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.production_listener_rule"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.0.test_listener_rule", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.role_arn"),
+				),
+			},
+			{
+				// Set test_listener_rule
+				Config: testAccServiceConfig_blueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.alternate_target_group_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.production_listener_rule"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.test_listener_rule"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.role_arn"),
+				),
+			},
+			{
+				// Remove test_listener_rule again
+				Config: testAccServiceConfig_blueGreenDeployment_withoutTestListenerRule(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.strategy", "BLUE_GREEN"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.alternate_target_group_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.production_listener_rule"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.0.advanced_configuration.0.test_listener_rule", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer.0.advanced_configuration.0.role_arn"),
 				),
 			},
 		},
@@ -3402,7 +3488,7 @@ resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
+  desired_count   = 2
   launch_type     = "FARGATE"
 
   deployment_configuration {
@@ -3460,6 +3546,84 @@ resource "aws_ecs_service" "test" {
       alternate_target_group_arn = aws_lb_target_group.alternate.arn
       production_listener_rule   = aws_lb_listener_rule.production.arn
       test_listener_rule         = aws_lb_listener_rule.test.arn
+      role_arn                   = aws_iam_role.global.arn
+    }
+  }
+
+  wait_for_steady_state = %[2]t
+
+  depends_on = [
+    aws_iam_role_policy_attachment.global_admin_attach,
+    aws_iam_role_policy.ecs_elb_permissions,
+    aws_iam_role_policy_attachment.ecs_service_role
+  ]
+}
+`, rName, waitSteadyState))
+}
+
+func testAccServiceConfig_blueGreenDeployment_withoutTestListenerRule(rName string, waitSteadyState bool) string {
+	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  deployment_configuration {
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 2
+
+    lifecycle_hook {
+      hook_target_arn  = aws_lambda_function.hook_success.arn
+      role_arn         = aws_iam_role.global.arn
+      lifecycle_stages = ["POST_SCALE_UP", "POST_TEST_TRAFFIC_SHIFT"]
+    }
+
+    lifecycle_hook {
+      hook_target_arn  = aws_lambda_function.hook_success.arn
+      role_arn         = aws_iam_role.global.arn
+      lifecycle_stages = ["TEST_TRAFFIC_SHIFT", "POST_PRODUCTION_TRAFFIC_SHIFT"]
+    }
+  }
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    service {
+      client_alias {
+        dns_name = "test-service.local"
+        port     = 8080
+
+        test_traffic_rules {
+          header {
+            name = "x-test-header"
+            value {
+              exact = "test-value"
+            }
+          }
+        }
+      }
+      discovery_name = "test-service"
+      port_name      = "http"
+    }
+  }
+
+  network_configuration {
+    security_groups  = [aws_security_group.test.id]
+    subnets          = aws_subnet.test[*].id
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.primary.arn
+    container_name   = "test"
+    container_port   = 80
+
+    advanced_configuration {
+      alternate_target_group_arn = aws_lb_target_group.alternate.arn
+      production_listener_rule   = aws_lb_listener_rule.production.arn
       role_arn                   = aws_iam_role.global.arn
     }
   }

@@ -198,6 +198,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
@@ -291,4 +292,4 @@ For a private custom domain name:
 % terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com/abcde12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-43732385caf699107a4c8860f00579988c41b96bae17592cc615388ce0525adb -->
+<!-- cache-key: cdktf-0.20.8 input-3cdb6972bf7ecb4602cc09b75e070689c5b1e2a8229df1502c68b114fb26f3e8 -->

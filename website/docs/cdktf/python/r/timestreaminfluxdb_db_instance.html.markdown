@@ -296,6 +296,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_parameter_group_identifier` - (Optional) ID of the DB parameter group assigned to your DB instance. This argument is updatable. If added to an existing Timestream for InfluxDB instance or given a new value, will cause an in-place update to the instance. However, if an instance already has a value for `db_parameter_group_identifier`, removing `db_parameter_group_identifier` will cause the instance to be destroyed and recreated.
 * `db_storage_type` - (Default `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400. This argument is updatable. For a single instance, after this argument has been updated once, it can only be updated again after 6 hours have passed.
 * `deployment_type` - (Default `"SINGLE_AZ"`) Specifies whether the DB instance will be deployed as a standalone instance or with a Multi-AZ standby for high availability. Valid options are: `"SINGLE_AZ"`, `"WITH_MULTIAZ_STANDBY"`. This argument is updatable.
@@ -363,4 +364,4 @@ Using `terraform import`, import Timestream for InfluxDB Db Instance using its i
 % terraform import aws_timestreaminfluxdb_db_instance.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f033d38565c8bba8047b7dd9540c4eef21884863898cb9f03010334097c19285 -->
+<!-- cache-key: cdktf-0.20.8 input-f055d89618602b5b7e035bd86bd68123120f51663f1ed148c855bc209d96787b -->

@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +24,7 @@ import (
 
 func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstance
+	var v awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -58,7 +58,7 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 
 func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v1, v2 types.VerifiedAccessInstance
+	var v1, v2 awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 	originalDescription := "original description"
 	updatedDescription := "updated description"
@@ -100,7 +100,7 @@ func testAccVerifiedAccessInstance_description(t *testing.T, semaphore tfsync.Se
 
 func testAccVerifiedAccessInstance_fipsEnabled(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v1, v2 types.VerifiedAccessInstance
+	var v1, v2 awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 	originalFipsEnabled := true
 	updatedFipsEnabled := false
@@ -142,7 +142,7 @@ func testAccVerifiedAccessInstance_fipsEnabled(t *testing.T, semaphore tfsync.Se
 
 func testAccVerifiedAccessInstance_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessInstance
+	var v awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +169,7 @@ func testAccVerifiedAccessInstance_disappears(t *testing.T, semaphore tfsync.Sem
 
 func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 types.VerifiedAccessInstance
+	var v1, v2, v3 awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -221,7 +221,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 
 func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v1 types.VerifiedAccessInstance
+	var v1 awstypes.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 	subDomainName := "test.demo.com"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -252,7 +252,7 @@ func testAccVerifiedAccessInstance_cidrEndpointsCustomSubDomain(t *testing.T, se
 	})
 }
 
-func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *awstypes.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before != after {
 			return fmt.Errorf("Verified Access Instance (%s/%s) recreated", before, after)
@@ -262,7 +262,7 @@ func testAccCheckVerifiedAccessInstanceNotRecreated(before, after *types.Verifie
 	}
 }
 
-func testAccCheckVerifiedAccessInstanceRecreated(before, after *types.VerifiedAccessInstance) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceRecreated(before, after *awstypes.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.VerifiedAccessInstanceId), aws.ToString(after.VerifiedAccessInstanceId); before == after {
 			return fmt.Errorf("Verified Access Instance (%s) not recreated", before)
@@ -272,7 +272,7 @@ func testAccCheckVerifiedAccessInstanceRecreated(before, after *types.VerifiedAc
 	}
 }
 
-func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *types.VerifiedAccessInstance) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *awstypes.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routing_profile_id` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
@@ -90,4 +91,4 @@ A `queue_configs` block supports the following attributes:
 * `queue_id` - Identifier for the queue.
 * `queue_name` - Name for the queue.
 
-<!-- cache-key: cdktf-0.20.8 input-7b52c62aa5fc96bc070fdc4f49b0c96f81b55f17f04cb169afa157226b518e87 -->
+<!-- cache-key: cdktf-0.20.8 input-0c861b8d1618f3a091f9724b1c6534b1ce7f0ca51a4587c996adb555f1d1e98f -->

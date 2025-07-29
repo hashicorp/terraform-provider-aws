@@ -456,6 +456,8 @@ resource "aws_cloudfront_distribution" "example" {
 
 #### Custom Error Response Arguments
 
+~> **NOTE:** When specifying either `response_page_path` or `response_code`, **both** must be set.
+
 * `error_caching_min_ttl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `error_code` (Required) - 4xx or 5xx HTTP status code that you want to customize.
 * `response_code` (Optional) - HTTP status code that you want CloudFront to return with the custom error page to the viewer.

@@ -1026,7 +1026,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
 		}, "in progress")
 
@@ -1063,7 +1063,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := lambda.DeleteFunctionInput{
 		FunctionName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteFunction(ctx, &input)
 	}, "because it is a replicated function")
 

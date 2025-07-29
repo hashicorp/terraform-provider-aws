@@ -63,4 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-You cannot import this resource.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Account Subscription using `aws_account_id`. For example:
+
+```terraform
+import {
+  to = aws_quicksight_account_subscription.example
+  id = "012345678901"
+}
+```
+
+Using `terraform import`, import a QuickSight Account Subscription using `aws_account_id`. For example:
+
+```console
+% terraform import aws_quicksight_account_subscription.example "012345678901"
+```

@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.
 * `aclConfiguration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
@@ -125,4 +126,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-189ae35c915899617823f1aa58e52b808e9d89a93ad41348d3b67590fd2c7244 -->
+<!-- cache-key: cdktf-0.20.8 input-13188a81e96f866ade474043838b031d6458ee18f02d812ad9cabcf89e43f123 -->

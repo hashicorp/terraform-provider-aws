@@ -84,12 +84,12 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Name of the Region whose canonical user ID is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Canonical user ID for the AWS `awslogsdelivery` account in the region.
+* `id` - Canonical user ID for the AWS `awslogsdelivery` account in the Region.
 
-<!-- cache-key: cdktf-0.20.8 input-93b0ce0acde54dbb2724e7094b16f951a34315b647d556a75aa2324267cf2fad -->
+<!-- cache-key: cdktf-0.20.8 input-70fedd0c485b594a6be5f588a9b12ce8812ca66a1513a08a5eb6e242c77dd61c -->

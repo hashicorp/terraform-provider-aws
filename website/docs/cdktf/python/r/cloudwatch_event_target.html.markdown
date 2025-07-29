@@ -633,6 +633,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appsync_target` - (Optional) Parameters used when you are using the rule to invoke an AppSync GraphQL API mutation. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
@@ -787,4 +788,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fdc2f713a76965d636fc8d89157bf97c323ab9142eb0af278d9b82a78994c024 -->
+<!-- cache-key: cdktf-0.20.8 input-4c16b50e4d084f2bdd73c8f93285521d5ad87e9bd6a834dd34651580561c90b2 -->

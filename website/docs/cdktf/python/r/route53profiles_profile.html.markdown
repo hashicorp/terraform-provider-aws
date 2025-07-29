@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Profile.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -89,4 +90,4 @@ Using `terraform import`, import Route 53 Profiles Profile using the `example`. 
 % terraform import aws_route53profiles_profile.example rp-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8838144139a6c5b486c44af13268b924b7c793fc903587bb92d8be4213ffa27b -->
+<!-- cache-key: cdktf-0.20.8 input-2a86de21f45a30228220544390d7382f7c3f500eb5806ac8e9fe1ba9a8ef322b -->

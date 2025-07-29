@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -74,6 +75,25 @@ func resourceBus() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
+			"log_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include_detail": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.IncludeDetail](),
+						},
+						"level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.Level](),
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -91,7 +111,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	eventBusName := d.Get(names.AttrName).(string)
-	input := &eventbridge.CreateEventBusInput{
+	input := eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 		Tags: getTagsIn(ctx),
 	}
@@ -112,13 +132,17 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateEventBus(ctx, input)
+	if v, ok := d.GetOk("log_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
+	}
+
+	output, err := conn.CreateEventBus(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		output, err = conn.CreateEventBus(ctx, input)
+		output, err = conn.CreateEventBus(ctx, &input)
 	}
 
 	if err != nil {
@@ -161,9 +185,14 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig))
+	if err := d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	if err := d.Set("log_config", flattenLogConfig(output.LogConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+	}
 	d.Set(names.AttrName, output.Name)
 
 	return diags
@@ -173,8 +202,8 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChanges("dead_letter_config", names.AttrDescription, "kms_key_identifier") {
-		input := &eventbridge.UpdateEventBusInput{
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := eventbridge.UpdateEventBusInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -193,7 +222,11 @@ func resourceBusUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			input.KmsKeyIdentifier = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateEventBus(ctx, input)
+		if v, ok := d.GetOk("log_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.LogConfig = expandLogConfig(v.([]any)[0].(map[string]any))
+		}
+
+		_, err := conn.UpdateEventBus(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Event Bus (%s): %s", d.Id(), err)
@@ -208,9 +241,10 @@ func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Event Bus: %s", d.Id())
-	_, err := conn.DeleteEventBus(ctx, &eventbridge.DeleteEventBusInput{
+	input := eventbridge.DeleteEventBusInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventBus(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -224,11 +258,11 @@ func resourceBusDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func findEventBusByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeEventBusOutput, error) {
-	input := &eventbridge.DescribeEventBusInput{
+	input := eventbridge.DescribeEventBusInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeEventBus(ctx, input)
+	output, err := conn.DescribeEventBus(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -266,6 +300,34 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) []map[string]any
 	tfMap := map[string]any{}
 	if v := apiObject.Arn; v != nil {
 		tfMap[names.AttrARN] = aws.ToString(v)
+	}
+	return []map[string]any{tfMap}
+}
+
+func expandLogConfig(tfMap map[string]any) *types.LogConfig {
+	if tfMap == nil {
+		return nil
+	}
+	apiObject := &types.LogConfig{}
+	if v, ok := tfMap["include_detail"].(string); ok && v != "" {
+		apiObject.IncludeDetail = types.IncludeDetail(v)
+	}
+	if v, ok := tfMap["level"].(string); ok && v != "" {
+		apiObject.Level = types.Level(v)
+	}
+	return apiObject
+}
+
+func flattenLogConfig(apiObject *types.LogConfig) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+	tfMap := map[string]any{}
+	if v := apiObject.IncludeDetail; v != "" {
+		tfMap["include_detail"] = string(v)
+	}
+	if v := apiObject.Level; v != "" {
+		tfMap["level"] = string(v)
 	}
 	return []map[string]any{tfMap}
 }
