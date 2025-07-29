@@ -404,7 +404,6 @@ type ResourceDatum struct {
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
-	GoImports                        []goImport
 	GenerateConfig                   bool
 	InitCodeBlocks                   []codeBlock
 	additionalTfVars                 map[string]tfVar
@@ -440,11 +439,6 @@ func (d ResourceDatum) OverrideIdentifier() bool {
 
 func (d ResourceDatum) OverrideIdentifierAttribute() string {
 	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
-}
-
-type goImport struct {
-	Path  string
-	Alias string
 }
 
 type codeBlock struct {
@@ -641,7 +635,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.CheckDestroyNoop = b
 						d.GoImports = append(d.GoImports,
-							goImport{
+							tests.GoImport{
 								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 							},
 						)
@@ -651,7 +645,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					parts := strings.Split(attr, ";")
 					varName := "rBgpAsn"
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
 							Alias: "sdkacctest",
 						},
@@ -667,7 +661,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["randomIPv4Address"]; ok {
 					varName := "rIPv4Address"
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
 							Alias: "sdkacctest",
 						},
@@ -765,7 +759,7 @@ if err != nil {
 						}), ", ")),
 					})
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
 						},
 					)
@@ -780,7 +774,7 @@ if err != nil {
 							Code: "acctest.PreCheckAlternateAccount(t)",
 						})
 						d.GoImports = append(d.GoImports,
-							goImport{
+							tests.GoImport{
 								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 							},
 						)
@@ -891,7 +885,7 @@ if err != nil {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				goImport{
+				tests.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -923,7 +917,7 @@ if err != nil {
 			if !generatorSeen {
 				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)
@@ -973,19 +967,19 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	}
 }
 
-func parseIdentifierSpec(s string) (string, *goImport, error) {
+func parseIdentifierSpec(s string) (string, *tests.GoImport, error) {
 	parts := strings.Split(s, ";")
 	switch len(parts) {
 	case 1:
 		return parts[0], nil, nil
 
 	case 2:
-		return parts[1], &goImport{
+		return parts[1], &tests.GoImport{
 			Path: parts[0],
 		}, nil
 
 	case 3:
-		return parts[2], &goImport{
+		return parts[2], &tests.GoImport{
 			Path:  parts[0],
 			Alias: parts[1],
 		}, nil

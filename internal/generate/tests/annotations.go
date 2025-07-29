@@ -12,6 +12,12 @@ import (
 
 type CommonArgs struct {
 	DestroyTakesT bool
+	GoImports     []GoImport
+}
+
+type GoImport struct {
+	Path  string
+	Alias string
 }
 
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {

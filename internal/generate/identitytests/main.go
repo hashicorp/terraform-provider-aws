@@ -415,7 +415,6 @@ type ResourceDatum struct {
 	PreChecks                   []codeBlock
 	PreChecksWithRegion         []codeBlock
 	PreCheckRegions             []string
-	GoImports                   []goImport
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
 	additionalTfVars            map[string]string
@@ -533,11 +532,6 @@ type identityAttribute struct {
 
 func (i identityAttribute) Name() string {
 	return namesgen.ConstOrQuote(i.name)
-}
-
-type goImport struct {
-	Path  string
-	Alias string
 }
 
 type codeBlock struct {
@@ -806,7 +800,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.CheckDestroyNoop = b
 						d.GoImports = append(d.GoImports,
-							goImport{
+							tests.GoImport{
 								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 							},
 						)
@@ -818,7 +812,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						varName = attr
 					}
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
@@ -835,7 +829,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						varName = attr
 					}
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
@@ -857,7 +851,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						}
 					}
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 						},
 					)
@@ -914,10 +908,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/config",
 						},
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 						},
 					)
@@ -984,7 +978,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						return endpointsConstOrQuote(s)
 					})
 					d.GoImports = append(d.GoImports,
-						goImport{
+						tests.GoImport{
 							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
 						},
 					)
@@ -1104,7 +1098,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				goImport{
+				tests.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -1133,10 +1127,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if !skip {
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/config",
 					},
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 					},
 				)
@@ -1148,11 +1142,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					goImport{
+					tests.GoImport{
 						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
 						Alias: "sdkacctest",
 					},
-					goImport{
+					tests.GoImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},
 				)
@@ -1204,19 +1198,19 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	}
 }
 
-func parseIdentifierSpec(s string) (string, *goImport, error) {
+func parseIdentifierSpec(s string) (string, *tests.GoImport, error) {
 	parts := strings.Split(s, ";")
 	switch len(parts) {
 	case 1:
 		return parts[0], nil, nil
 
 	case 2:
-		return parts[1], &goImport{
+		return parts[1], &tests.GoImport{
 			Path: parts[0],
 		}, nil
 
 	case 3:
-		return parts[2], &goImport{
+		return parts[2], &tests.GoImport{
 			Path:  parts[0],
 			Alias: parts[1],
 		}, nil
