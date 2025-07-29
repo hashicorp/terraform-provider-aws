@@ -374,9 +374,6 @@ type ResourceDatum struct {
 	FileName                    string
 	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
 	Implementation              implementation
-	Serialize                   bool
-	SerializeDelay              bool
-	SerializeParallelTests      bool
 	PreChecks                   []codeBlock
 	PreChecksWithRegion         []codeBlock
 	PreCheckRegions             []string
@@ -798,30 +795,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 							},
 						)
-					}
-				}
-				if attr, ok := args.Keyword["serialize"]; ok {
-					if b, err := tests.ParseBoolAttr("serialize", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.Serialize = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-					if b, err := tests.ParseBoolAttr("serializeParallelTests", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.SerializeParallelTests = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeDelay"]; ok {
-					if b, err := tests.ParseBoolAttr("serializeDelay", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.SerializeDelay = b
 					}
 				}
 				if attr, ok := args.Keyword["identityTest"]; ok {

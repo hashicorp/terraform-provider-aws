@@ -386,9 +386,6 @@ type ResourceDatum struct {
 	TypeName                         string
 	FileName                         string
 	Implementation                   implementation
-	Serialize                        bool
-	SerializeDelay                   bool
-	SerializeParallelTests           bool
 	PreChecks                        []codeBlock
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
@@ -633,30 +630,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 							},
 						)
-					}
-				}
-				if attr, ok := args.Keyword["serialize"]; ok {
-					if b, err := tests.ParseBoolAttr("serialize", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.Serialize = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
-					if b, err := tests.ParseBoolAttr("serializeParallelTests", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.SerializeParallelTests = b
-					}
-				}
-				if attr, ok := args.Keyword["serializeDelay"]; ok {
-					if b, err := tests.ParseBoolAttr("serializeDelay", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.SerializeDelay = b
 					}
 				}
 				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {

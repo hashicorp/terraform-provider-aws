@@ -34,6 +34,11 @@ type CommonArgs struct {
 	ImportIgnore           []string
 	plannableImportAction  importAction
 
+	// Serialization
+	Serialize              bool
+	SerializeDelay         bool
+	SerializeParallelTests bool
+
 	Generator string
 
 	GoImports         []GoImport
@@ -212,6 +217,31 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 		default:
 			return fmt.Errorf("invalid plannableImportAction value %q: Must be one of %s.", attr, []string{importActionNoop.String(), importActionUpdate.String(), importActionReplace.String()})
+		}
+	}
+
+	// Serialization
+	if attr, ok := args.Keyword["serialize"]; ok {
+		if b, err := ParseBoolAttr("serialize", attr); err != nil {
+			return err
+		} else {
+			stuff.Serialize = b
+		}
+	}
+
+	if attr, ok := args.Keyword["serializeParallelTests"]; ok {
+		if b, err := ParseBoolAttr("serializeParallelTests", attr); err != nil {
+			return err
+		} else {
+			stuff.SerializeParallelTests = b
+		}
+	}
+
+	if attr, ok := args.Keyword["serializeDelay"]; ok {
+		if b, err := ParseBoolAttr("serializeDelay", attr); err != nil {
+			return err
+		} else {
+			stuff.SerializeDelay = b
 		}
 	}
 
