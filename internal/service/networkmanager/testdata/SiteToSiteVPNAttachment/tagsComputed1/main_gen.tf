@@ -85,22 +85,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   }
 }
 
-# acctest.ConfigAvailableAZsNoOptInDefaultExclude
-
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = local.default_exclude_zone_ids
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-locals {
-  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-}
-
 resource "null_resource" "test" {}
 
 variable "rName" {
