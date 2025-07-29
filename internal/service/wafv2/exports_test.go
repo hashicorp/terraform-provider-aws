@@ -23,4 +23,5 @@ var (
 	FindWebACLByThreePartKey          = findWebACLByThreePartKey
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
+	ParseWebACLARN                    = parseWebACLARN
 )
