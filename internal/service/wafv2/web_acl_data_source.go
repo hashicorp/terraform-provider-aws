@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,8 +35,15 @@ func dataSourceWebACL() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrName, "resource"},
+				},
+				"resource": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{names.AttrName, "resource"},
+					ValidateFunc: verify.ValidARN,
 				},
 				names.AttrScope: {
 					Type:             schema.TypeString,
@@ -49,44 +58,81 @@ func dataSourceWebACL() *schema.Resource {
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+
 	name := d.Get(names.AttrName).(string)
+	resourceArn := d.Get("resource").(string)
+	scope := awstypes.Scope(d.Get(names.AttrScope).(string))
 
-	var foundWebACL awstypes.WebACLSummary
-	input := &wafv2.ListWebACLsInput{
-		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
-		Limit: aws.Int32(100),
-	}
+	var webACL *awstypes.WebACL
+	var err error
 
-	for {
-		resp, err := conn.ListWebACLs(ctx, input)
+	if resourceArn != "" {
+		// Use GetWebACLForResource API
+		webACL, err = findWebACLByResourceARN(ctx, conn, resourceArn)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs: %s", err)
+			if tfresource.NotFound(err) {
+				return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for resource: %s", resourceArn)
+			}
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL for resource (%s): %s", resourceArn, err)
+		}
+	} else {
+		// Use existing ListWebACLs + filter by name logic
+		var foundWebACL awstypes.WebACLSummary
+		input := &wafv2.ListWebACLsInput{
+			Scope: scope,
+			Limit: aws.Int32(100),
 		}
 
-		if resp == nil || resp.WebACLs == nil {
-			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs")
-		}
+		for {
+			resp, err := conn.ListWebACLs(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs: %s", err)
+			}
 
-		for _, webACL := range resp.WebACLs {
-			if aws.ToString(webACL.Name) == name {
-				foundWebACL = webACL
+			if resp == nil || resp.WebACLs == nil {
+				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs")
+			}
+
+			for _, acl := range resp.WebACLs {
+				if aws.ToString(acl.Name) == name {
+					foundWebACL = acl
+					break
+				}
+			}
+
+			if resp.NextMarker == nil {
 				break
 			}
+			input.NextMarker = resp.NextMarker
 		}
 
-		if resp.NextMarker == nil {
-			break
+		if foundWebACL.Id == nil {
+			return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
 		}
-		input.NextMarker = resp.NextMarker
+
+		// Get full WebACL details using GetWebACL
+		getInput := &wafv2.GetWebACLInput{
+			Id:    foundWebACL.Id,
+			Name:  foundWebACL.Name,
+			Scope: scope,
+		}
+
+		getResp, err := conn.GetWebACL(ctx, getInput)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", aws.ToString(foundWebACL.Id), err)
+		}
+
+		webACL = getResp.WebACL
 	}
 
-	if foundWebACL.Id == nil {
-		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
+	if webACL == nil {
+		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found")
 	}
 
-	d.SetId(aws.ToString(foundWebACL.Id))
-	d.Set(names.AttrARN, foundWebACL.ARN)
-	d.Set(names.AttrDescription, foundWebACL.Description)
+	d.SetId(aws.ToString(webACL.Id))
+	d.Set(names.AttrARN, webACL.ARN)
+	d.Set(names.AttrDescription, webACL.Description)
+	d.Set(names.AttrName, webACL.Name)
 
 	return diags
 }
