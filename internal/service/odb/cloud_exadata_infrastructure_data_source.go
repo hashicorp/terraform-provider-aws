@@ -73,99 +73,133 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				Description: "The unique identifier of the Exadata infrastructure.",
 			},
 			"compute_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The number of database servers for the Exadata infrastructure.",
 			},
 			"cpu_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores that are allocated to the Exadata infrastructure.",
 			},
 			"data_storage_size_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The size of the Exadata infrastructure's data disk group, in terabytes (TB).",
 			},
 			"db_node_storage_size_in_gbs": schema.Int32Attribute{
 				Computed: true,
+				Description: "The database server model type of the Exadata infrastructure. For the list of\n" +
+					"valid model names, use the ListDbSystemShapes operation.",
 			},
 			"db_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The version of the Exadata infrastructure.",
 			},
 			"display_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The display name of the Exadata infrastructure.",
 			},
 			"last_maintenance_run_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The Oracle Cloud Identifier (OCID) of the last maintenance run for the Exadata infrastructure.",
 			},
 			"max_cpu_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of CPU cores available on the Exadata infrastructure.",
 			},
 			"max_data_storage_in_tbs": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of data disk group storage, in terabytes (TB), that's available on the Exadata infrastructure.",
 			},
 			"max_db_node_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of local node storage, in gigabytes (GB), that's available on the Exadata infrastructure.",
 			},
 			"max_memory_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of memory, in gigabytes (GB), that's available on the Exadata infrastructure.",
 			},
 			"memory_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of memory, in gigabytes (GB), that's allocated on the Exadata infrastructure.",
 			},
 			"monthly_db_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The monthly software version of the database servers installed on the Exadata infrastructure.",
 			},
 			"monthly_storage_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The monthly software version of the storage servers installed on the Exadata infrastructure.",
 			},
 			"next_maintenance_run_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The OCID of the next maintenance run for the Exadata infrastructure.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor for the Exadata infrastructure.",
 			},
 			"oci_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The HTTPS link to the Exadata infrastructure in OCI.",
 			},
 			"ocid": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The OCID of the Exadata infrastructure in OCI.",
 			},
 			"percent_progress": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of progress made on the current operation on the Exadata infrastructure expressed as a percentage.",
 			},
 			"shape": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The model name of the Exadata infrastructure.",
 			},
 			"status": schema.StringAttribute{
-				CustomType: statusType,
-				Computed:   true,
+				CustomType:  statusType,
+				Computed:    true,
+				Description: "The status of the Exadata infrastructure.",
 			},
 			"status_reason": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Additional information about the status of the Exadata infrastructure.",
 			},
 			"storage_count": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "he number of storage servers that are activated for the Exadata infrastructure.",
 			},
 			"storage_server_version": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The software version of the storage servers on the Exadata infrastructure.",
 			},
 			"total_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of storage, in gigabytes (GB), on the the Exadata infrastructure.",
 			},
 			"compute_model": schema.StringAttribute{
 				CustomType: computeModelType,
 				Computed:   true,
+				Description: "The OCI model compute model used when you create or clone an instance: ECPU or\n" +
+					"OCPU. An ECPU is an abstracted measure of compute resources. ECPUs are based on\n" +
+					"the number of cores elastically allocated from a pool of compute and storage\n" +
+					"servers. An OCPU is a legacy physical measure of compute resources. OCPUs are\n" +
+					"based on the physical core of a processor with hyper-threading enabled.",
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The time when the Exadata infrastructure was created.",
 			},
 			"database_server_type": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.",
 			},
 			"storage_server_type": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.",
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"maintenance_window": schema.ObjectAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
-
+				Computed:    true,
+				CustomType:  fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
+				Description: "The maintenance window for the Exadata infrastructure.",
 				AttributeTypes: map[string]attr.Type{
 					"custom_action_timeout_in_mins": types.Int32Type,
 					"days_of_week": types.SetType{
@@ -189,7 +223,8 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 		},
 		Blocks: map[string]schema.Block{
 			"customer_contacts_to_send_to_oci": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[customerContactDataSourceModel](ctx),
+				Description: "Customer contact emails to send to OCI.",
+				CustomType:  fwtypes.NewSetNestedObjectTypeOf[customerContactDataSourceModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"email": schema.StringAttribute{
