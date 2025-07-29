@@ -53,9 +53,12 @@ func (r *policyStoreResource) Schema(ctx context.Context, request resource.Schem
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDeletionProtection: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
 				Optional:   true,
 				Computed:   true,
-				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -123,11 +126,22 @@ func (r *policyStoreResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
+
+	policyStore, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyStore, data.PolicyStoreID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, policyStore, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
