@@ -64,6 +64,8 @@ import {
   to = aws_redshiftdata_batch_statement.example
   id = "123456"
 }
+```
 
+```bash
 $ terraform import aws_redshiftdata_batch_statement.example example
 ```
