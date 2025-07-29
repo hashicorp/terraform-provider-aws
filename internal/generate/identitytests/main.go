@@ -418,7 +418,6 @@ type ResourceDatum struct {
 	GenerateConfig              bool
 	InitCodeBlocks              []codeBlock
 	additionalTfVars            map[string]string
-	CheckDestroyNoop            bool
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
 	ARNNamespace                string
@@ -793,19 +792,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.CheckDestroyNoop = b
-						d.GoImports = append(d.GoImports,
-							tests.GoImport{
-								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-							},
-						)
-					}
-				}
 				if attr, ok := args.Keyword["emailAddress"]; ok {
 					varName := "address"
 					if len(attr) > 0 {

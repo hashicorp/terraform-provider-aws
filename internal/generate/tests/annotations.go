@@ -11,8 +11,9 @@ import (
 )
 
 type CommonArgs struct {
-	DestroyTakesT bool
-	GoImports     []GoImport
+	CheckDestroyNoop bool
+	DestroyTakesT    bool
+	GoImports        []GoImport
 }
 
 type GoImport struct {
@@ -21,6 +22,19 @@ type GoImport struct {
 }
 
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
+	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
+		if b, err := strconv.ParseBool(attr); err != nil {
+			return fmt.Errorf("invalid checkDestroyNoop value: %q: Should be boolean value.", attr)
+		} else {
+			stuff.CheckDestroyNoop = b
+			stuff.GoImports = append(stuff.GoImports,
+				GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
+		}
+	}
+
 	if attr, ok := args.Keyword["destroyTakesT"]; ok {
 		if b, err := strconv.ParseBool(attr); err != nil {
 			return fmt.Errorf("invalid destroyTakesT value %q: Should be boolean value.", attr)

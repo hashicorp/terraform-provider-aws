@@ -410,7 +410,6 @@ type ResourceDatum struct {
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
-	CheckDestroyNoop                 bool
 	IsDataSource                     bool
 	DataSourceResourceImplementation implementation
 	overrideIdentifierAttribute      string
@@ -628,19 +627,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.CheckDestroyNoop = b
-						d.GoImports = append(d.GoImports,
-							tests.GoImport{
-								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-							},
-						)
-					}
-				}
 				if attr, ok := args.Keyword["randomBgpAsn"]; ok {
 					parts := strings.Split(attr, ";")
 					varName := "rBgpAsn"
