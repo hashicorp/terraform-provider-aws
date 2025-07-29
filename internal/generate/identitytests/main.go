@@ -373,7 +373,6 @@ type ResourceDatum struct {
 	Name                        string
 	TypeName                    string
 	FileName                    string
-	Generator                   string
 	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
 	Implementation              implementation
 	Serialize                   bool
@@ -732,20 +731,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				if attr, ok := args.Keyword["generator"]; ok {
-					if attr == "false" {
-						generatorSeen = true
-					} else if funcName, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.Generator = funcName
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-						generatorSeen = true
-					}
+				// This needs better handling
+				if _, ok := args.Keyword["generator"]; ok {
+					generatorSeen = true
 				}
+
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
 					d.GoImports = append(d.GoImports,

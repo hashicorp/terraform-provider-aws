@@ -32,6 +32,8 @@ type CommonArgs struct {
 	ImportIgnore           []string
 	plannableImportAction  importAction
 
+	Generator string
+
 	GoImports         []GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
@@ -170,15 +172,19 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 		stuff.plannableImportAction = importActionUpdate
 	}
+
 	if attr, ok := args.Keyword["importStateId"]; ok {
 		stuff.ImportStateID = attr
 	}
+
 	if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
 		stuff.importStateIDAttribute = attr
 	}
+
 	if attr, ok := args.Keyword["importStateIdFunc"]; ok {
 		stuff.ImportStateIDFunc = attr
 	}
+
 	if attr, ok := args.Keyword["noImport"]; ok {
 		if b, err := strconv.ParseBool(attr); err != nil {
 			return fmt.Errorf("invalid noImport value %q: Should be boolean value.", attr)
@@ -186,6 +192,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			stuff.NoImport = b
 		}
 	}
+
 	if attr, ok := args.Keyword["plannableImportAction"]; ok {
 		switch attr {
 		case importActionNoop.String():
@@ -203,6 +210,18 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 	}
 
 	// TF Variables
+	if attr, ok := args.Keyword["generator"]; ok {
+		if attr == "false" {
+		} else if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return fmt.Errorf("%s: %w", attr, err)
+		} else {
+			stuff.Generator = funcName
+			if importSpec != nil {
+				stuff.GoImports = append(stuff.GoImports, *importSpec)
+			}
+		}
+	}
+
 	if attr, ok := args.Keyword["emailAddress"]; ok {
 		varName := "address"
 		if len(attr) > 0 {
