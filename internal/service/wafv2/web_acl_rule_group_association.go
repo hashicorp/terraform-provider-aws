@@ -37,6 +37,8 @@ import (
 
 const (
 	webACLRuleGroupAssociationResourceIDPartCount = 3
+	overrideActionNone                            = "none"
+	overrideActionCount                           = "count"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -107,7 +109,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf("none", "count"),
+					stringvalidator.OneOf(overrideActionNone, overrideActionCount),
 				},
 				Description: "Override action for the rule group. Valid values are 'none' and 'count'. Defaults to 'none'.",
 			},
@@ -454,16 +456,16 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	// Set override action
 	overrideAction := plan.OverrideAction.ValueString()
 	if overrideAction == "" {
-		overrideAction = "none"
-		plan.OverrideAction = types.StringValue("none") // Set the default in the plan
+		overrideAction = overrideActionNone
+		plan.OverrideAction = types.StringValue(overrideActionNone) // Set the default in the plan
 	}
 
 	switch overrideAction {
-	case "none":
+	case overrideActionNone:
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			None: &awstypes.NoneAction{},
 		}
-	case "count":
+	case overrideActionCount:
 		newRule.OverrideAction = &awstypes.OverrideAction{
 			Count: &awstypes.CountAction{},
 		}
@@ -586,12 +588,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 			state.Priority = types.Int32Value(rule.Priority)
 
 			// Determine override action
-			overrideAction := "none"
+			overrideAction := overrideActionNone
 			if rule.OverrideAction != nil {
 				if rule.OverrideAction.Count != nil {
-					overrideAction = "count"
+					overrideAction = overrideActionCount
 				} else if rule.OverrideAction.None != nil {
-					overrideAction = "none"
+					overrideAction = overrideActionNone
 				}
 			}
 			state.OverrideAction = types.StringValue(overrideAction)
@@ -670,15 +672,15 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 			// Update override action
 			overrideAction := plan.OverrideAction.ValueString()
 			if overrideAction == "" {
-				overrideAction = "none" // Default value
+				overrideAction = overrideActionNone // Default value
 			}
 
 			switch overrideAction {
-			case "none":
+			case overrideActionNone:
 				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
 					None: &awstypes.NoneAction{},
 				}
-			case "count":
+			case overrideActionCount:
 				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
 					Count: &awstypes.CountAction{},
 				}
