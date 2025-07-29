@@ -596,113 +596,12 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 			}
 			state.OverrideAction = types.StringValue(overrideAction)
 
-			// Handle rule action overrides
+			// Handle rule action overrides with autoflex
 			if rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides != nil {
-				var ruleActionOverrides []*ruleActionOverrideModel
-				for _, override := range rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides {
-					overrideModel := &ruleActionOverrideModel{
-						Name: types.StringValue(aws.ToString(override.Name)),
-					}
-
-					// Convert the action to use
-					if override.ActionToUse != nil {
-						actionToUse := &actionToUseModel{
-							Allow:     fwtypes.NewListNestedObjectValueOfNull[allowActionModel](ctx),
-							Block:     fwtypes.NewListNestedObjectValueOfNull[blockActionModel](ctx),
-							Captcha:   fwtypes.NewListNestedObjectValueOfNull[captchaActionModel](ctx),
-							Challenge: fwtypes.NewListNestedObjectValueOfNull[challengeActionModel](ctx),
-							Count:     fwtypes.NewListNestedObjectValueOfNull[countActionModel](ctx),
-						}
-						if override.ActionToUse.Allow != nil {
-							allowModel := &allowActionModel{}
-							if override.ActionToUse.Allow.CustomRequestHandling != nil {
-								customHandlingModel := &customRequestHandlingModel{}
-								var insertHeaders []*insertHeaderModel
-								for _, header := range override.ActionToUse.Allow.CustomRequestHandling.InsertHeaders {
-									insertHeaders = append(insertHeaders, &insertHeaderModel{
-										Name:  types.StringValue(aws.ToString(header.Name)),
-										Value: types.StringValue(aws.ToString(header.Value)),
-									})
-								}
-								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
-								allowModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
-							}
-							actionToUse.Allow = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*allowActionModel{allowModel})
-						} else if override.ActionToUse.Block != nil {
-							blockModel := &blockActionModel{}
-							if override.ActionToUse.Block.CustomResponse != nil {
-								customResponse := &customResponseModel{
-									ResponseCode: types.Int32Value(aws.ToInt32(override.ActionToUse.Block.CustomResponse.ResponseCode)),
-								}
-								if override.ActionToUse.Block.CustomResponse.CustomResponseBodyKey != nil {
-									customResponse.CustomResponseBodyKey = types.StringValue(aws.ToString(override.ActionToUse.Block.CustomResponse.CustomResponseBodyKey))
-								}
-								var responseHeaders []*responseHeaderModel
-								for _, header := range override.ActionToUse.Block.CustomResponse.ResponseHeaders {
-									responseHeaders = append(responseHeaders, &responseHeaderModel{
-										Name:  types.StringValue(aws.ToString(header.Name)),
-										Value: types.StringValue(aws.ToString(header.Value)),
-									})
-								}
-								customResponse.ResponseHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, responseHeaders)
-								blockModel.CustomResponse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customResponseModel{customResponse})
-							}
-							actionToUse.Block = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*blockActionModel{blockModel})
-						} else if override.ActionToUse.Captcha != nil {
-							captchaModel := &captchaActionModel{}
-							if override.ActionToUse.Captcha.CustomRequestHandling != nil {
-								customHandlingModel := &customRequestHandlingModel{}
-								var insertHeaders []*insertHeaderModel
-								for _, header := range override.ActionToUse.Captcha.CustomRequestHandling.InsertHeaders {
-									insertHeaders = append(insertHeaders, &insertHeaderModel{
-										Name:  types.StringValue(aws.ToString(header.Name)),
-										Value: types.StringValue(aws.ToString(header.Value)),
-									})
-								}
-								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
-								captchaModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
-							}
-							actionToUse.Captcha = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*captchaActionModel{captchaModel})
-						} else if override.ActionToUse.Challenge != nil {
-							challengeModel := &challengeActionModel{}
-							if override.ActionToUse.Challenge.CustomRequestHandling != nil {
-								customHandlingModel := &customRequestHandlingModel{}
-								var insertHeaders []*insertHeaderModel
-								for _, header := range override.ActionToUse.Challenge.CustomRequestHandling.InsertHeaders {
-									insertHeaders = append(insertHeaders, &insertHeaderModel{
-										Name:  types.StringValue(aws.ToString(header.Name)),
-										Value: types.StringValue(aws.ToString(header.Value)),
-									})
-								}
-								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
-								challengeModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
-							}
-							actionToUse.Challenge = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*challengeActionModel{challengeModel})
-						} else if override.ActionToUse.Count != nil {
-							countModel := &countActionModel{}
-							if override.ActionToUse.Count.CustomRequestHandling != nil {
-								customHandlingModel := &customRequestHandlingModel{}
-								var insertHeaders []*insertHeaderModel
-								for _, header := range override.ActionToUse.Count.CustomRequestHandling.InsertHeaders {
-									insertHeaders = append(insertHeaders, &insertHeaderModel{
-										Name:  types.StringValue(aws.ToString(header.Name)),
-										Value: types.StringValue(aws.ToString(header.Value)),
-									})
-								}
-								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
-								countModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
-							}
-							actionToUse.Count = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*countActionModel{countModel})
-						}
-
-						overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*actionToUseModel{actionToUse})
-					} else {
-						// If ActionToUse is nil, set it to null
-						overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfNull[actionToUseModel](ctx)
-					}
-					ruleActionOverrides = append(ruleActionOverrides, overrideModel)
+				resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides, &state.RuleActionOverride)...)
+				if resp.Diagnostics.HasError() {
+					return
 				}
-				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, ruleActionOverrides)
 			} else {
 				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
 			}
