@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -57,7 +56,6 @@ func (r *policyStoreResource) Schema(ctx context.Context, request resource.Schem
 				Optional:   true,
 				Computed:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
-				Default:    stringdefault.StaticString(string(awstypes.DeletionProtectionDisabled)),
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
@@ -182,7 +180,7 @@ func (r *policyStoreResource) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	if !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) || !new.DeletionProtection.Equal(old.DeletionProtection) {
+	if !new.DeletionProtection.Equal(old.DeletionProtection) || !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
 		var input verifiedpermissions.UpdatePolicyStoreInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
