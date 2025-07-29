@@ -26,7 +26,6 @@ import (
 
 	"github.com/dlclark/regexp2"
 	"github.com/hashicorp/go-version"
-	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -184,7 +183,7 @@ func main() {
 		resource.GenerateConfig = true
 
 		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
@@ -416,7 +415,6 @@ type ResourceDatum struct {
 	PreChecksWithRegion         []codeBlock
 	PreCheckRegions             []string
 	GenerateConfig              bool
-	additionalTfVars            map[string]tests.TFVar
 	overrideIdentifierAttribute string
 	OverrideResourceType        string
 	ARNNamespace                string
@@ -439,12 +437,6 @@ type ResourceDatum struct {
 	RequiredEnvVars             []string
 	PreIdentityVersion          *version.Version
 	tests.CommonArgs
-}
-
-func (d ResourceDatum) AdditionalTfVars() map[string]tests.TFVar {
-	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
-		return acctestgen.ConstOrQuote(k)
-	})
 }
 
 func (d ResourceDatum) HasIDAttrDuplicates() bool {
@@ -619,8 +611,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	d := ResourceDatum{
-		FileName:              v.fileName,
-		additionalTfVars:      make(map[string]tests.TFVar),
+		FileName: v.fileName,
+		CommonArgs: tests.CommonArgs{
+			AdditionalTfVars_: make(map[string]tests.TFVar),
+		},
 		IsGlobal:              false,
 		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
@@ -806,7 +800,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							`domain := acctest.RandomDomainName()
 %s := acctest.RandomEmailAddress(domain)`, varName),
 					})
-					d.additionalTfVars[varName] = tests.TFVar{
+					d.AdditionalTfVars_[varName] = tests.TFVar{
 						GoVarName: varName,
 						Type:      tests.TFVarTypeString,
 					}
@@ -824,7 +818,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := acctest.RandomDomainName()`, varName),
 					})
-					d.additionalTfVars[varName] = tests.TFVar{
+					d.AdditionalTfVars_[varName] = tests.TFVar{
 						GoVarName: varName,
 						Type:      tests.TFVarTypeString,
 					}
@@ -852,13 +846,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf(`%s := %s.RandomSubdomain()`, varName, parentName),
 					})
-					// d.additionalTfVars[parentName] = fmt.Sprintf("%s.String()", parentName)
-					d.additionalTfVars[parentName] = tests.TFVar{
+					d.AdditionalTfVars_[parentName] = tests.TFVar{
 						GoVarName: fmt.Sprintf("%s.String()", parentName),
 						Type:      tests.TFVarTypeString,
 					}
-					// d.additionalTfVars[varName] = fmt.Sprintf("%s.String()", varName)
-					d.additionalTfVars[varName] = tests.TFVar{
+					d.AdditionalTfVars_[varName] = tests.TFVar{
 						GoVarName: fmt.Sprintf("%s.String()", varName),
 						Type:      tests.TFVarTypeString,
 					}
@@ -1106,11 +1098,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = tests.TFVar{
+		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
 			GoVarName: "certificatePEM",
 			Type:      tests.TFVarTypeString,
 		}
-		d.additionalTfVars["private_key_pem"] = tests.TFVar{
+		d.AdditionalTfVars_["private_key_pem"] = tests.TFVar{
 			GoVarName: "privateKeyPEM",
 			Type:      tests.TFVarTypeString,
 		}

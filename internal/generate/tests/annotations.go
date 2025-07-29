@@ -7,14 +7,23 @@ import (
 	"fmt"
 	"strconv"
 
+	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
 type CommonArgs struct {
-	CheckDestroyNoop bool
-	DestroyTakesT    bool
-	GoImports        []GoImport
-	InitCodeBlocks   []CodeBlock
+	CheckDestroyNoop  bool
+	DestroyTakesT     bool
+	GoImports         []GoImport
+	InitCodeBlocks    []CodeBlock
+	AdditionalTfVars_ map[string]TFVar
+}
+
+func (d CommonArgs) AdditionalTfVars() map[string]TFVar {
+	return tfmaps.ApplyToAllKeys(d.AdditionalTfVars_, func(k string) string {
+		return acctestgen.ConstOrQuote(k)
+	})
 }
 
 type GoImport struct {

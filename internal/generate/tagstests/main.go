@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/dlclark/regexp2"
-	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -173,7 +172,7 @@ func main() {
 			}
 
 			if resource.GenerateConfig {
-				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
 				slices.Sort(additionalTfVars)
 				testDirPath := path.Join("testdata", resource.Name)
 
@@ -238,7 +237,7 @@ func main() {
 					g.Fatalf("opening data source config template %q: %w", dataSourceConfigTmplFile, err)
 				}
 
-				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars_)
 				slices.Sort(additionalTfVars)
 				testDirPath := path.Join("testdata", resource.Name)
 
@@ -405,7 +404,6 @@ type ResourceDatum struct {
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
 	GenerateConfig                   bool
-	additionalTfVars                 map[string]tests.TFVar
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
@@ -415,12 +413,6 @@ type ResourceDatum struct {
 	OverrideResourceType             string
 	UseAlternateAccount              bool
 	tests.CommonArgs
-}
-
-func (d ResourceDatum) AdditionalTfVars() map[string]tests.TFVar {
-	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
-		return acctestgen.ConstOrQuote(k)
-	})
 }
 
 func (d ResourceDatum) HasImportStateIDAttribute() bool {
@@ -529,8 +521,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for tagging annotations.
 	d := ResourceDatum{
-		FileName:         v.fileName,
-		additionalTfVars: make(map[string]tests.TFVar),
+		FileName: v.fileName,
+		CommonArgs: tests.CommonArgs{
+			AdditionalTfVars_: make(map[string]tests.TFVar),
+		},
 	}
 	tagged := false
 	skip := false
@@ -626,7 +620,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
 						Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
 					})
-					d.additionalTfVars[varName] = tests.TFVar{
+					d.AdditionalTfVars_[varName] = tests.TFVar{
 						GoVarName: varName,
 						Type:      tests.TFVarTypeInt,
 					}
@@ -646,7 +640,7 @@ if err != nil {
 }
 `, varName, attr),
 					})
-					d.additionalTfVars[varName] = tests.TFVar{
+					d.AdditionalTfVars_[varName] = tests.TFVar{
 						GoVarName: varName,
 						Type:      tests.TFVarTypeString,
 					}
@@ -867,11 +861,11 @@ if err != nil {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = tests.TFVar{
+		d.AdditionalTfVars_["certificate_pem"] = tests.TFVar{
 			GoVarName: "certificatePEM",
 			Type:      tests.TFVarTypeString,
 		}
-		d.additionalTfVars["private_key_pem"] = tests.TFVar{
+		d.AdditionalTfVars_["private_key_pem"] = tests.TFVar{
 			GoVarName: "privateKeyPEM",
 			Type:      tests.TFVarTypeString,
 		}
