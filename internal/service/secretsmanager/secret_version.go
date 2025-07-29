@@ -162,6 +162,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var output *secretsmanager.GetSecretValueOutput
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretID, versionID, err := secretVersionParseResourceID(d.Id())
@@ -182,10 +183,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// If the secret is write-only, we use DescribeSecret to avoid any reads on the secret value
-	var output *secretsmanager.GetSecretValueOutput
-
 	if hasWriteOnly {
-		// Use DescribeSecret to get the version stages, set all other keys to nil
 		output, err = findSecretVersionWriteOnly(ctx, conn, secretID, versionID)
 	} else {
 		output, err = findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)

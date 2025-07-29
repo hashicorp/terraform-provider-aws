@@ -13,4 +13,5 @@ var (
 	FindSecretByID                = findSecretByID
 	FindSecretPolicyByID          = findSecretPolicyByID
 	FindSecretVersionByTwoPartKey = findSecretVersionByTwoPartKey
+	FindSecretVersionWriteOnly    = findSecretVersionWriteOnly
 )
