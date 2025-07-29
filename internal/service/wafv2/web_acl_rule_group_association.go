@@ -14,11 +14,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -27,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -113,6 +116,258 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 				},
 				Description: "Override action for the rule group. Valid values are 'none' and 'count'. Defaults to 'none'.",
 			},
+			"rule_action_override": schema.ListNestedAttribute{
+				Optional: true,
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(100),
+				},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrName: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 128),
+							},
+							Description: "Name of the rule to override.",
+						},
+						"action_to_use": schema.ListNestedAttribute{
+							Required: true,
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
+							},
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"allow": schema.ListNestedAttribute{
+										Optional: true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"custom_request_handling": schema.ListNestedAttribute{
+													Optional: true,
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"insert_header": schema.ListNestedAttribute{
+																Required: true,
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																},
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 64),
+																			},
+																		},
+																		names.AttrValue: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"block": schema.ListNestedAttribute{
+										Optional: true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"custom_response": schema.ListNestedAttribute{
+													Optional: true,
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"custom_response_body_key": schema.StringAttribute{
+																Optional: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 128),
+																},
+															},
+															"response_code": schema.Int32Attribute{
+																Required: true,
+																Validators: []validator.Int32{
+																	int32validator.Between(200, 600),
+																},
+															},
+															"response_header": schema.ListNestedAttribute{
+																Optional: true,
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 64),
+																			},
+																		},
+																		names.AttrValue: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"captcha": schema.ListNestedAttribute{
+										Optional: true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"custom_request_handling": schema.ListNestedAttribute{
+													Optional: true,
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"insert_header": schema.ListNestedAttribute{
+																Required: true,
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																},
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 64),
+																			},
+																		},
+																		names.AttrValue: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"challenge": schema.ListNestedAttribute{
+										Optional: true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"custom_request_handling": schema.ListNestedAttribute{
+													Optional: true,
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"insert_header": schema.ListNestedAttribute{
+																Required: true,
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																},
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 64),
+																			},
+																		},
+																		names.AttrValue: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"count": schema.ListNestedAttribute{
+										Optional: true,
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"custom_request_handling": schema.ListNestedAttribute{
+													Optional: true,
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"insert_header": schema.ListNestedAttribute{
+																Required: true,
+																Validators: []validator.List{
+																	listvalidator.SizeAtLeast(1),
+																},
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		names.AttrName: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 64),
+																			},
+																		},
+																		names.AttrValue: schema.StringAttribute{
+																			Required: true,
+																			Validators: []validator.String{
+																				stringvalidator.LengthBetween(1, 255),
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							Description: "Action to use in place of the rule action.",
+						},
+					},
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Description: "Action settings to use in place of rule actions configured inside the rule group. You can specify up to 100 overrides.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -172,13 +427,224 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	}
 
 	// Create new rule with rule group reference statement
+	ruleGroupRefStatement := &awstypes.RuleGroupReferenceStatement{
+		ARN: plan.RuleGroupARN.ValueStringPointer(),
+	}
+
+	// Add rule action overrides if specified
+	if !plan.RuleActionOverride.IsNull() && !plan.RuleActionOverride.IsUnknown() {
+		ruleActionOverrides, diags := plan.RuleActionOverride.ToSlice(ctx)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		var overrides []awstypes.RuleActionOverride
+		for _, override := range ruleActionOverrides {
+			actionToUseList, diags := override.ActionToUse.ToSlice(ctx)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if len(actionToUseList) > 0 {
+				actionToUse := actionToUseList[0]
+				ruleAction := &awstypes.RuleAction{}
+
+				// Set the appropriate action based on which one is configured
+				if !actionToUse.Allow.IsNull() && !actionToUse.Allow.IsUnknown() {
+					allowList, diags := actionToUse.Allow.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if len(allowList) > 0 {
+						allowAction := &awstypes.AllowAction{}
+						if !allowList[0].CustomRequestHandling.IsNull() && !allowList[0].CustomRequestHandling.IsUnknown() {
+							customHandlingList, diags := allowList[0].CustomRequestHandling.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(customHandlingList) > 0 {
+								insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+								resp.Diagnostics.Append(diags...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+								var headers []awstypes.CustomHTTPHeader
+								for _, header := range insertHeaderList {
+									headers = append(headers, awstypes.CustomHTTPHeader{
+										Name:  header.Name.ValueStringPointer(),
+										Value: header.Value.ValueStringPointer(),
+									})
+								}
+								allowAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+									InsertHeaders: headers,
+								}
+							}
+						}
+						ruleAction.Allow = allowAction
+					}
+				} else if !actionToUse.Block.IsNull() && !actionToUse.Block.IsUnknown() {
+					blockList, diags := actionToUse.Block.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if len(blockList) > 0 {
+						blockAction := &awstypes.BlockAction{}
+						if !blockList[0].CustomResponse.IsNull() && !blockList[0].CustomResponse.IsUnknown() {
+							customResponseList, diags := blockList[0].CustomResponse.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(customResponseList) > 0 {
+								customResponse := &awstypes.CustomResponse{
+									ResponseCode: customResponseList[0].ResponseCode.ValueInt32Pointer(),
+								}
+								if !customResponseList[0].CustomResponseBodyKey.IsNull() {
+									customResponse.CustomResponseBodyKey = customResponseList[0].CustomResponseBodyKey.ValueStringPointer()
+								}
+								if !customResponseList[0].ResponseHeader.IsNull() && !customResponseList[0].ResponseHeader.IsUnknown() {
+									responseHeaderList, diags := customResponseList[0].ResponseHeader.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									var headers []awstypes.CustomHTTPHeader
+									for _, header := range responseHeaderList {
+										headers = append(headers, awstypes.CustomHTTPHeader{
+											Name:  header.Name.ValueStringPointer(),
+											Value: header.Value.ValueStringPointer(),
+										})
+									}
+									customResponse.ResponseHeaders = headers
+								}
+								blockAction.CustomResponse = customResponse
+							}
+						}
+						ruleAction.Block = blockAction
+					}
+				} else if !actionToUse.Captcha.IsNull() && !actionToUse.Captcha.IsUnknown() {
+					captchaList, diags := actionToUse.Captcha.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if len(captchaList) > 0 {
+						captchaAction := &awstypes.CaptchaAction{}
+						if !captchaList[0].CustomRequestHandling.IsNull() && !captchaList[0].CustomRequestHandling.IsUnknown() {
+							customHandlingList, diags := captchaList[0].CustomRequestHandling.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(customHandlingList) > 0 {
+								insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+								resp.Diagnostics.Append(diags...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+								var headers []awstypes.CustomHTTPHeader
+								for _, header := range insertHeaderList {
+									headers = append(headers, awstypes.CustomHTTPHeader{
+										Name:  header.Name.ValueStringPointer(),
+										Value: header.Value.ValueStringPointer(),
+									})
+								}
+								captchaAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+									InsertHeaders: headers,
+								}
+							}
+						}
+						ruleAction.Captcha = captchaAction
+					}
+				} else if !actionToUse.Challenge.IsNull() && !actionToUse.Challenge.IsUnknown() {
+					challengeList, diags := actionToUse.Challenge.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if len(challengeList) > 0 {
+						challengeAction := &awstypes.ChallengeAction{}
+						if !challengeList[0].CustomRequestHandling.IsNull() && !challengeList[0].CustomRequestHandling.IsUnknown() {
+							customHandlingList, diags := challengeList[0].CustomRequestHandling.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(customHandlingList) > 0 {
+								insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+								resp.Diagnostics.Append(diags...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+								var headers []awstypes.CustomHTTPHeader
+								for _, header := range insertHeaderList {
+									headers = append(headers, awstypes.CustomHTTPHeader{
+										Name:  header.Name.ValueStringPointer(),
+										Value: header.Value.ValueStringPointer(),
+									})
+								}
+								challengeAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+									InsertHeaders: headers,
+								}
+							}
+						}
+						ruleAction.Challenge = challengeAction
+					}
+				} else if !actionToUse.Count.IsNull() && !actionToUse.Count.IsUnknown() {
+					countList, diags := actionToUse.Count.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+					if len(countList) > 0 {
+						countAction := &awstypes.CountAction{}
+						if !countList[0].CustomRequestHandling.IsNull() && !countList[0].CustomRequestHandling.IsUnknown() {
+							customHandlingList, diags := countList[0].CustomRequestHandling.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(customHandlingList) > 0 {
+								insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+								resp.Diagnostics.Append(diags...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+								var headers []awstypes.CustomHTTPHeader
+								for _, header := range insertHeaderList {
+									headers = append(headers, awstypes.CustomHTTPHeader{
+										Name:  header.Name.ValueStringPointer(),
+										Value: header.Value.ValueStringPointer(),
+									})
+								}
+								countAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+									InsertHeaders: headers,
+								}
+							}
+						}
+						ruleAction.Count = countAction
+					}
+				}
+
+				overrides = append(overrides, awstypes.RuleActionOverride{
+					Name:        override.Name.ValueStringPointer(),
+					ActionToUse: ruleAction,
+				})
+			}
+		}
+		ruleGroupRefStatement.RuleActionOverrides = overrides
+	}
+
 	newRule := awstypes.Rule{
 		Name:     plan.RuleName.ValueStringPointer(),
 		Priority: plan.Priority.ValueInt32(),
 		Statement: &awstypes.Statement{
-			RuleGroupReferenceStatement: &awstypes.RuleGroupReferenceStatement{
-				ARN: plan.RuleGroupARN.ValueStringPointer(),
-			},
+			RuleGroupReferenceStatement: ruleGroupRefStatement,
 		},
 		VisibilityConfig: &awstypes.VisibilityConfig{
 			SampledRequestsEnabled:   true,
@@ -331,6 +797,108 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 				}
 			}
 			state.OverrideAction = types.StringValue(overrideAction)
+
+			// Handle rule action overrides
+			if rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides != nil {
+				var ruleActionOverrides []*ruleActionOverrideModel
+				for _, override := range rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides {
+					overrideModel := &ruleActionOverrideModel{
+						Name: types.StringValue(aws.ToString(override.Name)),
+					}
+
+					// Convert the action to use
+					actionToUse := &actionToUseModel{}
+					if override.ActionToUse != nil {
+						if override.ActionToUse.Allow != nil {
+							allowModel := &allowActionModel{}
+							if override.ActionToUse.Allow.CustomRequestHandling != nil {
+								customHandlingModel := &customRequestHandlingModel{}
+								var insertHeaders []*insertHeaderModel
+								for _, header := range override.ActionToUse.Allow.CustomRequestHandling.InsertHeaders {
+									insertHeaders = append(insertHeaders, &insertHeaderModel{
+										Name:  types.StringValue(aws.ToString(header.Name)),
+										Value: types.StringValue(aws.ToString(header.Value)),
+									})
+								}
+								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
+								allowModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
+							}
+							actionToUse.Allow = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*allowActionModel{allowModel})
+						} else if override.ActionToUse.Block != nil {
+							blockModel := &blockActionModel{}
+							if override.ActionToUse.Block.CustomResponse != nil {
+								customResponse := &customResponseModel{
+									ResponseCode: types.Int32Value(aws.ToInt32(override.ActionToUse.Block.CustomResponse.ResponseCode)),
+								}
+								if override.ActionToUse.Block.CustomResponse.CustomResponseBodyKey != nil {
+									customResponse.CustomResponseBodyKey = types.StringValue(aws.ToString(override.ActionToUse.Block.CustomResponse.CustomResponseBodyKey))
+								}
+								var responseHeaders []*responseHeaderModel
+								for _, header := range override.ActionToUse.Block.CustomResponse.ResponseHeaders {
+									responseHeaders = append(responseHeaders, &responseHeaderModel{
+										Name:  types.StringValue(aws.ToString(header.Name)),
+										Value: types.StringValue(aws.ToString(header.Value)),
+									})
+								}
+								customResponse.ResponseHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, responseHeaders)
+								blockModel.CustomResponse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customResponseModel{customResponse})
+							}
+							actionToUse.Block = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*blockActionModel{blockModel})
+						} else if override.ActionToUse.Captcha != nil {
+							captchaModel := &captchaActionModel{}
+							if override.ActionToUse.Captcha.CustomRequestHandling != nil {
+								customHandlingModel := &customRequestHandlingModel{}
+								var insertHeaders []*insertHeaderModel
+								for _, header := range override.ActionToUse.Captcha.CustomRequestHandling.InsertHeaders {
+									insertHeaders = append(insertHeaders, &insertHeaderModel{
+										Name:  types.StringValue(aws.ToString(header.Name)),
+										Value: types.StringValue(aws.ToString(header.Value)),
+									})
+								}
+								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
+								captchaModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
+							}
+							actionToUse.Captcha = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*captchaActionModel{captchaModel})
+						} else if override.ActionToUse.Challenge != nil {
+							challengeModel := &challengeActionModel{}
+							if override.ActionToUse.Challenge.CustomRequestHandling != nil {
+								customHandlingModel := &customRequestHandlingModel{}
+								var insertHeaders []*insertHeaderModel
+								for _, header := range override.ActionToUse.Challenge.CustomRequestHandling.InsertHeaders {
+									insertHeaders = append(insertHeaders, &insertHeaderModel{
+										Name:  types.StringValue(aws.ToString(header.Name)),
+										Value: types.StringValue(aws.ToString(header.Value)),
+									})
+								}
+								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
+								challengeModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
+							}
+							actionToUse.Challenge = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*challengeActionModel{challengeModel})
+						} else if override.ActionToUse.Count != nil {
+							countModel := &countActionModel{}
+							if override.ActionToUse.Count.CustomRequestHandling != nil {
+								customHandlingModel := &customRequestHandlingModel{}
+								var insertHeaders []*insertHeaderModel
+								for _, header := range override.ActionToUse.Count.CustomRequestHandling.InsertHeaders {
+									insertHeaders = append(insertHeaders, &insertHeaderModel{
+										Name:  types.StringValue(aws.ToString(header.Name)),
+										Value: types.StringValue(aws.ToString(header.Value)),
+									})
+								}
+								customHandlingModel.InsertHeader = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, insertHeaders)
+								countModel.CustomRequestHandling = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*customRequestHandlingModel{customHandlingModel})
+							}
+							actionToUse.Count = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*countActionModel{countModel})
+						}
+					}
+
+					overrideModel.ActionToUse = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*actionToUseModel{actionToUse})
+					ruleActionOverrides = append(ruleActionOverrides, overrideModel)
+				}
+				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, ruleActionOverrides)
+			} else {
+				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
+			}
 			break
 		}
 	}
@@ -543,11 +1111,65 @@ func parseWebACLARN(arn string) (id, name, scope string, err error) {
 
 type resourceWebACLRuleGroupAssociationModel struct {
 	framework.WithRegionModel
-	ID             types.String   `tfsdk:"id"`
-	RuleName       types.String   `tfsdk:"rule_name"`
-	Priority       types.Int32    `tfsdk:"priority"`
-	RuleGroupARN   types.String   `tfsdk:"rule_group_arn"`
-	WebACLARN      types.String   `tfsdk:"web_acl_arn"`
-	OverrideAction types.String   `tfsdk:"override_action"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	ID                 types.String                                             `tfsdk:"id"`
+	RuleName           types.String                                             `tfsdk:"rule_name"`
+	Priority           types.Int32                                              `tfsdk:"priority"`
+	RuleGroupARN       types.String                                             `tfsdk:"rule_group_arn"`
+	WebACLARN          types.String                                             `tfsdk:"web_acl_arn"`
+	OverrideAction     types.String                                             `tfsdk:"override_action"`
+	RuleActionOverride fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel] `tfsdk:"rule_action_override"`
+	Timeouts           timeouts.Value                                           `tfsdk:"timeouts"`
+}
+
+type ruleActionOverrideModel struct {
+	Name        types.String                                      `tfsdk:"name"`
+	ActionToUse fwtypes.ListNestedObjectValueOf[actionToUseModel] `tfsdk:"action_to_use"`
+}
+
+type actionToUseModel struct {
+	Allow     fwtypes.ListNestedObjectValueOf[allowActionModel]     `tfsdk:"allow"`
+	Block     fwtypes.ListNestedObjectValueOf[blockActionModel]     `tfsdk:"block"`
+	Captcha   fwtypes.ListNestedObjectValueOf[captchaActionModel]   `tfsdk:"captcha"`
+	Challenge fwtypes.ListNestedObjectValueOf[challengeActionModel] `tfsdk:"challenge"`
+	Count     fwtypes.ListNestedObjectValueOf[countActionModel]     `tfsdk:"count"`
+}
+
+type allowActionModel struct {
+	CustomRequestHandling fwtypes.ListNestedObjectValueOf[customRequestHandlingModel] `tfsdk:"custom_request_handling"`
+}
+
+type blockActionModel struct {
+	CustomResponse fwtypes.ListNestedObjectValueOf[customResponseModel] `tfsdk:"custom_response"`
+}
+
+type captchaActionModel struct {
+	CustomRequestHandling fwtypes.ListNestedObjectValueOf[customRequestHandlingModel] `tfsdk:"custom_request_handling"`
+}
+
+type challengeActionModel struct {
+	CustomRequestHandling fwtypes.ListNestedObjectValueOf[customRequestHandlingModel] `tfsdk:"custom_request_handling"`
+}
+
+type countActionModel struct {
+	CustomRequestHandling fwtypes.ListNestedObjectValueOf[customRequestHandlingModel] `tfsdk:"custom_request_handling"`
+}
+
+type customRequestHandlingModel struct {
+	InsertHeader fwtypes.ListNestedObjectValueOf[insertHeaderModel] `tfsdk:"insert_header"`
+}
+
+type customResponseModel struct {
+	CustomResponseBodyKey types.String                                         `tfsdk:"custom_response_body_key"`
+	ResponseCode          types.Int32                                          `tfsdk:"response_code"`
+	ResponseHeader        fwtypes.ListNestedObjectValueOf[responseHeaderModel] `tfsdk:"response_header"`
+}
+
+type insertHeaderModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+type responseHeaderModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
 }

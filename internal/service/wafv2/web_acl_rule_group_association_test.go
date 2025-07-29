@@ -6,7 +6,6 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -107,7 +106,7 @@ func TestParseWebACLARN(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			id, name, scope, err := parseWebACLARN(testCase.arn)
+			id, name, scope, err := tfwafv2.ParseWebACLARN(testCase.arn)
 
 			if testCase.expectError {
 				if err == nil {
@@ -165,7 +164,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -239,7 +238,7 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 			ruleGroupARN := parts[2]
 
 			// Parse Web ACL ARN to get ID, name, and scope
-			webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
+			webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
 			if err != nil {
 				continue
 			}
@@ -292,7 +291,7 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 		ruleGroupARN := parts[2]
 
 		// Parse Web ACL ARN to get ID, name, and scope
-		webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
+		webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
 		if err != nil {
 			return fmt.Errorf("error parsing Web ACL ARN: %w", err)
 		}
@@ -327,7 +326,7 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 	}
 }
 
-func testAccWebACLRuleGroupAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -467,37 +466,4 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   override_action = %[2]q
 }
 `, rName, overrideAction)
-}
-
-// parseWebACLARN extracts the Web ACL ID, name, and scope from the ARN
-// This is a copy of the function from the main resource file for use in tests
-func parseWebACLARN(arn string) (id, name, scope string, err error) {
-	// ARN format: arn:aws:wafv2:region:account-id:scope/webacl/name/id
-	// or for CloudFront: arn:aws:wafv2:global:account-id:global/webacl/name/id
-	parts := strings.Split(arn, ":")
-	if len(parts) < 6 {
-		return "", "", "", fmt.Errorf("invalid Web ACL ARN format: %s", arn)
-	}
-
-	resourceParts := strings.Split(parts[5], "/")
-	if len(resourceParts) < 4 {
-		return "", "", "", fmt.Errorf("invalid Web ACL ARN resource format: %s", parts[5])
-	}
-
-	// Validate that this is a webacl ARN
-	if resourceParts[1] != "webacl" {
-		return "", "", "", fmt.Errorf("invalid Web ACL ARN: expected webacl resource type, got %s", resourceParts[1])
-	}
-
-	// Determine scope
-	scopeValue := "REGIONAL"
-	if parts[3] == "global" || resourceParts[0] == "global" {
-		scopeValue = "CLOUDFRONT"
-	}
-
-	// Extract name and ID
-	nameIndex := len(resourceParts) - 2
-	idIndex := len(resourceParts) - 1
-
-	return resourceParts[idIndex], resourceParts[nameIndex], scopeValue, nil
 }
