@@ -387,7 +387,6 @@ type ResourceDatum struct {
 	PackageProviderNameUpper         string
 	Name                             string
 	TypeName                         string
-	DestroyTakesT                    bool
 	ExistsTypeName                   string
 	ExistsTakesT                     bool
 	FileName                         string
@@ -418,6 +417,7 @@ type ResourceDatum struct {
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	UseAlternateAccount              bool
+	tests.CommonArgs
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]tfVar {
@@ -619,6 +619,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
+
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				}
+
 				if attr, ok := args.Keyword["altRegionProvider"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -628,14 +634,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-				if attr, ok := args.Keyword["destroyTakesT"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid destroyTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.DestroyTakesT = b
-					}
-				}
 				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

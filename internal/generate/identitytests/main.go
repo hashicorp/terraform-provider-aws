@@ -397,7 +397,6 @@ type ResourceDatum struct {
 	PackageProviderNameUpper    string
 	Name                        string
 	TypeName                    string
-	DestroyTakesT               bool
 	HasExistsFunc               bool
 	ExistsTypeName              string
 	ExistsTakesT                bool
@@ -442,6 +441,7 @@ type ResourceDatum struct {
 	HasV6_0RefreshError         bool
 	RequiredEnvVars             []string
 	PreIdentityVersion          *version.Version
+	tests.CommonArgs
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -794,14 +794,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "Testing":
 				args := common.ParseArgs(m[3])
 
-				if attr, ok := args.Keyword["destroyTakesT"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid destroyTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.DestroyTakesT = b
-					}
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
 				}
+
 				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
