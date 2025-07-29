@@ -109,6 +109,17 @@ func (r *ipRestrictionResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
+	// Send empty maps, not nil.
+	if data.IPRestrictionRuleMap.IsNull() {
+		input.IpRestrictionRuleMap = map[string]string{}
+	}
+	if data.VPCEndpointIDRestrictionRuleMap.IsNull() {
+		input.VpcEndpointIdRestrictionRuleMap = map[string]string{}
+	}
+	if data.VPCIDRestrictionRuleMap.IsNull() {
+		input.VpcIdRestrictionRuleMap = map[string]string{}
+	}
+
 	_, err := conn.UpdateIpRestriction(ctx, &input)
 
 	if err != nil {
@@ -182,6 +193,17 @@ func (r *ipRestrictionResource) Update(ctx context.Context, request resource.Upd
 	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Send empty maps, not nil.
+	if new.IPRestrictionRuleMap.IsNull() {
+		input.IpRestrictionRuleMap = map[string]string{}
+	}
+	if new.VPCEndpointIDRestrictionRuleMap.IsNull() {
+		input.VpcEndpointIdRestrictionRuleMap = map[string]string{}
+	}
+	if new.VPCIDRestrictionRuleMap.IsNull() {
+		input.VpcIdRestrictionRuleMap = map[string]string{}
 	}
 
 	_, err := conn.UpdateIpRestriction(ctx, &input)

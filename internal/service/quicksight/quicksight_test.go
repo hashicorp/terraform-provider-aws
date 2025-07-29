@@ -35,6 +35,7 @@ func TestAccQuickSight_serial(t *testing.T) {
 		"IPRestriction": {
 			acctest.CtBasic:      testAccIPRestriction_basic,
 			acctest.CtDisappears: testAccIPRestriction_disappears,
+			"update":             testAccIPRestriction_update,
 		},
 		"KeyRegistration": {
 			acctest.CtBasic:      testAccKeyRegistration_basic,
