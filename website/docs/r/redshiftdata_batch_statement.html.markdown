@@ -35,12 +35,16 @@ resource "aws_redshiftdata_batch_statement" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `database` - (Required) The name of the database.
 * `sqls` - (Required) The SQL statements list to run.
+
+The following arguments are optional:
+
 * `cluster_identifier` - (Optional) The cluster identifier. This parameter is required when connecting to a cluster and authenticating using either Secrets Manager or temporary credentials.
 * `db_user` - (Optional) The database user name.
+* `region` - (Optional) The AWS Region in which the batch statement is created. If not specified, the region from the provider configuration will be used.
 * `secret_arn` - (Optional) The name or ARN of the secret that enables access to the database.
 * `statement_name` - (Optional) The name of the SQL statement. You can name the SQL statement when you create it to identify the query.
 * `with_event` - (Optional) A value that indicates whether to send an event to the Amazon EventBridge event bus after the SQL statement runs.
@@ -54,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Data Statements using the `id`. For example:
 
 ```terraform
 import {
@@ -63,6 +67,8 @@ import {
 }
 ```
 
+Using `terraform import`, import Redshift Data Statements using the `id`. For example:
+
 ```console
-$ terraform import aws_redshiftdata_batch_statement.example example
+% terraform import aws_redshiftdata_batch_statement.example example
 ```
