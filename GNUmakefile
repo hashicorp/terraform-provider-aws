@@ -383,6 +383,9 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+quick-fix: fmt testacc-lint-fix fix-imports modern-fix semgrep-fix ## Some quick fixes
+	@echo "make: Quick fixes..."
+
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
 	@docker run --rm \
@@ -885,45 +888,45 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	changelog-misspell \
-	ci-quick \
 	ci \
+	ci-quick \
+	clean \
 	clean-go \
 	clean-make-tests \
 	clean-tidy \
-	clean \
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
-	docs-lint-fix \
 	docs-lint \
+	docs-lint-fix \
 	docs-markdown-lint \
 	docs-misspell \
-	docs \
 	examples-tflint \
 	fix-constants \
 	fix-imports \
-	fmt-check \
 	fmt \
+	fmt-check \
 	fumpt \
-	gen-check \
 	gen \
+	gen-check \
 	generate-changelog \
 	gh-workflows-lint \
 	go-build \
 	go-misspell \
+	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
-	golangci-lint \
 	help \
 	import-lint \
 	install \
-	lint-fix \
 	lint \
+	lint-fix \
 	misspell \
 	modern-check \
 	modern-fix \
@@ -931,37 +934,38 @@ yamllint: ## [CI] YAML Linting / yamllint
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	quick-fix \
 	sane \
 	sanity \
+	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
-	semgrep-naming-cae \
 	semgrep-naming \
+	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
 	semgrep-vcr \
-	semgrep \
-	skaff-check-compile \
 	skaff \
+	skaff-check-compile \
 	smoke \
 	sweep \
+	sweeper \
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
-	sweeper \
 	t \
-	test-compile \
 	test \
-	testacc-lint-fix \
+	test-compile \
+	testacc \
 	testacc-lint \
+	testacc-lint-fix \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
-	testacc \
 	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
@@ -969,15 +973,15 @@ yamllint: ## [CI] YAML Linting / yamllint
 	ts \
 	update \
 	vcr-enable \
+	website \
+	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \
-	website-link-check \
-	website-lint-fix \
 	website-lint \
+	website-lint-fix \
 	website-markdown-lint \
 	website-misspell \
 	website-terrafmt \
 	website-tflint \
-	website \
 	yamllint
