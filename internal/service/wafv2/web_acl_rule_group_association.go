@@ -19,8 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -76,9 +74,6 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 			names.AttrPriority: schema.Int32Attribute{
 				Required: true,
-				PlanModifiers: []planmodifier.Int32{
-					int32planmodifier.RequiresReplace(),
-				},
 				Validators: []validator.Int32{
 					int32validator.AtLeast(0),
 				},
@@ -108,7 +103,6 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
@@ -120,15 +114,13 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Update: true,
 				Delete: true,
 			}),
 			"rule_action_override": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionOverrideModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(100),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -941,11 +933,328 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 		return
 	}
 
-	// Most attributes require replacement, so we only need to handle changes to attributes
-	// that don't require replacement (currently none)
+	conn := r.Meta().WAFV2Client(ctx)
 
-	// For future extensibility, if any attributes are added that don't require replacement,
-	// they would be handled here
+	// Parse Web ACL ARN to get ID, name, and scope
+	webACLARN := plan.WebACLARN.ValueString()
+	webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Get current Web ACL configuration
+	webACL, err := findWebACLByThreePartKey(ctx, conn, webACLID, webACLName, webACLScope)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Find the rule to update
+	ruleName := plan.RuleName.ValueString()
+	ruleFound := false
+	for i, rule := range webACL.WebACL.Rules {
+		if aws.ToString(rule.Name) == ruleName {
+			ruleFound = true
+
+			// Update the rule's priority
+			webACL.WebACL.Rules[i].Priority = plan.Priority.ValueInt32()
+
+			// Update override action
+			overrideAction := plan.OverrideAction.ValueString()
+			if overrideAction == "" {
+				overrideAction = "none" // Default value
+			}
+
+			switch overrideAction {
+			case "none":
+				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
+					None: &awstypes.NoneAction{},
+				}
+			case "count":
+				webACL.WebACL.Rules[i].OverrideAction = &awstypes.OverrideAction{
+					Count: &awstypes.CountAction{},
+				}
+			}
+
+			// Update rule action overrides if specified
+			if !plan.RuleActionOverride.IsNull() && !plan.RuleActionOverride.IsUnknown() {
+				ruleActionOverrides, diags := plan.RuleActionOverride.ToSlice(ctx)
+				resp.Diagnostics.Append(diags...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				var overrides []awstypes.RuleActionOverride
+				for _, override := range ruleActionOverrides {
+					actionToUseList, diags := override.ActionToUse.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+
+					if len(actionToUseList) > 0 {
+						actionToUse := actionToUseList[0]
+						ruleAction := &awstypes.RuleAction{}
+
+						// Set the appropriate action based on which one is configured
+						if !actionToUse.Allow.IsNull() && !actionToUse.Allow.IsUnknown() {
+							allowList, diags := actionToUse.Allow.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(allowList) > 0 {
+								allowAction := &awstypes.AllowAction{}
+								if !allowList[0].CustomRequestHandling.IsNull() && !allowList[0].CustomRequestHandling.IsUnknown() {
+									customHandlingList, diags := allowList[0].CustomRequestHandling.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									if len(customHandlingList) > 0 {
+										insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+										resp.Diagnostics.Append(diags...)
+										if resp.Diagnostics.HasError() {
+											return
+										}
+										var headers []awstypes.CustomHTTPHeader
+										for _, header := range insertHeaderList {
+											headers = append(headers, awstypes.CustomHTTPHeader{
+												Name:  header.Name.ValueStringPointer(),
+												Value: header.Value.ValueStringPointer(),
+											})
+										}
+										allowAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+											InsertHeaders: headers,
+										}
+									}
+								}
+								ruleAction.Allow = allowAction
+							}
+						} else if !actionToUse.Block.IsNull() && !actionToUse.Block.IsUnknown() {
+							blockList, diags := actionToUse.Block.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(blockList) > 0 {
+								blockAction := &awstypes.BlockAction{}
+								if !blockList[0].CustomResponse.IsNull() && !blockList[0].CustomResponse.IsUnknown() {
+									customResponseList, diags := blockList[0].CustomResponse.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									if len(customResponseList) > 0 {
+										customResponse := &awstypes.CustomResponse{
+											ResponseCode: aws.Int32(customResponseList[0].ResponseCode.ValueInt32()),
+										}
+										if !customResponseList[0].CustomResponseBodyKey.IsNull() {
+											customResponse.CustomResponseBodyKey = customResponseList[0].CustomResponseBodyKey.ValueStringPointer()
+										}
+										responseHeaderList, diags := customResponseList[0].ResponseHeader.ToSlice(ctx)
+										resp.Diagnostics.Append(diags...)
+										if resp.Diagnostics.HasError() {
+											return
+										}
+										var headers []awstypes.CustomHTTPHeader
+										for _, header := range responseHeaderList {
+											headers = append(headers, awstypes.CustomHTTPHeader{
+												Name:  header.Name.ValueStringPointer(),
+												Value: header.Value.ValueStringPointer(),
+											})
+										}
+										customResponse.ResponseHeaders = headers
+										blockAction.CustomResponse = customResponse
+									}
+								}
+								ruleAction.Block = blockAction
+							}
+						} else if !actionToUse.Captcha.IsNull() && !actionToUse.Captcha.IsUnknown() {
+							captchaList, diags := actionToUse.Captcha.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(captchaList) > 0 {
+								captchaAction := &awstypes.CaptchaAction{}
+								if !captchaList[0].CustomRequestHandling.IsNull() && !captchaList[0].CustomRequestHandling.IsUnknown() {
+									customHandlingList, diags := captchaList[0].CustomRequestHandling.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									if len(customHandlingList) > 0 {
+										insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+										resp.Diagnostics.Append(diags...)
+										if resp.Diagnostics.HasError() {
+											return
+										}
+										var headers []awstypes.CustomHTTPHeader
+										for _, header := range insertHeaderList {
+											headers = append(headers, awstypes.CustomHTTPHeader{
+												Name:  header.Name.ValueStringPointer(),
+												Value: header.Value.ValueStringPointer(),
+											})
+										}
+										captchaAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+											InsertHeaders: headers,
+										}
+									}
+								}
+								ruleAction.Captcha = captchaAction
+							}
+						} else if !actionToUse.Challenge.IsNull() && !actionToUse.Challenge.IsUnknown() {
+							challengeList, diags := actionToUse.Challenge.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(challengeList) > 0 {
+								challengeAction := &awstypes.ChallengeAction{}
+								if !challengeList[0].CustomRequestHandling.IsNull() && !challengeList[0].CustomRequestHandling.IsUnknown() {
+									customHandlingList, diags := challengeList[0].CustomRequestHandling.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									if len(customHandlingList) > 0 {
+										insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+										resp.Diagnostics.Append(diags...)
+										if resp.Diagnostics.HasError() {
+											return
+										}
+										var headers []awstypes.CustomHTTPHeader
+										for _, header := range insertHeaderList {
+											headers = append(headers, awstypes.CustomHTTPHeader{
+												Name:  header.Name.ValueStringPointer(),
+												Value: header.Value.ValueStringPointer(),
+											})
+										}
+										challengeAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+											InsertHeaders: headers,
+										}
+									}
+								}
+								ruleAction.Challenge = challengeAction
+							}
+						} else if !actionToUse.Count.IsNull() && !actionToUse.Count.IsUnknown() {
+							countList, diags := actionToUse.Count.ToSlice(ctx)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							if len(countList) > 0 {
+								countAction := &awstypes.CountAction{}
+								if !countList[0].CustomRequestHandling.IsNull() && !countList[0].CustomRequestHandling.IsUnknown() {
+									customHandlingList, diags := countList[0].CustomRequestHandling.ToSlice(ctx)
+									resp.Diagnostics.Append(diags...)
+									if resp.Diagnostics.HasError() {
+										return
+									}
+									if len(customHandlingList) > 0 {
+										insertHeaderList, diags := customHandlingList[0].InsertHeader.ToSlice(ctx)
+										resp.Diagnostics.Append(diags...)
+										if resp.Diagnostics.HasError() {
+											return
+										}
+										var headers []awstypes.CustomHTTPHeader
+										for _, header := range insertHeaderList {
+											headers = append(headers, awstypes.CustomHTTPHeader{
+												Name:  header.Name.ValueStringPointer(),
+												Value: header.Value.ValueStringPointer(),
+											})
+										}
+										countAction.CustomRequestHandling = &awstypes.CustomRequestHandling{
+											InsertHeaders: headers,
+										}
+									}
+								}
+								ruleAction.Count = countAction
+							}
+						}
+
+						overrides = append(overrides, awstypes.RuleActionOverride{
+							Name:        override.Name.ValueStringPointer(),
+							ActionToUse: ruleAction,
+						})
+					}
+				}
+
+				// Update the rule group reference statement with new overrides
+				if webACL.WebACL.Rules[i].Statement != nil && webACL.WebACL.Rules[i].Statement.RuleGroupReferenceStatement != nil {
+					webACL.WebACL.Rules[i].Statement.RuleGroupReferenceStatement.RuleActionOverrides = overrides
+				}
+			} else {
+				// Clear rule action overrides if not specified
+				if webACL.WebACL.Rules[i].Statement != nil && webACL.WebACL.Rules[i].Statement.RuleGroupReferenceStatement != nil {
+					webACL.WebACL.Rules[i].Statement.RuleGroupReferenceStatement.RuleActionOverrides = nil
+				}
+			}
+
+			break
+		}
+	}
+
+	if !ruleFound {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), nil),
+			fmt.Sprintf("Rule %s not found in Web ACL", ruleName),
+		)
+		return
+	}
+
+	// Check for priority conflicts with other rules
+	for _, rule := range webACL.WebACL.Rules {
+		if aws.ToString(rule.Name) != ruleName && rule.Priority == plan.Priority.ValueInt32() {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), nil),
+				fmt.Sprintf("Rule with priority %d already exists in Web ACL", plan.Priority.ValueInt32()),
+			)
+			return
+		}
+	}
+
+	// Update the Web ACL with the modified rule
+	updateInput := &wafv2.UpdateWebACLInput{
+		Id:                   aws.String(webACLID),
+		Name:                 aws.String(webACLName),
+		Scope:                awstypes.Scope(webACLScope),
+		DefaultAction:        webACL.WebACL.DefaultAction,
+		Rules:                webACL.WebACL.Rules,
+		VisibilityConfig:     webACL.WebACL.VisibilityConfig,
+		LockToken:            webACL.LockToken,
+		AssociationConfig:    webACL.WebACL.AssociationConfig,
+		CaptchaConfig:        webACL.WebACL.CaptchaConfig,
+		ChallengeConfig:      webACL.WebACL.ChallengeConfig,
+		CustomResponseBodies: webACL.WebACL.CustomResponseBodies,
+		TokenDomains:         webACL.WebACL.TokenDomains,
+	}
+
+	// Only set description if it's not empty
+	if webACL.WebACL.Description != nil && aws.ToString(webACL.WebACL.Description) != "" {
+		updateInput.Description = webACL.WebACL.Description
+	}
+
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, updateTimeout, func() (any, error) {
+		return conn.UpdateWebACL(ctx, updateInput)
+	})
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionUpdating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
