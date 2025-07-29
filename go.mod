@@ -139,7 +139,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.21.6
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/iot v1.64.5
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.43.5
