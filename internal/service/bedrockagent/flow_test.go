@@ -334,7 +334,8 @@ func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var flow bedrockagent.GetFlowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	flowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	promptName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_flow.test"
 	foundationModel := "amazon.titan-text-express-v1"
 
@@ -349,7 +350,7 @@ func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_withPromptResource(rName, foundationModel),
+				Config: testAccFlowConfig_withPromptResource(flowName, promptName, foundationModel),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flow),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
@@ -358,7 +359,7 @@ func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, flowName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -659,15 +660,15 @@ resource "aws_bedrockagent_flow" "test" {
 `, rName, model))
 }
 
-func testAccFlowConfig_withPromptResource(rName, model string) string {
+func testAccFlowConfig_withPromptResource(flowName, promptName, model string) string {
 	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
 resource "aws_bedrockagent_prompt" "test" {
-  name        = "MyPrompt"
+  name        = %[1]q
   description = "My prompt description."
 }
 
 resource "aws_bedrockagent_flow" "test" {
-  name               = %[1]q
+  name               = %[2]q
   execution_role_arn = aws_iam_role.test.arn
 
   definition {
@@ -698,5 +699,5 @@ resource "aws_bedrockagent_flow" "test" {
     }
   }
 }
-`, rName, model))
+`, promptName, flowName, model))
 }
