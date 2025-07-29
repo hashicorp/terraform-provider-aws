@@ -91,6 +91,120 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 }
 ```
 
+### With Rule Action Overrides
+
+```terraform
+resource "aws_wafv2_rule_group" "example" {
+  name     = "example-rule-group"
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "geo-block-rule"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["CN", "RU"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "geo-block-rule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = "rate-limit-rule"
+    priority = 2
+
+    action {
+      block {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit              = 1000
+        aggregate_key_type = "IP"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "rate-limit-rule"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "example-rule-group"
+    sampled_requests_enabled   = true
+  }
+}
+
+resource "aws_wafv2_web_acl" "example" {
+  name  = "example-web-acl"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "example-web-acl"
+    sampled_requests_enabled   = true
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "example" {
+  rule_name      = "example-rule-group-rule"
+  priority       = 100
+  rule_group_arn = aws_wafv2_rule_group.example.arn
+  web_acl_arn    = aws_wafv2_web_acl.example.arn
+
+  # Override specific rules within the rule group
+  rule_action_override {
+    name = "geo-block-rule"
+    action_to_use {
+      count {
+        custom_request_handling {
+          insert_header {
+            name  = "X-Geo-Block-Override"
+            value = "counted"
+          }
+        }
+      }
+    }
+  }
+
+  rule_action_override {
+    name = "rate-limit-rule"
+    action_to_use {
+      captcha {
+        custom_request_handling {
+          insert_header {
+            name  = "X-Rate-Limit-Override"
+            value = "captcha-required"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ### CloudFront Web ACL
 
 ```terraform
@@ -168,6 +282,62 @@ The following arguments are optional:
 
 * `override_action` - (Optional) Override action for the rule group. Valid values are `none` and `count`. Defaults to `none`. When set to `count`, the actions defined in the rule group rules are overridden to count matches instead of blocking or allowing requests.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule_action_override` - (Optional) Override actions for specific rules within the rule group. [See below](#rule_action_override).
+
+### rule_action_override
+
+* `name` - (Required) Name of the rule to override within the rule group.
+* `action_to_use` - (Required) Action to use instead of the rule's original action. [See below](#action_to_use).
+
+### action_to_use
+
+Exactly one of the following action blocks must be specified:
+
+* `allow` - (Optional) Allow the request. [See below](#allow).
+* `block` - (Optional) Block the request. [See below](#block).
+* `captcha` - (Optional) Require CAPTCHA verification. [See below](#captcha).
+* `challenge` - (Optional) Require challenge verification. [See below](#challenge).
+* `count` - (Optional) Count the request without taking action. [See below](#count).
+
+### allow
+
+* `custom_request_handling` - (Optional) Custom handling for allowed requests. [See below](#custom_request_handling).
+
+### block
+
+* `custom_response` - (Optional) Custom response for blocked requests. [See below](#custom_response).
+
+### captcha
+
+* `custom_request_handling` - (Optional) Custom handling for CAPTCHA requests. [See below](#custom_request_handling).
+
+### challenge
+
+* `custom_request_handling` - (Optional) Custom handling for challenge requests. [See below](#custom_request_handling).
+
+### count
+
+* `custom_request_handling` - (Optional) Custom handling for counted requests. [See below](#custom_request_handling).
+
+### custom_request_handling
+
+* `insert_header` - (Required) Headers to insert into the request. [See below](#insert_header).
+
+### custom_response
+
+* `custom_response_body_key` - (Optional) Key of a custom response body to use.
+* `response_code` - (Required) HTTP response code to return (200-599).
+* `response_header` - (Optional) Headers to include in the response. [See below](#response_header).
+
+### insert_header
+
+* `name` - (Required) Name of the header to insert.
+* `value` - (Required) Value of the header to insert.
+
+### response_header
+
+* `name` - (Required) Name of the response header.
+* `value` - (Required) Value of the response header.
 
 ## Attribute Reference
 
@@ -180,6 +350,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
