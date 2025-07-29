@@ -180,7 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/notifications v1.2.6
+	github.com/aws/aws-sdk-go-v2/service/notifications v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.1.5
 	github.com/aws/aws-sdk-go-v2/service/oam v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.47.1
