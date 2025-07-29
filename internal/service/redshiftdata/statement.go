@@ -147,7 +147,7 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(aws.ToString(output.Id))
 
-	if _, err := waitStatementFinished(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitStatementFinished(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Data Statement (%s) finish: %s", d.Id(), err)
 	}
 
@@ -233,7 +233,7 @@ func statusStatement(ctx context.Context, conn *redshiftdata.Client, id string) 
 	}
 }
 
-func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id string, timeout time.Duration) (*redshiftdata.DescribeStatementOutput, error) {
+func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.StatusStringPicked,
@@ -253,11 +253,9 @@ func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id st
 		if status := output.Status; status == types.StatusStringFailed {
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.Error)))
 		}
-
-		return output, err
 	}
 
-	return nil, err
+	return err
 }
 
 func expandParameter(tfMap map[string]any) *types.SqlParameter {
