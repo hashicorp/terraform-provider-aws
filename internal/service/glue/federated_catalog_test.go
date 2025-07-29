@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,86 +23,6 @@ import (
 )
 
 func TestAccGlueFederatedCatalog_basic(t *testing.T) {
-	t.Skip("Skipping basic test - test-identifier is not a registered data source")
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var federatedcatalog glue.GetCatalogOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFederatedCatalogConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, resourceName, &federatedcatalog),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test federated catalog"),
-					resource.TestCheckResourceAttr(resourceName, "federated_catalog.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "federated_catalog.0.identifier", "test-identifier"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", regexache.MustCompile(`catalog/.+$`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccGlueFederatedCatalog_disappears(t *testing.T) {
-	t.Skip("Skipping disappears test - test-identifier is not a registered data source")
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var federatedcatalog glue.GetCatalogOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_glue_federated_catalog.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFederatedCatalogConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFederatedCatalogExists(ctx, resourceName, &federatedcatalog),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglue.ResourceFederatedCatalog, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-		},
-	})
-}
-
-func TestAccGlueFederatedCatalog_s3Tables(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -145,7 +64,107 @@ func TestAccGlueFederatedCatalog_s3Tables(t *testing.T) {
 	})
 }
 
-func TestAccGlueFederatedCatalog_s3TablesDisappears(t *testing.T) {
+func TestAccGlueFederatedCatalog_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var federatedcatalog glue.GetCatalogOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_federated_catalog.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFederatedCatalogExists(ctx, resourceName, &federatedcatalog),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglue.ResourceFederatedCatalog, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueFederatedCatalog_catalogProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var federatedcatalog glue.GetCatalogOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_federated_catalog.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFederatedCatalogConfig_s3Tables(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFederatedCatalogExists(ctx, resourceName, &federatedcatalog),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "s3tablescatalog"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCatalogID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test S3 Tables federated catalog"),
+					resource.TestCheckResourceAttr(resourceName, "federated_catalog.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "federated_catalog.0.identifier"),
+					resource.TestCheckResourceAttr(resourceName, "federated_catalog.0.connection_name", "aws:s3tables"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", regexache.MustCompile(`catalog/.+$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueFederatedCatalog_configurationError(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.GlueEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFederatedCatalogDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFederatedCatalogConfig_missingConfiguration(rName),
+				ExpectError: regexache.MustCompile("Missing Required Configuration"),
+			},
+		},
+	})
+}
+
+func TestAccGlueFederatedCatalog_catalogPropertiesDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -235,17 +254,11 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccFederatedCatalogConfig_basic(rName string) string {
+func testAccFederatedCatalogConfig_missingConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_federated_catalog" "test" {
   name        = %[1]q
-  description = "Test federated catalog"
-
-  federated_catalog {
-    identifier      = "test-identifier"
-    connection_name = "test-connection"
-  }
-
+  description = "Test federated catalog without required configuration"
 }
 `, rName)
 }
@@ -261,7 +274,6 @@ resource "aws_glue_federated_catalog" "test" {
     identifier      = "arn:${data.aws_partition.current.partition}:s3tables:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:bucket/*"
     connection_name = "aws:s3tables"
   }
-
 
   depends_on = [aws_lakeformation_resource.test]
 }

@@ -69,6 +69,9 @@ func (r *resourceFederatedCatalog) Schema(ctx context.Context, req resource.Sche
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
@@ -404,7 +407,6 @@ func (r *resourceFederatedCatalog) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *resourceFederatedCatalog) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().GlueClient(ctx)
 	var plan, state resourceFederatedCatalogModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -419,36 +421,11 @@ func (r *resourceFederatedCatalog) Update(ctx context.Context, req resource.Upda
 	}
 
 	if diff.HasChanges() {
-		catalogId, _, err := readCatalogResourceID(plan.ID.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
-			return
-		}
-
-		var input glue.UpdateCatalogInput
-		input.CatalogId = aws.String(catalogId)
-		input.CatalogInput = &awstypes.CatalogInput{}
-
-		if !plan.Description.IsNull() {
-			input.CatalogInput.Description = plan.Description.ValueStringPointer()
-		}
-
-		_, err = conn.UpdateCatalog(ctx, &input)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
-			return
-		}
-
-		catalog, err := findFederatedCatalogByID(ctx, conn, plan.ID.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, catalog, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		resp.Diagnostics.AddError(
+			"Update Not Supported",
+			"AWS Glue federated catalogs do not support updates. All attributes require replacement.",
+		)
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
