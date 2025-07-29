@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -318,6 +319,156 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "rule_action_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.name", "rule-1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.captcha.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_priorityUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_priority(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "10"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_priority(rName, 20),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "20"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_overrideActionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, "none"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, "count"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "count"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ruleNameRequiresReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ruleName(rName, "original-rule"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "original-rule"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ruleName(rName, "updated-rule"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "updated-rule"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_webACLARNRequiresReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_webACL(rName, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_webACL(rName, "second"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -848,4 +999,196 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_priority(rName string, priority int) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = "%[1]s-association"
+  priority       = %[2]d
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  override_action = "none"
+}
+`, rName, priority)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ruleName(rName, ruleName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = %[2]q
+  priority       = 10
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  override_action = "none"
+}
+`, rName, ruleName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_webACL(rName, webACLSuffix string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = "%[1]s-%[2]s"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-%[2]s"
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = "%[1]s-association"
+  priority       = 10
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  override_action = "none"
+}
+`, rName, webACLSuffix)
 }
