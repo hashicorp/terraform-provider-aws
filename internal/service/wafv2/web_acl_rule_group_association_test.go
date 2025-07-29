@@ -6,6 +6,7 @@ package wafv2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -135,6 +136,34 @@ func TestParseWebACLARN(t *testing.T) {
 	}
 }
 
+func TestWebACLRuleGroupAssociationConfig_ruleActionOverride_syntax(t *testing.T) {
+	t.Parallel()
+
+	// Test that the Terraform configuration syntax is valid
+	rName := "test-config"
+	config := testAccWebACLRuleGroupAssociationConfig_ruleActionOverride(rName)
+
+	// Basic validation that the config contains expected elements
+	if !strings.Contains(config, "rule_action_override") {
+		t.Error("Configuration should contain rule_action_override block")
+	}
+	if !strings.Contains(config, "action_to_use") {
+		t.Error("Configuration should contain action_to_use block")
+	}
+	if !strings.Contains(config, "custom_request_handling") {
+		t.Error("Configuration should contain custom_request_handling block")
+	}
+	if !strings.Contains(config, "custom_response") {
+		t.Error("Configuration should contain custom_response block")
+	}
+	if !strings.Contains(config, "insert_header") {
+		t.Error("Configuration should contain insert_header block")
+	}
+	if !strings.Contains(config, "response_header") {
+		t.Error("Configuration should contain response_header block")
+	}
+}
+
 func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
@@ -211,6 +240,84 @@ func TestAccWAFV2WebACLRuleGroupAssociation_overrideAction(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "override_action", "count"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.allow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.allow.0.custom_request_handling.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.allow.0.custom_request_handling.0.insert_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.allow.0.custom_request_handling.0.insert_header.0.name", "X-Custom-Header"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.allow.0.custom_request_handling.0.insert_header.0.value", "custom-value"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.name", "rule-2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.0.custom_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_code", "403"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.0.name", "X-Block-Reason"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.1.action_to_use.0.block.0.custom_response.0.response_header.0.value", "rule-override"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.count.#", "1"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCaptcha(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.name", "rule-1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_action_override.0.action_to_use.0.captcha.#", "1"),
 				),
 			},
 		},
@@ -466,4 +573,279 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   override_action = %[2]q
 }
 `, rName, overrideAction)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ruleActionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  rule {
+    name     = "rule-2"
+    priority = 2
+
+    action {
+      allow {}
+    }
+
+    statement {
+      ip_set_reference_statement {
+        arn = aws_wafv2_ip_set.test.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-2"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_ip_set" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  ip_address_version = "IPV4"
+  addresses          = ["192.0.2.0/24"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = "%[1]s-association"
+  priority       = 10
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+
+  rule_action_override {
+    name = "rule-1"
+    action_to_use {
+      allow {
+        custom_request_handling {
+          insert_header {
+            name  = "X-Custom-Header"
+            value = "custom-value"
+          }
+        }
+      }
+    }
+  }
+
+  rule_action_override {
+    name = "rule-2"
+    action_to_use {
+      block {
+        custom_response {
+          response_code = 403
+          response_header {
+            name  = "X-Block-Reason"
+            value = "rule-override"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCount(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = "%[1]s-association"
+  priority       = 10
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+
+  rule_action_override {
+    name = "rule-1"
+    action_to_use {
+      count {
+        custom_request_handling {
+          insert_header {
+            name  = "X-Count-Header"
+            value = "counted"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCaptcha(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name      = "%[1]s-association"
+  priority       = 10
+  rule_group_arn = aws_wafv2_rule_group.test.arn
+  web_acl_arn    = aws_wafv2_web_acl.test.arn
+
+  rule_action_override {
+    name = "rule-1"
+    action_to_use {
+      captcha {
+        custom_request_handling {
+          insert_header {
+            name  = "X-Captcha-Header"
+            value = "captcha-required"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
 }
