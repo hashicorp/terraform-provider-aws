@@ -144,7 +144,7 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.Te
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d
   ip_address  = %[3]q
@@ -226,7 +226,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
   }
 }
-`, rName, bgpASN, vpnIP))
+`, rName, bgpASN, vpnIP)
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {

@@ -76,5 +76,3 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
   }
 }
-
-{{ template "acctest.ConfigAvailableAZsNoOptInDefaultExclude" }}
