@@ -14,11 +14,25 @@ import (
 )
 
 type CommonArgs struct {
-	CheckDestroyNoop  bool
-	DestroyTakesT     bool
+	// CheckDestroy
+	CheckDestroyNoop bool
+	DestroyTakesT    bool
+
+	// CheckExists
+	HasExistsFunc  bool
+	ExistsTypeName string
+	ExistsTakesT   bool
+
 	GoImports         []GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
+}
+
+func InitCommonArgs() CommonArgs {
+	return CommonArgs{
+		AdditionalTfVars_: make(map[string]TFVar),
+		HasExistsFunc:     true,
+	}
 }
 
 func (d CommonArgs) AdditionalTfVars() map[string]TFVar {
@@ -49,6 +63,7 @@ const (
 )
 
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
+	// DestroyCheck
 	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
 		if b, err := strconv.ParseBool(attr); err != nil {
 			return fmt.Errorf("invalid checkDestroyNoop value: %q: Should be boolean value.", attr)
@@ -70,6 +85,35 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 	}
 
+	// ExistsCheck
+	if attr, ok := args.Keyword["hasExistsFunction"]; ok {
+		if b, err := strconv.ParseBool(attr); err != nil {
+			return fmt.Errorf("invalid existsFunction value %q: Should be boolean value.", attr)
+		} else {
+			stuff.HasExistsFunc = b
+		}
+	}
+
+	if attr, ok := args.Keyword["existsType"]; ok {
+		if typeName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return fmt.Errorf("%s: %w", attr, err)
+		} else {
+			stuff.ExistsTypeName = typeName
+			if importSpec != nil {
+				stuff.GoImports = append(stuff.GoImports, *importSpec)
+			}
+		}
+	}
+
+	if attr, ok := args.Keyword["existsTakesT"]; ok {
+		if b, err := strconv.ParseBool(attr); err != nil {
+			return fmt.Errorf("invalid existsTakesT value %q: Should be boolean value.", attr)
+		} else {
+			stuff.ExistsTakesT = b
+		}
+	}
+
+	// TF Variables
 	if attr, ok := args.Keyword["emailAddress"]; ok {
 		varName := "address"
 		if len(attr) > 0 {
@@ -183,4 +227,26 @@ if err != nil {
 	}
 
 	return nil
+}
+
+func ParseIdentifierSpec(s string) (string, *GoImport, error) {
+	parts := strings.Split(s, ";")
+	switch len(parts) {
+	case 1:
+		return parts[0], nil, nil
+
+	case 2:
+		return parts[1], &GoImport{
+			Path: parts[0],
+		}, nil
+
+	case 3:
+		return parts[2], &GoImport{
+			Path:  parts[0],
+			Alias: parts[1],
+		}, nil
+
+	default:
+		return "", nil, fmt.Errorf("invalid generator value: %q", s)
+	}
 }

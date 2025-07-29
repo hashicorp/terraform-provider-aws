@@ -396,9 +396,6 @@ type ResourceDatum struct {
 	PackageProviderNameUpper    string
 	Name                        string
 	TypeName                    string
-	HasExistsFunc               bool
-	ExistsTypeName              string
-	ExistsTakesT                bool
 	FileName                    string
 	Generator                   string
 	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
@@ -611,12 +608,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	v.functionName = funcDecl.Name.Name
 
 	d := ResourceDatum{
-		FileName: v.fileName,
-		CommonArgs: tests.CommonArgs{
-			AdditionalTfVars_: make(map[string]tests.TFVar),
-		},
+		FileName:              v.fileName,
+		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
-		HasExistsFunc:         true,
 		HasRegionOverrideTest: true,
 		plannableImportAction: importActionNoop,
 		PreIdentityVersion:    version.Must(version.NewVersion("5.100.0")),
@@ -785,37 +779,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				if attr, ok := args.Keyword["hasExistsFunction"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid existsFunction value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.HasExistsFunc = b
-					}
-				}
-				if attr, ok := args.Keyword["existsType"]; ok {
-					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.ExistsTypeName = typeName
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-					}
-				}
-				if attr, ok := args.Keyword["existsTakesT"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid existsTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.ExistsTakesT = b
-					}
-				}
 				if attr, ok := args.Keyword["generator"]; ok {
 					if attr == "false" {
 						generatorSeen = true
-					} else if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					} else if funcName, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
@@ -881,7 +848,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
-					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
@@ -905,7 +872,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					)
 				}
 				if attr, ok := args.Keyword["preCheckWithRegion"]; ok {
-					if code, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
@@ -1122,28 +1089,6 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
-	}
-}
-
-func parseIdentifierSpec(s string) (string, *tests.GoImport, error) {
-	parts := strings.Split(s, ";")
-	switch len(parts) {
-	case 1:
-		return parts[0], nil, nil
-
-	case 2:
-		return parts[1], &tests.GoImport{
-			Path: parts[0],
-		}, nil
-
-	case 3:
-		return parts[2], &tests.GoImport{
-			Path:  parts[0],
-			Alias: parts[1],
-		}, nil
-
-	default:
-		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
 }
 
