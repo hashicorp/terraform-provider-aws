@@ -275,6 +275,8 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Delay:          4 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 
