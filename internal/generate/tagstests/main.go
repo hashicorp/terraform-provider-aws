@@ -384,7 +384,6 @@ type ResourceDatum struct {
 	ProviderPackage                  string
 	ResourceProviderNameUpper        string
 	PackageProviderNameUpper         string
-	Name                             string
 	TypeName                         string
 	FileName                         string
 	Implementation                   implementation
@@ -595,9 +594,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					generatorSeen = true
 				}
 
-				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
-				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))

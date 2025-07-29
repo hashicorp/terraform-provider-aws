@@ -15,6 +15,8 @@ import (
 )
 
 type CommonArgs struct {
+	Name string // Resource Type Name
+
 	// CheckDestroy
 	CheckDestroyNoop bool
 	DestroyTakesT    bool
@@ -114,6 +116,10 @@ const (
 )
 
 func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
+	if attr, ok := args.Keyword["name"]; ok {
+		stuff.Name = strings.ReplaceAll(attr, " ", "")
+	}
+
 	// DestroyCheck
 	if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
 		if b, err := strconv.ParseBool(attr); err != nil {
