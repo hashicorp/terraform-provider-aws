@@ -1,4 +1,6 @@
 ```release-note:enhancement
-resource/aws_ecs_service: Remove Terraform default for `availability_zone_rebalancing` to allow ECS to default to `ENABLED` for new resources and maintain existing service's AvailabilityZoneRebalancing value during updates when not
-specified.
+resource/aws_ecs_service: Remove Terraform default for `availability_zone_rebalancing` to allow ECS to default to `ENABLED` 
+for new resources compatible with AvailabilityZoneRebalancing and maintain existing service's AvailabilityZoneRebalancing value 
+during updates when not specified. If an existing service never had an AvailabilityZoneRebalancing value set and is updated, ECS
+will treat this as `DISABLED`.
 ```
