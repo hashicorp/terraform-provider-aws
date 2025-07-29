@@ -501,7 +501,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+  secret_id                = aws_secretsmanager_secret.test.id
   secret_string_wo         = %[2]q
   secret_string_wo_version = %[3]d
 
@@ -517,7 +517,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+  secret_id                = aws_secretsmanager_secret.test.id
   secret_string_wo         = %[2]q
   secret_string_wo_version = %[3]d
 
@@ -533,7 +533,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+  secret_id                = aws_secretsmanager_secret.test.id
   secret_string_wo         = %[2]q
   secret_string_wo_version = %[3]d
 
