@@ -547,7 +547,7 @@ For example, 3 minutes and 30 seconds is `3m30s`.
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 
-Some services do not support tags with an null string value.
+Some services do not support tags with a null string value.
 In that case, use the annotation `@Testing(skipNullTags=true)`.
 
 ##### Tag Update parameters
