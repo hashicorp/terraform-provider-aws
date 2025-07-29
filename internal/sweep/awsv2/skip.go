@@ -130,6 +130,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
 		return true
 	}
+	//  Example (fsx): UnsupportedOperation: This operation is unsupported.
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "This operation is unsupported") {
+		return true
+	}
 	// For example from us-west-1 EMR studio
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
