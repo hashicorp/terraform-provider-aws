@@ -608,43 +608,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 
-				if attr, ok := args.Keyword["randomBgpAsn"]; ok {
-					parts := strings.Split(attr, ";")
-					varName := "rBgpAsn"
-					d.GoImports = append(d.GoImports,
-						tests.GoImport{
-							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-							Alias: "sdkacctest",
-						},
-					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
-						Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
-					})
-					d.AdditionalTfVars_[varName] = tests.TFVar{
-						GoVarName: varName,
-						Type:      tests.TFVarTypeInt,
-					}
-				}
-				if attr, ok := args.Keyword["randomIPv4Address"]; ok {
-					varName := "rIPv4Address"
-					d.GoImports = append(d.GoImports,
-						tests.GoImport{
-							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-							Alias: "sdkacctest",
-						},
-					)
-					d.InitCodeBlocks = append(d.InitCodeBlocks, tests.CodeBlock{
-						Code: fmt.Sprintf(`%s, err := sdkacctest.RandIpAddress("%s")
-if err != nil {
-	t.Fatal(err)
-}
-`, varName, attr),
-					})
-					d.AdditionalTfVars_[varName] = tests.TFVar{
-						GoVarName: varName,
-						Type:      tests.TFVarTypeString,
-					}
-				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
