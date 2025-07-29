@@ -11,6 +11,6 @@ import (
 	tfapplicationinsights "github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 )
 
-func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTags(tfapplicationinsights.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfapplicationinsights.ServicePackage(ctx), resourceAddress, knownValue)
 }

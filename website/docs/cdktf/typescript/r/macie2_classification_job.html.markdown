@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scheduleFrequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `jobType` property to `ONE_TIME`. (documented below)
 * `customDataIdentifierIds` -  (Optional) The custom data identifiers to use for data analysis and classification.
 * `samplingPercentage` -  (Optional) The sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
@@ -185,4 +186,4 @@ Using `terraform import`, import `aws_macie2_classification_job` using the id. F
 % terraform import aws_macie2_classification_job.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f62ead1dae3d2746a8307b847aaf630080830a38d1230d59645e343b433aafc2 -->
+<!-- cache-key: cdktf-0.20.8 input-fce68488959c7fa1804d49ff314e17c598fb5c3d0cf19c057718af80c86d5b33 -->

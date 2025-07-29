@@ -21,7 +21,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -194,7 +194,7 @@ func TestAccAMPWorkspace_tags_null(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -239,8 +239,14 @@ func TestAccAMPWorkspace_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -251,7 +257,7 @@ func TestAccAMPWorkspace_tags_EmptyMap(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -292,8 +298,14 @@ func TestAccAMPWorkspace_tags_EmptyMap(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtResourceTags: nil,
 				},
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -304,7 +316,7 @@ func TestAccAMPWorkspace_tags_AddOnUpdate(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -381,7 +393,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnCreate(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -465,7 +477,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -596,7 +608,7 @@ func TestAccAMPWorkspace_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -681,7 +693,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_providerOnly(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -853,7 +865,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1006,7 +1018,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_overlapping(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1175,7 +1187,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1261,7 +1273,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1346,7 +1358,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1408,7 +1420,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1462,7 +1474,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullOverlappingResourceTag(t *testing.
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1521,7 +1533,7 @@ func TestAccAMPWorkspace_tags_DefaultTags_nullNonOverlappingResourceTag(t *testi
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1580,7 +1592,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnCreate(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1632,7 +1644,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1725,7 +1737,7 @@ func TestAccAMPWorkspace_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1808,7 +1820,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1838,7 +1850,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1886,7 +1898,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1934,7 +1946,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -1966,7 +1978,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	var v types.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.AMPServiceID),
 		CheckDestroy: testAccCheckWorkspaceDestroy(ctx),
@@ -1994,7 +2006,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2056,7 +2068,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2118,7 +2130,7 @@ func TestAccAMPWorkspace_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

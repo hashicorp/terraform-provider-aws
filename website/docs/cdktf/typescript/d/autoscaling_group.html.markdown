@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Specify the exact name of the desired autoscaling group.
 
 ## Attribute Reference
@@ -152,4 +153,4 @@ This data source exports the following attributes in addition to the arguments a
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
-<!-- cache-key: cdktf-0.20.8 input-99279721d61a0d3e30f5066b1062cf8bd8e12200a2f7c5468101f8804d45205e -->
+<!-- cache-key: cdktf-0.20.8 input-91278adf952c3e3c5f7f081457dc99442d94a60d9685ee8bc56f075034179bef -->

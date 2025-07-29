@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -92,9 +91,10 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	ig, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.InternetGateway, error) {
 		return findInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -108,17 +108,8 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway (%s): %s", d.Id(), err)
 	}
 
-	ig := outputRaw.(*awstypes.InternetGateway)
-
 	ownerID := aws.ToString(ig.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, internetGatewayARN(ctx, c, ownerID, d.Id()))
 	d.Set(names.AttrOwnerID, ownerID)
 	if len(ig.Attachments) == 0 {
 		// Gateway exists but not attached to the VPC.
@@ -241,4 +232,8 @@ func detachInternetGateway(ctx context.Context, conn *ec2.Client, internetGatewa
 	}
 
 	return nil
+}
+
+func internetGatewayARN(ctx context.Context, c *conns.AWSClient, accountID, internetGatewayID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "internet-gateway/"+internetGatewayID)
 }

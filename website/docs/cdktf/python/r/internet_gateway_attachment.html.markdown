@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `internet_gateway_id` - (Required) The ID of the internet gateway.
 * `vpc_id` - (Required) The ID of the VPC.
 
@@ -87,4 +88,4 @@ Using `terraform import`, import Internet Gateway Attachments using the `id`. Fo
 % terraform import aws_internet_gateway_attachment.example igw-c0a643a9:vpc-123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-afa0ad650467b8c31da183ec77ac9779b620b292e7a92425cb2b77263075d02d -->
+<!-- cache-key: cdktf-0.20.8 input-51e5d79bfa8bcf5ae3791841c9824423c3c25786f72567a790a8893b02862a87 -->

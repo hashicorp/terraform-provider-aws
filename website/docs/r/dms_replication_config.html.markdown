@@ -42,6 +42,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_config` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.

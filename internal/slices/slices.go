@@ -4,6 +4,7 @@
 package slices
 
 import (
+	"iter"
 	"slices"
 )
 
@@ -55,6 +56,17 @@ func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2
 	}
 
 	return v, nil
+}
+
+// AppliedToEach returns an iterator that yields the slice elements transformed by the function `f`.
+func AppliedToEach[S ~[]E, E any, T any](s S, f func(E) T) iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for _, v := range s {
+			if !yield(f(v)) {
+				return
+			}
+		}
+	}
 }
 
 // Values returns a new slice containing values from the pointers in each element of the original slice `s`.
@@ -125,7 +137,7 @@ func IndexOf[S ~[]any, E comparable](s S, v E) int {
 }
 
 type signed interface {
-	~int | ~int32 | ~int64
+	~int | ~int8 | ~int16 | ~int32 | ~int64
 }
 
 // Range returns a slice of integers from `start` to `stop` (exclusive) using the specified `step`.
@@ -152,4 +164,14 @@ func Range[T signed](start, stop, step T) []T {
 	}
 
 	return v
+}
+
+type stringable interface {
+	~string | ~[]byte | ~[]rune
+}
+
+func Strings[S ~[]E, E stringable](s S) []string {
+	return ApplyToAll(s, func(e E) string {
+		return string(e)
+	})
 }

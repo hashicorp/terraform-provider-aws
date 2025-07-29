@@ -126,11 +126,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `availability_zone_rebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launch_type`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. [See below](#deployment_circuit_breaker).
+* `deployment_configuration` - (Optional) Configuration block for deployment settings. [See below](#deployment_configuration).
 * `deployment_controller` - (Optional) Configuration block for deployment controller configuration. [See below](#deployment_controller).
 * `deployment_maximum_percent` - (Optional) Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.
 * `deployment_minimum_healthy_percent` - (Optional) Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
@@ -205,6 +207,22 @@ The `capacity_provider_strategy` configuration block supports the following:
 * `capacity_provider` - (Required) Short name of the capacity provider.
 * `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
 
+### deployment_configuration
+
+The `deployment_configuration` configuration block supports the following:
+
+* `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`. Default: `ROLLING`.
+* `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Only used when `strategy` is set to `BLUE_GREEN`.
+* `lifecycle_hook` - (Optional) Configuration block for lifecycle hooks that are invoked during deployments. [See below](#lifecycle_hook).
+
+### lifecycle_hook
+
+The `lifecycle_hook` configuration block supports the following:
+
+* `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
+* `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
+* `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
+
 ### deployment_circuit_breaker
 
 The `deployment_circuit_breaker` configuration block supports the following:
@@ -226,8 +244,18 @@ The `deployment_controller` configuration block supports the following:
 * `target_group_arn` - (Required for ALB/NLB) ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) Name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) Port on the container to associate with the load balancer.
+* `advanced_configuration` - (Optional) Configuration block for Blue/Green deployment settings. Required when using `BLUE_GREEN` deployment strategy. [See below](#advanced_configuration).
 
 -> **Version note:** Multiple `load_balancer` configuration block support was added in Terraform AWS Provider version 2.22.0. This allows configuration of [ECS service support for multiple target groups](https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecs-services-now-support-multiple-load-balancer-target-groups/).
+
+### advanced_configuration
+
+The `advanced_configuration` configuration block supports the following:
+
+* `alternate_target_group_arn` - (Required) ARN of the alternate target group to use for Blue/Green deployments.
+* `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
+* `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
+* `test_listener_rule` - (Optional) ARN of the listener rule that routes test traffic.
 
 ### network_configuration
 
@@ -329,6 +357,26 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `dns_name` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+* `test_traffic_rules` - (Optional) Configuration block for test traffic routing rules. [See below](#test_traffic_rules).
+
+### test_traffic_rules
+
+The `test_traffic_rules` configuration block supports the following:
+
+* `header` - (Optional) Configuration block for header-based routing rules. [See below](#header).
+
+### header
+
+The `header` configuration block supports the following:
+
+* `name` - (Required) Name of the HTTP header to match.
+* `value` - (Required) Configuration block for header value matching criteria. [See below](#value).
+
+### value
+
+The `value` configuration block supports the following:
+
+* `exact` - (Required) Exact string value to match in the header.
 
 ### tag_specifications
 
@@ -342,7 +390,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the service.
+* `arn` - ARN that identifies the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

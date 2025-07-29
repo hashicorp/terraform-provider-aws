@@ -27,6 +27,9 @@ resource "aws_bedrock_guardrail" "example" {
       output_strength = "MEDIUM"
       type            = "HATE"
     }
+    tier_config {
+      tier_name = "STANDARD"
+    }
   }
 
   sensitive_information_policy_config {
@@ -49,6 +52,9 @@ resource "aws_bedrock_guardrail" "example" {
       examples   = ["Where should I invest my money ?"]
       type       = "DENY"
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+    tier_config {
+      tier_name = "CLASSIC"
     }
   }
 
@@ -73,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content_policy_config` - (Optional) Content policy config for a guardrail. See [Content Policy Config](#content-policy-config) for more information.
 * `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [Contextual Grounding Policy Config](#contextual-grounding-policy-config) for more information.
 * `description` (Optional) Description of the guardrail or its version.
@@ -88,6 +95,7 @@ The `content_policy_config` configuration block supports the following arguments
 
 * `filters_config` - (Optional) Set of content filter configs in content policy.
   See [Filters Config](#content-filters-config) for more information.
+* `tier_config` - (Optional) Configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
 
 #### Content Filters Config
 
@@ -96,6 +104,12 @@ The `filters_config` configuration block supports the following arguments:
 * `input_strength` - (Optional) Strength for filters.
 * `output_strength` - (Optional) Strength for filters.
 * `type` - (Optional) Type of filter in content policy.
+
+#### Content Tier Config
+
+The `tier_config` configuration block supports the following arguments:
+
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Contextual Grounding Policy Config
 
@@ -108,8 +122,17 @@ The `filters_config` configuration block supports the following arguments:
 * `threshold` - (Required) The threshold for this filter.
 * `type` - (Required) Type of contextual grounding filter.
 
+### Cross Region Inference
+
+* `cross_region_config` (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [Cross Region Config](#cross-region-config for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+
+#### Cross Region Config
+
+* `guardrail_profile_identifier` (Required) Guardrail profile ARN.
+
 ### Topic Policy Config
 
+* `tier_config` - (Optional) Configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
 * `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
 
 #### Topics Config
@@ -118,6 +141,12 @@ The `filters_config` configuration block supports the following arguments:
 * `name` (Required) Name of topic in topic policy.
 * `type` (Required) Type of topic in a policy.
 * `examples` (Optional) List of text examples.
+
+#### Topics Tier Config
+
+The `tier_config` configuration block supports the following arguments:
+
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Sensitive Information Policy Config
 

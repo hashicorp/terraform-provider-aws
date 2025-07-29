@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name that lets you identify the domain list, to manage and use it.
 * `domains` - (Optional) A array of domains for the firewall domain list.
 * `tags` - (Optional) A map of tags to assign to the resource. f configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -72,4 +73,4 @@ Using `terraform import`, import  Route 53 Resolver DNS Firewall domain lists us
 % terraform import aws_route53_resolver_firewall_domain_list.example rslvr-fdl-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3154f1bdcac6cbca6a0b5ed4de8e5f387de71af6809cbe31b5fc56bec0e07a22 -->
+<!-- cache-key: cdktf-0.20.8 input-0d016368ea8322e219d925c4fd8e56614a74e5cc9f19ab70a9c25fd3a8c2cc33 -->

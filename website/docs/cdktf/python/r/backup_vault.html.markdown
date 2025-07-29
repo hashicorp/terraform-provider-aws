@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `force_destroy` - (Optional, Default: `false`) A boolean that indicates that all recovery points stored in the vault are deleted so that the vault can be destroyed without error.
 * `kms_key_arn` - (Optional) The server-side encryption key that is used to protect your backups.
 * `name` - (Required) Name of the backup vault to create.
@@ -81,4 +82,4 @@ Using `terraform import`, import Backup vault using the `name`. For example:
 % terraform import aws_backup_vault.test-vault TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-eca95e815c6165631f5519aecaf60793b9c12d8e7d3bc319cb6177906c2d98c0 -->
+<!-- cache-key: cdktf-0.20.8 input-18f974099a22ceb1e9d19c886927654956e6d58d32aaa0c716dd632d81ae4e87 -->

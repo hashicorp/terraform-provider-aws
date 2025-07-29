@@ -52,8 +52,8 @@ import (
 
 // @FrameworkResource("aws_dataexchange_revision_assets", name="Revision Assets")
 // @Tags(identifierAttribute="arn")
+// @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
-// @Testing(noImport=true)
 func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -66,7 +66,7 @@ const (
 )
 
 type revisionAssetsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[revisionAssetsResourceModel]
 	framework.WithTimeouts
 }
 
@@ -832,9 +832,15 @@ func (r *revisionAssetsResource) ModifyPlan(ctx context.Context, req resource.Mo
 		}
 
 		if !plan.Comment.Equal(state.Comment) || !plan.Finalized.Equal(state.Finalized) {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		} else {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }
@@ -894,6 +900,7 @@ func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, re
 }
 
 type revisionAssetsResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                               `tfsdk:"arn"`
 	Assets       fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
 	Comment      types.String                               `tfsdk:"comment"`

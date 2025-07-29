@@ -688,6 +688,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 func TestAccSSMParameter_Overwrite_cascade(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test_upstream"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -697,14 +698,30 @@ func TestAccSSMParameter_Overwrite_cascade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterConfig_cascadeOverwrite(name, "test1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccParameterConfig_cascadeOverwrite(name, "test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config:             testAccParameterConfig_cascadeOverwrite(name, "test2"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccParameterConfig_cascadeOverwrite(name, "test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1039,6 +1056,11 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "notsecret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccParameterConfig_insecure(rName, "String", "newvalue"),
@@ -1047,11 +1069,22 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "insecure_value", "newvalue"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config:             testAccParameterConfig_insecure(rName, "String", "diff"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccParameterConfig_insecure(rName, "String", "diff"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 			{
 				Config:      testAccParameterConfig_insecure(rName, "SecureString", "notsecret"),
@@ -1701,6 +1734,7 @@ resource "aws_ssm_parameter" "test" {
 resource "aws_kms_key" "test_key" {
   description             = "KMS key 1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "test_alias" {

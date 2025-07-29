@@ -540,8 +540,8 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete),
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteDBInstance(ctx, input)
 		},
 		"Delete the replica cluster before deleting")

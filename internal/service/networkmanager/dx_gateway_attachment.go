@@ -45,7 +45,7 @@ func newDirectConnectGatewayAttachmentResource(context.Context) (resource.Resour
 }
 
 type directConnectGatewayAttachmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[directConnectGatewayAttachmentResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }

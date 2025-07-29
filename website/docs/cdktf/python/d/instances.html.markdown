@@ -66,6 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on desired instances.
 * `instance_state_names` - (Optional) List of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.
@@ -91,4 +92,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.8 input-9d797e5d25fe95bba15ab7e31a2bc3d6bece51de9451295de23e135def0e7d07 -->
+<!-- cache-key: cdktf-0.20.8 input-faed7265a026e743ced765540585ab67effbde51a217272bdd412810a9b9df7c -->

@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `id` – (Optional) Identifier for the network interface.
-* `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) Identifier for the network interface.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
 ## Attribute Reference
 
@@ -79,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-977a2ac0cb764462163a7f88ba759b0356aad19bd641c37a273229749245c67e -->
+<!-- cache-key: cdktf-0.20.8 input-f409fd91709afd0788432053fbb0cbf5a6f39f89378658fc8472e479d6131aa2 -->

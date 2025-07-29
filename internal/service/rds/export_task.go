@@ -13,25 +13,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_rds_export_task", name="Export Task")
-func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceExportTask{}
+func newExportTaskResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &exportTaskResource{}
+
 	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultDeleteTimeout(20 * time.Minute)
 
@@ -39,26 +42,27 @@ func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, e
 }
 
 const (
-	ResNameExportTask = "ExportTask"
-
-	// Use string constants as the RDS package does not provide status enums
-	StatusCanceled   = "CANCELED"
-	StatusCanceling  = "CANCELING"
-	StatusComplete   = "COMPLETE"
-	StatusFailed     = "FAILED"
-	StatusInProgress = "IN_PROGRESS"
-	StatusStarting   = "STARTING"
+	// Use string constants as the RDS package does not provide status enums.
+	exportTaskStatusCanceled   = "CANCELED"
+	exportTaskStatusCanceling  = "CANCELING"
+	exportTaskStatusComplete   = "COMPLETE"
+	exportTaskStatusFailed     = "FAILED"
+	exportTaskStatusInProgress = "IN_PROGRESS"
+	exportTaskStatusStarting   = "STARTING"
 )
 
-type resourceExportTask struct {
-	framework.ResourceWithConfigure
+type exportTaskResource struct {
+	framework.ResourceWithModel[exportTaskResourceModel]
+	framework.WithNoUpdate
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *exportTaskResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"export_only": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
@@ -75,7 +79,8 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed: true,
 			},
 			names.AttrIAMRoleARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
@@ -105,10 +110,12 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"snapshot_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"source_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
@@ -120,10 +127,12 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed: true,
 			},
 			"task_end_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"task_start_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"warning_message": schema.StringAttribute{
 				Computed: true,
@@ -138,158 +147,160 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceExportTask) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *exportTaskResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data exportTaskResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan resourceExportTaskData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	id := fwflex.StringValueFromFramework(ctx, data.ExportTaskIdentifier)
+	var input rds.StartExportTaskInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+	input.S3BucketName = fwflex.StringFromFramework(ctx, data.S3Bucket)
 
-	in := rds.StartExportTaskInput{
-		ExportTaskIdentifier: plan.ExportTaskIdentifier.ValueStringPointer(),
-		IamRoleArn:           plan.IAMRoleArn.ValueStringPointer(),
-		KmsKeyId:             plan.KMSKeyID.ValueStringPointer(),
-		S3BucketName:         plan.S3BucketName.ValueStringPointer(),
-		SourceArn:            plan.SourceArn.ValueStringPointer(),
-	}
-	if !plan.ExportOnly.IsNull() {
-		in.ExportOnly = flex.ExpandFrameworkStringValueList(ctx, plan.ExportOnly)
-	}
-	if !plan.S3Prefix.IsNull() && !plan.S3Prefix.IsUnknown() {
-		in.S3Prefix = plan.S3Prefix.ValueStringPointer()
-	}
+	_, err := conn.StartExportTask(ctx, &input)
 
-	outStart, err := conn.StartExportTask(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameExportTask, plan.ExportTaskIdentifier.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if outStart == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameExportTask, plan.ExportTaskIdentifier.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("starting RDS Export Task (%s)", id), err.Error())
+
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	out, err := waitExportTaskCreated(ctx, conn, plan.ExportTaskIdentifier.ValueString(), createTimeout)
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+
+	exportTask, err := waitExportTaskCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameExportTask, plan.ExportTaskIdentifier.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Export Task (%s) create", id), err.Error())
+
 		return
 	}
 
-	state := plan
-	state.refreshFromOutput(ctx, out)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, exportTask, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceExportTask) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RDSClient(ctx)
-
-	var state resourceExportTaskData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *exportTaskResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data exportTaskResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindExportTaskByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().RDSClient(ctx)
+
+	output, err := findExportTaskByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.AddWarning(
-			"AWS Resource Not Found During Refresh",
-			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
-		)
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameExportTask, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading RDS Export Task (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.refreshFromOutput(ctx, out)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// There is no update API, so this method is a no-op
-func (r *resourceExportTask) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
+func (r *exportTaskResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data exportTaskResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RDSClient(ctx)
-
-	var state resourceExportTaskData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	// Attempt to cancel the export task, but ignore errors where the task is in an invalid
-	// state (ie. completed or failed) which can't be cancelled
-	_, err := conn.CancelExportTask(ctx, &rds.CancelExportTaskInput{
-		ExportTaskIdentifier: state.ID.ValueStringPointer(),
-	})
-	if err != nil {
-		var stateFault *awstypes.InvalidExportTaskStateFault
-		if errors.As(err, &stateFault) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionDeleting, ResNameExportTask, state.ID.String(), nil),
-			err.Error(),
-		)
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitExportTaskDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionDeleting, ResNameExportTask, state.ID.String(), nil),
-			err.Error(),
-		)
-	}
-}
-
-func (r *resourceExportTask) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.ExportTask, error) {
-	in := &rds.DescribeExportTasksInput{
+	// state (ie. completed or failed) which can't be cancelled.
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	input := rds.CancelExportTaskInput{
 		ExportTaskIdentifier: aws.String(id),
 	}
-	out, err := conn.DescribeExportTasks(ctx, in)
-	// This API won't return a NotFound error if the identifier can't be found, just
-	// an empty result slice.
+	_, err := conn.CancelExportTask(ctx, &input)
+
+	if errs.IsA[*awstypes.InvalidExportTaskStateFault](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("canceling RDS Export Task (%s)", id), err.Error())
+
+		return
+	}
+
+	if _, err := waitExportTaskDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Export Task (%s) delete", id), err.Error())
+
+		return
+	}
+}
+
+func findExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.ExportTask, error) {
+	input := rds.DescribeExportTasksInput{
+		ExportTaskIdentifier: aws.String(id),
+	}
+
+	return findExportTask(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.ExportTask]())
+}
+
+func findExportTask(ctx context.Context, conn *rds.Client, input *rds.DescribeExportTasksInput, filter tfslices.Predicate[*awstypes.ExportTask]) (*awstypes.ExportTask, error) {
+	output, err := findExportTasks(ctx, conn, input, filter)
+
 	if err != nil {
 		return nil, err
 	}
-	if out == nil || len(out.ExportTasks) == 0 {
-		return nil, &retry.NotFoundError{
-			LastRequest: in,
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findExportTasks(ctx context.Context, conn *rds.Client, input *rds.DescribeExportTasksInput, filter tfslices.Predicate[*awstypes.ExportTask]) ([]awstypes.ExportTask, error) {
+	var output []awstypes.ExportTask
+
+	pages := rds.NewDescribeExportTasksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ExportTasks {
+			if filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
-	if len(out.ExportTasks) != 1 {
-		return nil, tfresource.NewTooManyResultsError(len(out.ExportTasks), in)
-	}
 
-	return &out.ExportTasks[0], nil
+	return output, nil
 }
 
 func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindExportTaskByID(ctx, conn, id)
+		out, err := findExportTaskByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -304,8 +315,8 @@ func statusExportTask(ctx context.Context, conn *rds.Client, id string) retry.St
 
 func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{StatusStarting, StatusInProgress},
-		Target:     []string{StatusComplete, StatusFailed},
+		Pending:    []string{exportTaskStatusStarting, exportTaskStatusInProgress},
+		Target:     []string{exportTaskStatusComplete, exportTaskStatusFailed},
 		Refresh:    statusExportTask(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -313,8 +324,11 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.ExportTask); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -322,67 +336,40 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 
 func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.ExportTask, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{StatusStarting, StatusInProgress, StatusCanceling},
+		Pending: []string{exportTaskStatusStarting, exportTaskStatusInProgress, exportTaskStatusCanceling},
 		Target:  []string{},
 		Refresh: statusExportTask(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.ExportTask); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-type resourceExportTaskData struct {
-	ExportOnly           types.List     `tfsdk:"export_only"`
-	ExportTaskIdentifier types.String   `tfsdk:"export_task_identifier"`
-	FailureCause         types.String   `tfsdk:"failure_cause"`
-	IAMRoleArn           types.String   `tfsdk:"iam_role_arn"`
-	ID                   types.String   `tfsdk:"id"`
-	KMSKeyID             types.String   `tfsdk:"kms_key_id"`
-	PercentProgress      types.Int64    `tfsdk:"percent_progress"`
-	S3BucketName         types.String   `tfsdk:"s3_bucket_name"`
-	S3Prefix             types.String   `tfsdk:"s3_prefix"`
-	SnapshotTime         types.String   `tfsdk:"snapshot_time"`
-	SourceArn            types.String   `tfsdk:"source_arn"`
-	SourceType           types.String   `tfsdk:"source_type"`
-	Status               types.String   `tfsdk:"status"`
-	TaskEndTime          types.String   `tfsdk:"task_end_time"`
-	TaskStartTime        types.String   `tfsdk:"task_start_time"`
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
-	WarningMessage       types.String   `tfsdk:"warning_message"`
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *awstypes.ExportTask) {
-	if out == nil {
-		return
-	}
-
-	rd.ID = flex.StringToFramework(ctx, out.ExportTaskIdentifier)
-	rd.ExportOnly = flex.FlattenFrameworkStringValueList(ctx, out.ExportOnly)
-	rd.ExportTaskIdentifier = flex.StringToFramework(ctx, out.ExportTaskIdentifier)
-	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
-	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
-	rd.KMSKeyID = flex.StringToFramework(ctx, out.KmsKeyId)
-	rd.PercentProgress = types.Int64Value(int64(aws.ToInt32(out.PercentProgress)))
-	rd.S3BucketName = flex.StringToFramework(ctx, out.S3Bucket)
-	rd.S3Prefix = flex.StringToFramework(ctx, out.S3Prefix)
-	rd.SnapshotTime = timeToFramework(ctx, out.SnapshotTime)
-	rd.SourceArn = flex.StringToFramework(ctx, out.SourceArn)
-	rd.SourceType = flex.StringValueToFramework(ctx, out.SourceType)
-	rd.Status = flex.StringToFramework(ctx, out.Status)
-	rd.TaskEndTime = timeToFramework(ctx, out.TaskEndTime)
-	rd.TaskStartTime = timeToFramework(ctx, out.TaskEndTime)
-	rd.WarningMessage = flex.StringToFramework(ctx, out.WarningMessage)
-}
-
-func timeToFramework(ctx context.Context, t *time.Time) basetypes.StringValue {
-	if t == nil {
-		return types.StringNull()
-	}
-	return flex.StringValueToFramework(ctx, t.String())
+type exportTaskResourceModel struct {
+	framework.WithRegionModel
+	ExportOnly           fwtypes.ListOfString `tfsdk:"export_only"`
+	ExportTaskIdentifier types.String         `tfsdk:"export_task_identifier"`
+	FailureCause         types.String         `tfsdk:"failure_cause"`
+	IAMRoleArn           fwtypes.ARN          `tfsdk:"iam_role_arn"`
+	ID                   types.String         `tfsdk:"id"`
+	KMSKeyID             types.String         `tfsdk:"kms_key_id"`
+	PercentProgress      types.Int64          `tfsdk:"percent_progress"`
+	S3Bucket             types.String         `tfsdk:"s3_bucket_name"`
+	S3Prefix             types.String         `tfsdk:"s3_prefix"`
+	SnapshotTime         timetypes.RFC3339    `tfsdk:"snapshot_time"`
+	SourceARN            fwtypes.ARN          `tfsdk:"source_arn"`
+	SourceType           types.String         `tfsdk:"source_type"`
+	Status               types.String         `tfsdk:"status"`
+	TaskEndTime          timetypes.RFC3339    `tfsdk:"task_end_time"`
+	TaskStartTime        timetypes.RFC3339    `tfsdk:"task_start_time"`
+	Timeouts             timeouts.Value       `tfsdk:"timeouts"`
+	WarningMessage       types.String         `tfsdk:"warning_message"`
 }

@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Service name.
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service.
 
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.20.8 input-f6eb2edf5afca72fd15cc9f050a43fc65c468170db53f21a34cb79340e78b9d1 -->
+<!-- cache-key: cdktf-0.20.8 input-9dd29653e174d1bdcad2a4963b25093f92ad3be59f18581e697066625145f8c8 -->

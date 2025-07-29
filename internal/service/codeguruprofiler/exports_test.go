@@ -5,7 +5,7 @@ package codeguruprofiler
 
 // Exports for use in tests only.
 var (
-	ResourceProfilingGroup = newResourceProfilingGroup
+	ResourceProfilingGroup = newProfilingGroupResource
 
 	FindProfilingGroupByName = findProfilingGroupByName
 )

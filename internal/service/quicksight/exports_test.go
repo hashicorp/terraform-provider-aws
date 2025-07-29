@@ -17,9 +17,10 @@ var (
 	ResourceGroupMembership     = resourceGroupMembership
 	ResourceIAMPolicyAssignment = newIAMPolicyAssignmentResource
 	ResourceIngestion           = newIngestionResource
+	ResourceKeyRegistration     = newKeyRegistrationResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
-	ResourceRoleMembership      = newResourceRoleMembership
+	ResourceRoleMembership      = newRoleMembershipResource
 	ResourceTemplate            = resourceTemplate
 	ResourceTemplateAlias       = newTemplateAliasResource
 	ResourceTheme               = resourceTheme
@@ -28,7 +29,6 @@ var (
 
 	DashboardLatestVersion                = dashboardLatestVersion
 	DefaultGroupNamespace                 = defaultGroupNamespace
-	DefaultIAMPolicyAssignmentNamespace   = defaultIAMPolicyAssignmentNamespace
 	DefaultUserNamespace                  = defaultUserNamespace
 	FindAccountSettingsByID               = findAccountSettingsByID
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
@@ -42,6 +42,7 @@ var (
 	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey
 	FindIAMPolicyAssignmentByThreePartKey = findIAMPolicyAssignmentByThreePartKey
 	FindIngestionByThreePartKey           = findIngestionByThreePartKey
+	FindKeyRegistrationByID               = findKeyRegistrationByID
 	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey     = findRefreshScheduleByThreePartKey
 	FindRoleMembershipByMultiPartKey      = findRoleMembershipByMultiPartKey

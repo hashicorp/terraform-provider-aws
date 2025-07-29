@@ -51,7 +51,7 @@ func newApplicationResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type applicationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[applicationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -157,7 +157,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.AccessDeniedException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
@@ -573,6 +573,7 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 type applicationResourceModel struct {
+	framework.WithRegionModel
 	ApplicationID  types.String                                     `tfsdk:"application_id"`
 	ApplicationARN types.String                                     `tfsdk:"arn"`
 	CurrentVersion types.Int64                                      `tfsdk:"current_version"`
