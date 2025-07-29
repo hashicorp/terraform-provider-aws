@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshiftdata_batch_statement")
+// @SDKResource("aws_redshiftdata_batch_statement", name="BatchStatement")
 func resourceBatchStatement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBatchStatementCreate,

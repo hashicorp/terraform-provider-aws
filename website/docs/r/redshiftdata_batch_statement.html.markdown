@@ -35,13 +35,10 @@ resource "aws_redshiftdata_batch_statement" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `database` - (Required) The name of the database.
 * `sqls` - (Required) The SQL statements list to run.
-
-The following arguments are optional:
-
 * `cluster_identifier` - (Optional) The cluster identifier. This parameter is required when connecting to a cluster and authenticating using either Secrets Manager or temporary credentials.
 * `db_user` - (Optional) The database user name.
 * `secret_arn` - (Optional) The name or ARN of the secret that enables access to the database.
@@ -53,7 +50,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - (Required) The Redshift Data Statement ID.
+* `id` - The Redshift Data Statement ID.
 
 ## Import
 
