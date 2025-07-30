@@ -806,7 +806,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					names.AttrResourceARN: schema.StringAttribute{
+																					"prompt_arn": schema.StringAttribute{
 																						CustomType: fwtypes.ARNType,
 																						Required:   true,
 																					},
@@ -1775,7 +1775,7 @@ type promptFlowNodeInlineConfigurationModel struct {
 }
 
 type promptFlowNodeResourceConfigurationModel struct {
-	ResourceARN fwtypes.ARN `tfsdk:"resource_arn"`
+	PromptARN fwtypes.ARN `tfsdk:"prompt_arn"`
 }
 
 type retrievalFlowNodeConfigurationModel struct {
