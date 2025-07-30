@@ -8,7 +8,11 @@ description: |-
 
 # Resource: aws_wafv2_web_acl_rule_group_association
 
-Associates a WAFv2 Rule Group with a Web ACL by adding a rule that references the Rule Group. Use this resource to apply the rules defined in a Rule Group to a Web ACL without duplicating rule definitions.
+Associates a WAFv2 Rule Group (custom or managed) with a Web ACL by adding a rule that references the Rule Group. Use this resource to apply the rules defined in a Rule Group to a Web ACL without duplicating rule definitions.
+
+This resource supports both:
+- **Custom Rule Groups**: User-created rule groups that you manage within your AWS account
+- **Managed Rule Groups**: Pre-configured rule groups provided by AWS or third-party vendors
 
 ~> **Note:** This resource creates a rule within the Web ACL that references the entire Rule Group. The rule group's individual rules are evaluated as a unit when requests are processed by the Web ACL.
 
@@ -16,7 +20,7 @@ Associates a WAFv2 Rule Group with a Web ACL by adding a rule that references th
 
 ## Example Usage
 
-### Basic Usage
+### Custom Rule Group - Basic Usage
 
 ```terraform
 resource "aws_wafv2_rule_group" "example" {
@@ -82,7 +86,94 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 }
 ```
 
-### With Override Action
+### Managed Rule Group - Basic Usage
+
+```terraform
+resource "aws_wafv2_web_acl" "example" {
+  name  = "example-web-acl"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "example-web-acl"
+    sampled_requests_enabled   = true
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "managed_example" {
+  rule_name   = "aws-common-rule-set"
+  priority    = 50
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+  }
+}
+```
+
+### Managed Rule Group - With Version
+
+```terraform
+resource "aws_wafv2_web_acl_rule_group_association" "managed_versioned" {
+  rule_name   = "aws-common-rule-set-versioned"
+  priority    = 60
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+    version     = "Version_1.0"
+  }
+}
+```
+
+### Managed Rule Group - With Rule Action Overrides
+
+```terraform
+resource "aws_wafv2_web_acl_rule_group_association" "managed_with_overrides" {
+  rule_name   = "aws-common-rule-set-with-overrides"
+  priority    = 70
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+
+    # Override specific rules within the managed rule group
+    rule_action_override {
+      name = "GenericRFI_BODY"
+      action_to_use {
+        count {
+          custom_request_handling {
+            insert_header {
+              name  = "X-RFI-Override"
+              value = "counted"
+            }
+          }
+        }
+      }
+    }
+
+    rule_action_override {
+      name = "SizeRestrictions_BODY"
+      action_to_use {
+        captcha {}
+      }
+    }
+  }
+}
+```
+
+### Custom Rule Group - With Override Action
 
 ```terraform
 resource "aws_wafv2_web_acl_rule_group_association" "example" {
@@ -97,7 +188,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 }
 ```
 
-### With Rule Action Overrides
+### Custom Rule Group - With Rule Action Overrides
 
 ```terraform
 resource "aws_wafv2_rule_group" "example" {
@@ -214,7 +305,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 }
 ```
 
-### CloudFront Web ACL
+### Custom Rule Group - CloudFront Web ACL
 
 ```terraform
 resource "aws_wafv2_rule_group" "cloudfront_example" {
@@ -288,7 +379,11 @@ The following arguments are required:
 * `rule_name` - (Required) Name of the rule to create in the Web ACL that references the rule group. Must be between 1 and 128 characters.
 * `priority` - (Required) Priority of the rule within the Web ACL. Rules are evaluated in order of priority, with lower numbers evaluated first.
 * `web_acl_arn` - (Required) ARN of the Web ACL to associate the Rule Group with.
-* `rule_group_reference` - (Required) Rule Group reference configuration. [See below](#rule_group_reference).
+
+Exactly one of the following rule group blocks is required:
+
+* `rule_group_reference` - (Optional) Custom Rule Group reference configuration. Conflicts with `managed_rule_group`. [See below](#rule_group_reference).
+* `managed_rule_group` - (Optional) Managed Rule Group configuration. Conflicts with `rule_group_reference`. [See below](#managed_rule_group).
 
 The following arguments are optional:
 
@@ -298,6 +393,13 @@ The following arguments are optional:
 ### rule_group_reference
 
 * `arn` - (Required) ARN of the Rule Group to associate with the Web ACL.
+* `rule_action_override` - (Optional) Override actions for specific rules within the rule group. [See below](#rule_action_override).
+
+### managed_rule_group
+
+* `name` - (Required) Name of the managed rule group.
+* `vendor_name` - (Required) Name of the managed rule group vendor. For AWS managed rule groups, this is `AWS`.
+* `version` - (Optional) Version of the managed rule group. If not specified, the default version is used.
 * `rule_action_override` - (Optional) Override actions for specific rules within the rule group. [See below](#rule_action_override).
 
 ### rule_action_override
@@ -371,17 +473,72 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACL Rule Group Associations using `WebACLARN,RuleName,RuleGroupARN`. For example:
+WAFv2 Web ACL Rule Group Associations can be imported using different formats depending on the rule group type:
+
+### Custom Rule Groups
+
+For custom rule groups, use the format: `WebACLARN,RuleGroupARN,RuleName`
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import):
 
 ```terraform
 import {
   to = aws_wafv2_web_acl_rule_group_association.example
-  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,example-rule-group-rule,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321"
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321,example-rule-group-rule"
 }
 ```
 
-Using `terraform import`, import WAFv2 Web ACL Rule Group Associations using `WebACLARN,RuleName,RuleGroupARN`. For example:
+Using `terraform import`:
 
 ```console
-% terraform import aws_wafv2_web_acl_rule_group_association.example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,example-rule-group-rule,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321"
+% terraform import aws_wafv2_web_acl_rule_group_association.example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,arn:aws:wafv2:us-east-1:123456789012:regional/rulegroup/example-rule-group/87654321-4321-4321-4321-210987654321,example-rule-group-rule"
+```
+
+### Managed Rule Groups
+
+For managed rule groups, use the format: `WebACLARN,VendorName:RuleGroupName[:Version],RuleName`
+
+#### Managed Rule Group without Version
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import):
+
+```terraform
+import {
+  to = aws_wafv2_web_acl_rule_group_association.managed_example
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet,aws-common-rule-set"
+}
+```
+
+Using `terraform import`:
+
+```console
+% terraform import aws_wafv2_web_acl_rule_group_association.managed_example "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet,aws-common-rule-set"
+```
+
+#### Managed Rule Group with Version
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import):
+
+```terraform
+import {
+  to = aws_wafv2_web_acl_rule_group_association.managed_versioned
+  id = "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet:Version_1.0,aws-common-rule-set-versioned"
+}
+```
+
+Using `terraform import`:
+
+```console
+% terraform import aws_wafv2_web_acl_rule_group_association.managed_versioned "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example-web-acl/12345678-1234-1234-1234-123456789012,AWS:AWSManagedRulesCommonRuleSet:Version_1.0,aws-common-rule-set-versioned"
+```
+
+#### CloudFront (Global) Web ACL
+
+For CloudFront Web ACLs, the ARN uses the `global` region:
+
+```terraform
+import {
+  to = aws_wafv2_web_acl_rule_group_association.cloudfront_example
+  id = "arn:aws:wafv2:global:123456789012:global/webacl/cloudfront-web-acl/12345678-1234-1234-1234-123456789012,arn:aws:wafv2:global:123456789012:global/rulegroup/cloudfront-rule-group/87654321-4321-4321-4321-210987654321,cloudfront-rule-group-rule"
+}
 ```

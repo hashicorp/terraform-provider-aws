@@ -1371,8 +1371,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name                 = %[1]q
-    sampled_requests_enabled    = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
   }
 
   lifecycle {
@@ -1407,8 +1407,8 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name                 = %[1]q
-    sampled_requests_enabled    = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
   }
 
   lifecycle {
