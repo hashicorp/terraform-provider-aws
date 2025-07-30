@@ -14,20 +14,8 @@
 acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
 {{- end }}
 
-{{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . -}}
-{{ if not .AlternateRegionProvider }}
-	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-{{- end -}}
-{{- end }}
-
 {{ define "TestCaseSetupNoProviders" -}}
-	PreCheck:     func() { acctest.PreCheck(ctx, t)
-		{{- range .PreChecks }}
-		{{ .Code }}
-		{{ end -}}
-	},
-	ErrorCheck: acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+	{{ template "CommonTestCaseChecks" . -}}
 {{- end }}
 
 {{ define "TagsKnownValueForNull" -}}
@@ -50,43 +38,9 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 {{- end }}
 
-{{ define "ImportBody" }}
-	ResourceName: resourceName,
-	ImportState:  true,
-{{ if gt (len .ImportStateID) 0 -}}
-	ImportStateId: {{ .ImportStateID }},
-{{ end -}}
-{{ if gt (len .ImportStateIDFunc) 0 -}}
-	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
-{{ end -}}
-	ImportStateVerify: true,
-{{ if gt (len .ImportIgnore) 0 -}}
-	ImportStateVerifyIgnore: []string{
-	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
-	},
-{{- end }}
-{{ end }}
-
 {{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}DataSource
+{{ template "resourceTestname" . }}DataSource
 {{- end }}
-
-{{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
-{{ end }}
-
-{{ define "AdditionalTfVars" -}}
-	{{ range $name, $value := .AdditionalTfVars -}}
-		{{ if eq $value.Type "string" -}}
-			{{ $name }}: config.StringVariable({{ $value.GoVarName }}),
-		{{- else if eq $value.Type "int" -}}
-			{{ $name }}: config.IntegerVariable({{ $value.GoVarName }}),
-		{{- end }}
-	{{ end -}}
-	{{ if .AlternateRegionProvider -}}
-		"alt_region": config.StringVariable(acctest.AlternateRegion()),
-	{{ end }}
-{{ end }}
 
 package {{ .ProviderPackage }}_test
 

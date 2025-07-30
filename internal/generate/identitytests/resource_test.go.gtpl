@@ -23,18 +23,7 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 	TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 		tfversion.SkipBelow(tfversion.Version1_12_0),
 	},
-	PreCheck: func() { acctest.PreCheck(ctx, t)
-		{{- if .PreCheckRegions }}
-			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
-		{{- end -}}
-		{{- range .PreChecks }}
-			{{ .Code }}
-		{{- end -}}
-		{{- range .PreChecksWithRegion }}
-			{{ .Code }}(ctx, t, acctest.Region())
-		{{- end -}}
-	},
-	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+	{{ template "CommonTestCaseChecks" . }}
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
@@ -221,22 +210,8 @@ ImportPlanChecks: resource.ImportPlanChecks{
 {{- end }}
 
 {{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
+{{ template "resourceTestname" . }}
 {{- end }}
-
-{{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
-{{ end }}
-
-{{ define "AdditionalTfVars" -}}
-	{{ range $name, $value := .AdditionalTfVars -}}
-		{{ if eq $value.Type "string" -}}
-			{{ $name }}: config.StringVariable({{ $value.GoVarName }}),
-		{{- else if eq $value.Type "int" -}}
-			{{ $name }}: config.IntegerVariable({{ $value.GoVarName }}),
-		{{- end }}
-	{{ end -}}
-{{ end }}
 
 package {{ .ProviderPackage }}_test
 
