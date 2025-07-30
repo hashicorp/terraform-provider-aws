@@ -557,39 +557,6 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `)
 }
 
-func testAccVPCAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccVPCAttachmentConfig_base(rName, false),
-		fmt.Sprintf(`
-resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpc_arn         = aws_vpc.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccVPCAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccVPCAttachmentConfig_base(rName, false),
-		fmt.Sprintf(`
-resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpc_arn         = aws_vpc.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
 func testAccVPCAttachmentConfig_updates(rName string, requireAcceptance bool, nSubnets int, applianceModeSupport, ipv6Support bool) string {
 	return acctest.ConfigCompose(
 		testAccVPCAttachmentConfig_base(rName, requireAcceptance),
