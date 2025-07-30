@@ -475,6 +475,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_basic(t *testing.T)
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -510,6 +511,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_withVersion(t *test
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -548,6 +550,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ruleActionOverride(
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
 			},
 		},
 	})
@@ -716,6 +719,29 @@ func testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName string) res
 		ruleName := rs.Primary.Attributes["rule_name"]
 
 		return fmt.Sprintf("%s,%s,%s", webACLARN, ruleGroupARN, ruleName), nil
+	}
+}
+
+func testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		webACLARN := rs.Primary.Attributes["web_acl_arn"]
+		vendorName := rs.Primary.Attributes["managed_rule_group.0.vendor_name"]
+		ruleGroupName := rs.Primary.Attributes["managed_rule_group.0.name"]
+		version := rs.Primary.Attributes["managed_rule_group.0.version"]
+		ruleName := rs.Primary.Attributes["rule_name"]
+
+		// Build managed rule group identifier: vendorName:ruleGroupName[:version]
+		ruleGroupIdentifier := fmt.Sprintf("%s:%s", vendorName, ruleGroupName)
+		if version != "" {
+			ruleGroupIdentifier += ":" + version
+		}
+
+		return fmt.Sprintf("%s,%s,%s", webACLARN, ruleGroupIdentifier, ruleName), nil
 	}
 }
 
@@ -1345,8 +1371,12 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
+    metric_name                 = %[1]q
+    sampled_requests_enabled    = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
@@ -1377,8 +1407,12 @@ resource "aws_wafv2_web_acl" "test" {
 
   visibility_config {
     cloudwatch_metrics_enabled = false
-    metric_name                = %[1]q
-    sampled_requests_enabled   = false
+    metric_name                 = %[1]q
+    sampled_requests_enabled    = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
@@ -1412,6 +1446,10 @@ resource "aws_wafv2_web_acl" "test" {
     cloudwatch_metrics_enabled = false
     metric_name                = %[1]q
     sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
   }
 }
 
