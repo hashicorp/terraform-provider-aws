@@ -38,10 +38,6 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 {{- end }}
 
-{{ define "testname" -}}
-{{ template "resourceTestname" . }}DataSource
-{{- end }}
-
 package {{ .ProviderPackage }}_test
 
 import (

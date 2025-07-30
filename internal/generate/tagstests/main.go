@@ -143,7 +143,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			templates, err = tests.AddCommonResourceTestTemplates(templates)
+			templates, err = tests.AddCommonDataSourceTestTemplates(templates)
 			if err != nil {
 				g.Fatalf(err.Error())
 			}

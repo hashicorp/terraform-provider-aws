@@ -209,10 +209,6 @@ ImportPlanChecks: resource.ImportPlanChecks{
 },
 {{- end }}
 
-{{ define "testname" -}}
-{{ template "resourceTestname" . }}
-{{- end }}
-
 package {{ .ProviderPackage }}_test
 
 import (
