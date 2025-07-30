@@ -3,6 +3,10 @@
 
 package quicksight
 
+import (
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
+)
+
 // Exports for use in tests only.
 var (
 	ResourceAccountSettings     = newAccountSettingsResource
@@ -30,7 +34,7 @@ var (
 	ResourceVPCConnection       = newVPCConnectionResource
 
 	DashboardLatestVersion                = dashboardLatestVersion
-	DefaultNamespace                      = defaultNamespace
+	DefaultNamespace                      = quicksightschema.DefaultNamespace
 	FindAccountSettingsByID               = findAccountSettingsByID
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey

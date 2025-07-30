@@ -16,9 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -55,14 +52,7 @@ func (r *accountSettingsResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
-			"default_namespace": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(defaultNamespace),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			"default_namespace":    quicksightschema.NamespaceAttribute(),
 			"termination_protection_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,

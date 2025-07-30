@@ -9,7 +9,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,16 +64,7 @@ func resourceUser() *schema.Resource {
 						awstypes.IdentityTypeQuicksight,
 					), false),
 				},
-				names.AttrNamespace: {
-					Type:     schema.TypeString,
-					Optional: true,
-					ForceNew: true,
-					Default:  defaultNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-					),
-				},
+				names.AttrNamespace: quicksightschema.NamespaceSchema(),
 				"session_name": {
 					Type:     schema.TypeString,
 					Optional: true,

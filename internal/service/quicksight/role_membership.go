@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -54,14 +53,7 @@ func (r *roleMembershipResource) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrNamespace: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(defaultNamespace),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrNamespace: quicksightschema.NamespaceAttribute(),
 			names.AttrRole: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.Role](),
 				Required:   true,
