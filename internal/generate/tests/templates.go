@@ -29,7 +29,7 @@ func AddCommonResourceTestTemplates(template *template.Template) (*template.Temp
 	return result, nil
 }
 
-//go:embed datasource_test.go.gtpl
+//go:embed data_source_test.go.gtpl
 var dataSourceTestGoTmpl string
 
 func AddCommonDataSourceTestTemplates(template *template.Template) (*template.Template, error) {

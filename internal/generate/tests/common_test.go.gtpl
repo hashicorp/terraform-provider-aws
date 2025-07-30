@@ -2,9 +2,10 @@
 {{ range .RequiredEnvVars -}}
 	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
 {{ end -}}
-	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
+{{ block "targetName" . }}Missing template "targetName"{{ end }}
+{{- if .Generator }}
 	rName := {{ .Generator }}
-{{- end }}
+{{- end -}}
 {{- range .InitCodeBlocks }}
     {{ .Code }}
 {{- end -}}
