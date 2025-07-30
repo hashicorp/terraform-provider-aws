@@ -278,7 +278,7 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
 		tflog.Info(ctx, "request for Service Quota already exists", map[string]any{
-			"id": d.Id(),
+			names.AttrID: d.Id(),
 		})
 		return diags
 	}
