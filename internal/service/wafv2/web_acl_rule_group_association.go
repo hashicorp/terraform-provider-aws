@@ -62,6 +62,259 @@ type resourceWebACLRuleGroupAssociation struct {
 }
 
 func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ruleActionOverrideLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionOverrideModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(100),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 128),
+					},
+					Description: "Name of the rule to override.",
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"action_to_use": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[actionToUseModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+						listvalidator.SizeAtLeast(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"allow": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[allowActionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Blocks: map[string]schema.Block{
+													"insert_header": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtLeast(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																names.AttrName: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 64),
+																	},
+																},
+																names.AttrValue: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"block": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[blockActionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_response": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customResponseModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Attributes: map[string]schema.Attribute{
+													"custom_response_body_key": schema.StringAttribute{
+														Optional: true,
+														Validators: []validator.String{
+															stringvalidator.LengthBetween(1, 128),
+														},
+													},
+													"response_code": schema.Int32Attribute{
+														Required: true,
+														Validators: []validator.Int32{
+															int32validator.Between(200, 600),
+														},
+													},
+												},
+												Blocks: map[string]schema.Block{
+													"response_header": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[responseHeaderModel](ctx),
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																names.AttrName: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 64),
+																	},
+																},
+																names.AttrValue: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"captcha": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[captchaActionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Blocks: map[string]schema.Block{
+													"insert_header": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtLeast(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																names.AttrName: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 64),
+																	},
+																},
+																names.AttrValue: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"challenge": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[challengeActionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Blocks: map[string]schema.Block{
+													"insert_header": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtLeast(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																names.AttrName: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 64),
+																	},
+																},
+																names.AttrValue: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"count": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[countActionModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"custom_request_handling": schema.ListNestedBlock{
+											CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
+											Validators: []validator.List{
+												listvalidator.SizeAtMost(1),
+											},
+											NestedObject: schema.NestedBlockObject{
+												Blocks: map[string]schema.Block{
+													"insert_header": schema.ListNestedBlock{
+														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														Validators: []validator.List{
+															listvalidator.SizeAtLeast(1),
+														},
+														NestedObject: schema.NestedBlockObject{
+															Attributes: map[string]schema.Attribute{
+																names.AttrName: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 64),
+																	},
+																},
+																names.AttrValue: schema.StringAttribute{
+																	Required: true,
+																	Validators: []validator.String{
+																		stringvalidator.LengthBetween(1, 255),
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+					Description: "Action to use in place of the rule action.",
+				},
+			},
+		},
+		Description: "Action settings to use in place of rule actions configured inside the rule group. You can specify up to 100 overrides.",
+	}
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -115,264 +368,12 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"rule_action_override": ruleActionOverrideLNB,
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
 			}),
-			"rule_action_override": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionOverrideModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(100),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrName: schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(1, 128),
-							},
-							Description: "Name of the rule to override.",
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"action_to_use": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[actionToUseModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.SizeAtLeast(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"allow": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[allowActionModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"custom_request_handling": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Blocks: map[string]schema.Block{
-															"insert_header": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtLeast(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		names.AttrName: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 64),
-																			},
-																		},
-																		names.AttrValue: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"block": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[blockActionModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"custom_response": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customResponseModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"custom_response_body_key": schema.StringAttribute{
-																Optional: true,
-																Validators: []validator.String{
-																	stringvalidator.LengthBetween(1, 128),
-																},
-															},
-															"response_code": schema.Int32Attribute{
-																Required: true,
-																Validators: []validator.Int32{
-																	int32validator.Between(200, 600),
-																},
-															},
-														},
-														Blocks: map[string]schema.Block{
-															"response_header": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[responseHeaderModel](ctx),
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		names.AttrName: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 64),
-																			},
-																		},
-																		names.AttrValue: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"captcha": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[captchaActionModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"custom_request_handling": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Blocks: map[string]schema.Block{
-															"insert_header": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtLeast(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		names.AttrName: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 64),
-																			},
-																		},
-																		names.AttrValue: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"challenge": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[challengeActionModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"custom_request_handling": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Blocks: map[string]schema.Block{
-															"insert_header": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtLeast(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		names.AttrName: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 64),
-																			},
-																		},
-																		names.AttrValue: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"count": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[countActionModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Blocks: map[string]schema.Block{
-												"custom_request_handling": schema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[customRequestHandlingModel](ctx),
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-													NestedObject: schema.NestedBlockObject{
-														Blocks: map[string]schema.Block{
-															"insert_header": schema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
-																Validators: []validator.List{
-																	listvalidator.SizeAtLeast(1),
-																},
-																NestedObject: schema.NestedBlockObject{
-																	Attributes: map[string]schema.Attribute{
-																		names.AttrName: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 64),
-																			},
-																		},
-																		names.AttrValue: schema.StringAttribute{
-																			Required: true,
-																			Validators: []validator.String{
-																				stringvalidator.LengthBetween(1, 255),
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							Description: "Action to use in place of the rule action.",
-						},
-					},
-				},
-				Description: "Action settings to use in place of rule actions configured inside the rule group. You can specify up to 100 overrides.",
-			},
 		},
 		Description: "Associates a WAFv2 Rule Group with a Web ACL by adding a rule that references the Rule Group.",
 	}
