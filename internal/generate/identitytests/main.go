@@ -393,7 +393,6 @@ type ResourceDatum struct {
 	IDAttrFormat                string
 	HasV6_0NullValuesError      bool
 	HasV6_0RefreshError         bool
-	RequiredEnvVars             []string
 	PreIdentityVersion          *version.Version
 	tests.CommonArgs
 }
@@ -811,10 +810,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
-				}
-
-				if attr, ok := args.Keyword["requireEnvVar"]; ok {
-					d.RequiredEnvVars = append(d.RequiredEnvVars, attr)
 				}
 			}
 		}

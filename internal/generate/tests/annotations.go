@@ -47,6 +47,8 @@ type CommonArgs struct {
 
 	Generator string
 
+	RequiredEnvVars []string
+
 	GoImports         []GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
@@ -288,6 +290,10 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 				stuff.GoImports = append(stuff.GoImports, *importSpec)
 			}
 		}
+	}
+
+	if attr, ok := args.Keyword["requireEnvVar"]; ok {
+		stuff.RequiredEnvVars = append(stuff.RequiredEnvVars, attr)
 	}
 
 	// TF Variables
