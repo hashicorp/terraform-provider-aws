@@ -8,6 +8,7 @@ var (
 	ResourceAccountSettings     = newAccountSettingsResource
 	ResourceAccountSubscription = resourceAccountSubscription
 	ResourceAnalysis            = resourceAnalysis
+	ResourceCustomPermissions   = newCustomPermissionsResource
 	ResourceDashboard           = resourceDashboard
 	ResourceDataSet             = resourceDataSet
 	ResourceDataSource          = resourceDataSource
@@ -34,6 +35,7 @@ var (
 	FindAccountSettingsByID               = findAccountSettingsByID
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey
+	FindCustomPermissionsByTwoPartKey     = findCustomPermissionsByTwoPartKey
 	FindDashboardByThreePartKey           = findDashboardByThreePartKey
 	FindDataSetByTwoPartKey               = findDataSetByTwoPartKey
 	FindDataSourceByTwoPartKey            = findDataSourceByTwoPartKey
