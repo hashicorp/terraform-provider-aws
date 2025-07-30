@@ -16,6 +16,7 @@ import (
 	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func AWSAccountIDAttribute() fwschema.StringAttribute {
@@ -29,6 +30,25 @@ func AWSAccountIDAttribute() fwschema.StringAttribute {
 			stringplanmodifier.UseStateForUnknown(),
 			stringplanmodifier.RequiresReplace(),
 		},
+	}
+}
+
+func AWSAccountIDSchema() *sdkschema.Schema {
+	return &sdkschema.Schema{
+		Type:         sdkschema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ForceNew:     true,
+		ValidateFunc: verify.ValidAccountID,
+	}
+}
+
+func AWSAccountIDDataSourceSchema() *sdkschema.Schema {
+	return &sdkschema.Schema{
+		Type:         sdkschema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: verify.ValidAccountID,
 	}
 }
 

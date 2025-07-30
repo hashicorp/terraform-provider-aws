@@ -25,11 +25,7 @@ func dataSourceGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDDataSourceSchema(),
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,

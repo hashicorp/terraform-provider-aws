@@ -39,12 +39,7 @@ func resourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ForceNew: true,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Required: true,
