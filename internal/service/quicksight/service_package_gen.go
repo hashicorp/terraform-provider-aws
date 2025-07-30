@@ -31,6 +31,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newCustomPermissionsResource,
+			TypeName: "aws_quicksight_custom_permissions",
+			Name:     "Custom Permissions",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newFolderMembershipResource,
 			TypeName: "aws_quicksight_folder_membership",
 			Name:     "Folder Membership",
