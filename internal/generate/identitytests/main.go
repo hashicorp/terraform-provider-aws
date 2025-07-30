@@ -370,7 +370,6 @@ type ResourceDatum struct {
 	ProviderPackage             string
 	ResourceProviderNameUpper   string
 	PackageProviderNameUpper    string
-	TypeName                    string
 	FileName                    string
 	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
 	Implementation              implementation

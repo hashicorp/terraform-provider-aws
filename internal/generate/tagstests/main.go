@@ -382,7 +382,6 @@ type ResourceDatum struct {
 	ProviderPackage                  string
 	ResourceProviderNameUpper        string
 	PackageProviderNameUpper         string
-	TypeName                         string
 	FileName                         string
 	Implementation                   implementation
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1

@@ -16,7 +16,8 @@ import (
 )
 
 type CommonArgs struct {
-	Name string // Resource Type Name
+	Name     string // Resource Type Name
+	TypeName string // Terraform Type Name
 
 	// CheckDestroy
 	CheckDestroyNoop bool
