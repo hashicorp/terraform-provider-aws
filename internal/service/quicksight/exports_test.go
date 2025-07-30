@@ -17,6 +17,7 @@ var (
 	ResourceGroupMembership     = resourceGroupMembership
 	ResourceIAMPolicyAssignment = newIAMPolicyAssignmentResource
 	ResourceIngestion           = newIngestionResource
+	ResourceKeyRegistration     = newKeyRegistrationResource
 	ResourceNamespace           = newNamespaceResource
 	ResourceRefreshSchedule     = newRefreshScheduleResource
 	ResourceRoleMembership      = newRoleMembershipResource
@@ -41,6 +42,7 @@ var (
 	FindGroupMembershipByFourPartKey      = findGroupMembershipByFourPartKey
 	FindIAMPolicyAssignmentByThreePartKey = findIAMPolicyAssignmentByThreePartKey
 	FindIngestionByThreePartKey           = findIngestionByThreePartKey
+	FindKeyRegistrationByID               = findKeyRegistrationByID
 	FindNamespaceByTwoPartKey             = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey     = findRefreshScheduleByThreePartKey
 	FindRoleMembershipByMultiPartKey      = findRoleMembershipByMultiPartKey

@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deletion_protection_enabled` - (Optional) By default this is set to `false`. When set to true the phone number can’t be deleted.
 * `iso_country_code` - (Required) The two-character code, in ISO 3166-1 alpha-2 format, for the country or region.
 * `message_type` - (Required) The type of message. Valid values are `TRANSACTIONAL` for messages that are critical or time-sensitive and `PROMOTIONAL` for messages that aren’t critical or time-sensitive.
@@ -85,4 +86,4 @@ Using `terraform import`, import phone numbers using the `id`. For example:
 % terraform import aws_pinpointsmsvoicev2_phone_number.example phone-abcdef0123456789abcdef0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bef2b023de082319db998245ea01e7c70f736939e7407c200c7563039036970d -->
+<!-- cache-key: cdktf-0.20.8 input-c1f5739b295b4c9076b6692e10520c63f316e7055411850dae65dde8e9b98542 -->

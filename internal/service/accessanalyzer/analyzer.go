@@ -219,8 +219,8 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	// Handle Organizations eventual consistency.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ValidationException](ctx, organizationCreationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateAnalyzer(ctx, &input)
 		},
 		"You must create an organization",

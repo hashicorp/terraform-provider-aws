@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. Changing this forces a new resource to be created. **NOTE:** WAFv2 API Keys deployed for `CLOUDFRONT` must be created within the `us-east-1` region.
 - `tokenDomains` - (Required) The domains that you want to be able to use the API key with, for example `example.com`. You can specify up to 5 domains. Changing this forces a new resource to be created.
 
@@ -80,4 +81,4 @@ Using `terraform import`, import WAFv2 API Key using `api_key,scope`. For exampl
 % terraform import aws_wafv2_api_key.example a1b2c3d4-5678-90ab-cdef-EXAMPLE11111,REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4f751f0c8fe45dca2cca4d07e90aa4ea7e23ced28f6c923e102149ed0e86a679 -->
+<!-- cache-key: cdktf-0.20.8 input-32c4fb8e18a4c5db3d48059853fd63677b68bbcdba8c74e5309d2d949e770722 -->

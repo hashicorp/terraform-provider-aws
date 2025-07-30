@@ -55,12 +55,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `logGroupArnList` - (Required) Array containing the ARN of the log group that this anomaly detector will watch. You can specify only one log group ARN.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `anomalyVisibilityTime` - (Optional) Number of days to have visibility on an anomaly. After this time period has elapsed for an anomaly, it will be automatically baselined and the anomaly detector will treat new occurrences of a similar anomaly as normal. Therefore, if you do not correct the cause of an anomaly during the time period specified in `anomalyVisibilityTime`, it will be considered normal going forward and will not be detected as an anomaly. Valid Range: Minimum value of 7. Maximum value of 90.
 
 * `detectorName` - (Optional) Name for this anomaly detector.
@@ -109,4 +111,4 @@ Using `terraform import`, import CloudWatch Log Anomaly Detector using the `exam
 % terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-arn-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-95cc91e31e402b93c751dfb64f5b75bc683b067b9032f54cad7e75fd22c4b36d -->
+<!-- cache-key: cdktf-0.20.8 input-7ed6bea3f772033a86597eba03b1f23d8f7a2701f5a655751d6910599f4cd907 -->

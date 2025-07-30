@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the docDB subnet group. If omitted, Terraform will assign a random, unique name.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the docDB subnet group. Defaults to "Managed by Terraform".
@@ -88,4 +89,4 @@ Using `terraform import`, import DocumentDB Subnet groups using the `name`. For 
 % terraform import aws_docdb_subnet_group.default production-subnet-group
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-88009fd606f1c5adfe6f2ed488e5bfa54a43279608f02880560a223786cb4993 -->
+<!-- cache-key: cdktf-0.20.8 input-15880f34eedf8a710f11146afdf3a90f473816fc9f3e7a646d56f94d18272c29 -->

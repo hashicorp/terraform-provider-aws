@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the security configuration.
 
 ### saml_options
@@ -99,4 +100,4 @@ Using `terraform import`, import OpenSearchServerless Access Policy using the `n
 % terraform import aws_opensearchserverless_security_config.example saml/123456789012/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e97ed43190ce4b1c367d53c0c942b49ca04c3b1646b849a93a8705b0516e690f -->
+<!-- cache-key: cdktf-0.20.8 input-e932740aa12a7a52c0b941d9b90f48e70e4f9a6e1832c15384b04ff0eb6ba8ae -->

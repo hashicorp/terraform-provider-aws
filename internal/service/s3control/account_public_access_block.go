@@ -96,7 +96,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 	})
 
@@ -177,7 +177,7 @@ func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Account Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, s3PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 	})
 

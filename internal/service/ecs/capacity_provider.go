@@ -386,7 +386,7 @@ func expandAutoScalingGroupProviderCreate(configured any) *awstypes.AutoScalingG
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
@@ -413,7 +413,7 @@ func expandAutoScalingGroupProviderUpdate(configured any) *awstypes.AutoScalingG
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
@@ -438,7 +438,7 @@ func expandManagedScaling(configured any) *awstypes.ManagedScaling {
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 

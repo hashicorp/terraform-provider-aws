@@ -2068,12 +2068,12 @@ service "cognitoidp" {
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk)"
+    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
+  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
   brand                    = "AWS"
 }
 

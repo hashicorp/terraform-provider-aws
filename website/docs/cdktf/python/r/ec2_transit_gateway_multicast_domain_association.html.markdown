@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_id` - (Required) The ID of the subnet to associate with the transit gateway multicast domain.
 * `transit_gateway_attachment_id` - (Required) The ID of the transit gateway attachment.
 * `transit_gateway_multicast_domain_id` - (Required) The ID of the transit gateway multicast domain.
@@ -77,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.20.8 input-6c4de69f84e7a9ddb2ed6ce4cfadb8fa72c50ebf1d30ec7a4dc0c8b0330dd7d7 -->
+<!-- cache-key: cdktf-0.20.8 input-6f7c9b6dcc2564fc048dfce5cf0a73918e92fd5e5418718fd67c737c18304c05 -->

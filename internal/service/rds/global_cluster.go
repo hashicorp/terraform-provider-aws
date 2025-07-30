@@ -363,7 +363,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		globalClusterClusterDeleteTimeout = 5 * time.Minute
 	)
 	timeout := max(deadline.Remaining(), globalClusterClusterDeleteTimeout)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidGlobalClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
@@ -529,7 +529,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
-	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
 

@@ -417,6 +417,7 @@ type ResourceDatum struct {
 	DataSourceResourceImplementation implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
+	UseAlternateAccount              bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -722,6 +723,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						},
 					)
 				}
+				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.UseAlternateAccount = true
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: "acctest.PreCheckAlternateAccount(t)",
+						})
+						d.GoImports = append(d.GoImports,
+							goImport{
+								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+							},
+						)
+					}
+				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -851,12 +868,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				return
 			}
 			if !generatorSeen {
-				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+				d.Generator = "acctest.RandomWithPrefix(t, acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
-					goImport{
-						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-						Alias: "sdkacctest",
-					},
 					goImport{
 						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 					},

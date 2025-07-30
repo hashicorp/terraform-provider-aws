@@ -151,9 +151,9 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	const (
 		timeout = 30 * time.Second
 	)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func() (any, error) {
+	output, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func(ctx context.Context) (*datazone.CreateDomainOutput, error) {
 		return conn.CreateDomain(ctx, &input)
-	}, ErrorCodeAccessDenied)
+	}, errCodeAccessDenied)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
@@ -162,7 +162,6 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	// Set values for unknowns.
-	output := outputRaw.(*datazone.CreateDomainOutput)
 	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
 	data.ID = fwflex.StringToFramework(ctx, output.Id)
 	data.PortalURL = fwflex.StringToFramework(ctx, output.PortalUrl)

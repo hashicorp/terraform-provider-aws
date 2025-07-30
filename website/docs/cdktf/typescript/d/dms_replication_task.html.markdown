@@ -40,14 +40,10 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicationTaskId` - (Required) The replication task identifier.
-
-    - Must contain from 1 to 255 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen.
-    - Cannot contain two consecutive hyphens.
 
 ## Attribute Reference
 
@@ -65,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `targetEndpointArn` - The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 * `replicationTaskArn` - The Amazon Resource Name (ARN) for the replication task.
 
-<!-- cache-key: cdktf-0.20.8 input-fa1a1915aa39f86d68f0c890bf2884e184e4111a8bb8bbe6b38fd7c6c992b063 -->
+<!-- cache-key: cdktf-0.20.8 input-bd68a0d3d48ee95e21b042c28d8b92612fdcb7f3700886e85dd6551b43189b4d -->

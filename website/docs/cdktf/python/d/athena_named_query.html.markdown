@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The plain language name for the query. Maximum length of 128.
 * `workgroup` - (Optional) The workgroup to which the query belongs. Defaults to `primary`.
 
@@ -47,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - The unique ID of the query.
 * `query` - Text of the query itself.
 
-<!-- cache-key: cdktf-0.20.8 input-c30e54012a2870f54ff21f77cceec74dff83a4ad92b1235e35a096091d8b122c -->
+<!-- cache-key: cdktf-0.20.8 input-1a237ab7d7487d9f5752e3fc37b41c548806eeabbf8cb88a1cee315318a02998 -->

@@ -52,6 +52,7 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secretId` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
 * `rotateImmediately` - (Optional) Specifies whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotationRules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
 * `rotationLambdaArn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
@@ -103,4 +104,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_rotation` using the 
 % terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-981ee22e0fa2a512405fc3422d9ccdc84ffe4cca74a3f247700c467d89539716 -->
+<!-- cache-key: cdktf-0.20.8 input-0b372f574c52ea040e99250c5d5f728eef076b7f667128775e412d7f68c5baac -->

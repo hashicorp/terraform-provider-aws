@@ -591,7 +591,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findFunctionByName(ctx, conn, d.Id())
 	})
 
@@ -1026,7 +1026,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
 		}, "in progress")
 
@@ -1063,7 +1063,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := lambda.DeleteFunctionInput{
 		FunctionName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteFunction(ctx, &input)
 	}, "because it is a replicated function")
 
@@ -1272,7 +1272,14 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 			return nil, "", err
 		}
 
-		return output, string(output.LastUpdateStatus), nil
+		// "LastUpdateStatus":null can be returned (when SnapStart is enabled?).
+		// lambda.NewFunctionUpdatedWaiter handles this as a retryable status.
+		status := output.LastUpdateStatus
+		if status == "" {
+			status = awstypes.LastUpdateStatusInProgress
+		}
+
+		return output, string(status), nil
 	}
 }
 
@@ -1634,7 +1641,7 @@ func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.Res
 	return suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new, d.HasChanges("logging_config.0.log_format"))
 }
 
-func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
+func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(_, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
 	if logFormatHasChanges {
 		return false
 	}

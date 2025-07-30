@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the Regex Pattern Set.
 * `regexPatternStrings` - (Optional) A list of regular expression (regex) patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`.
 
@@ -80,4 +81,4 @@ Using `terraform import`, import WAF Regional Regex Pattern Set using the id. Fo
 % terraform import aws_wafregional_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cff1466a5daff624aa9ded6cc255388e5ab53f5a98b6e49b1cd55ad6eb538fca -->
+<!-- cache-key: cdktf-0.20.8 input-3335203f507f04cb1b824e0527ed7493ac0bc1980df53405a190cd5aa7c35109 -->

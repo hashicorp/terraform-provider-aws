@@ -89,6 +89,10 @@ func TestAccConnect_serial(t *testing.T) {
 			"prefix":             testAccPhoneNumber_prefix,
 			"targetARN":          testAccPhoneNumber_targetARN,
 		},
+		"PhoneNumberContactFlowAssociation": {
+			acctest.CtBasic:      testAccPhoneNumberContactFlowAssociation_basic,
+			acctest.CtDisappears: testAccPhoneNumberContactFlowAssociation_disappears,
+		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
 		},

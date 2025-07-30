@@ -115,7 +115,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, managedPrefixListEntryCreateTimeout, func() (any, error) {
+	entry, err := tfresource.RetryWhenNewResourceNotFound(ctx, managedPrefixListEntryCreateTimeout, func(ctx context.Context) (*awstypes.PrefixListEntry, error) {
 		return findManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
 	}, d.IsNewResource())
 
@@ -128,8 +128,6 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
-
-	entry := outputRaw.(*awstypes.PrefixListEntry)
 
 	d.Set("cidr", entry.Cidr)
 	d.Set(names.AttrDescription, entry.Description)
