@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,15 +57,8 @@ func (r *iamPolicyAssignmentResource) Schema(ctx context.Context, request resour
 				CustomType: fwtypes.StringEnumType[awstypes.AssignmentStatus](),
 				Required:   true,
 			},
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
 			names.AttrNamespace: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -109,7 +103,7 @@ func (r *iamPolicyAssignmentResource) Create(ctx context.Context, request resour
 	if response.Diagnostics.HasError() {
 		return
 	}
-	if data.AWSAccountID.IsUnknown() || data.AWSAccountID.IsNull() {
+	if data.AWSAccountID.IsUnknown() {
 		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 

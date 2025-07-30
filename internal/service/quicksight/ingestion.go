@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,14 +50,7 @@ func (r *ingestionResource) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"data_set_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -87,46 +81,46 @@ func (r *ingestionResource) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *ingestionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan ingestionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data ingestionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
-	awsAccountID, dataSetID, ingestionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.DataSetID), flex.StringValueFromFramework(ctx, plan.IngestionID)
+
+	conn := r.Meta().QuickSightClient(ctx)
+
+	awsAccountID, dataSetID, ingestionID := flex.StringValueFromFramework(ctx, data.AWSAccountID), flex.StringValueFromFramework(ctx, data.DataSetID), flex.StringValueFromFramework(ctx, data.IngestionID)
 	in := quicksight.CreateIngestionInput{
 		AwsAccountId:  aws.String(awsAccountID),
 		DataSetId:     aws.String(dataSetID),
 		IngestionId:   aws.String(ingestionID),
-		IngestionType: awstypes.IngestionType(plan.IngestionType.ValueString()),
+		IngestionType: awstypes.IngestionType(data.IngestionType.ValueString()),
 	}
 
 	out, err := conn.CreateIngestion(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIngestion, plan.IngestionID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIngestion, data.IngestionID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIngestion, plan.IngestionID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameIngestion, data.IngestionID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, ingestionCreateResourceID(awsAccountID, dataSetID, ingestionID))
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.IngestionStatus = flex.StringValueToFramework(ctx, out.IngestionStatus)
+	data.ID = flex.StringValueToFramework(ctx, ingestionCreateResourceID(awsAccountID, dataSetID, ingestionID))
+	data.ARN = flex.StringToFramework(ctx, out.Arn)
+	data.IngestionStatus = flex.StringValueToFramework(ctx, out.IngestionStatus)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *ingestionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

@@ -23,7 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,14 +47,7 @@ type roleMembershipResource struct {
 func (r *roleMembershipResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"member_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -79,35 +74,34 @@ func (r *roleMembershipResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *roleMembershipResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan roleMembershipResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data roleMembershipResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
 
+	conn := r.Meta().QuickSightClient(ctx)
+
 	input := quicksight.CreateRoleMembershipInput{
-		AwsAccountId: plan.AWSAccountID.ValueStringPointer(),
-		MemberName:   plan.MemberName.ValueStringPointer(),
-		Namespace:    plan.Namespace.ValueStringPointer(),
-		Role:         plan.Role.ValueEnum(),
+		AwsAccountId: data.AWSAccountID.ValueStringPointer(),
+		MemberName:   data.MemberName.ValueStringPointer(),
+		Namespace:    data.Namespace.ValueStringPointer(),
+		Role:         data.Role.ValueEnum(),
 	}
 
 	_, err := conn.CreateRoleMembership(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameRoleMembership, plan.MemberName.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameRoleMembership, data.MemberName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *roleMembershipResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
