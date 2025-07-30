@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	pretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -82,7 +83,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 			webACL, err = findWebACLByResourceARN(ctx, conn, resourceArn)
 		}
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if pretry.NotFound(err) {
 				return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for resource_arn: %s", resourceArn)
 			}
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL for resource_arn (%s): %s", resourceArn, err)
@@ -221,12 +222,12 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 	webACLID := parts[len(parts)-1]
 
 	var webACLOut *wafv2.GetWebACLOutput
-	if webACLOut, err = findWebACLByThreePartKey(ctx, wafConn, webACLName, webACLID, string(awstypes.ScopeCloudfront)); err != nil {
-		return nil, fmt.Errorf("finding WAFv2 WebACL by ARN (%s): %w", webACLARN, err)
+	if webACLOut, err = findWebACLByThreePartKey(ctx, wafConn, webACLID, webACLName, string(awstypes.ScopeCloudfront)); err != nil {
+		return nil, fmt.Errorf("finding WAFv2 WebACL (%s): %w", webACLARN, err)
 	}
 	if webACLOut == nil {
 		return nil, &retry.NotFoundError{
-			Message: fmt.Sprintf("no WAFv2 WebACL found for ARN: %s", webACLARN),
+			Message: fmt.Sprintf("no WAFv2 WebACL found: %s", webACLARN),
 		}
 
 	}
