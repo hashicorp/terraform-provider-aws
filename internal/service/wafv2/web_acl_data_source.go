@@ -150,9 +150,9 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 // Helper function to detect CloudFront distribution ARNs
-func isCloudFrontDistributionARN(arn string) bool {
+func isCloudFrontDistributionARN(s string) bool {
 	// CloudFront distribution ARNs: arn:partition:cloudfront::account:distribution/ID
-	return strings.Contains(arn, ":cloudfront::") && strings.Contains(arn, ":distribution/") && strings.HasPrefix(arn, "arn:")
+	return strings.Contains(s, ":cloudfront::") && strings.Contains(s, ":distribution/") && arn.IsARN(s)
 }
 
 // Helper function to extract distribution ID from CloudFront ARN
