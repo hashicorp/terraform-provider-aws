@@ -163,7 +163,13 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	id := serviceQuotaCreateResourceID(serviceCode, quotaCode)
-	if value := d.Get(names.AttrValue).(float64); value > quotaValue {
+	value := d.Get(names.AttrValue).(float64)
+
+	if value < quotaValue {
+		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) with value less than current", id)
+	}
+
+	if value > quotaValue {
 		input := servicequotas.RequestServiceQuotaIncreaseInput{
 			DesiredValue: aws.Float64(value),
 			QuotaCode:    aws.String(quotaCode),
@@ -176,8 +182,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		d.Set("request_id", output.RequestedQuota.Id)
-	} else if value < quotaValue {
-		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas with value less than current: %s", err)
 	}
 
 	d.SetId(id)
