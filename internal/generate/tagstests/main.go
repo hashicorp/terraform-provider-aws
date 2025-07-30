@@ -370,19 +370,11 @@ func (sr serviceRecords) PackageProviderNameUpper() string {
 	return sr.primary.ProviderNameUpper()
 }
 
-type implementation string
-
-const (
-	implementationFramework implementation = "framework"
-	implementationSDK       implementation = "sdk"
-)
-
 type ResourceDatum struct {
 	ProviderPackage                  string
 	ResourceProviderNameUpper        string
 	PackageProviderNameUpper         string
 	FileName                         string
-	Implementation                   implementation
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
@@ -391,7 +383,7 @@ type ResourceDatum struct {
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
 	IsDataSource                     bool
-	DataSourceResourceImplementation implementation
+	DataSourceResourceImplementation tests.Implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
 	UseAlternateAccount              bool
@@ -516,7 +508,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				fallthrough
 
 			case "FrameworkResource":
-				d.Implementation = implementationFramework
+				d.Implementation = tests.ImplementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -534,7 +526,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				fallthrough
 
 			case "SDKResource":
-				d.Implementation = implementationSDK
+				d.Implementation = tests.ImplementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

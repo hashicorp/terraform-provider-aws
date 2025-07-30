@@ -349,13 +349,6 @@ func (sr serviceRecords) ARNNamespace() string {
 	return sr.primary.ARNNamespace()
 }
 
-type implementation string
-
-const (
-	implementationFramework implementation = "framework"
-	implementationSDK       implementation = "sdk"
-)
-
 type triBoolean uint
 
 const (
@@ -370,7 +363,6 @@ type ResourceDatum struct {
 	PackageProviderNameUpper  string
 	FileName                  string
 	idAttrDuplicates          string // TODO: Remove. Still needed for Parameterized Identity
-	Implementation            implementation
 	GenerateConfig            bool
 	ARNNamespace              string
 	ARNFormat                 string
@@ -561,7 +553,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				break
 
 			case "FrameworkResource":
-				d.Implementation = implementationFramework
+				d.Implementation = tests.ImplementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -578,7 +570,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				break
 
 			case "SDKResource":
-				d.Implementation = implementationSDK
+				d.Implementation = tests.ImplementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -607,7 +599,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
 					attrs = strings.Split(attr, ";")
 				}
-				if d.Implementation == implementationSDK {
+				if d.Implementation == tests.ImplementationSDK {
 					attrs = append(attrs, "id")
 				}
 				slices.Sort(attrs)
