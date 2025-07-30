@@ -16,20 +16,21 @@ import (
 )
 
 func TestIsCloudFrontDistributionARN(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		arn      string
 		expected bool
 	}{
 		{
-			arn:      "arn:aws:cloudfront::123456789012:distribution/E12345678901234",
+			arn:      "arn:aws:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
 			expected: true,
 		},
 		{
-			arn:      "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188",
+			arn:      "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188", //lintignore:AWSAT005
 			expected: false,
 		},
 		{
-			arn:      "arn:aws:cloudfront::123456789012:origin-access-identity/E12345678901234",
+			arn:      "arn:aws:cloudfront::123456789012:origin-access-identity/E12345678901234", //lintignore:AWSAT005
 			expected: false,
 		},
 		{
@@ -40,6 +41,7 @@ func TestIsCloudFrontDistributionARN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.arn, func(t *testing.T) {
+			t.Parallel()
 			result := tfwafv2.IsCloudFrontDistributionARN(tt.arn)
 			if result != tt.expected {
 				t.Errorf("isCloudFrontDistributionARN(%q) = %v, want %v", tt.arn, result, tt.expected)
@@ -49,13 +51,14 @@ func TestIsCloudFrontDistributionARN(t *testing.T) {
 }
 
 func TestCloudFrontDistributionIDFromARN(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		arn         string
 		expectedID  string
 		expectError bool
 	}{
 		{
-			arn:        "arn:aws:cloudfront::123456789012:distribution/E12345678901234",
+			arn:        "arn:aws:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
 			expectedID: "E12345678901234",
 		},
 		{
@@ -63,13 +66,14 @@ func TestCloudFrontDistributionIDFromARN(t *testing.T) {
 			expectError: true,
 		},
 		{
-			arn:         "arn:aws:cloudfront::123456789012:distribution",
+			arn:         "arn:aws:cloudfront::123456789012:distribution", //lintignore:AWSAT005
 			expectError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.arn, func(t *testing.T) {
+			t.Parallel()
 			id, err := tfwafv2.CloudFrontDistributionIDFromARN(tt.arn)
 			if tt.expectError {
 				if err == nil {
@@ -387,7 +391,7 @@ resource "aws_wafv2_web_acl" "test" {
 
 resource "aws_cloudfront_distribution" "test" {
   web_acl_id = aws_wafv2_web_acl.test.arn
-  
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "test"
