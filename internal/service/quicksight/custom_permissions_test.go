@@ -91,7 +91,7 @@ func TestAccQuickSightCustomPermissions_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrAWSAccountID, "custom_permissions_name"),
+				ImportStateIdFunc:                    testAccCustomPermissionsImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: "custom_permissions_name",
 			},
 		},
@@ -188,7 +188,7 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrAWSAccountID, "custom_permissions_name"),
+				ImportStateIdFunc:                    testAccCustomPermissionsImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: "custom_permissions_name",
 			},
 			{
@@ -271,6 +271,12 @@ func testAccCheckCustomPermissionsExists(ctx context.Context, n string, v *awsty
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCustomPermissionsImportStateID(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		return acctest.AttrsImportStateIdFunc(n, ",", names.AttrAWSAccountID, "custom_permissions_name")(s)
 	}
 }
 
