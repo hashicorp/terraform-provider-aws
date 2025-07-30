@@ -37,7 +37,8 @@ import (
 
 // @FrameworkResource("aws_quicksight_custom_permissions", name="Custom Permissions")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.CustomPermissions")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newCustomPermissionsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customPermissionsResource{}
 
