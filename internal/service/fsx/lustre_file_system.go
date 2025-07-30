@@ -406,7 +406,7 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 }
 
 func resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
-	if v, ok := d.Get("storage_type").(string); ok && v == string(awstypes.StorageTypeIntelligentTiering) {
+	if v, ok := d.Get(names.AttrStorageType).(string); ok && v == string(awstypes.StorageTypeIntelligentTiering) {
 		var throughputCapacity int
 		if v, ok := d.Get("throughput_capacity").(int); ok && v != 0 {
 			throughputCapacity = v
