@@ -12,7 +12,7 @@ import (
 //go:embed acctest.tf.gtpl
 var acctestTfTmpl string
 
-func AddCommonTemplates(template *template.Template) (*template.Template, error) {
+func AddCommonTfTemplates(template *template.Template) (*template.Template, error) {
 	result, err := template.Parse(acctestTfTmpl)
 	if err != nil {
 		return nil, fmt.Errorf("parsing common \"acctest.tf.gtpl\" config template: %s", err)

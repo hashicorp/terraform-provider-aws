@@ -178,7 +178,7 @@ func main() {
 					g.Fatalf("parsing base Terraform config template: %s", err)
 				}
 
-				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
+				tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
 				if err != nil {
 					g.Fatalf(err.Error())
 				}
@@ -243,7 +243,7 @@ func main() {
 					g.Fatalf("parsing base Terraform config template: %s", err)
 				}
 
-				tfTemplates, err = tests.AddCommonTemplates(tfTemplates)
+				tfTemplates, err = tests.AddCommonTfTemplates(tfTemplates)
 				if err != nil {
 					g.Fatalf(err.Error())
 				}
