@@ -151,7 +151,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_basic(rName),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_name", fmt.Sprintf("%s-association", rName)),
@@ -184,7 +184,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_basic(rName),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLRuleGroupAssociation, resourceName),
@@ -195,7 +195,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_overrideAction(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_overrideAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -208,7 +208,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_overrideAction(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, "count"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_overrideAction(rName, "count"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "override_action", "count"),
@@ -218,7 +218,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_overrideAction(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverride(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_ruleActionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -231,7 +231,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverride(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverride(rName),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverride(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.0.rule_action_override.#", "2"),
@@ -262,7 +262,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverride(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_ruleActionOverrideUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -275,7 +275,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCount(rName),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverrideCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.0.rule_action_override.#", "1"),
@@ -284,7 +284,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.
 				),
 			},
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCaptcha(rName),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverrideCaptcha(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.0.rule_action_override.#", "1"),
@@ -296,7 +296,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleActionOverrideUpdate(t *testing.
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_priorityUpdate(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_priorityUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -309,14 +309,14 @@ func TestAccWAFV2WebACLRuleGroupAssociation_priorityUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_priority(rName, 10),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_priority(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "10"),
 				),
 			},
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_priority(rName, 20),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_priority(rName, 20),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -337,7 +337,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_priorityUpdate(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_overrideActionUpdate(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_overrideActionUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -350,14 +350,14 @@ func TestAccWAFV2WebACLRuleGroupAssociation_overrideActionUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, "none"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_overrideAction(rName, "none"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
 				),
 			},
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, "count"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_overrideAction(rName, "count"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -378,7 +378,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_overrideActionUpdate(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_ruleNameRequiresReplace(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_ruleNameRequiresReplace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -391,14 +391,14 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleNameRequiresReplace(t *testing.T
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_ruleName(rName, "original-rule"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleName(rName, "original-rule"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule_name", "original-rule"),
 				),
 			},
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_ruleName(rName, "updated-rule"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleName(rName, "updated-rule"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
@@ -413,7 +413,7 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ruleNameRequiresReplace(t *testing.T
 	})
 }
 
-func TestAccWAFV2WebACLRuleGroupAssociation_webACLARNRequiresReplace(t *testing.T) {
+func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_webACLARNRequiresReplace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.GetWebACLOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -426,13 +426,13 @@ func TestAccWAFV2WebACLRuleGroupAssociation_webACLARNRequiresReplace(t *testing.
 		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_webACL(rName, "first"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_webACL(rName, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 				),
 			},
 			{
-				Config: testAccWebACLRuleGroupAssociationConfig_webACL(rName, "second"),
+				Config: testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_webACL(rName, "second"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
@@ -441,6 +441,113 @@ func TestAccWAFV2WebACLRuleGroupAssociation_webACLARNRequiresReplace(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &v),
 				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_withVersion(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.version", "Version_1.0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ruleActionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webACL wafv2.GetWebACLOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_ruleActionOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "rule_name", "test-rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_action", "none"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.name", "AWSManagedRulesCommonRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.rule_action_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.rule_action_override.0.name", "GenericRFI_BODY"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.rule_action_override.0.action_to_use.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_rule_group.0.rule_action_override.0.action_to_use.0.count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group_reference.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -456,15 +563,16 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 			}
 
 			// Parse the ID using the standard flex utility
-			// Format: webACLARN,ruleName,ruleGroupARN
-			parts, err := flex.ExpandResourceId(rs.Primary.ID, 3, false)
+			// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
+			parts, err := flex.ExpandResourceId(rs.Primary.ID, 4, false)
 			if err != nil {
 				continue
 			}
 
 			webACLARN := parts[0]
 			ruleName := parts[1]
-			ruleGroupARN := parts[2]
+			ruleGroupType := parts[2]
+			ruleGroupIdentifier := parts[3]
 
 			// Parse Web ACL ARN to get ID, name, and scope
 			webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
@@ -484,10 +592,30 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 
 			// Check if the rule still exists in the Web ACL
 			for _, rule := range webACL.WebACL.Rules {
-				if aws.ToString(rule.Name) == ruleName &&
-					rule.Statement != nil &&
-					rule.Statement.RuleGroupReferenceStatement != nil &&
-					aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupARN {
+				if aws.ToString(rule.Name) != ruleName || rule.Statement == nil {
+					continue
+				}
+
+				// Check if this rule matches our rule group type and identifier
+				var matchesRuleGroup bool
+				if ruleGroupType == "custom" && rule.Statement.RuleGroupReferenceStatement != nil {
+					// For custom rule groups, the identifier is the ARN
+					if aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupIdentifier {
+						matchesRuleGroup = true
+					}
+				} else if ruleGroupType == "managed" && rule.Statement.ManagedRuleGroupStatement != nil {
+					// For managed rule groups, construct identifier and compare
+					managedStmt := rule.Statement.ManagedRuleGroupStatement
+					managedIdentifier := fmt.Sprintf("%s:%s", aws.ToString(managedStmt.VendorName), aws.ToString(managedStmt.Name))
+					if managedStmt.Version != nil && aws.ToString(managedStmt.Version) != "" {
+						managedIdentifier += ":" + aws.ToString(managedStmt.Version)
+					}
+					if managedIdentifier == ruleGroupIdentifier {
+						matchesRuleGroup = true
+					}
+				}
+
+				if matchesRuleGroup {
 					return fmt.Errorf("WAFv2 Web ACL Rule Group Association still exists: %s", rs.Primary.ID)
 				}
 			}
@@ -509,15 +637,16 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 		}
 
 		// Parse the ID using the standard flex utility
-		// Format: webACLARN,ruleName,ruleGroupARN
-		parts, err := flex.ExpandResourceId(rs.Primary.ID, 3, false)
+		// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
+		parts, err := flex.ExpandResourceId(rs.Primary.ID, 4, false)
 		if err != nil {
 			return fmt.Errorf("Invalid ID format: %s", rs.Primary.ID)
 		}
 
 		webACLARN := parts[0]
 		ruleName := parts[1]
-		ruleGroupARN := parts[2]
+		ruleGroupType := parts[2]
+		ruleGroupIdentifier := parts[3]
 
 		// Parse Web ACL ARN to get ID, name, and scope
 		webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
@@ -536,10 +665,30 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 		// Check if the rule exists in the Web ACL with the correct configuration
 		found := false
 		for _, rule := range webACL.WebACL.Rules {
-			if aws.ToString(rule.Name) == ruleName &&
-				rule.Statement != nil &&
-				rule.Statement.RuleGroupReferenceStatement != nil &&
-				aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupARN {
+			if aws.ToString(rule.Name) != ruleName || rule.Statement == nil {
+				continue
+			}
+
+			// Check if this rule matches our rule group type and identifier
+			var matchesRuleGroup bool
+			if ruleGroupType == "custom" && rule.Statement.RuleGroupReferenceStatement != nil {
+				// For custom rule groups, the identifier is the ARN
+				if aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupIdentifier {
+					matchesRuleGroup = true
+				}
+			} else if ruleGroupType == "managed" && rule.Statement.ManagedRuleGroupStatement != nil {
+				// For managed rule groups, construct identifier and compare
+				managedStmt := rule.Statement.ManagedRuleGroupStatement
+				managedIdentifier := fmt.Sprintf("%s:%s", aws.ToString(managedStmt.VendorName), aws.ToString(managedStmt.Name))
+				if managedStmt.Version != nil && aws.ToString(managedStmt.Version) != "" {
+					managedIdentifier += ":" + aws.ToString(managedStmt.Version)
+				}
+				if managedIdentifier == ruleGroupIdentifier {
+					matchesRuleGroup = true
+				}
+			}
+
+			if matchesRuleGroup {
 				found = true
 				break
 			}
@@ -570,7 +719,7 @@ func testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName string) res
 	}
 }
 
-func testAccWebACLRuleGroupAssociationConfig_basic(rName string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -636,7 +785,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_overrideAction(rName, overrideAction string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_overrideAction(rName, overrideAction string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -703,7 +852,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName, overrideAction)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_ruleActionOverride(rName string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverride(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -793,7 +942,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
-    
+
     rule_action_override {
       name = "rule-1"
       action_to_use {
@@ -827,7 +976,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCount(rName string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverrideCount(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -888,7 +1037,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
-    
+
     rule_action_override {
       name = "rule-1"
       action_to_use {
@@ -907,7 +1056,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_ruleActionOverrideCaptcha(rName string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleActionOverrideCaptcha(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -962,11 +1111,11 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name      = "%[1]s-association"
-  priority       = 10
+  rule_name = "%[1]s-association"
+  priority  = 10
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
-    
+
     rule_action_override {
       name = "rule-1"
       action_to_use {
@@ -981,12 +1130,12 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
       }
     }
   }
-  web_acl_arn    = aws_wafv2_web_acl.test.arn
+  web_acl_arn = aws_wafv2_web_acl.test.arn
 }
 `, rName)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_priority(rName string, priority int) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_priority(rName string, priority int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -1041,8 +1190,8 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name       = "%[1]s-association"
-  priority        = %[2]d
+  rule_name = "%[1]s-association"
+  priority  = %[2]d
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
   }
@@ -1052,7 +1201,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName, priority)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_ruleName(rName, ruleName string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_ruleName(rName, ruleName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -1107,8 +1256,8 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name       = %[2]q
-  priority        = 10
+  rule_name = %[2]q
+  priority  = 10
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
   }
@@ -1118,7 +1267,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
 `, rName, ruleName)
 }
 
-func testAccWebACLRuleGroupAssociationConfig_webACL(rName, webACLSuffix string) string {
+func testAccWebACLRuleGroupAssociationConfig_RuleGroupReference_webACL(rName, webACLSuffix string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = %[1]q
@@ -1173,8 +1322,8 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "test" {
-  rule_name       = "%[1]s-association"
-  priority        = 10
+  rule_name = "%[1]s-association"
+  priority  = 10
   rule_group_reference {
     arn = aws_wafv2_rule_group.test.arn
   }
@@ -1182,4 +1331,108 @@ resource "aws_wafv2_web_acl_rule_group_association" "test" {
   override_action = "none"
 }
 `, rName, webACLSuffix)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_withVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+    version     = "Version_1.0"
+  }
+
+  override_action = "none"
+}
+`, rName)
+}
+
+func testAccWebACLRuleGroupAssociationConfig_ManagedRuleGroup_ruleActionOverride(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  managed_rule_group {
+    name        = "AWSManagedRulesCommonRuleSet"
+    vendor_name = "AWS"
+
+    rule_action_override {
+      name = "GenericRFI_BODY"
+      action_to_use {
+        count {}
+      }
+    }
+  }
+
+  override_action = "none"
+}
+`, rName)
 }
