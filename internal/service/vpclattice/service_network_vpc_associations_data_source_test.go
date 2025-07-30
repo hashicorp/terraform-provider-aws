@@ -96,13 +96,13 @@ data "aws_vpclattice_service_network_vpc_associations" "test-sn" {
 }
 
 data "aws_vpclattice_service_network_vpc_associations" "test-vpc-1" {
-  vpc_identifier             = aws_vpc.test-vpc-1.id
-  depends_on                 = [aws_vpclattice_service_network_vpc_association.test-vpc-1]
+  vpc_identifier = aws_vpc.test-vpc-1.id
+  depends_on     = [aws_vpclattice_service_network_vpc_association.test-vpc-1]
 }
 
 data "aws_vpclattice_service_network_vpc_associations" "test-vpc-2" {
-  vpc_identifier             = aws_vpc.test-vpc-2.id
-  depends_on                 = [aws_vpclattice_service_network_vpc_association.test-vpc-2]
+  vpc_identifier = aws_vpc.test-vpc-2.id
+  depends_on     = [aws_vpclattice_service_network_vpc_association.test-vpc-2]
 }
 
 `, rName)

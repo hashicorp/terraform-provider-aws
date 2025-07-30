@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -18,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -145,7 +144,7 @@ func flattenServiceNetworkVPCAssociation(obj *awstypes.ServiceNetworkVpcAssociat
 		ServiceNetworkId:   types.StringPointerValue(obj.ServiceNetworkId),
 		ServiceNetworkName: types.StringPointerValue(obj.ServiceNetworkName),
 		Status:             types.StringValue(string(obj.Status)),
-		VpcId:              types.StringValue(string(*obj.VpcId)),
+		VpcId:              types.StringPointerValue(obj.VpcId),
 	}
 }
 
