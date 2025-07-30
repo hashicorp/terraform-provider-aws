@@ -51,4 +51,3 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the entity.
 * `description` - Description of the WebACL that helps with identification.
 * `id` - Unique identifier of the WebACL.
-* `name` - Name of the WebACL.
