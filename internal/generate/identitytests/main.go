@@ -95,19 +95,12 @@ func main() {
 	}
 
 	for _, resource := range v.identityResources {
+		resource.service = &svc
+
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
 		sourceName = strings.TrimSuffix(sourceName, "_")
-
-		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
-			g.Fatalf("determining provider service name: %w", err)
-		} else {
-			resource.ResourceProviderNameUpper = name
-		}
-		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
-		resource.ProviderPackage = servicePackage
-		resource.ARNNamespace = svc.ARNNamespace()
 
 		if svc.primary.IsGlobal() {
 			resource.IsGlobal = true
@@ -288,6 +281,10 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
+func (sr serviceRecords) ProviderPackage() string {
+	return sr.primary.ProviderPackage()
+}
+
 func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
@@ -358,30 +355,43 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage           string
-	ResourceProviderNameUpper string
-	PackageProviderNameUpper  string
-	FileName                  string
-	idAttrDuplicates          string // TODO: Remove. Still needed for Parameterized Identity
-	GenerateConfig            bool
-	ARNNamespace              string
-	ARNFormat                 string
-	arnAttribute              string
-	isARNFormatGlobal         triBoolean
-	ArnIdentity               bool
-	MutableIdentity           bool
-	IsGlobal                  bool
-	isSingleton               bool
-	HasRegionOverrideTest     bool
-	UseAlternateAccount       bool
-	identityAttributes        []identityAttribute
-	identityAttribute         string
-	IdentityDuplicateAttrs    []string
-	IDAttrFormat              string
-	HasV6_0NullValuesError    bool
-	HasV6_0RefreshError       bool
-	PreIdentityVersion        *version.Version
+	service                *serviceRecords
+	FileName               string
+	idAttrDuplicates       string // TODO: Remove. Still needed for Parameterized Identity
+	GenerateConfig         bool
+	ARNFormat              string
+	arnAttribute           string
+	isARNFormatGlobal      triBoolean
+	ArnIdentity            bool
+	MutableIdentity        bool
+	IsGlobal               bool
+	isSingleton            bool
+	HasRegionOverrideTest  bool
+	UseAlternateAccount    bool
+	identityAttributes     []identityAttribute
+	identityAttribute      string
+	IdentityDuplicateAttrs []string
+	IDAttrFormat           string
+	HasV6_0NullValuesError bool
+	HasV6_0RefreshError    bool
+	PreIdentityVersion     *version.Version
 	tests.CommonArgs
+}
+
+func (d ResourceDatum) ProviderPackage() string {
+	return d.service.ProviderPackage()
+}
+
+func (d ResourceDatum) ResourceProviderNameUpper() (string, error) {
+	return d.service.ProviderNameUpper(d.TypeName)
+}
+
+func (d ResourceDatum) PackageProviderNameUpper() string {
+	return d.service.PackageProviderNameUpper()
+}
+
+func (d ResourceDatum) ARNNamespace() string {
+	return d.service.ARNNamespace()
 }
 
 func (d ResourceDatum) HasIDAttrDuplicates() bool {

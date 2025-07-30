@@ -104,18 +104,12 @@ func main() {
 	}
 
 	for _, resource := range v.taggedResources {
+		resource.service = &svc
+
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
 		sourceName = strings.TrimSuffix(sourceName, "_")
-
-		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
-			g.Fatalf("determining provider service name: %s", err)
-		} else {
-			resource.ResourceProviderNameUpper = name
-		}
-		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
-		resource.ProviderPackage = servicePackage
 
 		if !resource.IsDataSource {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
@@ -313,6 +307,10 @@ type serviceRecords struct {
 	additional []data.ServiceRecord
 }
 
+func (sr serviceRecords) ProviderPackage() string {
+	return sr.primary.ProviderPackage()
+}
+
 func (sr serviceRecords) ProviderNameUpper(typeName string) (string, error) {
 	if len(sr.additional) == 0 {
 		return sr.primary.ProviderNameUpper(), nil
@@ -371,9 +369,7 @@ func (sr serviceRecords) PackageProviderNameUpper() string {
 }
 
 type ResourceDatum struct {
-	ProviderPackage                  string
-	ResourceProviderNameUpper        string
-	PackageProviderNameUpper         string
+	service                          *serviceRecords
 	FileName                         string
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
@@ -388,6 +384,18 @@ type ResourceDatum struct {
 	OverrideResourceType             string
 	UseAlternateAccount              bool
 	tests.CommonArgs
+}
+
+func (d ResourceDatum) ProviderPackage() string {
+	return d.service.ProviderPackage()
+}
+
+func (d ResourceDatum) ResourceProviderNameUpper() (string, error) {
+	return d.service.ProviderNameUpper(d.TypeName)
+}
+
+func (d ResourceDatum) PackageProviderNameUpper() string {
+	return d.service.PackageProviderNameUpper()
 }
 
 func (d ResourceDatum) OverrideIdentifier() bool {
