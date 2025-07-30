@@ -69,7 +69,7 @@ func (r *accountSettingsResource) Schema(ctx context.Context, request resource.S
 			"default_namespace": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("default"),
+				Default:  stringdefault.StaticString(defaultNamespace),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

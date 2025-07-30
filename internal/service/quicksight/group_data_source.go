@@ -42,7 +42,7 @@ func dataSourceGroup() *schema.Resource {
 				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  defaultGroupNamespace,
+					Default:  defaultNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),

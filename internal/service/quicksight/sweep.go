@@ -249,7 +249,7 @@ func sweepGroups(region string) error {
 	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListGroupsInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(defaultNamespace),
 	}
 
 	pages := quicksight.NewListGroupsPaginator(conn, input)
@@ -275,7 +275,7 @@ func sweepGroups(region string) error {
 
 			r := resourceGroup()
 			d := r.Data(nil)
-			d.SetId(groupCreateResourceID(awsAccountID, defaultUserNamespace, groupName))
+			d.SetId(groupCreateResourceID(awsAccountID, defaultNamespace, groupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -345,7 +345,7 @@ func sweepUsers(region string) error {
 	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(defaultNamespace),
 	}
 
 	pages := quicksight.NewListUsersPaginator(conn, input)
@@ -371,7 +371,7 @@ func sweepUsers(region string) error {
 
 			r := resourceUser()
 			d := r.Data(nil)
-			d.SetId(userCreateResourceID(awsAccountID, defaultUserNamespace, userName))
+			d.SetId(userCreateResourceID(awsAccountID, defaultNamespace, userName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

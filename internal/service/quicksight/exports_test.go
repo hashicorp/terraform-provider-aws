@@ -30,8 +30,7 @@ var (
 	ResourceVPCConnection       = newVPCConnectionResource
 
 	DashboardLatestVersion                = dashboardLatestVersion
-	DefaultGroupNamespace                 = defaultGroupNamespace
-	DefaultUserNamespace                  = defaultUserNamespace
+	DefaultNamespace                      = defaultNamespace
 	FindAccountSettingsByID               = findAccountSettingsByID
 	FindAccountSubscriptionByID           = findAccountSubscriptionByID
 	FindAnalysisByTwoPartKey              = findAnalysisByTwoPartKey

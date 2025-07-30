@@ -62,7 +62,7 @@ func (r *roleMembershipResource) Schema(ctx context.Context, req resource.Schema
 			names.AttrNamespace: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("default"),
+				Default:  stringdefault.StaticString(defaultNamespace),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

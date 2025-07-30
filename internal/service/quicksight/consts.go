@@ -10,3 +10,7 @@ import (
 const (
 	iamPropagationTimeout = 2 * time.Minute
 )
+
+const (
+	defaultNamespace = "default"
+)
