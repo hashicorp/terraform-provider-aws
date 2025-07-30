@@ -117,6 +117,9 @@ func (r *customPermissionsResource) Create(ctx context.Context, request resource
 		return
 	}
 
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
 	output, err := conn.CreateCustomPermissions(ctx, &input)
 
 	if err != nil {
