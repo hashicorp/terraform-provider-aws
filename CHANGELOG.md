@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_quicksight_ip_restriction` ([#43596](https://github.com/hashicorp/terraform-provider-aws/issues/43596))
 * **New Resource:** `aws_quicksight_key_registration` ([#43587](https://github.com/hashicorp/terraform-provider-aws/issues/43587))
 
 ENHANCEMENTS:
