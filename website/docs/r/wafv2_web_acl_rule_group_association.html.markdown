@@ -11,6 +11,7 @@ description: |-
 Associates a WAFv2 Rule Group (custom or managed) with a Web ACL by adding a rule that references the Rule Group. Use this resource to apply the rules defined in a Rule Group to a Web ACL without duplicating rule definitions.
 
 This resource supports both:
+
 - **Custom Rule Groups**: User-created rule groups that you manage within your AWS account
 - **Managed Rule Groups**: Pre-configured rule groups provided by AWS or third-party vendors
 
@@ -272,7 +273,7 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 
   rule_group_reference {
     arn = aws_wafv2_rule_group.example.arn
-    
+
     # Override specific rules within the rule group
     rule_action_override {
       name = "geo-block-rule"
@@ -380,15 +381,12 @@ The following arguments are required:
 * `priority` - (Required) Priority of the rule within the Web ACL. Rules are evaluated in order of priority, with lower numbers evaluated first.
 * `web_acl_arn` - (Required) ARN of the Web ACL to associate the Rule Group with.
 
-Exactly one of the following rule group blocks is required:
-
-* `rule_group_reference` - (Optional) Custom Rule Group reference configuration. Conflicts with `managed_rule_group`. [See below](#rule_group_reference).
-* `managed_rule_group` - (Optional) Managed Rule Group configuration. Conflicts with `rule_group_reference`. [See below](#managed_rule_group).
-
 The following arguments are optional:
 
+* `managed_rule_group` - (Optional) Managed Rule Group configuration. One of `rule_group_reference` or `managed_rule_group` is required. Conflicts with `rule_group_reference`. [See below](#managed_rule_group).
 * `override_action` - (Optional) Override action for the rule group. Valid values are `none` and `count`. Defaults to `none`. When set to `count`, the actions defined in the rule group rules are overridden to count matches instead of blocking or allowing requests.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule_group_reference` - (Optional) Custom Rule Group reference configuration. One of `rule_group_reference` or `managed_rule_group` is required. Conflicts with `managed_rule_group`. [See below](#rule_group_reference).
 
 ### rule_group_reference
 
