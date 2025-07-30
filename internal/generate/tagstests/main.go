@@ -666,8 +666,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						Type:      tfVarTypeInt,
 					}
 				}
-				if attr, ok := args.Keyword["randomIPAddress"]; ok {
-					varName := "rIPAddress"
+				if attr, ok := args.Keyword["randomIPv4Address"]; ok {
+					varName := "rIPv4Address"
 					d.GoImports = append(d.GoImports,
 						goImport{
 							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",

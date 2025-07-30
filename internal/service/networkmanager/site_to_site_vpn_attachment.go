@@ -30,7 +30,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.SiteToSiteVpnAttachment")
 // @Testing(skipEmptyTags=true)
 // @Testing(randomBgpAsn="64512;65534")
-// @Testing(randomIPAddress="172.0.0.0/24")
+// @Testing(randomIPv4Address="172.0.0.0/24")
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,

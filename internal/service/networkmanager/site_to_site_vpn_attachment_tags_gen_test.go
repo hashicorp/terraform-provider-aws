@@ -23,7 +23,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,8 +41,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -74,8 +74,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -89,8 +89,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -127,8 +127,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -141,8 +141,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -174,8 +174,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -187,7 +187,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -210,7 +210,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -226,7 +226,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -244,8 +244,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -270,8 +270,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -283,7 +283,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_null(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -304,7 +304,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -321,7 +321,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -345,7 +345,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -357,7 +357,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyMap(t *testing.T) {
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -378,7 +378,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -395,7 +395,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -420,8 +420,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -453,8 +453,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_AddOnUpdate(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -472,7 +472,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -490,8 +490,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -522,8 +522,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -535,7 +535,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -558,7 +558,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnCreate(t *test
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -576,7 +576,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -594,8 +594,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -628,8 +628,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -664,8 +664,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -678,8 +678,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -711,8 +711,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Add(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -730,7 +730,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -748,8 +748,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -781,8 +781,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -813,8 +813,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_EmptyTag_OnUpdate_Replace
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -830,7 +830,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -850,7 +850,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -881,7 +881,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -898,7 +898,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -932,7 +932,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -948,7 +948,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -979,7 +979,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -992,7 +992,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1016,7 +1016,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_providerOnly(
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1032,7 +1032,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1053,8 +1053,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1092,8 +1092,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1111,8 +1111,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1155,8 +1155,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1169,7 +1169,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1193,7 +1193,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nonOverlappin
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1209,7 +1209,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1230,8 +1230,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1267,8 +1267,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1287,8 +1287,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1330,8 +1330,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1348,8 +1348,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1385,8 +1385,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_overlapping(t
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1402,7 +1402,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1420,8 +1420,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1456,7 +1456,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1487,7 +1487,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToProvi
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1503,7 +1503,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1523,7 +1523,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1552,8 +1552,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1586,8 +1586,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_updateToResou
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1605,7 +1605,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1626,8 +1626,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1662,8 +1662,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyResource
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1681,7 +1681,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1701,7 +1701,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1731,7 +1731,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_emptyProvider
 					}),
 					acctest.CtResourceTags: nil,
 					"rBgpAsn":              config.IntegerVariable(rBgpAsn),
-					"rIPAddress":           config.StringVariable(rIPAddress),
+					"rIPv4Address":         config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1747,7 +1747,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1768,8 +1768,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1801,8 +1801,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullOverlappi
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1818,7 +1818,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1839,8 +1839,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1872,8 +1872,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_DefaultTags_nullNonOverla
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1889,7 +1889,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1906,7 +1906,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -1937,7 +1937,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnCreate(t *t
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1953,7 +1953,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1971,8 +1971,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2006,7 +2006,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2045,7 +2045,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Add(
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -2061,7 +2061,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2079,8 +2079,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2112,7 +2112,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2143,7 +2143,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_ComputedTag_OnUpdate_Repl
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 					"rBgpAsn":       config.IntegerVariable(rBgpAsn),
-					"rIPAddress":    config.StringVariable(rIPAddress),
+					"rIPv4Address":  config.StringVariable(rIPv4Address),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -2159,7 +2159,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2184,8 +2184,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2235,8 +2235,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2286,8 +2286,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Defaul
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtProviderKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2332,7 +2332,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	rIPAddress, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	rIPv4Address, err := sdkacctest.RandIpAddress("172.0.0.0/24")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2355,8 +2355,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2420,8 +2420,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
@@ -2485,8 +2485,8 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags_IgnoreTags_Overlap_Resour
 					"ignore_tag_keys": config.SetVariable(
 						config.StringVariable(acctest.CtResourceKey1),
 					),
-					"rBgpAsn":    config.IntegerVariable(rBgpAsn),
-					"rIPAddress": config.StringVariable(rIPAddress),
+					"rBgpAsn":      config.IntegerVariable(rBgpAsn),
+					"rIPv4Address": config.StringVariable(rIPv4Address),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),

@@ -17,7 +17,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 
 resource "aws_customer_gateway" "test" {
   bgp_asn     = var.rBgpAsn
-  ip_address  = var.rIPAddress
+  ip_address  = var.rIPv4Address
   type        = "ipsec.1"
   device_name = var.rName
 }
@@ -92,7 +92,7 @@ variable "rBgpAsn" {
   nullable = false
 }
 
-variable "rIPAddress" {
+variable "rIPv4Address" {
   type     = string
   nullable = false
 }
