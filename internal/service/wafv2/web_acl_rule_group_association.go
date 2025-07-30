@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -335,16 +336,6 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 				},
 				Description: "Priority of the rule within the Web ACL.",
 			},
-			"rule_group_arn": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					fwvalidators.ARN(),
-				},
-				Description: "ARN of the Rule Group to associate with the Web ACL.",
-			},
 			"web_acl_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -368,7 +359,31 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"rule_action_override": ruleActionOverrideLNB,
+			"rule_group_reference": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ruleGroupReferenceModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrARN: schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								fwvalidators.ARN(),
+							},
+							Description: "ARN of the Rule Group to associate with the Web ACL.",
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"rule_action_override": ruleActionOverrideLNB,
+					},
+				},
+				Description: "Rule Group reference configuration.",
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -426,19 +441,43 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		}
 	}
 
-	// Create new rule with rule group reference statement
-	ruleGroupRefStatement := &awstypes.RuleGroupReferenceStatement{
-		ARN: plan.RuleGroupARN.ValueStringPointer(),
-	}
-
-	// Add rule action overrides if specified
+	// Get rule group ARN from the nested structure
+	var ruleGroupARN string
 	var ruleActionOverrides []awstypes.RuleActionOverride
-	if !plan.RuleActionOverride.IsNull() && !plan.RuleActionOverride.IsUnknown() {
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan.RuleActionOverride, &ruleActionOverrides)...)
-		if resp.Diagnostics.HasError() {
-			return
+	if !plan.RuleGroupReference.IsNull() && !plan.RuleGroupReference.IsUnknown() {
+		ruleGroupRefs := plan.RuleGroupReference.Elements()
+		if len(ruleGroupRefs) > 0 {
+			var ruleGroupRefModel ruleGroupReferenceModel
+			resp.Diagnostics.Append(ruleGroupRefs[0].(fwtypes.ObjectValueOf[ruleGroupReferenceModel]).As(ctx, &ruleGroupRefModel, basetypes.ObjectAsOptions{})...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			ruleGroupARN = ruleGroupRefModel.ARN.ValueString()
+
+			// Add rule action overrides if specified
+			if !ruleGroupRefModel.RuleActionOverride.IsNull() && !ruleGroupRefModel.RuleActionOverride.IsUnknown() {
+				resp.Diagnostics.Append(fwflex.Expand(ctx, ruleGroupRefModel.RuleActionOverride, &ruleActionOverrides)...)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+			}
 		}
 	}
+
+	if ruleGroupARN == "" {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionCreating, ResNameWebACLRuleGroupAssociation, plan.RuleName.String(), nil),
+			"rule_group_reference block is required",
+		)
+		return
+	}
+
+	// Create new rule with rule group reference statement
+	ruleGroupRefStatement := &awstypes.RuleGroupReferenceStatement{
+		ARN: aws.String(ruleGroupARN),
+	}
+
+	// Set rule action overrides
 	ruleGroupRefStatement.RuleActionOverrides = ruleActionOverrides
 
 	newRule := awstypes.Rule{
@@ -514,7 +553,7 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	id, err := flex.FlattenResourceId([]string{
 		plan.WebACLARN.ValueString(),
 		plan.RuleName.ValueString(),
-		plan.RuleGroupARN.ValueString(),
+		ruleGroupARN,
 	}, webACLRuleGroupAssociationResourceIDPartCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -600,14 +639,28 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 			state.OverrideAction = types.StringValue(overrideAction)
 
 			// Handle rule action overrides with autoflex
+			var ruleActionOverrides fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel]
 			if rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides != nil {
-				resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides, &state.RuleActionOverride)...)
+				resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides, &ruleActionOverrides)...)
 				if resp.Diagnostics.HasError() {
 					return
 				}
 			} else {
-				state.RuleActionOverride = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
+				ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
 			}
+
+			// Set the rule group reference nested structure with rule action overrides
+			ruleGroupRefModel := ruleGroupReferenceModel{
+				ARN:                types.StringValue(ruleGroupARN),
+				RuleActionOverride: ruleActionOverrides,
+			}
+
+			listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{&ruleGroupRefModel}, nil)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			state.RuleGroupReference = listValue
 			break
 		}
 	}
@@ -623,7 +676,6 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 
 	// Update state with current values
 	state.WebACLARN = types.StringValue(webACLARN)
-	state.RuleGroupARN = types.StringValue(ruleGroupARN)
 	state.RuleName = types.StringValue(ruleName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -687,12 +739,23 @@ func (r *resourceWebACLRuleGroupAssociation) Update(ctx context.Context, req res
 				}
 			}
 
-			// Update rule action overrides
+			// Update rule action overrides from nested structure
 			var overrides []awstypes.RuleActionOverride
-			if !plan.RuleActionOverride.IsNull() && !plan.RuleActionOverride.IsUnknown() {
-				resp.Diagnostics.Append(fwflex.Expand(ctx, plan.RuleActionOverride, &overrides)...)
-				if resp.Diagnostics.HasError() {
-					return
+			if !plan.RuleGroupReference.IsNull() && !plan.RuleGroupReference.IsUnknown() {
+				ruleGroupRefs := plan.RuleGroupReference.Elements()
+				if len(ruleGroupRefs) > 0 {
+					var ruleGroupRefModel ruleGroupReferenceModel
+					resp.Diagnostics.Append(ruleGroupRefs[0].(fwtypes.ObjectValueOf[ruleGroupReferenceModel]).As(ctx, &ruleGroupRefModel, basetypes.ObjectAsOptions{})...)
+					if resp.Diagnostics.HasError() {
+						return
+					}
+
+					if !ruleGroupRefModel.RuleActionOverride.IsNull() && !ruleGroupRefModel.RuleActionOverride.IsUnknown() {
+						resp.Diagnostics.Append(fwflex.Expand(ctx, ruleGroupRefModel.RuleActionOverride, &overrides)...)
+						if resp.Diagnostics.HasError() {
+							return
+						}
+					}
 				}
 			}
 
@@ -897,8 +960,21 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_arn"), ruleGroupARN)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)
+
+	// Set the rule group reference nested structure
+	ruleGroupRefModel := ruleGroupReferenceModel{
+		ARN:                types.StringValue(ruleGroupARN),
+		RuleActionOverride: fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx),
+	}
+
+	listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{&ruleGroupRefModel}, nil)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), listValue)...)
 }
 
 // parseWebACLARN extracts the Web ACL ID, name, and scope from the ARN
@@ -938,11 +1014,15 @@ type resourceWebACLRuleGroupAssociationModel struct {
 	ID                 types.String                                             `tfsdk:"id"`
 	RuleName           types.String                                             `tfsdk:"rule_name"`
 	Priority           types.Int32                                              `tfsdk:"priority"`
-	RuleGroupARN       types.String                                             `tfsdk:"rule_group_arn"`
+	RuleGroupReference fwtypes.ListNestedObjectValueOf[ruleGroupReferenceModel] `tfsdk:"rule_group_reference"`
 	WebACLARN          types.String                                             `tfsdk:"web_acl_arn"`
 	OverrideAction     types.String                                             `tfsdk:"override_action"`
-	RuleActionOverride fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel] `tfsdk:"rule_action_override"`
 	Timeouts           timeouts.Value                                           `tfsdk:"timeouts"`
+}
+
+type ruleGroupReferenceModel struct {
+	ARN                types.String                                             `tfsdk:"arn"`
+	RuleActionOverride fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel] `tfsdk:"rule_action_override"`
 }
 
 type ruleActionOverrideModel struct {

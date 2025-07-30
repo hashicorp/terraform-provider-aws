@@ -72,10 +72,13 @@ resource "aws_wafv2_web_acl" "example" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "example" {
-  rule_name      = "example-rule-group-rule"
-  priority       = 100
-  rule_group_arn = aws_wafv2_rule_group.example.arn
-  web_acl_arn    = aws_wafv2_web_acl.example.arn
+  rule_name   = "example-rule-group-rule"
+  priority    = 100
+  web_acl_arn = aws_wafv2_web_acl.example.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.example.arn
+  }
 }
 ```
 
@@ -85,9 +88,12 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 resource "aws_wafv2_web_acl_rule_group_association" "example" {
   rule_name       = "example-rule-group-rule"
   priority        = 100
-  rule_group_arn  = aws_wafv2_rule_group.example.arn
   web_acl_arn     = aws_wafv2_web_acl.example.arn
   override_action = "count"
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.example.arn
+  }
 }
 ```
 
@@ -169,34 +175,37 @@ resource "aws_wafv2_web_acl" "example" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "example" {
-  rule_name      = "example-rule-group-rule"
-  priority       = 100
-  rule_group_arn = aws_wafv2_rule_group.example.arn
-  web_acl_arn    = aws_wafv2_web_acl.example.arn
+  rule_name   = "example-rule-group-rule"
+  priority    = 100
+  web_acl_arn = aws_wafv2_web_acl.example.arn
 
-  # Override specific rules within the rule group
-  rule_action_override {
-    name = "geo-block-rule"
-    action_to_use {
-      count {
-        custom_request_handling {
-          insert_header {
-            name  = "X-Geo-Block-Override"
-            value = "counted"
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.example.arn
+    
+    # Override specific rules within the rule group
+    rule_action_override {
+      name = "geo-block-rule"
+      action_to_use {
+        count {
+          custom_request_handling {
+            insert_header {
+              name  = "X-Geo-Block-Override"
+              value = "counted"
+            }
           }
         }
       }
     }
-  }
 
-  rule_action_override {
-    name = "rate-limit-rule"
-    action_to_use {
-      captcha {
-        custom_request_handling {
-          insert_header {
-            name  = "X-Rate-Limit-Override"
-            value = "captcha-required"
+    rule_action_override {
+      name = "rate-limit-rule"
+      action_to_use {
+        captcha {
+          custom_request_handling {
+            insert_header {
+              name  = "X-Rate-Limit-Override"
+              value = "captcha-required"
+            }
           }
         }
       }
@@ -262,10 +271,13 @@ resource "aws_wafv2_web_acl" "cloudfront_example" {
 }
 
 resource "aws_wafv2_web_acl_rule_group_association" "cloudfront_example" {
-  rule_name      = "cloudfront-rule-group-rule"
-  priority       = 50
-  rule_group_arn = aws_wafv2_rule_group.cloudfront_example.arn
-  web_acl_arn    = aws_wafv2_web_acl.cloudfront_example.arn
+  rule_name   = "cloudfront-rule-group-rule"
+  priority    = 50
+  web_acl_arn = aws_wafv2_web_acl.cloudfront_example.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.cloudfront_example.arn
+  }
 }
 ```
 
@@ -275,13 +287,17 @@ The following arguments are required:
 
 * `rule_name` - (Required) Name of the rule to create in the Web ACL that references the rule group. Must be between 1 and 128 characters.
 * `priority` - (Required) Priority of the rule within the Web ACL. Rules are evaluated in order of priority, with lower numbers evaluated first.
-* `rule_group_arn` - (Required) ARN of the Rule Group to associate with the Web ACL.
 * `web_acl_arn` - (Required) ARN of the Web ACL to associate the Rule Group with.
+* `rule_group_reference` - (Required) Rule Group reference configuration. [See below](#rule_group_reference).
 
 The following arguments are optional:
 
 * `override_action` - (Optional) Override action for the rule group. Valid values are `none` and `count`. Defaults to `none`. When set to `count`, the actions defined in the rule group rules are overridden to count matches instead of blocking or allowing requests.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### rule_group_reference
+
+* `arn` - (Required) ARN of the Rule Group to associate with the Web ACL.
 * `rule_action_override` - (Optional) Override actions for specific rules within the rule group. [See below](#rule_action_override).
 
 ### rule_action_override
