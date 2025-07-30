@@ -18,23 +18,53 @@ import (
 func TestIsCloudFrontDistributionARN(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
+		name     string
 		arn      string
 		expected bool
 	}{
 		{
+			name:     "standard AWS partition",
 			arn:      "arn:aws:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
 			expected: true,
 		},
 		{
-			arn:      "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188", //lintignore:AWSAT005
+			name:     "AWS GovCloud partition",
+			arn:      "arn:aws-us-gov:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expected: true,
+		},
+		{
+			name:     "AWS China partition",
+			arn:      "arn:aws-cn:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expected: true,
+		},
+		{
+			name:     "ISOB partition",
+			arn:      "arn:isob:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expected: true,
+		},
+		{
+			name:     "unknown future partition",
+			arn:      "arn:aws-new-region:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expected: true,
+		},
+		{
+			name:     "ALB ARN",
+			arn:      "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188", //lintignore:AWSAT003,AWSAT005
 			expected: false,
 		},
 		{
+			name:     "CloudFront origin access identity",
 			arn:      "arn:aws:cloudfront::123456789012:origin-access-identity/E12345678901234", //lintignore:AWSAT005
 			expected: false,
 		},
 		{
+			name:     "not an ARN",
 			arn:      "not-an-arn",
+			expected: false,
+		},
+		{
+			name:     "invalid ARN format",
+			arn:      "arn:aws:cloudfront:123456789012:distribution/E12345678901234", //lintignore:AWSAT005
 			expected: false,
 		},
 	}
@@ -53,19 +83,38 @@ func TestIsCloudFrontDistributionARN(t *testing.T) {
 func TestCloudFrontDistributionIDFromARN(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
+		name        string
 		arn         string
 		expectedID  string
 		expectError bool
 	}{
 		{
+			name:       "standard AWS CloudFront ARN",
 			arn:        "arn:aws:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
 			expectedID: "E12345678901234",
 		},
 		{
+			name:       "GovCloud CloudFront ARN",
+			arn:        "arn:aws-us-gov:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expectedID: "E12345678901234",
+		},
+		{
+			name:       "China CloudFront ARN",
+			arn:        "arn:aws-cn:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expectedID: "E12345678901234",
+		},
+		{
+			name:       "ISOB CloudFront ARN",
+			arn:        "arn:isob:cloudfront::123456789012:distribution/E12345678901234", //lintignore:AWSAT005
+			expectedID: "E12345678901234",
+		},
+		{
+			name:        "invalid ARN - no slash",
 			arn:         "invalid-arn",
 			expectError: true,
 		},
 		{
+			name:        "invalid ARN - missing distribution ID",
 			arn:         "arn:aws:cloudfront::123456789012:distribution", //lintignore:AWSAT005
 			expectError: true,
 		},

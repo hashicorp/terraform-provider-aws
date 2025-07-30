@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cftypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -150,8 +151,8 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 // Helper function to detect CloudFront distribution ARNs
 func isCloudFrontDistributionARN(arn string) bool {
-	// CloudFront distribution ARNs: arn:aws:cloudfront::account:distribution/ID
-	return strings.Contains(arn, ":cloudfront::") && strings.Contains(arn, ":distribution/")
+	// CloudFront distribution ARNs: arn:partition:cloudfront::account:distribution/ID
+	return strings.Contains(arn, ":cloudfront::") && strings.Contains(arn, ":distribution/") && strings.HasPrefix(arn, "arn:")
 }
 
 // Helper function to extract distribution ID from CloudFront ARN
@@ -206,7 +207,7 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 
 	// WebACLId can be either an ARN (WAFv2) or ID (WAF Classic)
 	// For WAFv2, we need to extract the name and ID from the ARN
-	if strings.HasPrefix(webACLId, "arn:aws:wafv2:") {
+	if strings.Contains(webACLId, ":wafv2:") && arn.IsARN(webACLId) {
 		return findWebACLByARN(ctx, wafConn, webACLId)
 	} else {
 		// This would be a WAF Classic ID, not supported by this data source
@@ -217,7 +218,7 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 // Helper function to find WebACL by WAFv2 ARN
 func findWebACLByARN(ctx context.Context, conn *wafv2.Client, webACLARN string) (*awstypes.WebACL, error) {
 	// Parse the ARN to extract name and ID
-	// WAFv2 ARN format: arn:aws:wafv2:region:account:global/webacl/name/id
+	// WAFv2 ARN format: arn:partition:wafv2:region:account:global/webacl/name/id
 	parts := strings.Split(webACLARN, "/")
 	if len(parts) < 4 {
 		return nil, fmt.Errorf("invalid WAFv2 WebACL ARN format: %s", webACLARN)
