@@ -21,6 +21,7 @@ BUG FIXES:
 * resource/aws_bedrockagent_flow: Fix `missing required field, CreateFlowInput.Definition.Nodes[0].Configuration[prompt].SourceConfiguration[resource].PromptArn` errors on Create ([#43595](https://github.com/hashicorp/terraform-provider-aws/issues/43595))
 * resource/aws_s3_bucket: Accept `NoSuchTagSetError` responses from S3-compatible services ([#43589](https://github.com/hashicorp/terraform-provider-aws/issues/43589))
 * resource/aws_s3_object: Accept `NoSuchTagSetError` responses from S3-compatible services ([#43589](https://github.com/hashicorp/terraform-provider-aws/issues/43589))
+* resource/aws_servicequotas_service_quota: Fix error when updating a pending service quota request ([#43606](https://github.com/hashicorp/terraform-provider-aws/issues/43606))
 * resource/aws_ssm_parameter: Fix `Provider produced inconsistent final plan` errors when changing from using `value` to using `value_wo` ([#42877](https://github.com/hashicorp/terraform-provider-aws/issues/42877))
 * resource/aws_ssm_parameter: Fix `version` not being updated when `description` changes ([#42595](https://github.com/hashicorp/terraform-provider-aws/issues/42595))
 
