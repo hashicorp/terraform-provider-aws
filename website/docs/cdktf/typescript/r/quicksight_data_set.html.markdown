@@ -265,6 +265,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `columnGroups` - (Optional) Groupings of columns that work together in certain Amazon QuickSight features. Currently, only geospatial hierarchy is supported. See [column_groups](#column_groups).
 * `columnLevelPermissionRules` - (Optional) A set of 1 or more definitions of a [ColumnLevelPermissionRule](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnLevelPermissionRule.html). See [column_level_permission_rules](#column_level_permission_rules).
@@ -523,4 +524,4 @@ Using `terraform import`, import a QuickSight Data Set using the AWS account ID 
 % terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-209484316ffc23df22cba062139a66942ef37cd214c14e2c05b72e92b260c18e -->
+<!-- cache-key: cdktf-0.20.8 input-ddf890d5315a85445080a25b9354c7786bbbdf51d6183ab0a15207f71aea992a -->

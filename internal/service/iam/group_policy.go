@@ -98,7 +98,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta an
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", groupName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 		})
 

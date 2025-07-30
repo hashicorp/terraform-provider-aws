@@ -38,7 +38,7 @@ func testAccGuardDutyDetectorDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +64,7 @@ func testAccGuardDutyDetectorDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -86,7 +86,7 @@ func testAccGuardDutyDetectorDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -108,7 +108,7 @@ func testAccGuardDutyDetectorDataSource_tags_DefaultTags_nonOverlapping(t *testi
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *te
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		Steps: []resource.TestStep{
@@ -174,7 +174,7 @@ func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *t
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_guardduty_detector.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		Steps: []resource.TestStep{

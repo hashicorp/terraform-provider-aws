@@ -83,6 +83,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipam_ids` - (Optional) IDs of the IPAM resources to query for.
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -122,4 +123,4 @@ This data source exports the following attributes in addition to the arguments a
 * `state_message` - State message of the IPAM.
 * `tier` - IPAM Tier.
 
-<!-- cache-key: cdktf-0.20.8 input-6608292437e3e6073462806d349c5c4db79e526e37a2a35148342a3c59629527 -->
+<!-- cache-key: cdktf-0.20.8 input-628f6a94077c487f678fa99b6e22432dacbc2c3629404dd70c601bb2b46d4f7a -->

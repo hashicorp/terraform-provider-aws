@@ -37,6 +37,7 @@ const (
 // @IdAttrFormat("{role}:{name}")
 // @ImportIDHandler("rolePolicyImportID")
 // @Testing(existsType="string")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
@@ -108,7 +109,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta any
 	if d.IsNewResource() {
 		d.SetId(createRolePolicyImportID(roleName, policyName))
 
-		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return findRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 		})
 

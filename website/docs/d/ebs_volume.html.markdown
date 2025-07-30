@@ -59,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
 * `throughput` - Throughput that the volume supports, in MiB/s.
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_type` - Type of EBS volume.
+* `volume_initialization_rate` - EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume.
 
 ## Timeouts
 

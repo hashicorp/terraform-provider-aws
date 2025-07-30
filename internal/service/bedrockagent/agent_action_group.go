@@ -89,6 +89,9 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 			"parent_action_group_signature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ActionGroupSignature](),
 				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrDescription)),
+				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -254,7 +257,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
 
-	output, err := retryOpIfPreparing[*bedrockagent.CreateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.CreateAgentActionGroupOutput, error) {
+	output, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.CreateAgentActionGroupOutput, error) {
 		return conn.CreateAgentActionGroup(ctx, input)
 	})
 
@@ -280,6 +283,9 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		}
 	}
 
+	if output.AgentActionGroup.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue(output.AgentActionGroup.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -318,6 +324,9 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	if output.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue(output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -349,7 +358,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 			return
 		}
 
-		_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.UpdateAgentActionGroupOutput, error) {
+		_, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.UpdateAgentActionGroupOutput, error) {
 			return conn.UpdateAgentActionGroup(ctx, input)
 		})
 
@@ -374,7 +383,9 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	}
 
 	new.ActionGroupState = fwtypes.StringEnumValue(output.ActionGroupState)
-
+	if output.ParentActionSignature != "" {
+		new.ParentActionGroupSignature = fwtypes.StringEnumValue(output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -396,7 +407,7 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
 
-	_, err := retryOpIfPreparing[*bedrockagent.DeleteAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.DeleteAgentActionGroupOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.DeleteAgentActionGroupOutput, error) {
 		return conn.DeleteAgentActionGroup(ctx, &input)
 	})
 

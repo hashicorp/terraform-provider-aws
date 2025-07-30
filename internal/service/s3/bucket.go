@@ -51,7 +51,7 @@ const (
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags(identifierAttribute="bucket", resourceType="Bucket")
 // @IdentityAttribute("bucket")
-// @WrappedImport(false)
+// @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
 func resourceBucket() *schema.Resource {
@@ -63,7 +63,9 @@ func resourceBucket() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if err := importer.RegionalSingleParameterized(ctx, rd, names.AttrBucket, meta.(importer.AWSClient)); err != nil {
+				identitySpec := importer.IdentitySpec(ctx)
+
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
 					return nil, err
 				}
 
@@ -776,7 +778,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 
@@ -1590,7 +1592,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findBucket(ctx, conn, d.Id())
 	})
 

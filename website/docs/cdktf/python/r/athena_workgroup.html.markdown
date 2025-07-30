@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
 * `description` - (Optional) Description of the workgroup.
@@ -119,4 +120,4 @@ Using `terraform import`, import Athena Workgroups using their name. For example
 % terraform import aws_athena_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->
+<!-- cache-key: cdktf-0.20.8 input-29db519b787d423eccc887f36db12b9fd995cc4c02422654cb296de31b711323 -->

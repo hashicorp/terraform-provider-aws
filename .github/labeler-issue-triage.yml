@@ -170,7 +170,7 @@ service/codestarnotifications:
 service/cognitoidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_identity_(?!provider)'
 service/cognitoidp:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk|log)'
 service/cognitosync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognitosync_'
 service/comprehend:

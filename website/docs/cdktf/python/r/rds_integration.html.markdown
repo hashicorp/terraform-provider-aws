@@ -126,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
 For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
 You can only include this parameter if you specify the `kms_key_id` parameter.
@@ -146,7 +147,7 @@ For more detailed documentation about each argument, refer to the [AWS official 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Integration.
-* `id` - ID of the Integration.
+* `id` - (**Deprecated**, use `arn` instead) ARN of the Integration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -182,4 +183,4 @@ Using `terraform import`, import RDS (Relational Database) Integration using the
 % terraform import aws_rds_integration.example arn:aws:rds:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c8bb2d8edc64fab097c8f558a3a0c85630c655783a80094ab43d1e7002eaffc -->
+<!-- cache-key: cdktf-0.20.8 input-e1d279db05e5935cabfde974497d8d4bde326c92e9257925cf70f61a7d11fbc9 -->

@@ -10,7 +10,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
