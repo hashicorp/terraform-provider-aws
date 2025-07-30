@@ -229,7 +229,6 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 		return nil, &retry.NotFoundError{
 			Message: fmt.Sprintf("no WAFv2 WebACL found: %s", webACLARN),
 		}
-
 	}
 
 	return webACLOut.WebACL, nil
