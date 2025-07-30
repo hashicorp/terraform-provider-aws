@@ -11,6 +11,7 @@ import (
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
@@ -38,6 +39,11 @@ type CommonArgs struct {
 	Serialize              bool
 	SerializeDelay         bool
 	SerializeParallelTests bool
+
+	// PreChecks
+	PreChecks           []CodeBlock
+	PreCheckRegions     []string
+	PreChecksWithRegion []CodeBlock
 
 	Generator string
 
@@ -245,6 +251,45 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		}
 	}
 
+	// PreChecks
+	if attr, ok := args.Keyword["preCheck"]; ok {
+		if code, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return fmt.Errorf("%s: %w", attr, err)
+		} else {
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: fmt.Sprintf("%s(ctx, t)", code),
+			})
+			if importSpec != nil {
+				stuff.GoImports = append(stuff.GoImports, *importSpec)
+			}
+		}
+	}
+
+	if attr, ok := args.Keyword["preCheckRegion"]; ok {
+		regions := strings.Split(attr, ";")
+		stuff.PreCheckRegions = tfslices.ApplyToAll(regions, func(s string) string {
+			return endpointsConstOrQuote(s)
+		})
+		stuff.GoImports = append(stuff.GoImports,
+			GoImport{
+				Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
+			},
+		)
+	}
+
+	if attr, ok := args.Keyword["preCheckWithRegion"]; ok {
+		if code, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+			return fmt.Errorf("%s: %w", attr, err)
+		} else {
+			stuff.PreChecksWithRegion = append(stuff.PreChecksWithRegion, CodeBlock{
+				Code: code,
+			})
+			if importSpec != nil {
+				stuff.GoImports = append(stuff.GoImports, *importSpec)
+			}
+		}
+	}
+
 	// TF Variables
 	if attr, ok := args.Keyword["generator"]; ok {
 		if attr == "false" {
@@ -401,4 +446,16 @@ func ParseIdentifierSpec(s string) (string, *GoImport, error) {
 	default:
 		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
+}
+
+func endpointsConstOrQuote(region string) string {
+	var buf strings.Builder
+	buf.WriteString("endpoints.")
+
+	for _, part := range strings.Split(region, "-") {
+		buf.WriteString(strings.Title(part))
+	}
+	buf.WriteString("RegionID")
+
+	return buf.String()
 }

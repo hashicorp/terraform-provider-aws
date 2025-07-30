@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -386,7 +385,6 @@ type ResourceDatum struct {
 	TypeName                         string
 	FileName                         string
 	Implementation                   implementation
-	PreChecks                        []codeBlock
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
@@ -590,39 +588,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					generatorSeen = true
 				}
 
-				if attr, ok := args.Keyword["preCheck"]; ok {
-					if code, importSpec, err := tests.ParseIdentifierSpec(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-						continue
-					} else {
-						d.PreChecks = append(d.PreChecks, codeBlock{
-							Code: fmt.Sprintf("%s(ctx, t)", code),
-						})
-						if importSpec != nil {
-							d.GoImports = append(d.GoImports, *importSpec)
-						}
-					}
-				}
-				if attr, ok := args.Keyword["preCheckRegion"]; ok {
-					regions := strings.Split(attr, ";")
-					d.PreChecks = append(d.PreChecks, codeBlock{
-						Code: fmt.Sprintf("acctest.PreCheckRegion(t, %s)", strings.Join(tfslices.ApplyToAll(regions, func(s string) string {
-							return endpointsConstOrQuote(s)
-						}), ", ")),
-					})
-					d.GoImports = append(d.GoImports,
-						tests.GoImport{
-							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
-						},
-					)
-				}
 				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
 					if b, err := tests.ParseBoolAttr("useAlternateAccount", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else if b {
 						d.UseAlternateAccount = true
-						d.PreChecks = append(d.PreChecks, codeBlock{
+						d.PreChecks = append(d.PreChecks, tests.CodeBlock{
 							Code: "acctest.PreCheckAlternateAccount(t)",
 						})
 						d.GoImports = append(d.GoImports,
@@ -823,16 +795,4 @@ func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
 		}
 	}
 	return c
-}
-
-func endpointsConstOrQuote(region string) string {
-	var buf strings.Builder
-	buf.WriteString("endpoints.")
-
-	for _, part := range strings.Split(region, "-") {
-		buf.WriteString(strings.Title(part))
-	}
-	buf.WriteString("RegionID")
-
-	return buf.String()
 }

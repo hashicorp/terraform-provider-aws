@@ -28,9 +28,15 @@ acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Paral
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
-	PreCheck:     func() { acctest.PreCheck(ctx, t)
+	PreCheck: func() { acctest.PreCheck(ctx, t)
+		{{- if .PreCheckRegions }}
+			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
+		{{- end -}}
 		{{- range .PreChecks }}
 			{{ .Code }}
+		{{- end -}}
+		{{- range .PreChecksWithRegion }}
+			{{ .Code }}(ctx, t, acctest.Region())
 		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),

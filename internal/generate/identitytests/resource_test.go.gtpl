@@ -45,8 +45,8 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 	TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 		tfversion.SkipBelow(tfversion.Version1_12_0),
 	},
-	PreCheck:     func() { acctest.PreCheck(ctx, t)
-		{{- if gt (len .PreCheckRegions) 0 }}
+	PreCheck: func() { acctest.PreCheck(ctx, t)
+		{{- if .PreCheckRegions }}
 			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
 		{{- end -}}
 		{{- range .PreChecks }}
@@ -64,8 +64,8 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 	tfversion.SkipBelow(tfversion.Version1_12_0),
 },
-PreCheck:     func() { acctest.PreCheck(ctx, t)
-	{{- if gt (len .PreCheckRegions) 0 }}
+PreCheck: func() { acctest.PreCheck(ctx, t)
+	{{- if .PreCheckRegions }}
 		acctest.PreCheckAlternateRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
 	{{- end -}}
 	{{- range .PreChecks }}
