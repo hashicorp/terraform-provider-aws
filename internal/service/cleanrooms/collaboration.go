@@ -54,6 +54,11 @@ func ResourceCollaboration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"analytics_engine": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"creator_display_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -170,6 +175,10 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:                   getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("analytics_engine"); ok {
+		input.AnalyticsEngine = types.AnalyticsEngine(v.(string))
+	}
+
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
@@ -218,6 +227,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, collaboration.Arn)
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
+	d.Set("analytics_engine", collaboration.AnalyticsEngine)
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
 	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())

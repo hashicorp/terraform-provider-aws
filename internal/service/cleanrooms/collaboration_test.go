@@ -541,3 +541,42 @@ resource "aws_cleanrooms_collaboration" "test" {
 	`, name, description, tagValue, creatorMemberAbilities, creatorDisplayName, queryLogStatus,
 		dataEncryptionMetadata, additionalMember)
 }
+
+func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
+	resourceName := "aws_cleanrooms_collaboration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(context.Background(), t)
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCleanRoomsCollaborationConfigAnalyticsEngine("SPARK"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "analytics_engine", "SPARK"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCleanRoomsCollaborationConfigAnalyticsEngine(engine string) string {
+    return fmt.Sprintf(`
+resource "aws_cleanrooms_collaboration" "test" {
+  name                      = "tf-test-collab"
+  creator_display_name      = "tf-test"
+  creator_member_abilities  = ["CAN_RECEIVE_RESULTS"]
+  description               = "test collaboration"
+  query_log_status          = "ENABLED"
+
+  analytics_engine          = "%s"
+
+  member {
+    account_id      = "%s"
+    display_name    = "test-member"
+    member_abilities = ["CAN_QUERY"]
+  }
+}
+`, engine, acctest.AccountID(context.Background()))
+}

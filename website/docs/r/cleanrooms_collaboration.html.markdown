@@ -22,6 +22,7 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
   creator_display_name     = "Creator "
   description              = "I made this collaboration with terraform!"
   query_log_status         = "DISABLED"
+  analytics_engine         = "SPARK"
 
   data_encryption_metadata {
     allow_clear_text                            = true
@@ -54,6 +55,8 @@ This resource supports the following arguments:
 * `creator_display_name` - (Required - Forces new resource) - The name for the member record for the collaboration creator.
 * `query_log_status` - (Required - Forces new resource) - Determines if members of the collaboration can enable query logs within their own.
 emberships. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-queryLogStatus).
+* `analytics_engine` - (Optional, ForceNew) Specifies the analytics engine used by the collaboration.
+  Valid values: `CLEAN_ROOMS_SQL` (deprecated), `SPARK`. Defaults to `SPARK`.
 * `data_encryption_metadata` - (Required - Forces new resource) - a collection of settings which determine how the [c3r client](https://docs.aws.amazon.com/clean-rooms/latest/userguide/crypto-computing.html) will encrypt data for use within this collaboration.
 * `data_encryption_metadata.allow_clear_text` - (Required - Forces new resource) - Indicates whether encrypted tables can contain cleartext data. This is a boolea
  field.
