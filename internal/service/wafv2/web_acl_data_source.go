@@ -195,8 +195,8 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	webACLId := aws.ToString(output.Distribution.DistributionConfig.WebACLId)
-	if webACLId == "" {
+	webACLARN := aws.ToString(output.Distribution.DistributionConfig.WebACLId)
+	if webACLARN == "" {
 		return nil, &retry.NotFoundError{
 			Message: fmt.Sprintf("no WebACL associated with CloudFront distribution: %s", distributionID),
 		}
@@ -205,18 +205,11 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 	// Now get the actual WebACL using WAFv2 API
 	wafConn := client.WAFV2Client(ctx)
 
-	// WebACLId can be either an ARN (WAFv2) or ID (WAF Classic)
-	// For WAFv2, we need to extract the name and ID from the ARN
-	if strings.Contains(webACLId, ":wafv2:") && arn.IsARN(webACLId) {
-		return findWebACLByARN(ctx, wafConn, webACLId)
-	} else {
+	if !strings.Contains(webACLARN, ":wafv2:") || !arn.IsARN(webACLARN) {
 		// This would be a WAF Classic ID, not supported by this data source
-		return nil, fmt.Errorf("CloudFront distribution (%s) is associated with WAF Classic WebACL (%s), which is not supported by this data source. Use aws_waf_web_acl data source instead", distributionID, webACLId)
+		return nil, fmt.Errorf("CloudFront distribution (%s) is associated with WAF Classic WebACL (%s), which is not supported by this data source. Use aws_waf_web_acl data source instead", distributionID, webACLARN)
 	}
-}
 
-// Helper function to find WebACL by WAFv2 ARN
-func findWebACLByARN(ctx context.Context, conn *wafv2.Client, webACLARN string) (*awstypes.WebACL, error) {
 	// Parse the ARN to extract name and ID
 	// WAFv2 ARN format: arn:partition:wafv2:region:account:global/webacl/name/id
 	parts := strings.Split(webACLARN, "/")
@@ -227,26 +220,16 @@ func findWebACLByARN(ctx context.Context, conn *wafv2.Client, webACLARN string) 
 	webACLName := parts[len(parts)-2]
 	webACLID := parts[len(parts)-1]
 
-	input := &wafv2.GetWebACLInput{
-		Id:    aws.String(webACLID),
-		Name:  aws.String(webACLName),
-		Scope: awstypes.ScopeCloudfront, // CloudFront WebACLs are always global
+	var webACLOut *wafv2.GetWebACLOutput
+	if webACLOut, err = findWebACLByThreePartKey(ctx, wafConn, webACLName, webACLID, string(awstypes.ScopeCloudfront)); err != nil {
+		return nil, fmt.Errorf("finding WAFv2 WebACL by ARN (%s): %w", webACLARN, err)
 	}
-
-	output, err := conn.GetWebACL(ctx, input)
-	if err != nil {
-		if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+	if webACLOut == nil {
+		return nil, &retry.NotFoundError{
+			Message: fmt.Sprintf("no WAFv2 WebACL found for ARN: %s", webACLARN),
 		}
-		return nil, err
+
 	}
 
-	if output.WebACL == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.WebACL, nil
+	return webACLOut.WebACL, nil
 }
