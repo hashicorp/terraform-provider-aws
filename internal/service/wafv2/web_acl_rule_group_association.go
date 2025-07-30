@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -1134,7 +1135,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 	var ruleGroupRefModel *ruleGroupReferenceModel
 	var managedRuleGroupRef *managedRuleGroupModel
 
-	if strings.HasPrefix(ruleGroupIdentifier, "arn:") {
+	if arn.IsARN(ruleGroupIdentifier) {
 		// Custom rule group (ARN format)
 		ruleGroupType = "custom"
 		ruleGroupRefModel = &ruleGroupReferenceModel{
