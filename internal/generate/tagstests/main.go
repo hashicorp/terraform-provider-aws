@@ -398,10 +398,6 @@ func (d ResourceDatum) OverrideIdentifierAttribute() string {
 	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
-type codeBlock struct {
-	Code string
-}
-
 type commonConfig struct {
 	AdditionalTfVars        []string
 	WithRName               bool

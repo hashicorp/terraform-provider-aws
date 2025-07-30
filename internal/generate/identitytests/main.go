@@ -445,10 +445,6 @@ func (i identityAttribute) Name() string {
 	return namesgen.ConstOrQuote(i.name)
 }
 
-type codeBlock struct {
-	Code string
-}
-
 type commonConfig struct {
 	AdditionalTfVars  []string
 	WithRName         bool
