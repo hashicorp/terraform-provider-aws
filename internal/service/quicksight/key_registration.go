@@ -166,7 +166,7 @@ func (r *keyRegistrationResource) Update(ctx context.Context, request resource.U
 	_, err := conn.UpdateKeyRegistration(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Quicksight Key Registration (%s)", accountID), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Quicksight Key Registration (%s)", accountID), err.Error())
 
 		return
 	}
