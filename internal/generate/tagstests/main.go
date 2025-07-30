@@ -578,15 +578,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 
-				if attr, ok := args.Keyword["altRegionProvider"]; ok {
-					if b, err := tests.ParseBoolAttr("altRegionProvider", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else {
-						d.AlternateRegionProvider = b
-					}
-				}
-
 				// This needs better handling
 				if _, ok := args.Keyword["generator"]; ok {
 					generatorSeen = true
