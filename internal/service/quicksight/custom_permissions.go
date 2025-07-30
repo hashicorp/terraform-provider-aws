@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -28,6 +29,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -83,12 +85,12 @@ func (r *customPermissionsResource) Schema(ctx context.Context, request resource
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"add_or_run_anomaly_detection_for_analyses": schema.StringAttribute{
+					Attributes: tfmaps.ApplyToAllValues(fwtypes.AttributeTypesMust[capabilitiesModel](ctx), func(attr.Type) schema.Attribute {
+						return schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.CapabilityState](),
 							Optional:   true,
-						},
-					},
+						}
+					}),
 				},
 			},
 		},
@@ -285,5 +287,27 @@ type customPermissionsResourceModel struct {
 }
 
 type capabilitiesModel struct {
-	AddOrRunAnomalyDetectionForAnalyses fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"add_or_run_anomaly_detection_for_analyses"`
+	AddOrRunAnomalyDetectionForAnalyses   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"add_or_run_anomaly_detection_for_analyses"`
+	CreateAndUpdateDashboardEmailReports  fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_dashboard_email_reports"`
+	CreateAndUpdateDatasets               fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_datasets"`
+	CreateAndUpdateDataSources            fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_data_sources"`
+	CreateAndUpdateThemes                 fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_themes"`
+	CreateAndUpdateThresholdAlerts        fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_threshold_alerts"`
+	CreateSharedFolders                   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_shared_folders"`
+	CreateSPICEDataset                    fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_spice_dataset"`
+	ExportToCSV                           fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_csv"`
+	ExportToCSVInScheduledReports         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_csv_in_scheduled_reports"`
+	ExportToExcel                         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_excel"`
+	ExportToExcelInScheduledReports       fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_excel_in_scheduled_reports"`
+	ExportToPDF                           fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_pdf"`
+	ExportToPDFInScheduledReports         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"export_to_pdf_in_scheduled_reports"`
+	IncludeContentInScheduledReportsEmail fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"include_content_in_scheduled_reports_email"`
+	PrintReports                          fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"print_reports"`
+	RenameSharedFolders                   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"rename_shared_folders"`
+	ShareAnalyses                         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"share_analyses"`
+	ShareDashboards                       fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"share_dashboards"`
+	ShareDatasets                         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"share_datasets"`
+	ShareDataSources                      fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"share_data_sources"`
+	SubscribeDashboardEmailReports        fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"subscribe_dashboard_email_reports"`
+	ViewAccountSPICECapacity              fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"view_account_spice_capacity"`
 }
