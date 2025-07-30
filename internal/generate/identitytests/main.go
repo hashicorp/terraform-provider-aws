@@ -131,6 +131,11 @@ func main() {
 			g.Fatalf("parsing base Go test template: %w", err)
 		}
 
+		templates, err = tests.AddCommonResourceTestTemplates(templates)
+		if err != nil {
+			g.Fatalf(err.Error())
+		}
+
 		if err := d.BufferTemplateSet(templates, resource); err != nil {
 			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
@@ -367,7 +372,6 @@ type ResourceDatum struct {
 	IsGlobal               bool
 	isSingleton            bool
 	HasRegionOverrideTest  bool
-	UseAlternateAccount    bool
 	identityAttributes     []identityAttribute
 	identityAttribute      string
 	IdentityDuplicateAttrs []string
@@ -725,22 +729,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					)
 				}
 
-				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := tests.ParseBoolAttr("useAlternateAccount", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else if b {
-						d.UseAlternateAccount = true
-						d.PreChecks = append(d.PreChecks, tests.CodeBlock{
-							Code: "acctest.PreCheckAlternateAccount(t)",
-						})
-						d.GoImports = append(d.GoImports,
-							tests.GoImport{
-								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
-							},
-						)
-					}
-				}
 				if attr, ok := args.Keyword["identityTest"]; ok {
 					switch attr {
 					case "true":

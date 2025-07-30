@@ -54,6 +54,8 @@ type CommonArgs struct {
 	PreCheckRegions     []string
 	PreChecksWithRegion []CodeBlock
 
+	UseAlternateAccount bool
+
 	Generator string
 
 	RequiredEnvVars []string
@@ -303,6 +305,22 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	if attr, ok := args.Keyword["requireEnvVar"]; ok {
 		stuff.RequiredEnvVars = append(stuff.RequiredEnvVars, attr)
+	}
+
+	if attr, ok := args.Keyword["useAlternateAccount"]; ok {
+		if b, err := ParseBoolAttr("useAlternateAccount", attr); err != nil {
+			return err
+		} else if b {
+			stuff.UseAlternateAccount = true
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckAlternateAccount(t)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				GoImport{
+					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				},
+			)
+		}
 	}
 
 	// TF Variables

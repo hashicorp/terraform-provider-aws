@@ -382,7 +382,6 @@ type ResourceDatum struct {
 	DataSourceResourceImplementation tests.Implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
-	UseAlternateAccount              bool
 	tests.CommonArgs
 }
 
@@ -582,22 +581,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					generatorSeen = true
 				}
 
-				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
-					if b, err := tests.ParseBoolAttr("useAlternateAccount", attr); err != nil {
-						v.errs = append(v.errs, err)
-						continue
-					} else if b {
-						d.UseAlternateAccount = true
-						d.PreChecks = append(d.PreChecks, tests.CodeBlock{
-							Code: "acctest.PreCheckAlternateAccount(t)",
-						})
-						d.GoImports = append(d.GoImports,
-							tests.GoImport{
-								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
-							},
-						)
-					}
-				}
 				if attr, ok := args.Keyword["tagsIdentifierAttribute"]; ok {
 					d.overrideIdentifierAttribute = attr
 				}
