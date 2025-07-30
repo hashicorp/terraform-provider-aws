@@ -32,6 +32,7 @@ resource "aws_quicksight_ip_restriction" "example" {
 
 This resource supports the following arguments:
 
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `enabled` - (Required) Whether IP rules are turned on.
 * `ip_restriction_rule_map` - (Optional) Map of allowed IPv4 CIDR ranges and descriptions.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -40,9 +41,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `aws_account_id` - The ID for the AWS account that contains the settings.
+This resource exports no additional attributes.
 
 ## Import
 
