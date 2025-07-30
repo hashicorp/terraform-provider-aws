@@ -8,10 +8,10 @@
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
-{{ range .InitCodeBlocks -}}
+{{- range .InitCodeBlocks }}
 	{{ .Code }}
 {{- end }}
-{{- if .UseAlternateAccount -}}
+{{- if .UseAlternateAccount }}
 	providers := make(map[string]*schema.Provider)
 {{ end }}
 {{ end }}
@@ -30,7 +30,7 @@ acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Paral
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t)
 		{{- range .PreChecks }}
-		{{ .Code }}
+			{{ .Code }}
 		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
