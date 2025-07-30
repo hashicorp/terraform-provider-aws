@@ -365,32 +365,30 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage             string
-	ResourceProviderNameUpper   string
-	PackageProviderNameUpper    string
-	FileName                    string
-	idAttrDuplicates            string // TODO: Remove. Still needed for Parameterized Identity
-	Implementation              implementation
-	GenerateConfig              bool
-	overrideIdentifierAttribute string
-	OverrideResourceType        string
-	ARNNamespace                string
-	ARNFormat                   string
-	arnAttribute                string
-	isARNFormatGlobal           triBoolean
-	ArnIdentity                 bool
-	MutableIdentity             bool
-	IsGlobal                    bool
-	isSingleton                 bool
-	HasRegionOverrideTest       bool
-	UseAlternateAccount         bool
-	identityAttributes          []identityAttribute
-	identityAttribute           string
-	IdentityDuplicateAttrs      []string
-	IDAttrFormat                string
-	HasV6_0NullValuesError      bool
-	HasV6_0RefreshError         bool
-	PreIdentityVersion          *version.Version
+	ProviderPackage           string
+	ResourceProviderNameUpper string
+	PackageProviderNameUpper  string
+	FileName                  string
+	idAttrDuplicates          string // TODO: Remove. Still needed for Parameterized Identity
+	Implementation            implementation
+	GenerateConfig            bool
+	ARNNamespace              string
+	ARNFormat                 string
+	arnAttribute              string
+	isARNFormatGlobal         triBoolean
+	ArnIdentity               bool
+	MutableIdentity           bool
+	IsGlobal                  bool
+	isSingleton               bool
+	HasRegionOverrideTest     bool
+	UseAlternateAccount       bool
+	identityAttributes        []identityAttribute
+	identityAttribute         string
+	IdentityDuplicateAttrs    []string
+	IDAttrFormat              string
+	HasV6_0NullValuesError    bool
+	HasV6_0RefreshError       bool
+	PreIdentityVersion        *version.Version
 	tests.CommonArgs
 }
 
@@ -400,14 +398,6 @@ func (d ResourceDatum) HasIDAttrDuplicates() bool {
 
 func (d ResourceDatum) IDAttrDuplicates() string {
 	return namesgen.ConstOrQuote(d.idAttrDuplicates)
-}
-
-func (d ResourceDatum) OverrideIdentifier() bool {
-	return d.overrideIdentifierAttribute != ""
-}
-
-func (d ResourceDatum) OverrideIdentifierAttribute() string {
-	return namesgen.ConstOrQuote(d.overrideIdentifierAttribute)
 }
 
 func (d ResourceDatum) IsARNIdentity() bool {

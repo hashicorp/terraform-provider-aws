@@ -263,9 +263,6 @@ ImportPlanChecks: resource.ImportPlanChecks{
 package {{ .ProviderPackage }}_test
 
 import (
-	{{ if .OverrideIdentifier }}
-	"context"
-	{{- end }}
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -280,10 +277,6 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	{{- if .OverrideIdentifier }}
-	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
