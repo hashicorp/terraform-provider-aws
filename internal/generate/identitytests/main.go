@@ -13,7 +13,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"iter"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/dlclark/regexp2"
 	"github.com/hashicorp/go-version"
@@ -922,34 +920,4 @@ func generateTestConfig(g *common.Generator, dirPath, test string, tfTemplates *
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
 	}
-}
-
-func generateDurationStatement(d time.Duration) string {
-	var buf strings.Builder
-
-	d = d.Round(1 * time.Second)
-
-	if d >= time.Minute {
-		mins := d / time.Minute
-		fmt.Fprintf(&buf, "%d*time.Minute", mins)
-		d = d - mins*time.Minute
-		if d != 0 {
-			fmt.Fprint(&buf, "+")
-		}
-	}
-	if d != 0 {
-		secs := d / time.Second
-		fmt.Fprintf(&buf, "%d*time.Second", secs)
-	}
-
-	return buf.String()
-}
-
-func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
-	for v := range s {
-		if f(v) {
-			c++
-		}
-	}
-	return c
 }

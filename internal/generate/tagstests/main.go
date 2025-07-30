@@ -21,7 +21,6 @@ import (
 	"slices"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/dlclark/regexp2"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -764,27 +763,6 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	if err := tf.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", mainPath, err)
 	}
-}
-
-func generateDurationStatement(d time.Duration) string {
-	var buf strings.Builder
-
-	d = d.Round(1 * time.Second)
-
-	if d >= time.Minute {
-		mins := d / time.Minute
-		fmt.Fprintf(&buf, "%d*time.Minute", mins)
-		d = d - mins*time.Minute
-		if d != 0 {
-			fmt.Fprint(&buf, "+")
-		}
-	}
-	if d != 0 {
-		secs := d / time.Second
-		fmt.Fprintf(&buf, "%d*time.Second", secs)
-	}
-
-	return buf.String()
 }
 
 func count[T any](s iter.Seq[T], f func(T) bool) (c int) {
