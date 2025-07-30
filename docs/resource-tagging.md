@@ -504,6 +504,16 @@ To override the common name, set the annotation `@Testing(tlsKeyDomain=<referenc
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
 
+Some acceptance tests related to networking require a random BGP ASN value.
+This can be included by setting the annotation `@Testing(randomBsgAsn="<low end>;<high end>)`,
+where `<low end>` and `<high end>` are the upper and lower bounds for the randomly-generated ASN value.
+The Terraform variable name will be `rBgpAsn`.
+
+Some acceptance tests related to networking require a random IPv4 address.
+This can be included by setting the annotation `@Testing(randomIPv4Address="<CIDR range>)`.
+The randomly-generated IPv4 address value will be contained within the `<CIDR range>`.
+The Terraform variable name will be `rIPv4Address`.
+
 No additional parameters can be defined currently.
 If additional parameters are required, and cannot be derived from `rName`, the resource type must use manually created acceptance tests as described below.
 
