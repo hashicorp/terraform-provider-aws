@@ -5,26 +5,11 @@
 	{{ if .ExistsTypeName -}}
 	var v {{ .ExistsTypeName }}
 	{{ end -}}
-	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
-	rName := {{ .Generator }}
-{{- end }}
-{{- range .InitCodeBlocks }}
-	{{ .Code }}
-{{- end }}
-{{- if .UseAlternateAccount }}
-	providers := make(map[string]*schema.Provider)
-{{ end }}
+	{{ template "commonInit" . }}
 {{ end }}
 
 {{ define "Test" -}}
 acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
-{{- end }}
-
-{{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . -}}
-{{ if and (not .AlternateRegionProvider) (not .UseAlternateAccount) }}
-	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}

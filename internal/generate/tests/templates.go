@@ -9,6 +9,17 @@ import (
 	"text/template"
 )
 
+//go:embed resource_test.go.gtpl
+var resourceTestTmpl string
+
+func AddCommonResourceTestTemplates(template *template.Template) (*template.Template, error) {
+	result, err := template.Parse(resourceTestTmpl)
+	if err != nil {
+		return nil, fmt.Errorf("parsing common \"resource_test.go.gtpl\" test template: %s", err)
+	}
+	return result, nil
+}
+
 //go:embed acctest.tf.gtpl
 var acctestTfTmpl string
 
