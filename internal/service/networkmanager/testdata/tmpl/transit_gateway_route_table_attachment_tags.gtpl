@@ -20,7 +20,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
   depends_on = [
     aws_ec2_transit_gateway_policy_table.test,
     aws_networkmanager_core_network_policy_attachment.test,
-]
+  ]
 }
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
