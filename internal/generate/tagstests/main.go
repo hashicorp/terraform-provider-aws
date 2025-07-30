@@ -115,9 +115,15 @@ func main() {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 			d := g.NewGoFileDestination(filename)
+
 			templates, err := template.New("taggingtests").Parse(resourceTestGoTmpl)
 			if err != nil {
 				g.Fatalf("parsing base Go test template: %w", err)
+			}
+
+			templates, err = tests.AddCommonResourceTestTemplates(templates)
+			if err != nil {
+				g.Fatalf(err.Error())
 			}
 
 			if err := d.BufferTemplateSet(templates, resource); err != nil {
@@ -131,9 +137,15 @@ func main() {
 			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 			d := g.NewGoFileDestination(filename)
+
 			templates, err := template.New("taggingtests").Parse(dataSourceTestGoTmpl)
 			if err != nil {
 				g.Fatalf("parsing base Go test template: %w", err)
+			}
+
+			templates, err = tests.AddCommonResourceTestTemplates(templates)
+			if err != nil {
+				g.Fatalf(err.Error())
 			}
 
 			if err := d.BufferTemplateSet(templates, resource); err != nil {
@@ -375,7 +387,6 @@ type ResourceDatum struct {
 	SkipNullTags                     bool
 	NoRemoveTags                     bool
 	GenerateConfig                   bool
-	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
 	IsDataSource                     bool

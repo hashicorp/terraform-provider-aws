@@ -54,7 +54,8 @@ type CommonArgs struct {
 	PreCheckRegions     []string
 	PreChecksWithRegion []CodeBlock
 
-	UseAlternateAccount bool
+	UseAlternateAccount     bool
+	AlternateRegionProvider bool
 
 	Generator string
 
@@ -320,6 +321,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 				},
 			)
+		}
+	}
+
+	if attr, ok := args.Keyword["altRegionProvider"]; ok {
+		if b, err := ParseBoolAttr("altRegionProvider", attr); err != nil {
+			return err
+		} else {
+			stuff.AlternateRegionProvider = b
 		}
 	}
 
