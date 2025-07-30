@@ -62,8 +62,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 	}
 	{{ if .RetryTagOps }}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+		func(ctx context.Context) (any, error) {
 			return conn.{{ .TagOp }}(ctx, &input, optFns...)
 		},
 		"{{ .RetryErrorMessage }}",
@@ -112,8 +112,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 		}
 		{{ if .RetryTagOps }}
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func(ctx context.Context) (any, error) {
 				return conn.{{ .UntagOp }}(ctx, &input, optFns...)
 			},
 			"{{ .RetryErrorMessage }}",
@@ -161,8 +161,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		}
 
 		{{ if .RetryTagOps }}
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *{{ .RetryErrorCode }}](ctx, {{ .RetryTimeout }},
+			func(ctx context.Context) (any, error) {
 				return conn.{{ .TagOp }}(ctx, &input, optFns...)
 			},
 			"{{ .RetryErrorMessage }}",

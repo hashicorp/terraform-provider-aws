@@ -566,7 +566,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return err
 	}
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 		input := kms.PutKeyPolicyInput{
 			BypassPolicyLockoutSafetyCheck: bypassPolicyLockoutSafetyCheck,
@@ -580,7 +580,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("updating %s (%s) policy: %w", resourceTypeName, keyID, err)
 	}
 
@@ -595,7 +595,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool, rotationPeriod int) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -620,7 +620,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s) rotation: %w", action, resourceTypeName, keyID, err)
 	}
 

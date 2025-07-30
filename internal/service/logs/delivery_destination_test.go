@@ -323,6 +323,65 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 	})
 }
 
+func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationWithTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DeliveryDestination
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTag(rName, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("S3")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+			},
+			{
+				Config: testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTagDestinationUpdated(rName, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("S3")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDeliveryDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
@@ -507,4 +566,33 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTag(rName, tagValue string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.test.arn
+  }
+  tags = {
+    key1 = %[2]q
+  }
+}
+`, rName, tagValue))
+}
+func testAccDeliveryDestinationConfig_deliveryDestinationConfigurationS3WithTagDestinationUpdated(rName, tagValue string) string {
+	return acctest.ConfigCompose(testAccDeliveryDestinationConfig_deliveryDestinationConfigurationBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name = %[1]q
+
+  delivery_destination_configuration {
+    destination_resource_arn = "${aws_s3_bucket.test.arn}/test"
+  }
+  tags = {
+    key1 = %[2]q
+  }
+}
+`, rName, tagValue))
 }

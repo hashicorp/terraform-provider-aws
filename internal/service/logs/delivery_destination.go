@@ -185,9 +185,6 @@ func (r *deliveryDestinationResource) Update(ctx context.Context, request resour
 			return
 		}
 
-		// Additional fields.
-		input.Tags = getTagsIn(ctx)
-
 		output, err := conn.PutDeliveryDestination(ctx, &input)
 
 		if err != nil {

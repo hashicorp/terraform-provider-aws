@@ -1157,6 +1157,7 @@ Aggregate the request counts using one or more web request components as the agg
 
 The `customKey` block supports the following arguments:
 
+* `asn` - (Optional) Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. See [RateLimit `asn`](#ratelimit-asn-block) below for details.
 * `cookie` - (Optional) Use the value of a cookie in the request as an aggregate key. See [RateLimit `cookie`](#ratelimit-cookie-block) below for details.
 * `forwardedIp` - (Optional) Use the first IP address in an HTTP header as an aggregate key. See [`forwardedIp`](#ratelimit-forwarded_ip-block) below for details.
 * `httpMethod` - (Optional) Use the request's HTTP method as an aggregate key. See [RateLimit `httpMethod`](#ratelimit-http_method-block) below for details.
@@ -1168,6 +1169,12 @@ The `customKey` block supports the following arguments:
 * `queryArgument` - (Optional) Use the specified query argument as an aggregate key. See [RateLimit `queryArgument`](#ratelimit-query_argument-block) below for details.
 * `queryString` - (Optional) Use the request's query string as an aggregate key. See [RateLimit `queryString`](#ratelimit-query_string-block) below for details.
 * `uriPath` - (Optional) Use the request's URI path as an aggregate key. See [RateLimit `uriPath`](#ratelimit-uri_path-block) below for details.
+
+### RateLimit `asn` Block
+
+Use an Autonomous System Number (ASN) derived from the request's originating or forwarded IP address as an aggregate key. Each distinct ASN contributes to the aggregation instance.
+
+The `asn` block is configured as an empty block `{}`.
 
 ### RateLimit `cookie` Block
 
@@ -1296,4 +1303,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9bb3813b6e70cbf794d0edb7fa099e74cd4d1c389a273431955edf915caaff91 -->
+<!-- cache-key: cdktf-0.20.8 input-6339e1b232653adf1fbb2771556b291f92a1b0925ecff81f75211ca0b6120132 -->

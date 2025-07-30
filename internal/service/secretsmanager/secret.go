@@ -442,7 +442,7 @@ func removeSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id s
 }
 
 func putSecretPolicy(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.PutResourcePolicyInput) (*secretsmanager.PutResourcePolicyOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.MalformedPolicyDocumentException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.MalformedPolicyDocumentException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutResourcePolicy(ctx, input)
 	}, "This resource policy contains an unsupported principal")
 

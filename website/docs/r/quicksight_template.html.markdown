@@ -98,10 +98,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `definition` - (Optional) A detailed template definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `permissions` - (Optional) A set of resource permissions on the template. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the template (analysis or template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

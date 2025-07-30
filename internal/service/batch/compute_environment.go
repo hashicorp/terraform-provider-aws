@@ -115,6 +115,11 @@ func resourceComputeEnvironment() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
+									"image_kubernetes_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
 									"image_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -621,6 +626,12 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 				}
 			}
 
+			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_kubernetes_version") {
+				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_kubernetes_version"); err != nil {
+					return err
+				}
+			}
+
 			if diff.HasChange("compute_resources.0.ec2_configuration.0.image_type") {
 				if err := diff.ForceNew("compute_resources.0.ec2_configuration.0.image_type"); err != nil {
 					return err
@@ -983,6 +994,10 @@ func expandEC2Configuration(tfMap map[string]any) *awstypes.Ec2Configuration {
 		apiObject.ImageIdOverride = aws.String(v)
 	}
 
+	if v, ok := tfMap["image_kubernetes_version"].(string); ok && v != "" {
+		apiObject.ImageKubernetesVersion = aws.String(v)
+	}
+
 	if v, ok := tfMap["image_type"].(string); ok && v != "" {
 		apiObject.ImageType = aws.String(v)
 	}
@@ -1194,6 +1209,10 @@ func flattenEC2Configuration(apiObject *awstypes.Ec2Configuration) map[string]an
 
 	if v := apiObject.ImageIdOverride; v != nil {
 		tfMap["image_id_override"] = aws.ToString(v)
+	}
+
+	if v := apiObject.ImageKubernetesVersion; v != nil {
+		tfMap["image_kubernetes_version"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ImageType; v != nil {
