@@ -103,6 +103,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newUserCustomPermissionResource,
+			TypeName: "aws_quicksight_user_custom_permission",
+			Name:     "User Custom Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newVPCConnectionResource,
 			TypeName: "aws_quicksight_vpc_connection",
 			Name:     "VPC Connection",

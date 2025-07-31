@@ -32,6 +32,7 @@ var (
 	ResourceTemplateAlias        = newTemplateAliasResource
 	ResourceTheme                = resourceTheme
 	ResourceUser                 = resourceUser
+	ResourceUserCustomPermission = newUserCustomPermissionResource
 	ResourceVPCConnection        = newVPCConnectionResource
 
 	DashboardLatestVersion                 = dashboardLatestVersion
@@ -59,6 +60,7 @@ var (
 	FindTemplateByTwoPartKey               = findTemplateByTwoPartKey
 	FindThemeByTwoPartKey                  = findThemeByTwoPartKey
 	FindUserByThreePartKey                 = findUserByThreePartKey
+	FindUserCustomPermissionByThreePartKey = findUserCustomPermissionByThreePartKey
 	FindVPCConnectionByTwoPartKey          = findVPCConnectionByTwoPartKey
 
 	StartAfterDateTimeLayout = startAfterDateTimeLayout
