@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,6 +47,11 @@ func ResourceCollaboration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"analytics_engine": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.AnalyticsEngine](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,11 +59,6 @@ func ResourceCollaboration() *schema.Resource {
 			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"analytics_engine": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 			},
 			"creator_display_name": {
 				Type:     schema.TypeString,
@@ -266,6 +267,10 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChanges(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
+		if d.HasChanges("analytics_engine") {
+			input.AnalyticsEngine = types.AnalyticsEngine(d.Get("analytics_engine").(string))
 		}
 
 		_, err := conn.UpdateCollaboration(ctx, input)
