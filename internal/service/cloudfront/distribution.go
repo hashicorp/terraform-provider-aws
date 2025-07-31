@@ -1233,6 +1233,12 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 
 	_, err = conn.UpdateDistribution(ctx, &input)
 
+	// If the configured logging bucket no longer exists, disable logging and retry update
+	if errs.IsAErrorMessageContains[*awstypes.InvalidArgument](err, "The S3 bucket that you specified for CloudFront logs doesn't exist") {
+		input.DistributionConfig.Logging = &awstypes.LoggingConfig{Enabled: aws.Bool(false)}
+		_, err = conn.UpdateDistribution(ctx, &input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("updating CloudFront Distribution (%s): %w", id, err)
 	}
