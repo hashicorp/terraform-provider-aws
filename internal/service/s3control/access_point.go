@@ -166,6 +166,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get(names.AttrBucket).(string)),
 		Name:      aws.String(name),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bucket_account_id"); ok {
@@ -179,8 +180,6 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]any)[0].(map[string]any))
 	}
-
-	//input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAccessPoint(ctx, &input)
 
