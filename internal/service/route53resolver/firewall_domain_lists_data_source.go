@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_domain_lists", name="Firewall Domain Lists")
@@ -26,7 +27,7 @@ func dataSourceFirewallDomainLists() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -34,7 +35,7 @@ func dataSourceFirewallDomainLists() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -42,7 +43,7 @@ func dataSourceFirewallDomainLists() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -68,9 +69,7 @@ func dataSourceFirewallDomainListsRead(ctx context.Context, d *schema.ResourceDa
 			return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Firewall Domain Lists: %s", err)
 		}
 
-		for _, domainList := range page.FirewallDomainLists {
-			domainLists = append(domainLists, domainList)
-		}
+		domainLists = append(domainLists, page.FirewallDomainLists...)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
@@ -100,19 +99,19 @@ func flattenFirewallDomainListMetadata(apiObject awstypes.FirewallDomainListMeta
 	tfMap := map[string]any{}
 
 	if apiObject.Arn != nil {
-		tfMap["arn"] = aws.ToString(apiObject.Arn)
+		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
 	}
 	if apiObject.CreatorRequestId != nil {
 		tfMap["creator_request_id"] = aws.ToString(apiObject.CreatorRequestId)
 	}
 	if apiObject.Id != nil {
-		tfMap["id"] = aws.ToString(apiObject.Id)
+		tfMap[names.AttrID] = aws.ToString(apiObject.Id)
 	}
 	if apiObject.ManagedOwnerName != nil {
 		tfMap["managed_owner_name"] = aws.ToString(apiObject.ManagedOwnerName)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.ToString(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
 	return tfMap

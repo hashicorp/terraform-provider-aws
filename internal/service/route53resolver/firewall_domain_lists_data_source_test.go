@@ -30,11 +30,11 @@ func TestAccRoute53ResolverFirewallDomainListsDataSource_basic(t *testing.T) {
 					acctest.CheckResourceAttrGreaterThanValue(dsResourceName, "firewall_domain_lists.#", 0),
 					// Check that our created resource appears in the list
 					resource.TestCheckTypeSetElemNestedAttrs(dsResourceName, "firewall_domain_lists.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					// Check that AWS managed malware domain list appears in the list
 					resource.TestCheckTypeSetElemNestedAttrs(dsResourceName, "firewall_domain_lists.*", map[string]string{
-						"name":               "AWSManagedDomainsMalwareDomainList",
+						names.AttrName:       "AWSManagedDomainsMalwareDomainList",
 						"managed_owner_name": "Route 53 Resolver DNS Firewall",
 					}),
 				),
