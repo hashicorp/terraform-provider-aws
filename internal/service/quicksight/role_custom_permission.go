@@ -45,9 +45,6 @@ func (r *roleCustomPermissionResource) Schema(ctx context.Context, request resou
 			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"custom_permissions_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrNamespace: quicksightschema.NamespaceAttribute(),
 			names.AttrRole: schema.StringAttribute{

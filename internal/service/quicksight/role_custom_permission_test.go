@@ -24,12 +24,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccQuickSightRoleCustomPermission_basic(t *testing.T) {
+func testAccRoleCustomPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_role_custom_permission.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,6 +64,97 @@ func TestAccQuickSightRoleCustomPermission_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccRoleCustomPermissionImportStateID(resourceName),
 				ImportStateVerifyIdentifierAttribute: "custom_permissions_name",
+			},
+		},
+	})
+}
+
+func testAccRoleCustomPermission_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_quicksight_role_custom_permission.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleCustomPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleCustomPermissionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleCustomPermissionExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceRoleCustomPermission, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccRoleCustomPermission_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_quicksight_role_custom_permission.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleCustomPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleCustomPermissionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleCustomPermissionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_permissions_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRole), tfknownvalue.StringExact(awstypes.RoleReader)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccRoleCustomPermissionImportStateID(resourceName),
+				ImportStateVerifyIdentifierAttribute: "custom_permissions_name",
+			},
+			{
+				Config: testAccRoleCustomPermissionConfig_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRoleCustomPermissionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_permissions_name"), knownvalue.StringExact(rName+"-2")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRole), tfknownvalue.StringExact(awstypes.RoleReader)),
+				},
 			},
 		},
 	})
@@ -123,4 +214,23 @@ resource "aws_quicksight_role_custom_permission" "test" {
   custom_permissions_name = aws_quicksight_custom_permissions.test.custom_permissions_name
 }
 `)
+}
+
+func testAccRoleCustomPermissionConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccCustomPermissionsConfig_basic(rName), fmt.Sprintf(`
+resource "aws_quicksight_custom_permissions" "test2" {
+  custom_permissions_name = "%[1]s-2"
+
+  capabilities {
+    create_and_update_datasets     = "DENY"
+    create_and_update_data_sources = "DENY"
+    export_to_pdf                  = "DENY"
+  }
+}
+
+resource "aws_quicksight_role_custom_permission" "test" {
+  role                    = "READER"
+  custom_permissions_name = aws_quicksight_custom_permissions.test2.custom_permissions_name
+}
+`, rName))
 }
