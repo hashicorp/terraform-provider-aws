@@ -268,9 +268,6 @@ import (
 	{{- end }}
 	"testing"
 
-	{{ if .UseAlternateAccount }}
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	{{- end }}
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"

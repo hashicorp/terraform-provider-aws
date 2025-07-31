@@ -793,6 +793,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.PreChecks = append(d.PreChecks, codeBlock{
 							Code: "acctest.PreCheckAlternateAccount(t)",
 						})
+						d.GoImports = append(d.GoImports,
+							tests.GoImport{
+								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+							},
+						)
 					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
