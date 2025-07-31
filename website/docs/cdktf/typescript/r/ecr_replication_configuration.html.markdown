@@ -146,6 +146,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicationConfiguration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
 ### Replication Configuration
@@ -205,4 +206,4 @@ Using `terraform import`, import ECR Replication Configuration using the `regist
 % terraform import aws_ecr_replication_configuration.service 012345678912
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1e720b09bffb1410913da15b1daa4aaef042cc175055603ba3335ca4406730fc -->
+<!-- cache-key: cdktf-0.20.8 input-1ee827ebe68a80f0bee6147e59c17984cb00b855d09c7ded03b17b85967b1dbf -->

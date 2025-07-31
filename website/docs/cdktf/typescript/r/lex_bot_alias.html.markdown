@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `botName` - (Required) The name of the bot.
 * `botVersion` - (Required) The version of the bot.
 * `conversationLogs` - (Optional) The settings that determine how Amazon Lex uses conversation logs for the alias. Attributes are documented under [conversation_logs](#conversation_logs).
@@ -114,4 +115,4 @@ Using `terraform import`, import bot aliases using an ID with the format `bot_na
 % terraform import aws_lex_bot_alias.order_flowers_prod OrderFlowers:OrderFlowersProd
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1d88de25eb65ac94895d774194baf992f1fe3487e7eec1fc9809a28597665e73 -->
+<!-- cache-key: cdktf-0.20.8 input-1add339d5f6ea15f89f9f8ad7fe8c71c2801b6425591d16d31f55fb3cef84955 -->

@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `groupIpAddress` - (Required) The IP address assigned to the transit gateway multicast group.
 * `networkInterfaceId` - (Required) The group members' network interface ID to register with the transit gateway multicast group.
 * `transitGatewayMulticastDomainId` - (Required) The ID of the transit gateway multicast domain.
@@ -53,4 +54,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - EC2 Transit Gateway Multicast Group Member identifier.
 
-<!-- cache-key: cdktf-0.20.8 input-561db583d91352dec7ba040b0abbb86f30bfd413562c455a18fa76289ce3489f -->
+<!-- cache-key: cdktf-0.20.8 input-39e6544e7120d1dc91c881180123ddae31af4755cbc8ab46cc53ecf91f2b11e4 -->

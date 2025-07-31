@@ -215,7 +215,7 @@ class MyConvertedCode extends TerraformStack {
       },
       authorizationType: "BASIC",
       description: "A connection description",
-      kms_key_identifier: example.id,
+      kmsKeyIdentifier: example.id,
       name: "ngrok-connection",
     });
     const current = new DataAwsCallerIdentity(this, "current", {});
@@ -283,6 +283,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name for the connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Description for the connection. Maximum of 512 characters.
 * `authorizationType` - (Required) Type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
@@ -380,4 +381,4 @@ Using `terraform import`, import EventBridge EventBridge connection using the `n
 % terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-157fb47944e10745e461507900180ef0505f45510bc3985cc3f0c620f4f3d31c -->
+<!-- cache-key: cdktf-0.20.8 input-89571db5a946668df93cfaee7902913652ae1dd15f0f4ecd31915846dd20405b -->

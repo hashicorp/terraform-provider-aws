@@ -98,7 +98,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	alias, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.AliasListEntry, error) {
 		return findAliasByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -112,7 +112,6 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", d.Id(), err)
 	}
 
-	alias := outputRaw.(*awstypes.AliasListEntry)
 	aliasARN := aws.ToString(alias.AliasArn)
 	targetKeyID := aws.ToString(alias.TargetKeyId)
 	targetKeyARN, err := aliasARNToKeyARN(aliasARN, targetKeyID)

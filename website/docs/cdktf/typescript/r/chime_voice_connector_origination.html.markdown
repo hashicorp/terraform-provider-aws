@@ -63,6 +63,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voiceConnectorId` - (Required) The Amazon Chime Voice Connector ID.
 * `route` - (Required) Set of call distribution properties defined for your SIP hosts. See [route](#route) below for more details. Minimum of 1. Maximum of 20.
 * `disabled` - (Optional) When origination settings are disabled, inbound calls are not enabled for your Amazon Chime Voice Connector.
@@ -115,4 +116,4 @@ Using `terraform import`, import Chime Voice Connector Origination using the `vo
 % terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2f8024ec4e12ef059381d8723231847b43f7b2e0c051e5ee2e2f2bc6e04e4558 -->
+<!-- cache-key: cdktf-0.20.8 input-724344e3a726dfcd8d5e33cc2e303883af5d1ad702a599a0d782f8f2977a1f3f -->

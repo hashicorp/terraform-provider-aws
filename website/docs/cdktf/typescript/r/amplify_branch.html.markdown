@@ -213,6 +213,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appId` - (Required) Unique ID for an Amplify app.
 * `branchName` - (Required) Name for the branch.
 * `backendEnvironmentArn` - (Optional) ARN for a backend environment that is part of an Amplify app.
@@ -224,6 +225,7 @@ This resource supports the following arguments:
 * `enableNotification` - (Optional) Enables notifications for the branch.
 * `enablePerformanceMode` - (Optional) Enables performance mode for the branch.
 * `enablePullRequestPreview` - (Optional) Enables pull request previews for this branch.
+* `enableSkewProtection` - (Optional) Enables skew protection for the branch.  
 * `environmentVariables` - (Optional) Environment variables for the branch.
 * `framework` - (Optional) Framework for the branch.
 * `pullRequestEnvironmentName` - (Optional) Amplify environment name for the pull request.
@@ -274,4 +276,4 @@ Using `terraform import`, import Amplify branch using `appId` and `branchName`. 
 % terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-18bb34f7ab2ddc6f2adc5f5bfbff608bb9af62203731b97b751ed9bb930f797a -->
+<!-- cache-key: cdktf-0.20.8 input-c2ac19160ba2a7472b0c12de406007df3d31ddc22f7a081b7ed719ed2ceccf5c -->

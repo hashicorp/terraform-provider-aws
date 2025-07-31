@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `viewArn` - (Optional) Specifies the Amazon resource name (ARN) of the view to use for the query. If you don't specify a value for this parameter, then the operation automatically uses the default view for the AWS Region in which you called this operation. If the Region either doesn't have a default view or if you don't have permission to use the default view, then the operation fails with a `401 Unauthorized` exception.
 
 ## Attribute Reference
@@ -75,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_reported_at` - The date and time that the information about this resource property was last updated.
 * `name` - Name of this property of the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-31144e670d147dab0360ec85b762177c41b0aa457f05a33d9d6901423f901b80 -->
+<!-- cache-key: cdktf-0.20.8 input-2c369c9b1cf45dd53e11473c0e18399b546381b87dec863f8f3da7a8c0213209 -->

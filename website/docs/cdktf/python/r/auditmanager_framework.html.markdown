@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compliance_type` - (Optional) Compliance type that the new custom framework supports, such as `CIS` or `HIPAA`.
 * `description` - (Optional) Description of the framework.
 * `tags` - (Optional) A map of tags to assign to the framework. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -103,4 +104,4 @@ Using `terraform import`, import Audit Manager Framework using the framework `id
 % terraform import aws_auditmanager_framework.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-93d510f54f0d893a89ff49786d9c2af44b17e105211d90aef366d90b4e1975a5 -->
+<!-- cache-key: cdktf-0.20.8 input-4fbba115e5fa9a433093d92d64cd1e11bd17ef8ec02771d17f0c49debceebcaa -->

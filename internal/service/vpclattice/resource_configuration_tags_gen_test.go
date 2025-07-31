@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,9 +20,9 @@ func TestAccVPCLatticeResourceConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -203,9 +202,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -265,9 +264,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -315,9 +314,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -395,9 +394,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnCreate(t *testing.T)
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -485,9 +484,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Add(t *testin
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -624,9 +623,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_EmptyTag_OnUpdate_Replace(t *te
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
@@ -714,9 +713,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_providerOnly(t *tes
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -895,9 +894,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nonOverlapping(t *t
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1055,9 +1054,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_overlapping(t *test
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1231,9 +1230,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToProviderOnl
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1321,9 +1320,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_updateToResourceOnl
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1410,9 +1409,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyResourceTag(t 
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1476,9 +1475,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_emptyProviderOnlyTa
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1534,9 +1533,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullOverlappingReso
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1603,9 +1602,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_DefaultTags_nullNonOverlappingR
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1674,9 +1673,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnCreate(t *testing
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1729,9 +1728,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Add(t *tes
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1826,9 +1825,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_ComputedTag_OnUpdate_Replace(t 
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -1913,9 +1912,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_DefaultTag(t
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),
@@ -2075,9 +2074,9 @@ func TestAccVPCLatticeResourceConfiguration_tags_IgnoreTags_Overlap_ResourceTag(
 	ctx := acctest.Context(t)
 	var v vpclattice.GetResourceConfigurationOutput
 	resourceName := "aws_vpclattice_resource_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckResourceConfigurationDestroy(ctx),

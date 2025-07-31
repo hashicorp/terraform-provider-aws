@@ -81,7 +81,7 @@ resource "aws_ssm_association" "example" {
 
 ### Create an association with multiple instances with their instance ids
 
-```
+```terraform
 # Removed EC2 provisioning dependencies for brevity
 
 resource "aws_ssm_association" "system_update" {
@@ -164,13 +164,13 @@ resource "aws_instance" "web_server_2" {
 
 ### Create an association with multiple instances with their values matching their tags
 
-```
+```terraform
 # SSM Association for Webbased Servers
 resource "aws_ssm_association" "database_association" {
   name = aws_ssm_document.system_update.name # Use the name of the document as the association name
   targets {
     key    = "tag:Role"
-    values = ["WebServer","Database"]
+    values = ["WebServer", "Database"]
   }
 
   parameters = {
@@ -182,7 +182,7 @@ resource "aws_ssm_association" "database_association" {
 # EC2 Instance 1 - Web Server with "ServerType" tag
 resource "aws_instance" "web_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
@@ -214,7 +214,7 @@ resource "aws_instance" "web_server" {
 # EC2 Instance 2 - Database Server with "Role" tag
 resource "aws_instance" "database_server" {
   ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = var.instance_type
+  instance_type          = "t3.micro"
   subnet_id              = data.aws_subnet.default.id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name

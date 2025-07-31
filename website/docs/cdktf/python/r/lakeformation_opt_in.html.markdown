@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) Lake Formation principal. Supported principals are IAM users or IAM roles. See [Principal](#principal) for more details.
 * `resource_data` - (Required) Structure for the resource. See [Resource](#resource) for more details.
 
@@ -118,4 +119,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-5bbab14fc1fff437003a201e2c32f1c88909f2d77c335bb60a3dee10abb5c522 -->
+<!-- cache-key: cdktf-0.20.8 input-68633ec61ad75265d67105d2ce45ad376611c83f7276b9e1169669a46657ce55 -->

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalogId` - (Optional) ID of the Data Catalog to create the tag in. If omitted, this defaults to the AWS Account ID.
 * `key` - (Required) Key-name for the tag.
 * `values` - (Required) List of possible values an attribute can take.
@@ -81,4 +82,4 @@ Using `terraform import`, import Lake Formation LF-Tags using the `catalog_id:ke
 % terraform import aws_lakeformation_lf_tag.example 123456789012:some_key
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bf94b8ab63011d4fef3fa3ec211650c4f2001e0c5c3d0a615a0fa38cb361e973 -->
+<!-- cache-key: cdktf-0.20.8 input-29134cd77090dc8b391a551e876d4b8faf942f648bfe210246569cbb36a8b6bb -->

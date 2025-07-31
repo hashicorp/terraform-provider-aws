@@ -76,7 +76,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	igw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.InternetGatewayAttachment, error) {
 		return findInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 	}, d.IsNewResource())
 
@@ -89,8 +89,6 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
-
-	igw := outputRaw.(*awstypes.InternetGatewayAttachment)
 
 	d.Set("internet_gateway_id", igwID)
 	d.Set(names.AttrVPCID, igw.VpcId)

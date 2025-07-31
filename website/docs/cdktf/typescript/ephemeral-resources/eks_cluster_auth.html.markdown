@@ -12,7 +12,7 @@ description: |-
 
 Retrieve an authentication token to communicate with an EKS cluster.
 
-~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> **NOTE:** Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 
@@ -62,6 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the EKS cluster.
 
 ## Attribute Reference
@@ -70,4 +71,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `token` - Token to use to authenticate with the cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-5916bbc303c26cf499afb36c9cc05e568cc4eedf6c791f738264aa569db2c7e9 -->
+<!-- cache-key: cdktf-0.20.8 input-eec6318229d55ad5761514abb7d8f77c872e6fdf9547c4e11030202c41c79b72 -->

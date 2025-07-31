@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptLanguage` - (Optional) Language code. Valid values are `en` (English), `jp` (Japanese), `zh` (Chinese). The default value is `en`.
 
 ## Attribute Reference
@@ -66,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Tags applied to the product.
 * `type` - Type of product.
 
-<!-- cache-key: cdktf-0.20.8 input-5458573534df92d96787bca1e91a863522fae24c5024caea86faec96b4253984 -->
+<!-- cache-key: cdktf-0.20.8 input-2ac0597aa511bc4b7dad15d182dfabf578c19d960840625a6ede27571ff6c882 -->

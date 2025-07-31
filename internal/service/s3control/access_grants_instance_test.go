@@ -167,7 +167,7 @@ func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+			_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -193,7 +193,7 @@ func testAccCheckAccessGrantsInstanceExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+		_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

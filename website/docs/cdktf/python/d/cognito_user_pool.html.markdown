@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `user_pool_id` - (Required) The cognito pool ID
 
 ## Attribute Reference
@@ -141,4 +142,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `custom_auth_mode` - Mode of threat protection operation in custom authentication.
 
-<!-- cache-key: cdktf-0.20.8 input-af9b7c4ec1e663d72bce0715d715a88aa18ab7c570b44899dbee9bef71556ee3 -->
+<!-- cache-key: cdktf-0.20.8 input-8135c3f8d4be335b6b097746886c35412367d271deb541a82e592ab5a47edc5c -->

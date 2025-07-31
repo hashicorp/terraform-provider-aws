@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `engine_version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.1.2`, `1.0.2.2`, and `1.0.3.0`.
 * `instance_class` - (Optional) DB instance class. Examples of classes are `db.r5.large`, `db.r5.xlarge`, `db.r4.large`, `db.r5.4xlarge`, `db.r5.12xlarge`, `db.r4.xlarge`, and `db.t3.medium`.
@@ -63,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supports_performance_insights` - Whether a DB instance supports Performance Insights.
 * `supports_storage_encryption` - Whether a DB instance supports encrypted storage.
 
-<!-- cache-key: cdktf-0.20.8 input-96ed319d4f21711473bbe2040090bbe88fe63b3c2315bc78386e18d098f01431 -->
+<!-- cache-key: cdktf-0.20.8 input-8fff1f54897d33c2f5bfe40eab334aef5303e955c9f77d10ea93f6cf91d031a0 -->

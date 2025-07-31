@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fileSystemId` - (Required) ID of the file system for which the access point is intended.
 * `posixUser` - (Optional) Operating system user and group applied to all file system requests made using the access point. [Detailed](#posix_user) below.
 * `rootDirectory`- (Optional) Directory on the Amazon EFS file system that the access point provides access to. [Detailed](#root_directory) below.
@@ -101,4 +102,4 @@ Using `terraform import`, import the EFS access points using the `id`. For examp
 % terraform import aws_efs_access_point.test fsap-52a643fb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ffd407eb1dbab3cdcf58701fd44811aa2c2bcc1408ea548ad5726f0832c16821 -->
+<!-- cache-key: cdktf-0.20.8 input-796655402bb7e6a1a5da7993a5945e56207bb97df842dc7a90a2f706a7e9a7c0 -->

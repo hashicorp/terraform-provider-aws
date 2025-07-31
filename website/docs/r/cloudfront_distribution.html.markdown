@@ -216,9 +216,11 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   # AWS Managed Caching Policy (CachingDisabled)
   default_cache_behavior {
     # Using the CachingDisabled managed policy ID:
-    cache_policy_id  = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = local.s3_origin_id
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = local.s3_origin_id
+    viewer_protocol_policy = "allow-all"
   }
 
   restrictions {
@@ -241,23 +243,12 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 The example below creates a CloudFront distribution with [standard logging V2 to S3](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
 
 ```terraform
-provider "aws" {
-  region = var.region
-}
-
-provider "aws" {
-  region = "us-east-1"
-  alias  = "us_east_1"
-}
-
 resource "aws_cloudfront_distribution" "example" {
-  provider = aws.us_east_1
-
   # other config...
 }
 
 resource "aws_cloudwatch_log_delivery_source" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name         = "example"
   log_type     = "ACCESS_LOGS"
@@ -270,7 +261,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery_destination" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   name          = "s3-destination"
   output_format = "parquet"
@@ -281,7 +272,7 @@ resource "aws_cloudwatch_log_delivery_destination" "example" {
 }
 
 resource "aws_cloudwatch_log_delivery" "example" {
-  provider = aws.us_east_1
+  region = "us-east-1"
 
   delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
   delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
@@ -292,11 +283,58 @@ resource "aws_cloudwatch_log_delivery" "example" {
 }
 ```
 
+### With V2 logging to Data Firehose
+
+The example below creates a CloudFront distribution with [standard logging V2 to Data Firehose](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging.html#enable-access-logging-api).
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # other config
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "cloudfront_logs" {
+  region = "us-east-1"
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-Firehose
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+
+  # other config
+}
+
+resource "aws_cloudwatch_log_delivery_source" "example" {
+  region = "us-east-1"
+
+  name         = "cloudfront-logs-source"
+  log_type     = "ACCESS_LOGS"
+  resource_arn = aws_cloudfront_distribution.example.arn
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "example" {
+  region = "us-east-1"
+
+  name          = "firehose-destination"
+  output_format = "json"
+  delivery_destination_configuration {
+    destination_resource_arn = aws_kinesis_firehose_delivery_stream.cloudfront_logs.arn
+  }
+}
+resource "aws_cloudwatch_log_delivery" "example" {
+  region = "us-east-1"
+
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.example.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.example.arn
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
+* `anycast_ip_list_id` (Optional) - ID of the Anycast static IP list that is associated with the distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `continuous_deployment_policy_id` (Optional) - Identifier of a continuous deployment policy. This argument should only be set on a production distribution. See the [`aws_cloudfront_continuous_deployment_policy` resource](./cloudfront_continuous_deployment_policy.html.markdown) for additional details.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
@@ -417,6 +455,8 @@ resource "aws_cloudfront_distribution" "example" {
 * `whitelisted_names` (Optional) - If you have specified `whitelist` to `forward`, the whitelisted cookies that you want CloudFront to forward to your origin.
 
 #### Custom Error Response Arguments
+
+~> **NOTE:** When specifying either `response_page_path` or `response_code`, **both** must be set.
 
 * `error_caching_min_ttl` (Optional) - Minimum amount of time you want HTTP error codes to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated.
 * `error_code` (Required) - 4xx or 5xx HTTP status code that you want to customize.

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterType` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
 * `clusterVersion` - (Optional) Redshift Cluster versionE.g., `1.0`
 * `nodeType` - (Optional) Redshift Cluster node typeE.g., `dc2.8xlarge`
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availabilityZones` - List of Availability Zone names where the Redshift Cluster is available.
 
-<!-- cache-key: cdktf-0.20.8 input-e0fdf3575794ac21787874dcbc817842b5e948d938752511869f169f7c1ca44e -->
+<!-- cache-key: cdktf-0.20.8 input-48e09712317b48f13ea38a0b93dffd8f8799e936796fe559aec9a0ba6cb46016 -->

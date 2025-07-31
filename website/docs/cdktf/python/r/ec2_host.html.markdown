@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `asset_id` - (Optional) The ID of the Outpost hardware asset on which to allocate the Dedicated Hosts. This parameter is supported only if you specify OutpostArn. If you are allocating the Dedicated Hosts in a Region, omit this parameter.
 * `auto_placement` - (Optional) Indicates whether the host accepts any untargeted instance launches that match its instance type configuration, or if it only accepts Host tenancy instance launches that specify its unique host ID. Valid values: `on`, `off`. Default: `on`.
 * `availability_zone` - (Required) The Availability Zone in which to allocate the Dedicated Host.
@@ -89,4 +90,4 @@ Using `terraform import`, import hosts using the host `id`. For example:
 % terraform import aws_ec2_host.example h-0385a99d0e4b20cbb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e72ecf384fda2cca3d20b84aaf4f24de52e9cc761d5cc1f6a6d8b91d7bf13fac -->
+<!-- cache-key: cdktf-0.20.8 input-69043782b6d79f4e1477dff2107561bbaf348997af802ef8733af0e0a0f666d4 -->

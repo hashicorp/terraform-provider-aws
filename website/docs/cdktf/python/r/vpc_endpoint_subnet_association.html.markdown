@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the subnet will be associated.
 * `subnet_id` - (Required) The ID of the subnet to be associated with the VPC endpoint.
 
@@ -85,4 +86,4 @@ Using `terraform import`, import VPC Endpoint Subnet Associations using `vpc_end
 % terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5669b71eb1929dcdffdde12d53b4824d055cb34a6173d0e6db8bbbcb9c7d5708 -->
+<!-- cache-key: cdktf-0.20.8 input-706557d47016cdb60e08adbf25eeb12ed1dd9072a89031e1c47360fd0fbf5fec -->

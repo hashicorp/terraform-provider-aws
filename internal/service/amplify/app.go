@@ -423,7 +423,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Repository = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.BadRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateApp(ctx, &input)
 	}, "role provided cannot be assumed")
 

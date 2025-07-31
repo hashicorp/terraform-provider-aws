@@ -66,6 +66,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kmsKeyDetails` - (Optional) An object describing the KMS key to asssociate. Block is documented below.
 
 ## repository
@@ -122,4 +123,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-b8a4a1df23287da973904a4fa9f7f519b62aeebe1f60535df99ad7d1c408a770 -->
+<!-- cache-key: cdktf-0.20.8 input-5eb51630aaf6b310d6659cd9363fb5460d6d63dfa54052571e6472b9a422c5b0 -->

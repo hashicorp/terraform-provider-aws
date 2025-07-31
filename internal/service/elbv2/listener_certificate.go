@@ -89,7 +89,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findListenerCertificateByTwoPartKey(ctx, conn, listenerARN, certificateARN)
 	}, d.IsNewResource())
 

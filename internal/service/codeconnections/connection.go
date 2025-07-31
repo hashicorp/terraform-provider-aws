@@ -53,7 +53,7 @@ const (
 
 type connectionResource struct {
 	framework.ResourceWithModel[connectionResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 

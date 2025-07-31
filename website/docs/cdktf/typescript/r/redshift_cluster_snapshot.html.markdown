@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Required, Forces new resource) The cluster identifier for which you want a snapshot.
 * `snapshotIdentifier` - (Required, Forces new resource) A unique identifier for the snapshot that you are requesting. This identifier must be unique for all snapshots within the Amazon Web Services account.
 * `manualSnapshotRetentionPeriod` - (Optional) The number of days that a manual snapshot is retained. If the value is `-1`, the manual snapshot is retained indefinitely. Valid values are -1 and between `1` and `3653`.
@@ -92,4 +93,4 @@ Using `terraform import`, import Redshift Cluster Snapshots using `snapshotIdent
 % terraform import aws_redshift_cluster_snapshot.test example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a09e33c45529d48fc1c9c42a16cb50804ddf0e3d8b2c1c227d16889af8efa09b -->
+<!-- cache-key: cdktf-0.20.8 input-21f0fec12ba78a830a04bc81ea37e6eb6f20cf2748ed87f6d8b3be782ac846dc -->

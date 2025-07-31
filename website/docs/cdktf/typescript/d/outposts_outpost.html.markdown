@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) Identifier of the Outpost.
 * `name` - (Optional) Name of the Outpost.
 * `arn` - (Optional) ARN.
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportedHardwareType` - The hardware type.
 * `tags` - The Outpost tags.
 
-<!-- cache-key: cdktf-0.20.8 input-35f3fde745d0b61be013964ef1d616fef90704512a6afea84fcf8f9bf3c2acd5 -->
+<!-- cache-key: cdktf-0.20.8 input-4f4195c9ef5c463f100c54f9ec9699e1a2d6109c896362816f312f7148c43b91 -->

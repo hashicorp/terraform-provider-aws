@@ -28,6 +28,10 @@ import (
 
 // @SDKResource("aws_networkmanager_connect_peer", name="Connect Peer")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.ConnectPeer")
+// @Testing(skipEmptyTags=true)
+// @Testing(importIgnore="state")
+// @Testing(generator=false)
 func resourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,
@@ -443,6 +447,8 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.Client, id
 		Target:         []string{},
 		Timeout:        timeout,
 		Refresh:        statusConnectPeerState(ctx, conn, id),
+		Delay:          2 * time.Minute,
+		PollInterval:   10 * time.Second,
 		NotFoundChecks: 1,
 	}
 

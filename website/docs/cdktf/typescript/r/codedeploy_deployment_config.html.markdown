@@ -130,6 +130,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deploymentConfigName` - (Required) The name of the deployment config.
 * `computePlatform` - (Optional) The compute platform can be `Server`, `Lambda`, or `ECS`. Default is `Server`.
 * `minimumHealthyHosts` - (Optional) A minimum_healthy_hosts block. Required for `Server` compute platform. Minimum Healthy Hosts are documented below.
@@ -211,4 +212,4 @@ Using `terraform import`, import CodeDeploy Deployment Configurations using the 
 % terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7683a24d45be8afb3fdb701aaf9093111f7bcd93063fb7f270dc2c81c0f1139e -->
+<!-- cache-key: cdktf-0.20.8 input-8ec5ed47e46ae6a15c98d84413569d720c1445cb2ca5dd512bfeec136a304e59 -->

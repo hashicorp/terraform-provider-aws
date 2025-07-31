@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the WAF Regional IP set.
 
 ## Attribute Reference
@@ -43,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF Regional IP set.
 
-<!-- cache-key: cdktf-0.20.8 input-664f0bcba2f0944a9bce4e4470bb1ca32f51d08df3ea85f50476a45145d90105 -->
+<!-- cache-key: cdktf-0.20.8 input-1cd0d3a831fbe776f297a9288dabce59a80f27f946893af543e5469725cef2a9 -->

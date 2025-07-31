@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy
 * `type` - (Required) Type of security policy. One of `encryption` or `network`.
 
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - The JSON policy document without any whitespaces.
 * `policyVersion` - Version of the policy.
 
-<!-- cache-key: cdktf-0.20.8 input-ad99e2a9f8c79ed6569c0fb0eb9b7ab2fea24fd51596cfcf3c67bf8b48f6cd78 -->
+<!-- cache-key: cdktf-0.20.8 input-dc4e5f4b6fbcb198d3e5c896884618d9532eef479833efde06f7865e58dc70b9 -->

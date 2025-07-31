@@ -150,16 +150,19 @@ func resourceParameter() *schema.Resource {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
 			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue)
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription)
 			}),
 			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
 			}),
 			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue)
+				if diff.NewValueKnown("insecure_value") {
+					return false
+				}
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue)
 			}),
 			customdiff.ComputedIf("has_value_wo", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange("value_wo_version")
+				return diff.HasChange("value_wo_version") || !diff.NewValueKnown("value_wo_version")
 			}),
 		),
 	}
@@ -292,6 +295,9 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 
 		if valueWO != "" {
 			hasWriteOnly = true
+		} else {
+			hasWriteOnly = false
+			d.Set("has_value_wo", nil)
 		}
 	}
 

@@ -41,10 +41,10 @@ This data source supports the following arguments:
 
 You can specify any of the following taggable resources.
 
-* AWS account – specify the account ID number.
-* Organizational unit – specify the OU ID that begins with `ou-` and looks similar to: `ou-1a2b-34uvwxyz`
-* Root – specify the root ID that begins with `r-` and looks similar to: `r-1a2b`
-* Policy – specify the policy ID that begins with `p-` and looks similar to: `p-12abcdefg3`
+* AWS account - specify the account ID number.
+* Organizational unit - specify the OU ID that begins with `ou-` and looks similar to: `ou-1a2b-34uvwxyz`
+* Root - specify the root ID that begins with `r-` and looks similar to: `r-1a2b`
+* Policy - specify the policy ID that begins with `p-` and looks similar to: `p-12abcdefg3`
 
 ## Attribute Reference
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `tags` - Map of key=value pairs for each tag set on the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-282d8cd5877f07019e53cfc0c53bc552177e48b4d679d99b98b8163f69d45a01 -->
+<!-- cache-key: cdktf-0.20.8 input-91b80cafe83017cb9e4a4c541a6c83580db236b756d9710dbb8cbe3c71a863d3 -->

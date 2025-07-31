@@ -75,6 +75,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `publicEndpoint` - (Optional) Configuration block that describes the settings of the public endpoint for the container service. [See below](#public_endpoint).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `container`
 
@@ -152,4 +153,4 @@ Using `terraform import`, import Lightsail Container Service Deployment Version 
 % terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-22a9613a0bc50f85099923aeba0ee148cf7dffb7876752850cd59e4534258989 -->
+<!-- cache-key: cdktf-0.20.8 input-432f5709e5939a3ef24f48a77799cf393980237cf5debfbfde4bb0257861f603 -->

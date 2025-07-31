@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID.
 
 ## Attribute Reference
@@ -78,4 +79,4 @@ Using `terraform import`, import QuickSight Folder Membership using the AWS acco
 % terraform import aws_quicksight_folder_membership.example 123456789012,example-folder,DATASET,example-dataset
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d86c3016c2fb02ce6bbff475bfb57b5c2ef1344603d2a5e1e68e88605800f66c -->
+<!-- cache-key: cdktf-0.20.8 input-e89fcb0d6a3232546180eb5dd15790a94e0e56ca32d114446be9d09da1f7d770 -->

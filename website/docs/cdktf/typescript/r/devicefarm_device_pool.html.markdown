@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Device Pool
 * `projectArn` - (Required) The ARN of the project for the device pool.
 * `rule` - (Required) The device pool's rules. See [Rule](#rule).
@@ -98,4 +99,4 @@ Using `terraform import`, import DeviceFarm Device Pools using their ARN. For ex
 % terraform import aws_devicefarm_device_pool.example arn:aws:devicefarm:us-west-2:123456789012:devicepool:4fa784c7-ccb4-4dbf-ba4f-02198320daa1/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7401e5540bbc9c409a752330f93de1b986a90f0ccd903a5fcf9a5e71234f64b3 -->
+<!-- cache-key: cdktf-0.20.8 input-826441071fab720d342048d37635511d24452904b2d16f7b15165264699a7f50 -->

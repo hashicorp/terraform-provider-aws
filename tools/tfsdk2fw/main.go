@@ -11,13 +11,13 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -57,7 +57,7 @@ func main() {
 		PackageName: packageName,
 	}
 
-	p, err := provider.New(context.Background())
+	p, err := sdkv2.NewProvider(context.Background())
 
 	if err != nil {
 		g.Fatalf(err.Error())

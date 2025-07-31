@@ -80,6 +80,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baseModelIdentifier` - (Required) The Amazon Resource Name (ARN) of the base model.
 * `customModelKmsKeyId` - (Optional) The custom model is encrypted at rest using this key. Specify the key ARN.
 * `customModelName` - (Required) Name for the custom model.
@@ -96,8 +97,8 @@ This resource supports the following arguments:
     * `validator` - (Required) Information about the validators.
         * `s3Uri` - (Required) The S3 URI where the validation data is stored.
 * `vpcConfig` - (Optional) Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job.
-    * `securityGroupIds` – (Required) VPC configuration security group IDs.
-    * `subnetIds` – (Required) VPC configuration subnets.
+    * `securityGroupIds` - (Required) VPC configuration security group IDs.
+    * `subnetIds` - (Required) VPC configuration subnets.
 
 ## Attribute Reference
 
@@ -150,4 +151,4 @@ Using `terraform import`, import Bedrock custom model using the `jobArn`. For ex
 % terraform import aws_bedrock_custom_model.example arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1959881c14a35854f6ddaa6dc9719e4e7da4e264d24291296d979be43fd743bc -->
+<!-- cache-key: cdktf-0.20.8 input-dff2569c2ee80bb9888cd14b204ff176ef54b8cbcb97900985c83d81f9611ea4 -->

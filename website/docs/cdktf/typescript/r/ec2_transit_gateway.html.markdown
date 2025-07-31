@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amazonSideAsn` - (Optional) Private Autonomous System Number (ASN) for the Amazon side of a BGP session. The range is `64512` to `65534` for 16-bit ASNs and `4200000000` to `4294967294` for 32-bit ASNs. Default value: `64512`.
 
 -> **NOTE:** Modifying `amazonSideAsn` on a Transit Gateway with active BGP sessions is [not allowed](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyTransitGatewayOptions.html). You must first delete all Transit Gateway attachments that have BGP configured prior to modifying `amazonSideAsn`.
@@ -100,4 +101,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway` using the EC2 Transit
 % terraform import aws_ec2_transit_gateway.example tgw-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7d48351af0472362ed03e7587b2d349c35832998a9a07ecac7ae586d3077a97a -->
+<!-- cache-key: cdktf-0.20.8 input-b11c28a7db71f15d8e91988b188e4878890e565e0d636de227eee1666641ca54 -->

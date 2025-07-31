@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The optional description for the route calculator resource.
 * `tags` - (Optional) Key-value tags for the route calculator. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -86,4 +87,4 @@ Using `terraform import`, import `aws_location_route_calculator` using the route
 % terraform import aws_location_route_calculator.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f35e811fd2c633c763e78f808cf0b9c4d35fac2d693f5e1526c62049823223eb -->
+<!-- cache-key: cdktf-0.20.8 input-91d762ee50289e9d8a86a0abef63a659b8918e95542d27f591efcefacdf62a81 -->

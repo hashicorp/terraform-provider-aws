@@ -112,6 +112,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the webhook.
 * `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
 * `authentication_configuration` - (Optional) An `auth` block. Required for `IP` and `GITHUB_HMAC`. Auth blocks are documented below.
@@ -164,4 +165,4 @@ Using `terraform import`, import CodePipeline Webhooks using their ARN. For exam
 % terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-12eddb2b0e3d8862aa33cfaab94c4516ce51690b35cba10b34567326ccde28ed -->
+<!-- cache-key: cdktf-0.20.8 input-c3ce7151839b2e8eacba62ae11df1ee45755d8a3f4549a7f852a5826ecf63ece -->

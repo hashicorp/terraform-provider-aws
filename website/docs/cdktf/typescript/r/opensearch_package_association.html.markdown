@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `packageId` - (Required, Forces new resource) Internal ID of the package to associate with a domain.
 * `domainName` - (Required, Forces new resource) Name of the domain to associate the package with.
 
@@ -77,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `10m`)
 * `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.20.8 input-4bf4fb6525081557853e76c5738da147fbc00142214c947d610c2b6a03303e42 -->
+<!-- cache-key: cdktf-0.20.8 input-38392025f49f93bca4135cd08b125975537dfdc385cd902d3e97e58a8b3d540a -->

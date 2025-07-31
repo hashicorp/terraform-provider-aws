@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ip` - (Required) Dedicated IP address.
 * `destinationPoolName` - (Required) Dedicated IP address.
 
@@ -84,4 +85,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Assignment
 % terraform import aws_sesv2_dedicated_ip_assignment.example "0.0.0.0,my-pool"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bade86996d3acf65855f6a6231ce2ef82aa6ec1d5d1f14f8816370a5fbe92d7 -->
+<!-- cache-key: cdktf-0.20.8 input-8aad6e0e6527f833cb94945c9e539a334170f7c710e0f2066f707f60fcf5cf40 -->

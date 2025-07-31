@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status` - (Optional) Status of a datashare in the producer. Valid values are `ACTIVE`, `AUTHORIZED`, `PENDING_AUTHORIZATION`, `DEAUTHORIZED`, and `REJECTED`. Omit this argument to return all statuses.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `managed_by` - Identifier of a datashare to show its managing entity.
 * `producer_arn` - ARN (Amazon Resource Name) of the producer.
 
-<!-- cache-key: cdktf-0.20.8 input-c22bf1ceec2a837156b82f0ac769e4db66ef8aaadf68004938353459ff4c08e1 -->
+<!-- cache-key: cdktf-0.20.8 input-fe04a2a334936991f8dba962acaf3906a15509853f3d285ad1c92053a21b5333 -->

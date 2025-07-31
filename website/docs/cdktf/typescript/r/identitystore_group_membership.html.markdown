@@ -79,6 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `memberId` - (Required) The identifier for a user in the Identity Store.
 * `groupId` - (Required)  The identifier for a group in the Identity Store.
 * `identityStoreId` - (Required) Identity Store ID associated with the Single Sign-On Instance.
@@ -121,4 +122,4 @@ Using `terraform import`, import `aws_identitystore_group_membership` using the 
 % terraform import aws_identitystore_group_membership.example d-0000000000/00000000-0000-0000-0000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-745ddbb430f05a4e5f0ba00082fd2e6025b969aa5422c002d78fa6aa6109ffff -->
+<!-- cache-key: cdktf-0.20.8 input-2ae04e8eff2b26136f77eb72d27bf8829606b6a55ea10f10e0eea5c32ec1c367 -->

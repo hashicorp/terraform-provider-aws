@@ -33,7 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_name` - Name of the runtime version.
 For a list of valid runtime versions, see [Canary Runtime Versions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html).
 
-<!-- cache-key: cdktf-0.20.8 input-72eb5486645f6fcf955bd6e4edfc6e9824e2e31c7685073770930dba7737560f -->
+<!-- cache-key: cdktf-0.20.8 input-bf132a8dd055f522c2d1075808a45d03f4f0164f34726bf4e81f5a9d6a5ff62a -->

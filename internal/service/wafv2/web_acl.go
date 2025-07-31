@@ -464,7 +464,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
 				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 				input.LockToken = aws.String(newLockToken)
-				_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+				_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 					return conn.UpdateWebACL(ctx, input)
 				})
 
@@ -500,7 +500,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteWebACL(ctx, input)
 	})
 
@@ -515,7 +515,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
 			// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 			input.LockToken = aws.String(newLockToken)
-			_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+			_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 				return conn.DeleteWebACL(ctx, input)
 			})
 

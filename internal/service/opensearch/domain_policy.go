@@ -92,8 +92,8 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),

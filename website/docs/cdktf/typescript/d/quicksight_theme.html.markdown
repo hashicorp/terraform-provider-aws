@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - AWS account ID.
 
 ## Attribute Reference
@@ -134,4 +135,4 @@ This data source exports the following attributes in addition to the arguments a
 * `warning` - Color (hexadecimal) that applies to warning and informational messages.
 * `warningForeground` - Color (hexadecimal) that applies to any text or other elements that appear over the warning color.
 
-<!-- cache-key: cdktf-0.20.8 input-2daca04fcd76a4ea2ca17ad1ba924c5d29610a6687a891e20570267c4f9bd850 -->
+<!-- cache-key: cdktf-0.20.8 input-0fd08d582dc79c8c510f13d07e44ec80d475400541bfa3aef7e94c3970552b86 -->

@@ -83,6 +83,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateAuthorityArn` - (Required) ARN of the certificate authority.
 * `certificateSigningRequest` - (Required) Certificate Signing Request in PEM format.
 * `signingAlgorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.
@@ -136,4 +137,4 @@ Using `terraform import`, import ACM PCA Certificates using their ARN. For examp
 % terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8d7847646fadad3366407a089a915a6efb6332c06ac3d98363d31e7d2c9bddea -->
+<!-- cache-key: cdktf-0.20.8 input-ff1375f49a49b3e299d9115dc001de81061fa8c925114c3949860e50be08037f -->

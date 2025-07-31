@@ -291,7 +291,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Deleting DocumentDB Global Cluster: %s", d.Id())
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &docdb.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})

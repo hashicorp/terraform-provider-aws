@@ -45,6 +45,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execution_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
@@ -210,13 +211,13 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 2"),
+				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.engine_version.0.effective_engine_version", resourceName, "configuration.0.engine_version.0.selected_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 3"),
 				),
 			},
 			{

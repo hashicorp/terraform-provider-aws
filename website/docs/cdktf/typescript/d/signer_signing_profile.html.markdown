@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the target signing profile.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Current version of the signing profile.
 * `versionArn` - Signing profile ARN, including the profile version.
 
-<!-- cache-key: cdktf-0.20.8 input-aba77f8dc958b5e0757ea2581dd2d80a47faca88c585f688dbc1436b3712ace6 -->
+<!-- cache-key: cdktf-0.20.8 input-413da44d1025fe6b2cd743c9d2b675b979c7053cdacb8f590ada5ef6ad4e0000 -->

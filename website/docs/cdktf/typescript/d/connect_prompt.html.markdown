@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Required) Returns information on a specific Prompt by name
 
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the Prompt.
 * `promptId` - Identifier for the prompt.
 
-<!-- cache-key: cdktf-0.20.8 input-eab8d63e50846c50789f59ce1b00e6b7371fab24f938434dce31edaf1e46b978 -->
+<!-- cache-key: cdktf-0.20.8 input-288673062e74d2ab768a8b7d7acaab48b79889eb613aedb128192ffff0c8a8c1 -->

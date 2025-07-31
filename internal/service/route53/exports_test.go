@@ -37,7 +37,6 @@ var (
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
-	RecordParseResourceID                       = recordParseResourceID
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync

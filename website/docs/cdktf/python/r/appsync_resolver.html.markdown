@@ -104,6 +104,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID for the GraphQL API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `type` - (Required) Type name from the schema defined in the GraphQL API.
@@ -173,4 +174,4 @@ Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hy
 % terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c52e7e65e799b6104f6c311a148eb1f52433b7035e764e94e6ade1153f6ef6e4 -->
+<!-- cache-key: cdktf-0.20.8 input-732165fc16ae033f875f3a18baa6cd4a8cd805108777257fd5d4bba8d08e6692 -->

@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serviceNetworkIdentifier` - (Required) Identifier of the service network.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfAssociatedServices` - Number of services associated with this service network.
 * `numberOfAssociatedVpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.20.8 input-c5a59dac1e7268599f0e6acda3ddb0fb6255e31f11816a2f2f97481c7e53c28d -->
+<!-- cache-key: cdktf-0.20.8 input-2c51ddaae628d2b7c8c6f40ed62775719fe1cd2f4eb9e1f1b9fca02f7c958b10 -->

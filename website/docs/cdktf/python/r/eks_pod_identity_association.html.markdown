@@ -80,7 +80,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `disable_session_tags` - (Optional) Disable the tags that are automatically added to role session by Amazon EKS.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role to be chained to the the IAM role specified as `role_arn`.
 
 ## Attribute Reference
 
@@ -88,6 +91,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `association_arn` - The Amazon Resource Name (ARN) of the association.
 * `association_id` - The ID of the association.
+* `external_id` - The unique identifier for this association for a target IAM role. You put this value in the trust policy of the target role, in a Condition to match the sts.ExternalId.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -115,4 +119,4 @@ Using `terraform import`, import EKS (Elastic Kubernetes) Pod Identity Associati
 % terraform import aws_eks_pod_identity_association.example example,a-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9067c06270d943e524beb400f69d69abd7c769f992d72bfd5bafff1e7b1db7b2 -->
+<!-- cache-key: cdktf-0.20.8 input-3e47517077a3db4445eff569ea9ecea66c75b8a51c35ef1d0b240badca459543 -->

@@ -49,11 +49,12 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-~> **NOTE:** Either `arn` or `name` must be configured.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the permission set.
 * `instanceArn` - (Required) ARN of the SSO Instance associated with the permission set.
 * `name` - (Optional) Name of the SSO Permission Set.
+
+~> **NOTE:** Either `arn` or `name` must be configured.
 
 ## Attribute Reference
 
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `sessionDuration` - Length of time that the application user sessions are valid in the ISO-8601 standard.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.20.8 input-72117fb8aa2c4b577764d0abcde2981eecfaa21858cd3f396c6b7b422f3c859d -->
+<!-- cache-key: cdktf-0.20.8 input-5f5a33ec9e428ebb200d54f40015054443fabf391d9a57579857cc2793b3dd78 -->

@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resolverQueryLogConfigId` - (Required) The ID of the [Route 53 Resolver query logging configuration](route53_resolver_query_log_config.html) that you want to associate a VPC with.
 * `resourceId` - (Required) The ID of a VPC that you want this query logging configuration to log queries for.
 
@@ -82,4 +83,4 @@ Using `terraform import`, import  Route 53 Resolver query logging configuration 
 % terraform import aws_route53_resolver_query_log_config_association.example rqlca-b320624fef3c4d70
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6f62f5b9b4259b2643b1af4febefb7ddfdc7693ad36af9e17d0e6b9e0c1fd40c -->
+<!-- cache-key: cdktf-0.20.8 input-abf588dc90cf9464cbcc1421435fc233b4db7f16e5ef566cb40f7798c105d833 -->

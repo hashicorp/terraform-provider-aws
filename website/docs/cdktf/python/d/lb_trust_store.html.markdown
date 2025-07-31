@@ -52,6 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) Full ARN of the trust store.
 * `name` - (Optional) Unique name of the trust store.
 
@@ -70,4 +71,4 @@ on the returned attributes - they are identical.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-32100df08bb9f9e80763027b7878e6eb13bb4fec8c7e5f59a2f5c26470eee975 -->
+<!-- cache-key: cdktf-0.20.8 input-5bb6b8acfb3a944abaada0787f124e2e30f71e67d3eb92da7b134e78e51c32a2 -->

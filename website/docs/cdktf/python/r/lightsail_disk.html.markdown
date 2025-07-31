@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import `aws_lightsail_disk` using the name attribute. 
 % terraform import aws_lightsail_disk.example example-disk
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-daa5d609b2508ff07860ef05f73c68950dfe3832469a315192ab486155ff4d6a -->
+<!-- cache-key: cdktf-0.20.8 input-b2b00c0d047812c476fdbbe150146dd440fcb6bce85e6462675d33d1795e7240 -->

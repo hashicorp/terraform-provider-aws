@@ -77,6 +77,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_configuration` - (Optional) The compute configuration of the compute fleet. This is only required if `compute_type` is set to `ATTRIBUTE_BASED_COMPUTE`. See [`compute_configuration`](#compute_configuration) below.
 * `fleet_service_role` - (Optional) The service role associated with the compute fleet.
 * `image_id` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
@@ -147,4 +148,4 @@ Using `terraform import`, import CodeBuild Fleet using the `name`. For example:
 % terraform import aws_codebuild_fleet.name fleet-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fa06d5482be245bb3fced3fa7e741b380ec91afe7cdfa28aaaa9e3e3a8d884d0 -->
+<!-- cache-key: cdktf-0.20.8 input-889f5e1bcaab3ae75ce301d75a61d7f534908d2cc76f4ca0ac814e36bf19e0e2 -->

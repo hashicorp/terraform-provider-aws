@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the traffic mirror session.
 * `networkInterfaceId` - (Required, Forces new) ID of the source network interface. Not all network interfaces are eligible as mirror sources. On EC2 instances only nitro based instances support mirroring.
 * `trafficMirrorFilterId`  - (Required) ID of the traffic mirror filter to be used
@@ -104,4 +105,4 @@ Using `terraform import`, import traffic mirror sessions using the `id`. For exa
 % terraform import aws_ec2_traffic_mirror_session.session tms-0d8aa3ca35897b82e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bebf9726dbd8427c2549afe146e9559250616ce6b54593bc2d8e49757985351e -->
+<!-- cache-key: cdktf-0.20.8 input-e27a7262a4b2a47f6ac8be6722456bbe39d420ea88f9cbccb9a0363ddd22dbf6 -->

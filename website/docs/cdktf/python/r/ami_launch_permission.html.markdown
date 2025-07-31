@@ -80,6 +80,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) AWS account ID for the launch permission.
 * `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
 * `image_id` - (Required) ID of the AMI.
@@ -117,4 +118,4 @@ Using `terraform import`, import AMI Launch Permissions using `[ACCOUNT-ID|GROUP
 % terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a0902093918e0a418db9b2fc23c95e8777db95ce86c83b3b547f718d788c6648 -->
+<!-- cache-key: cdktf-0.20.8 input-c4b5809e90071526077ddc5828d50a31df40da792f9c41a4826c335ff0f8e9d7 -->

@@ -229,7 +229,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	request, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.SpotInstanceRequest, error) {
 		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -242,8 +242,6 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", d.Id(), err)
 	}
-
-	request := outputRaw.(*awstypes.SpotInstanceRequest)
 
 	d.Set("spot_bid_status", request.Status.Code)
 	// Instance ID is not set if the request is still pending

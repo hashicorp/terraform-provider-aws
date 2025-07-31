@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
         VpcIpam(self, "main",
             description="My IPAM",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ],
             tags={
@@ -65,7 +65,7 @@ class MyConvertedCode(TerraformStack):
         )
         current = DataAwsRegion(self, "current")
         all_ipam_regions = Fn.distinct(
-            Token.as_any(Fn.concat([[current.name], ipam_regions.value])))
+            Token.as_any(Fn.concat([[current.region], ipam_regions.value])))
         # In most cases loops should be handled in the programming language context and
         #     not inside of the Terraform context. If you are looping over something external, e.g. a variable or a file input
         #     you should consider using a for loop. If you are looping over something only known to Terraform, e.g. a result of a data source
@@ -84,6 +84,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
 * `enable_private_gua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
@@ -134,4 +135,4 @@ Using `terraform import`, import IPAMs using the IPAM `id`. For example:
 % terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dc6646edefe1ef6f9374e324a414d7da4e9c6769dd1699494c854e5f93500100 -->
+<!-- cache-key: cdktf-0.20.8 input-41a160287db88dd545c3f1a2c18b23ba0f7bd115ca91f86152dc636cf70f7e23 -->

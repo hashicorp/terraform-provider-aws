@@ -50,6 +50,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `bucketName` - (Required) Name of the bucket that the access key will belong to and grant access to.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -93,4 +94,4 @@ Using `terraform import`, import `aws_lightsail_bucket_access_key` using the `id
 % terraform import aws_lightsail_bucket_access_key.example example-bucket,AKIAIOSFODNN7EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b1e9deb9b0cddc516d008dd6c5a5e11c948eba4aa829340b266c8ea689b566b8 -->
+<!-- cache-key: cdktf-0.20.8 input-5dcb1ded1757038916f8e9b4e19e930c0fa27649660abceb29e911480ddffb78 -->

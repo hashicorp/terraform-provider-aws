@@ -165,7 +165,7 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	vr, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualRouterData, error) {
 		return findVirtualRouterByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -178,8 +178,6 @@ func resourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Router (%s): %s", d.Id(), err)
 	}
-
-	vr := outputRaw.(*awstypes.VirtualRouterData)
 
 	d.Set(names.AttrARN, vr.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vr.Metadata.CreatedAt.Format(time.RFC3339))

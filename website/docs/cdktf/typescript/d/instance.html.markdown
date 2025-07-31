@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
@@ -152,4 +153,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.8 input-6be3248cfb27358ddb2d28d43a1f606e00e8edf34845e58f6efbfb9ec9bd828f -->
+<!-- cache-key: cdktf-0.20.8 input-f70e1e075123a472ddd8795c02fe5708eb38af5f5278746a1d85046d66c1ebda -->

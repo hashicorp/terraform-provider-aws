@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
         aws_securityhub_product_subscription_example =
         SecurityhubProductSubscription(self, "example_2",
             depends_on=[example],
-            product_arn="arn:aws:securityhub:${" + current.name + "}:733251395267:product/alertlogic/althreatmanagement"
+            product_arn="arn:aws:securityhub:${" + current.region + "}:733251395267:product/alertlogic/althreatmanagement"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_securityhub_product_subscription_example.override_logical_id("example")
@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `product_arn` - (Required) The ARN of the product that generates findings that you want to import into Security Hub - see below.
 
 Amazon maintains a list of [Product integrations in AWS Security Hub](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-providers.html) that changes over time. Any of the products on the linked [Available AWS service integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html) or [Available third-party partner product integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-partner-providers.html) can be configured using `aws_securityhub_product_subscription`.
@@ -114,4 +115,4 @@ Using `terraform import`, import Security Hub product subscriptions using `produ
 % terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e197181eaf1cbe693f21b8aefda6622e11891c6a8de2cc04fb6a75cee9693f4c -->
+<!-- cache-key: cdktf-0.20.8 input-fc2515fa30612d9652ea02932ac971d51ba44cb247818581eaefaac81c9e3cfb -->

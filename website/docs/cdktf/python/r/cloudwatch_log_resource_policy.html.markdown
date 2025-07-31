@@ -91,6 +91,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy_document` - (Required) Details of the resource policy, including the identity of the principal that is enabled to put logs to this account. This is formatted as a JSON string. Maximum length of 5120 characters.
 * `policy_name` - (Required) Name of the resource policy.
 
@@ -125,4 +126,4 @@ Using `terraform import`, import CloudWatch log resource policies using the poli
 % terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e10ada71512fa142d53597fd2949e853332001f8f918abaf19a3f490a6fae621 -->
+<!-- cache-key: cdktf-0.20.8 input-0a765fd35f3be453a0f73c5a19174505f064283f667814693376f440c7f21a89 -->

@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `faqId` - (Required) Identifier of the FAQ.
 * `indexId` - (Required) Identifier of the index that contains the FAQ.
 
@@ -65,4 +66,4 @@ The `s3Path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.20.8 input-9636299335f64ae0203ecc7a3f4e528046b49f94cf91c231efcff331e9a669fa -->
+<!-- cache-key: cdktf-0.20.8 input-f68c06151ee44c3a36864008de321c378dd48b1d9836acb9ea920e1b1033d036 -->

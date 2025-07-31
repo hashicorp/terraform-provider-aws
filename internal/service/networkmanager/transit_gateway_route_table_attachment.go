@@ -26,6 +26,9 @@ import (
 
 // @SDKResource("aws_networkmanager_transit_gateway_route_table_attachment", name="Transit Gateway Route Table Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayRouteTableAttachment")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
 func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAttachmentCreate,

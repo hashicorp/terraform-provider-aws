@@ -148,6 +148,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appNetworkAccessType` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
 * `appSecurityGroupManagement` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
 * `domainSettings` - (Optional) The domain settings. See [`domainSettings` Block](#domain_settings-block) below.
@@ -413,4 +414,4 @@ Using `terraform import`, import SageMaker AI Domains using the `id`. For exampl
 % terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8e017a817b9f8414bf410a1a2203d06386b3262c488678e9a3f03edccc2fe476 -->
+<!-- cache-key: cdktf-0.20.8 input-f5009ae5d0a584e9635b0ecc9913c66b20d7670a7144dd21fd10b218608c1c62 -->

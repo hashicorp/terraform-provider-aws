@@ -43,6 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Bucket name.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `policy` - IAM bucket policy.
 
-<!-- cache-key: cdktf-0.20.8 input-954a8fd4189d48cbd6438ea0a4f4717a1e6f8116e28864fc0a7752ae9c79f598 -->
+<!-- cache-key: cdktf-0.20.8 input-c52fdb1fa6a13925ab126d46f133c636dd54d9336f0071f3a8eb2bf5c9078ed4 -->

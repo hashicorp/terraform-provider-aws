@@ -159,6 +159,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) Logging Configuration name.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -204,4 +205,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Logging Configurat
 % terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->
+<!-- cache-key: cdktf-0.20.8 input-9833752dfd4061aee60a880c9e85a985bb464fac5c96897af5091cca3cb179cb -->

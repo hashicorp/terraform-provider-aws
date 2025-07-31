@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 
 ### `filter`
@@ -88,4 +89,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - List of all the license ARNs found.
 
-<!-- cache-key: cdktf-0.20.8 input-a78a0b97adbb2ca2b64e2ac39faa8b2a60ae2768e04e33d5d9b996293e028186 -->
+<!-- cache-key: cdktf-0.20.8 input-e6cbc1449ea2e079126729ade5a8af26a82457a4a1b8bab51b5aa9567db180c5 -->

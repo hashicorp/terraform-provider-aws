@@ -252,7 +252,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (any, error) {
+	attributes, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func(ctx context.Context) (map[string]string, error) {
 		return findSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -265,8 +265,6 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
-
-	attributes := outputRaw.(map[string]string)
 
 	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }

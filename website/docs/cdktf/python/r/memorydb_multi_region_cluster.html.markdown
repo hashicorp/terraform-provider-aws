@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) description for the multi-region cluster.
 * `engine` - (Optional) The name of the engine to be used for the multi-region cluster. Valid values are `redis` and `valkey`.
 * `engine_version` - (Optional) The version of the engine to be used for the multi-region cluster. Downgrades are not supported.
@@ -106,4 +107,4 @@ Using `terraform import`, import a cluster using the `multi_region_cluster_name`
 % terraform import aws_memorydb_multi_region_cluster.example virxk-example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3799d623bd517cf7fe1d19d5d069731caf039b655ec0685864b5961287492184 -->
+<!-- cache-key: cdktf-0.20.8 input-98185e973a7b585ea463f0a7c0e56ad4bbbc671ecdec6d59417c592b8d76bcc7 -->

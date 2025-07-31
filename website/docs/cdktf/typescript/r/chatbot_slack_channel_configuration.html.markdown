@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `guardrailPolicyArns` - (Optional) List of IAM policy ARNs that are applied as channel guardrails. The AWS managed `AdministratorAccess` policy is applied by default if this is not set.
 * `loggingLevel` - (Optional) Logging levels include `ERROR`, `INFO`, or `NONE`.
 * `snsTopicArns` - (Optional) ARNs of the SNS topics that deliver notifications to AWS Chatbot.
@@ -108,4 +109,4 @@ Using `terraform import`, import Chatbot Slack Channel Configuration using the `
 % terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55f71e83ec08ad6db07519e15d4c2534832af953654a4c90f49f251aade5d408 -->
+<!-- cache-key: cdktf-0.20.8 input-0607da2bba29af93eb098ee266d8702ed91775091c34d0bedcf7c64498222783 -->

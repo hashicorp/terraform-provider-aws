@@ -1,4 +1,4 @@
-# Roadmap:  Nov 2024 - Jan 2025
+# Roadmap:  July 2025 - September 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,67 +8,61 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning Nov to Jan 2025 the AWS Provider added support for the following (among many others):
+In the period spanning May to June 2025 the AWS Provider added support for the following (among many others):
 
-- AWS Chatbot
-- Amazon Bedrock
-- Amazon Route 53 Profiles & Zones
-- Amazon Bedrock Agents
-- Completed the migration to Amazon GO SDK v2
+- Major Release v6.0 - Multi Region Support
+- AWS Workspaces Web
+- AWS Notifications
 
-From Nov - Jan 2025, we will be prioritizing the following areas of work:
+From July - September 2025, we will be prioritizing the following areas of work:
 
-## New Services
+## New Services / Features
 
-### Amazon S3 Tables
+### DynamoDB Warm Throughput
 
-Issue: [#40407](https://github.com/hashicorp/terraform-provider-aws/issues/40407)
+Issue: [#40141](https://github.com/hashicorp/terraform-provider-aws/issues/40141)
 
-[Amazon S3 Tables](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-s3-tables-apache-iceberg-tables-analytics-workloads/) Amazon S3 Tables deliver the first cloud object store with built-in Apache Iceberg support and the easiest way to store tabular data at scale. S3 Tables are specifically optimized for analytics workloads, resulting in up to 3x faster query throughput and up to 10x higher transactions per second than self-managed tables.
+[DynamoDB Warm Throughput](https://aws.amazon.com/blogs/database/pre-warming-amazon-dynamodb-tables-with-warm-throughput/) Amazon DynamoDB now supports a new warm throughput value and the ability to easily pre-warm DynamoDB tables and indexes. The warm throughput value provides visibility into the number of read and write operations your DynamoDB tables can readily handle, while pre-warming lets you proactively increase the value to meet future traffic demands.
 
-Support for additional S3 resources may include:
-
-New Resource(s):
-
-- `aws_s3tables_table_bucket`
-- `aws_s3tables_table_bucket_policy`
-- `aws_s3tables_table`
-- `aws_s3tables_table_policy`
-- `aws_s3tables_namespace`
-
-### Amazon S3 Express Bucket Lifecycle Configuration
-
-Issue: [#40261](https://github.com/hashicorp/terraform-provider-aws/issues/40261)
-
-[Amazon S3 Express Bucket Lifecycle Configuration](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-s3-express-one-zone-s3-lifecycle-expirations/) Amazon S3 Express One Zone, a high-performance S3 storage class for latency-sensitive applications, now supports object expiration using S3 Lifecycle. S3 Lifecycle can expire objects based on age to help you automatically optimize storage costs.
-
-Support for Amazon S3 Express resources may include:
+Support for DynamoDB Warm Throughput may include:
 
 Affected Resource(s):
 
-- `aws_s3_bucket_lifecycle_configuration`
+- `aws_dynamodb_table`
 
-### Amazon EKS: Auto Mode
+### Amazon Connect phone number and contact flow association support
 
-Issue: [#40373](https://github.com/hashicorp/terraform-provider-aws/issues/40373)
+Issue: [#26015](https://github.com/hashicorp/terraform-provider-aws/issues/26015)
 
-[Amazon EKS: Auto Mode](https://aws.amazon.com/about-aws/whats-new/2024/12/amazon-eks-auto-mode/) a new feature that fully automates compute, storage, and networking management for Kubernetes clusters. Amazon EKS Auto Mode simplifies running Kubernetes by offloading cluster operations to AWS, improves the performance and security of your applications, and helps optimize compute costs.
+[Amazon Connect phone number and contact flow association support](https://aws.amazon.com/about-aws/whats-new/2022/04/amazon-connect-api-claim-phone-numbers/) Amazon Connect launches API to claim new phone numbers and configure them programmatically. Using this API, you can programmatically search for and claim available phone numbers, associate phone numbers to your contact flows, or release phone numbers that are no longer needed.
 
-### Amazon ECS: Availability Zone Rebalancing
+Support for Amazon Connect resources may include:
 
-Issue: [#40221](https://github.com/hashicorp/terraform-provider-aws/issues/40221)
+Affected Resource(s):
 
-[ECS: Availability Zone Rebalancing](https://aws.amazon.com/about-aws/whats-new/2024/11/amazon-ecs-az-rebalancing-speeds-mean-time-recovery-event/) a new feature that automatically redistributes containerized workloads across AZs. This capability helps reduce the mean time to recovery after infrastructure events, enabling applications to maintain high availability without requiring manual intervention.
+- `aws_connect_phone_number`
+- `aws_connect_phone_number_contact_flow_association`
+
+### AWS Control Tower APIs to register Organizational Units
+
+Issue: [#35849](https://github.com/hashicorp/terraform-provider-aws/issues/35849)
+
+[AWS Control Tower APIs to register Organizational Units](https://aws.amazon.com/about-aws/whats-new/2024/02/aws-control-tower-apis-register-organizational-units/) AWS Control Tower customers can now programmatically extend governance to organizational units (OUs) via APIs. These new APIs enable the AWS Control Tower baseline which contains best practice configurations, controls, and resources required for AWS Control Tower governance. For example, when you enable a baseline on an OU, member accounts within the OU will receive resources including AWS IAM roles, AWS CloudTrail, AWS Config, AWS Identity Center, and come under AWS Control Tower governance.
+
+### WAFv2 update rules shared with Firewall Manager
+
+Issue: [#36941](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
+
+[WAFv2 update rules shared with Firewall Manager](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-rule-groups) The Terraform AWS provider does use the UpdateWebACL API, but only for updating WAF ACLs that it manages and not quite in the way we need for dynamically managing shared Web ACLs within organizations using AWS Firewall Manager (FMS). This functionality is key as it allows different accounts to add their own rules to a shared Web ACL, promoting a flexible approach to security management.
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Enable Deletion Protection for DynamoDB Table Replicas](https://github.com/hashicorp/terraform-provider-aws/issues/30213)
-- [WAFv2 update rules shared with Firewall Manager](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
-- [Add support for enabling primary ipv6 address on EC2 instance](https://github.com/hashicorp/terraform-provider-aws/pull/36425)
-- [Timestream Scheduled Query](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
-- [Log Anomaly Detector](https://github.com/hashicorp/terraform-provider-aws/issues/22507)
+- [Fixes in-place UpdateService stabilization](https://github.com/hashicorp/terraform-provider-aws/pull/43502)
+- [Support for Cognito managed login branding](https://github.com/hashicorp/terraform-provider-aws/issues/42580)
+- [Updating capacity provider configuration for ECS services](https://github.com/hashicorp/terraform-provider-aws/issues/43004)
+- [aws_s3_bucket_lifecycle_configuration empty filter block produces a warning](https://github.com/hashicorp/terraform-provider-aws/issues/42714)
 
 ## Disclosures
 

@@ -174,6 +174,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_termination` - (Optional) Whether to terminate connections at the end of the deregistration timeout on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#deregistration-delay) for more information. Default is `false`.
 * `deregistration_delay` - (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
 * `health_check` - (Optional, Maximum of 1) Health Check configuration block. Detailed below.
@@ -321,4 +322,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-20cb036353506017bfefe5c1b327fd62a32a48b6ccdb9d4b57372e62c54e2f10 -->
+<!-- cache-key: cdktf-0.20.8 input-ba4d01d41f8f09e4a997f6dd80ae23eff5aff0b16432416537872bcf71a7ee8a -->

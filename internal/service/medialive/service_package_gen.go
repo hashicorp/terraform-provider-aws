@@ -48,7 +48,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceChannel,
+			Factory:  resourceChannel,
 			TypeName: "aws_medialive_channel",
 			Name:     "Channel",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInput,
+			Factory:  resourceInput,
 			TypeName: "aws_medialive_input",
 			Name:     "Input",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -66,7 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceInputSecurityGroup,
+			Factory:  resourceInputSecurityGroup,
 			TypeName: "aws_medialive_input_security_group",
 			Name:     "Input Security Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -75,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceMultiplex,
+			Factory:  resourceMultiplex,
 			TypeName: "aws_medialive_multiplex",
 			Name:     "Multiplex",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

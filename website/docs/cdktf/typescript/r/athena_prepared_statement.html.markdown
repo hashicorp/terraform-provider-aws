@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the prepared statement. Maximum length of 256.
 * `workgroup` - (Required) The name of the workgroup to which the prepared statement belongs.
 * `queryStatement` - (Required) The query string for the prepared statement.
@@ -116,4 +117,4 @@ Using `terraform import`, import Athena Prepared Statement using the `WORKGROUP-
 % terraform import aws_athena_prepared_statement.example 12345abcde/example 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f9448be709591784d5efcdb3a1f07a5bb6778cf5a1950bdedc990f59ba26a3f2 -->
+<!-- cache-key: cdktf-0.20.8 input-a8ebfad972a5d4f66549bec6fba9e395d8d77edc3c40429b47501598dbe9a621 -->

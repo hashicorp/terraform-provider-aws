@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `adminAccountId` - (Required) Identifier for the organization administrator account.
 
 ## Attribute Reference
@@ -81,4 +82,4 @@ Using `terraform import`, import Audit Manager Organization Admin Account Regist
 % terraform import aws_auditmanager_organization_admin_account_registration.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5cf8a2a486b752b03db8e2831ac4d0063d9d62c0be899f02b3e5d8318993d26c -->
+<!-- cache-key: cdktf-0.20.8 input-91c7acf4c230e940acb6ae534c7176427645285d63b7be072a89ba2d53dcc2ea -->

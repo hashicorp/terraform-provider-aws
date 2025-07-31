@@ -73,6 +73,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_type` - (Optional) Type of clusters to filter by.
 Currently, the only valid value is `eks`.
 * `cluster_versions` - (Optional) A list of Kubernetes versions that you can use to check if EKS supports it.
@@ -95,4 +96,4 @@ This data source exports the following attributes in addition to the arguments a
 * `release_date` - Release date of the cluster version.
 * `version_status` - Status of the EKS cluster version.
 
-<!-- cache-key: cdktf-0.20.8 input-d35871d4155cdaec3de8ab9dcadfb55e0fed325e6008ac405eab4326d521776b -->
+<!-- cache-key: cdktf-0.20.8 input-bab7956d183fc4501c59ae29ab510d656d752830ccc7c38233b7715b81d555e6 -->

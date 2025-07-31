@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `slackTeamName` - (Required) Slack workspace name configured with AWS Chatbot.
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `slackTeamId` - ID of the Slack Workspace assigned by AWS Chatbot.
 
-<!-- cache-key: cdktf-0.20.8 input-62340c1bdb1633b2d881f64f66520d98acaee101a0c84a3bd9b8c855bcc55fc4 -->
+<!-- cache-key: cdktf-0.20.8 input-11922e6fe8da0f36e518fdf4071ccb0c855de6745287325669ce596d0ab6c4c9 -->

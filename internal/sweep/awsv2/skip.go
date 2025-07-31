@@ -45,6 +45,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
 		return true
 	}
+	// Example (amp): InternalServerErrorException: Internal server error
+	if tfawserr.ErrMessageContains(err, "InternalServerErrorException", "Internal server error") {
+		return true
+	}
 	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
 		return true
@@ -128,6 +132,10 @@ func SkipSweepError(err error) bool {
 	}
 	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
+	//  Example (fsx): UnsupportedOperation: This operation is unsupported.
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "This operation is unsupported") {
 		return true
 	}
 	// For example from us-west-1 EMR studio

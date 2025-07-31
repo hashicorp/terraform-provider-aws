@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the alias you are creating.
 * `description` - (Optional) Description of the alias.
 * `routingConfiguration` - (Required) The StateMachine alias' route configuration settings. Fields documented below
@@ -109,4 +110,4 @@ Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For
 % terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bfd0b99447354a387498343e81e37140646e8c656cabd51886388e3b57f53683 -->
+<!-- cache-key: cdktf-0.20.8 input-222ea80f44b96d6ac90305f77ff3eefadb825a2ad5beaffe683714806b23b99b -->

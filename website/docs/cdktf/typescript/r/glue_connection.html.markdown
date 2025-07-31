@@ -456,20 +456,22 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `name` – (Required) Name of the connection.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the connection.
 
 The following arguments are optional:
 
-* `catalogId` – (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
-* `athenaProperties` – (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
-* `connectionProperties` – (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `catalogId` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
+* `athenaProperties` - (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
+* `connectionProperties` - (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
 
   **Note:** Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
-* `connectionType` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
-* `description` – (Optional) Description of the connection.
-* `matchCriteria` – (Optional) List of criteria that can be used in selecting this connection.
+* `connectionType` - (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `DYNAMODB`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
+* `description` - (Optional) Description of the connection.
+* `matchCriteria` - (Optional) List of criteria that can be used in selecting this connection.
 * `physicalConnectionRequirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physicalConnectionRequirements` Block](#physical_connection_requirements-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -521,4 +523,4 @@ Using `terraform import`, import Glue Connections using the `CATALOG-ID` (AWS ac
 % terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c74120cb1b6a8bca29606f9ab67226d4090d0fd1cbbaf1e6b08e67cb3f8adfee -->
+<!-- cache-key: cdktf-0.20.8 input-4710af87da7fc8d3036abd09142486a3634bd1f8d62ab6d578b6570a195a579f -->

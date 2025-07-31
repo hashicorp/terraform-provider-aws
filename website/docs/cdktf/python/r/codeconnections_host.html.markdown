@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the host to be created. The name must be unique in the calling AWS account.
 * `provider_endpoint` - (Required) The endpoint of the infrastructure to be represented by the host after it is created.
 * `provider_type` - (Required) The name of the external provider where your third-party code repository is configured.
@@ -57,8 +58,8 @@ A `vpc_configuration` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The CodeConnections Host ARN.
 * `arn` - The CodeConnections Host ARN.
+* `id` - (**Deprecated**) The CodeConnections Host ARN.
 * `status` - The CodeConnections Host status. Possible values are `PENDING`, `AVAILABLE`, `VPC_CONFIG_DELETING`, `VPC_CONFIG_INITIALIZING`, and `VPC_CONFIG_FAILED_INITIALIZATION`.
 
 ## Import
@@ -86,4 +87,4 @@ Using `terraform import`, import CodeConnections Host using the ARN. For example
 % terraform import aws_codeconnections_host.example-host arn:aws:codeconnections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-83aaa909f94154595a3f05cec51829b734e367bd3bd3e3f65e92f61539f0fe93 -->
+<!-- cache-key: cdktf-0.20.8 input-e1ce5ff32f8b44ad7a18916ea0fd1e702b08a31cf4ff2c2fd56de820dae5ae43 -->

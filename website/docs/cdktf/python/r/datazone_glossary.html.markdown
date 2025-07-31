@@ -125,6 +125,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the glossary. Must have a length between 0 and 4096.
 * `status` - (Optional) Status of business glossary. Valid values are DISABLED and ENABLED.
 
@@ -159,4 +160,4 @@ Using `terraform import`, import DataZone Glossary using the import Datazone Glo
 % terraform import aws_datazone_glossary.example domain-id,glossary-id,owning-project-identifier
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7110119e257d0e97a08a2b70761e9109f2ab35a3b62d81c390d315bf3054bd0f -->
+<!-- cache-key: cdktf-0.20.8 input-a620d71a60b84964062fe2e6500fe69b894e0c278bb6abb4e28ce2b2f37d4b57 -->

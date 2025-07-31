@@ -67,6 +67,7 @@ This resource supports the following arguments:
 * `disk_name` - (Required) Name of the Lightsail disk.
 * `disk_path` - (Required) Disk path to expose to the instance.
 * `instance_name` - (Required) Name of the Lightsail instance to attach to.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -99,4 +100,4 @@ Using `terraform import`, import `aws_lightsail_disk_attachment` using the id at
 % terraform import aws_lightsail_disk_attachment.example example-disk,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5810b562d79c97621ea49dd3faa5723d304ae39ca68f9fb9af2633d07296e82f -->
+<!-- cache-key: cdktf-0.20.8 input-a6121693264b4afced507a9257eaf3042d5f87ad215b2b32a454e1a16f74375e -->

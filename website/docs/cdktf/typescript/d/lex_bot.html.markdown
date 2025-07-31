@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the bot. The name is case sensitive.
 * `version` - (Optional) Version or alias of the bot.
 
@@ -63,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the bot. For a new bot, the version is always `$LATEST`.
 * `voiceId` - Amazon Polly voice ID that the Amazon Lex Bot uses for voice interactions with the user.
 
-<!-- cache-key: cdktf-0.20.8 input-5ef089ea17f3e167b9e877fe3394478af9b492a4da2e1d52a05076e5bbbba4a7 -->
+<!-- cache-key: cdktf-0.20.8 input-608d399faae96492ecbe09b8c023cbf2cb82ead9b1553354969452c5d8b795a3 -->

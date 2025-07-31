@@ -11,7 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func InfoFromContext(ctx context.Context, c *conns.AWSClient) (conns.ServicePackage, string, string, *tftags.InContext, bool) {
+type infoAWSClient interface {
+	ServicePackage(_ context.Context, name string) conns.ServicePackage
+}
+
+func InfoFromContext(ctx context.Context, c infoAWSClient) (conns.ServicePackage, string, string, *tftags.InContext, bool) {
 	if inContext, ok := conns.FromContext(ctx); ok {
 		if sp := c.ServicePackage(ctx, inContext.ServicePackageName()); sp != nil {
 			serviceName, err := names.HumanFriendly(sp.ServicePackageName())

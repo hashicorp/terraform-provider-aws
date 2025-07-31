@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
@@ -103,4 +104,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-fe98030488c524e5fa54a4d997e8c5e95dadd19c7f52c5f14b685074a40e9c80 -->
+<!-- cache-key: cdktf-0.20.8 input-7f12c9facea58d3ce201e579737f6038588f970f5adfa8d68d90d639791fbadf -->

@@ -186,7 +186,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			const (
 				timeout = 30 * time.Second
 			)
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterGroupStateFault](ctx, timeout, func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 				return conn.ResetParameterGroup(ctx, input)
 			}, " has pending changes")
 

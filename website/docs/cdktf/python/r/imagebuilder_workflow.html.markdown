@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `change_description` - (Optional) Change description of the workflow.
 * `data` - (Optional) Inline YAML string with data of the workflow. Exactly one of `data` and `uri` can be specified.
 * `description` - (Optional) Description of the workflow.
@@ -89,4 +90,4 @@ Using `terraform import`, import EC2 Image Builder Workflow using the `example_i
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.8 input-175b9ce33cd4b9bc0e8e753b4c79c33c079653b357cae7ce42826018f4ea958a -->
+<!-- cache-key: cdktf-0.20.8 input-7fafe9a8255cbdeb4d01e6eebc65914a89be8a55e1bf0237c76a9653a991d0c8 -->

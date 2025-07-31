@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/internal/attribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var regionalARNSchema = map[string]*schema.Schema{
@@ -41,7 +42,11 @@ func TestRegionalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	rd := schema.TestResourceDataRaw(t, regionalARNSchema, map[string]any{})
 	rd.SetId("not a valid ARN")
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), "could not parse import ID") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -65,7 +70,11 @@ func TestRegionalARN_ImportID_Invalid_WrongRegion(t *testing.T) {
 		Resource:  "res-abc123",
 	}.String())
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), "the region passed for import") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -89,7 +98,11 @@ func TestRegionalARN_ImportID_Valid_DefaultRegion(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -124,7 +137,11 @@ func TestRegionalARN_ImportID_Valid_RegionOverride(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -148,7 +165,11 @@ func TestRegionalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
 
 	rd := schema.TestResourceDataWithIdentityRaw(t, regionalARNSchema, regionalARNIdentitySchema, map[string]string{})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		if err.Error() != fmt.Sprintf("identity attribute %q is required", "arn") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -165,7 +186,11 @@ func TestRegionalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		"arn": "not a valid ARN",
 	})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), fmt.Sprintf("identity attribute %q: could not parse", "arn")) {
 			t.Fatalf("Unexpected error: %s", err)
@@ -190,7 +215,11 @@ func TestRegionalARN_Identity_Valid(t *testing.T) {
 		"arn": arn,
 	})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -223,7 +252,11 @@ func TestRegionalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id", "attr"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -257,7 +290,11 @@ func TestRegionalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 		"arn": arn,
 	})
 
-	err := importer.RegionalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id", "attr"),
+	)
+
+	err := importer.RegionalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -301,7 +338,11 @@ func TestGlobalARN_ImportID_Invalid_NotAnARN(t *testing.T) {
 	rd := schema.TestResourceDataRaw(t, globalARNSchema, map[string]any{})
 	rd.SetId("not a valid ARN")
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), "could not parse import ID") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -324,7 +365,11 @@ func TestGlobalARN_ImportID_Valid(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -345,7 +390,11 @@ func TestGlobalARN_Identity_Invalid_AttributeNotSet(t *testing.T) {
 
 	rd := schema.TestResourceDataWithIdentityRaw(t, globalARNSchema, globalARNIdentitySchema, map[string]string{})
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		if err.Error() != fmt.Sprintf("identity attribute %q is required", "arn") {
 			t.Fatalf("Unexpected error: %s", err)
@@ -362,7 +411,11 @@ func TestGlobalARN_Identity_Invalid_NotAnARN(t *testing.T) {
 		"arn": "not a valid ARN",
 	})
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		if !strings.HasPrefix(err.Error(), fmt.Sprintf("identity attribute %q: could not parse", "arn")) {
 			t.Fatalf("Unexpected error: %s", err)
@@ -386,7 +439,11 @@ func TestGlobalARN_Identity_Valid(t *testing.T) {
 		"arn": arn,
 	})
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -415,7 +472,11 @@ func TestGlobalARN_DuplicateAttrs_ImportID_Valid(t *testing.T) {
 	}.String()
 	rd.SetId(arn)
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id", "attr"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
@@ -445,7 +506,11 @@ func TestGlobalARN_DuplicateAttrs_Identity_Valid(t *testing.T) {
 		"arn": arn,
 	})
 
-	err := importer.GlobalARN(context.Background(), rd, "arn", []string{"id", "attr"})
+	identity := inttypes.RegionalARNIdentityNamed("arn",
+		inttypes.WithIdentityDuplicateAttrs("id", "attr"),
+	)
+
+	err := importer.GlobalARN(context.Background(), rd, identity)
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}

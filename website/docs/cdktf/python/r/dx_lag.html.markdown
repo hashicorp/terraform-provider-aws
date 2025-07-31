@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the LAG.
 * `connections_bandwidth` - (Required) The bandwidth of the individual dedicated connections bundled by the LAG. Valid values: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html).
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
@@ -84,4 +85,4 @@ Using `terraform import`, import Direct Connect LAGs using the LAG `id`. For exa
 % terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a8471f2dcbb934601d8dc3a119a4408575fd84abb0a4764cee068b15cd6b3fa4 -->
+<!-- cache-key: cdktf-0.20.8 input-4d0c9530338a90704d9acbbf414fe0e76a460f28d8c2b8ffd7e86d0081f36474 -->

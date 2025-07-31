@@ -34,8 +34,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_id` - (Required) The ID of the security group.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
 
@@ -77,4 +78,4 @@ Using `terraform import`, import a Security Group VPC Association using the `sec
 % terraform import aws_vpc_security_group_vpc_association.example sg-12345,vpc-67890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c0ba7de57b663ae435a7d22fd4300d66dc6710daffd67bab6a0b3d766ea40a3 -->
+<!-- cache-key: cdktf-0.20.8 input-9768425a48cd05fce3839b5319d5f1ae94d691e2a4fccedf70ffb4e2c77f03c2 -->

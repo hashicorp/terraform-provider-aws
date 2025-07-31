@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationAzureBlobOutput")
 // @Testing(importIgnore="sas_configuration")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(name="LocationAzureBlob")
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,

@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Required) Instance ID to attach.
 * `networkInterfaceId` - (Required) ENI ID to attach.
 * `deviceIndex` - (Required) Network interface index (int).
@@ -85,4 +86,4 @@ Using `terraform import`, import Elastic network interface (ENI) Attachments usi
 % terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c857f5e1172a1f296e98c2334fec654cb012784f50f94349ede0b2f1a99701bf -->
+<!-- cache-key: cdktf-0.20.8 input-f67e360f200625105bd0a2b6ced2f63179ecb61e2d98bfdd1f5fa4445842aec9 -->

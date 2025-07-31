@@ -19,7 +19,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -191,7 +191,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -249,7 +249,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -295,7 +295,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -370,7 +370,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -454,7 +454,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -586,7 +586,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -671,7 +671,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -842,7 +842,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -994,7 +994,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1162,7 +1162,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1247,7 +1247,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1331,7 +1331,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1393,7 +1393,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1447,7 +1447,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1512,7 +1512,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1579,7 +1579,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1630,7 +1630,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1722,7 +1722,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1804,7 +1804,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
@@ -1961,7 +1961,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),

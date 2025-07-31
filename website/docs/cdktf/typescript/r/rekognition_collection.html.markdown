@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -93,4 +94,4 @@ Using `terraform import`, import Rekognition Collection using the `example_id_ar
 % terraform import aws_rekognition_collection.example collection-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e93746c92e7d7250b0634ef2b685e01c3fb3dbcdb9e923b38199736f6578f3be -->
+<!-- cache-key: cdktf-0.20.8 input-05d3d5c15c13b39572918aba9a2cd99978df7b64795b0f25f9d4b83e9c9dddae -->

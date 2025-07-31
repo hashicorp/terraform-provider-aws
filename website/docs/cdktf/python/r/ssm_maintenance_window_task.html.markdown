@@ -175,6 +175,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
 * `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
@@ -273,4 +274,4 @@ Using `terraform import`, import AWS Maintenance Window Task using the `window_i
 % terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c897099591bdcacb9f61cf4c76d292fedaf9671e665a81bf657daf724fcf0e5c -->
+<!-- cache-key: cdktf-0.20.8 input-a15093cae75d3ea85c62bc1be18d18e6c07e1c8cee1c561d74a33f9d0e518a2f -->

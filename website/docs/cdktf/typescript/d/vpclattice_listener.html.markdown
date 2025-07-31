@@ -43,8 +43,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serviceIdentifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
 * `listenerIdentifier` - (Required) ID or Amazon Resource Name (ARN) of the listener
 
@@ -64,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `serviceId` - The ID of the service.
 * `tags` - List of tags associated with the listener.
 
-<!-- cache-key: cdktf-0.20.8 input-4a687c57ad29c134d46fc404c1c41b48da0292cbf1e1dd8120398bdb458ec84c -->
+<!-- cache-key: cdktf-0.20.8 input-76abf63713bfd80551cbbabf4211aa5a2c3fa55f4c01e4fe9a24ff2d50f9f1c7 -->

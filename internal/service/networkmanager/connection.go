@@ -29,6 +29,10 @@ import (
 
 // @SDKResource("aws_networkmanager_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(generator=false)
+// @Testing(serialize=true)
+// @Testing(importStateIdAttribute="arn")
+// @Testing(skipEmptyTags=true)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,

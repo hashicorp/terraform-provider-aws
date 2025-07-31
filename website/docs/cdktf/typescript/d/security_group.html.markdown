@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) Id of the specific security group to retrieve.
 * `name` - (Optional) Name that the desired security group must have.
@@ -92,4 +93,4 @@ The following fields are also exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-3b7277e9f8180af4e803d61c6c7c991e382301947b28cf0636b8f7ac7e99ff77 -->
+<!-- cache-key: cdktf-0.20.8 input-d8adcee7a0932d12021f9d65956e89bc8e38e17d6d91f8b1abf1037fe7de50e2 -->

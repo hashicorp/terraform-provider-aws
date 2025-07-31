@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
@@ -83,4 +84,4 @@ Using `terraform import`, import SSM  Maintenance Windows using the maintenance 
 % terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d84f015c687fb4fc29d800deeadde46a79d5a86fb911ce2556a835a7fea71234 -->
+<!-- cache-key: cdktf-0.20.8 input-c1bb7816649eef055c71400ccbe9ff2a89dda7794d07b422b38b899ab399d811 -->

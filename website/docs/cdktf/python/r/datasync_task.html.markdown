@@ -121,6 +121,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_location_arn` - (Required) Amazon Resource Name (ARN) of destination DataSync Location.
 * `source_location_arn` - (Required) Amazon Resource Name (ARN) of source DataSync Location.
 * `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of the CloudWatch Log Group that is used to monitor and log events in the sync task.
@@ -239,4 +240,4 @@ Using `terraform import`, import `aws_datasync_task` using the DataSync Task Ama
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-53c242c23e5dd30583394af3a7ee846a81b16fe7fbb82ec3f7cb2ba2c946ee09 -->
+<!-- cache-key: cdktf-0.20.8 input-e345ae4963038d5596f0040049ba40af169207efd7ca0c2a4edceda7b6f026d2 -->

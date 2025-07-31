@@ -47,11 +47,13 @@ func resourceAPICache() *schema.Resource {
 			"at_rest_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"ttl": {
@@ -133,19 +135,10 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	input := &appsync.UpdateApiCacheInput{
-		ApiId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("api_caching_behavior") {
-		input.ApiCachingBehavior = awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string))
-	}
-
-	if d.HasChange("ttl") {
-		input.Ttl = int64(d.Get("ttl").(int))
-	}
-
-	if d.HasChange(names.AttrType) {
-		input.Type = awstypes.ApiCacheType(d.Get(names.AttrType).(string))
+		ApiId:              aws.String(d.Id()),
+		ApiCachingBehavior: awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string)),
+		Ttl:                int64(d.Get("ttl").(int)),
+		Type:               awstypes.ApiCacheType(d.Get(names.AttrType).(string)),
 	}
 
 	_, err := conn.UpdateApiCache(ctx, input)

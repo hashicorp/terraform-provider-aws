@@ -80,6 +80,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `active_directory_id` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `self_managed_active_directory`.
 * `aliases` - (Optional) An array DNS alias names that you want to associate with the Amazon FSx file system.  For more information, see [Working with DNS Aliases](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-dns-aliases.html)
 * `audit_log_configuration` - (Optional) The configuration that Amazon FSx for Windows File Server uses to audit and log user accesses of files, folders, and file shares on the Amazon FSx for Windows File Server file system. See [`audit_log_configuration` Block](#audit_log_configuration-block) for details.
@@ -198,4 +199,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7512c63eecc7f2680d6ccea199dd6ef48933a2367fbdf05c9a796ce6d12b0c43 -->
+<!-- cache-key: cdktf-0.20.8 input-bb355d18f4d91802d7261a5c5dd00e1ebccf7fbe210e292514a31e83734235ae -->

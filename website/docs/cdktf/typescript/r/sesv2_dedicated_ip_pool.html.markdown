@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scalingMode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`. If omitted, the AWS API will default to a standard pool.
 * `tags` - (Optional) A map of tags to assign to the pool. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -104,4 +105,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Pool using
 % terraform import aws_sesv2_dedicated_ip_pool.example my-pool
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6412cfede9409ff4616137941920d2ba9f22cbdf7b5dfdf5784353be6f60b3e5 -->
+<!-- cache-key: cdktf-0.20.8 input-dabe4426f6fa3fd0ad245093b3aebf69f1d9524926d21cd5da0959cfbc30b227 -->

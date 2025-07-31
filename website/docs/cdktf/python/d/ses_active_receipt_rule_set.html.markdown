@@ -31,7 +31,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -40,4 +42,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - SES receipt rule set ARN.
 * `rule_set_name` - Name of the rule set
 
-<!-- cache-key: cdktf-0.20.8 input-2cf5633a2377aef251ee723039aa4a31c70e16ba5418ecb65daea62b14e5b3bf -->
+<!-- cache-key: cdktf-0.20.8 input-8c1cde8147ab60839e3b3ea77a29e3169a07c133077e254557d587b273702866 -->

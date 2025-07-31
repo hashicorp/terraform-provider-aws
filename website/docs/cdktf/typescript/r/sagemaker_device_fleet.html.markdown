@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deviceFleetName` - (Required) The name of the Device Fleet (must be unique).
 * `roleArn` - (Required) The Amazon Resource Name (ARN) that has access to AWS Internet of Things (IoT).
 * `outputConfig` - (Required) Specifies details about the repository. see [Output Config](#output-config) details below.
@@ -92,4 +93,4 @@ Using `terraform import`, import SageMaker AI Device Fleets using the `name`. Fo
 % terraform import aws_sagemaker_device_fleet.example my-fleet
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-76bb6581ca4d45ecef4d7999c0e51fd167d945883c9c7786d106ff69976fb300 -->
+<!-- cache-key: cdktf-0.20.8 input-746e54a5b52bf077cccb2c62e34bae21af36d36c119d1ee4b2d0c9b05575be70 -->

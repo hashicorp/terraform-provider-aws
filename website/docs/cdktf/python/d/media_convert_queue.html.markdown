@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier of the queue. The same as `name`.
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - The status of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-8843c6c70d1e4598b77a6d8cd45642165f8d098abe5c152f0479e015d6b509ca -->
+<!-- cache-key: cdktf-0.20.8 input-b20cf16973de1b05794e28a3186a5d608625a7c6b3153bd5ba5ed667fca79e75 -->

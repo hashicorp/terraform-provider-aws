@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the infrastructure configuration.
 
 ## Attribute Reference
@@ -67,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
 * `terminate_instance_on_failure` - Whether instances are terminated on failure.
 
-<!-- cache-key: cdktf-0.20.8 input-71e6ec8a166f3ffaa4d5166d02b41c995b2bef8b9ea8df41d9d47c1134655302 -->
+<!-- cache-key: cdktf-0.20.8 input-66e9fe42a4dfe8fef868356ba49dc84837c55555b515f4d484c2abafcfb28068 -->

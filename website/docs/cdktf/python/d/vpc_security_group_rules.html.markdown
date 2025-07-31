@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired security group rule.
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of all the security group rule IDs found.
 
-<!-- cache-key: cdktf-0.20.8 input-dd5ebbdf59ac8828eecfae871dc446b416b34f7711dab733d57136b5eb75f20e -->
+<!-- cache-key: cdktf-0.20.8 input-7864022b0829b2d0833b8f2bee3600c8c768ebd74992f333599bc90bd5630bed -->

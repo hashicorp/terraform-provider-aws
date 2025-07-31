@@ -71,8 +71,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `contact_id` - (Required) Amazon Resource Name (ARN) of the AWS SSM Contact that the contact channel belongs to.
 - `delivery_address` - (Required) Block that contains contact engagement details. See details below.
 - `name` - (Required) Name of the contact channel. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
@@ -114,4 +115,4 @@ Using `terraform import`, import SSM Contact Channel using the `ARN`. For exampl
 % terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-67d6f47b5cc058990a7ddf5e07adee25f5f66839fdfcdbac4003a8e367cbd01b -->
+<!-- cache-key: cdktf-0.20.8 input-eb5de9c73b894faf33a0f5f22f8fc3b84b42a01c57587169c8af6eb80adb39fc -->

@@ -71,6 +71,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `defaultBaseline` - (Optional) Filters the results against the baselines default_baseline field.
 * `namePrefix` - (Optional) Filter results by the baseline name prefix.
 * `operatingSystem` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
@@ -104,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - Name specified to identify the patch source.
     * `products` - Specific operating system versions a patch repository applies to.
 
-<!-- cache-key: cdktf-0.20.8 input-8ee6d71e67ed884af76dd23dafa24872940eb751791d12905502839059364dab -->
+<!-- cache-key: cdktf-0.20.8 input-5e13df7683cd868966f5625ac1ba408149e6795097ce730b91ec70fd500b398a -->

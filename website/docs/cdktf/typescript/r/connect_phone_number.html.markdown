@@ -96,6 +96,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `countryCode` - (Required, Forces new resource) The ISO country code. For a list of Valid values, refer to [PhoneNumberCountryCode](https://docs.aws.amazon.com/connect/latest/APIReference/API_SearchAvailablePhoneNumbers.html#connect-SearchAvailablePhoneNumbers-request-PhoneNumberCountryCode).
 * `description` - (Optional, Forces new resource) The description of the phone number.
 * `prefix` - (Optional, Forces new resource) The prefix of the phone number that is used to filter available phone numbers. If provided, it must contain `+` as part of the country code. Do not specify this argument when importing the resource.
@@ -160,4 +161,4 @@ Using `terraform import`, import Amazon Connect Phone Numbers using its `id`. Fo
 % terraform import aws_connect_phone_number.example 12345678-abcd-1234-efgh-9876543210ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3709bbd75b47ca64869527df48be54e1acf135a3093efdda6d797cfbc24ebba1 -->
+<!-- cache-key: cdktf-0.20.8 input-731a4677bdc70b0e6a8e1e26a55ffaf27ea907368b48446a4dae53ea562afddc -->

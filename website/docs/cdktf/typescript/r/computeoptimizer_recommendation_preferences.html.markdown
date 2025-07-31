@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enhancedInfrastructureMetrics` - (Optional) The status of the enhanced infrastructure metrics recommendation preference. Valid values: `Active`, `Inactive`.
 * `externalMetricsPreference` - (Optional) The provider of the external metrics recommendation preference. See [External Metrics Preference](#external-metrics-preference) below.
 * `inferredWorkloadTypes` - (Optional) The status of the inferred workload types recommendation preference. Valid values: `Active`, `Inactive`.
@@ -158,4 +159,4 @@ Using `terraform import`, import recommendation preferences using the resource t
 % terraform import aws_computeoptimizer_recommendation_preferences.example Ec2Instance,AccountId,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2baa0157c0499a84be3e2d1f847887b8a89478d41499cd5f412bd69b93587edb -->
+<!-- cache-key: cdktf-0.20.8 input-5f250081869182e482d3bdc4a1d2842305382867a71a84589055345c28a07897 -->

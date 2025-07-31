@@ -76,52 +76,6 @@ func TestAccNetworkManagerLink_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerLink_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_link.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLinkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccLinkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_link.test"
@@ -238,71 +192,6 @@ resource "aws_networkmanager_link" "test" {
   }
 }
 `, rName)
-}
-
-func testAccLinkConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_site" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_link" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-  site_id           = aws_networkmanager_site.test.id
-
-  bandwidth {
-    download_speed = 50
-    upload_speed   = 10
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccLinkConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_site" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_networkmanager_link" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-  site_id           = aws_networkmanager_site.test.id
-
-  bandwidth {
-    download_speed = 50
-    upload_speed   = 10
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccLinkConfig_allAttributes(rName string) string {

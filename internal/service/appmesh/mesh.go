@@ -147,7 +147,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	mesh, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.MeshData, error) {
 		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
 	}, d.IsNewResource())
 
@@ -160,8 +160,6 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Service Mesh (%s): %s", d.Id(), err)
 	}
-
-	mesh := outputRaw.(*awstypes.MeshData)
 
 	d.Set(names.AttrARN, mesh.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))

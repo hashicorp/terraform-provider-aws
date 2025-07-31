@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Selenium testing project.
 * `description` - (Optional) Human-readable description of the project.
 * `vpcConfig` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.
@@ -97,4 +98,4 @@ Using `terraform import`, import DeviceFarm Test Grid Projects using their ARN. 
 % terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-313e1fd84ca7bbe05e1339436e4a7d800d9f213722e60f3f4384d19648e491fd -->
+<!-- cache-key: cdktf-0.20.8 input-61321a2dcc2d73bd4c04abc94607de6b6308d76af0e5e1ec3b22803f81be2e2c -->

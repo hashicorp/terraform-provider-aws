@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_time` - (Optional) The date and time, in RFC 3339 format, that the rotation goes into effect.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -241,4 +242,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `ar
 % terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-11ce2607c2bd70eae69800fa9ab236aa96308ce2f9eed7c7448ec8f86bcb63bb -->
+<!-- cache-key: cdktf-0.20.8 input-2e2edf36791edc8caddea4f4ccea70b4d5ad0e5341a2046477c28f1c52337f18 -->

@@ -34,6 +34,7 @@ resource "aws_gamelift_fleet" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration).
 * `description` - (Optional) Human-readable description of the fleet.
@@ -122,4 +123,4 @@ Using `terraform import`, import GameLift Fleets using the ID. For example:
 % terraform import aws_gamelift_fleet.example <fleet-id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->
+<!-- cache-key: cdktf-0.20.8 input-d0744b58f2f446290fd8e50038fda4c3a7ff17252f5514fba2b7f28cbc78ae1e -->

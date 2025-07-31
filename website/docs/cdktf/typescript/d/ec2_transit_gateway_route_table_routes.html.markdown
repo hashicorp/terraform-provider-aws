@@ -357,6 +357,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Required) Custom filter block as described below.
 * `transitGatewayRouteTableId` - (Required) Identifier of EC2 Transit Gateway Route Table.
 
@@ -382,4 +383,4 @@ This data source exports the following attributes in addition to the arguments a
 * `transit_gateway_route_table_announcement_id` - The id of the transit gateway route table announcement, most of the time it is an empty string.
 * `type` - The type of the route, can be `propagated` or `static`.
 
-<!-- cache-key: cdktf-0.20.8 input-0127f2b0c710e7371ba682f52e5c0ee782913b4b112f80a448777e02c054b4b0 -->
+<!-- cache-key: cdktf-0.20.8 input-bb7bbc37086a3e69fc612f4a8f7a8af47f0cb65b7df116a0330bca92e77b1214 -->

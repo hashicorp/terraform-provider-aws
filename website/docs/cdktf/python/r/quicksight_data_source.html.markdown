@@ -100,7 +100,7 @@ class MyConvertedCode(TerraformStack):
             content=Token.as_string(
                 Fn.jsonencode({
                     "file_locations": [{
-                        "URIPrefixes": ["https://${" + example.id + "}.s3-${" + data_aws_region_current.name + "}.${" + data_aws_partition_current.dns_suffix + "}"
+                        "URIPrefixes": ["https://${" + example.id + "}.s3-${" + data_aws_region_current.region + "}.${" + data_aws_partition_current.dns_suffix + "}"
                         ]
                     }
                     ],
@@ -170,6 +170,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
 * `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
@@ -378,4 +379,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-39c44280e942ba61716c559b7b4651b6620fb727224eda3c89a529511b9790ff -->
+<!-- cache-key: cdktf-0.20.8 input-12efb02376cd25ec828f6f3b95249901855497bf92b36ac77a0c1b9a41e16c90 -->

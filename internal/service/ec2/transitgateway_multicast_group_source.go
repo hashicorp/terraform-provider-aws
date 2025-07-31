@@ -87,7 +87,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	multicastGroup, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.TransitGatewayMulticastGroup, error) {
 		return findTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	}, d.IsNewResource())
 
@@ -100,8 +100,6 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Group Source (%s): %s", d.Id(), err)
 	}
-
-	multicastGroup := outputRaw.(*awstypes.TransitGatewayMulticastGroup)
 
 	d.Set("group_ip_address", multicastGroup.GroupIpAddress)
 	d.Set(names.AttrNetworkInterfaceID, multicastGroup.NetworkInterfaceId)
@@ -152,7 +150,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 		return fmt.Errorf("deleting EC2 Transit Gateway Multicast Group Source (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	})
 

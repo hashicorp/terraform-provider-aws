@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_endpoint_id` - ID of the specific VPC Endpoint to retrieve.
 
 ## Attribute Reference
@@ -72,4 +73,4 @@ DNS blocks (for `private_dns_entry`) support the following attributes:
 * `dns_name` - DNS name.
 * `hosted_zone_id` - ID of the private hosted zone.
 
-<!-- cache-key: cdktf-0.20.8 input-97996ffbfe148b1ad2538b6cee60aadd2da3f57301db51783099caa30137f6d9 -->
+<!-- cache-key: cdktf-0.20.8 input-7650398e06008eeca533dd8d353cc52773ab347115093ef5a01992b92036e085 -->

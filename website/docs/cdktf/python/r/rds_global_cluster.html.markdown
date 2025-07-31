@@ -252,6 +252,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation. Terraform will only perform drift detection if a configuration value is provided.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
@@ -334,4 +335,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-75f5bb39a4f7c58422a98329024ee7d3751271479bb15d591f153bfb42e02e25 -->
+<!-- cache-key: cdktf-0.20.8 input-8111d4be4a08a90cfa632a113cd8fd0573de4624dff38c557f59a77a4c0c072f -->

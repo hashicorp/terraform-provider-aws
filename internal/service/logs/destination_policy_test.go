@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,9 +19,9 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v string
 	resourceName := "aws_cloudwatch_log_destination_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,7 +30,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDestinationPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
+					testAccCheckDestinationPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
@@ -45,7 +43,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDestinationPolicyConfig_forceUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
+					testAccCheckDestinationPolicyExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
@@ -54,14 +52,14 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDestinationPolicyExists(ctx context.Context, n string, v *string) resource.TestCheckFunc {
+func testAccCheckDestinationPolicyExists(ctx context.Context, t *testing.T, n string, v *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindDestinationPolicyByName(ctx, conn, rs.Primary.ID)
 

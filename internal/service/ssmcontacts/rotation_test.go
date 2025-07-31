@@ -81,8 +81,8 @@ func testAccRotation_basic(t *testing.T) {
 	})
 }
 
-// testAccRotation_Identity_RegionOverride cannot be generated, because the test requires `aws_ssmincidents_replication_set`, which doesn't support region override
-func testAccRotation_Identity_RegionOverride(t *testing.T) {
+// testAccSSMContactsRotation_Identity_RegionOverride cannot be generated, because the test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+func testAccSSMContactsRotation_Identity_RegionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

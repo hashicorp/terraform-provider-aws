@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
 * `after` - (Optional) The name of the rule to place this rule after
@@ -146,4 +147,4 @@ Using `terraform import`, import SES receipt rules using the ruleset name and ru
 % terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2b2a4c2e280a318a5e9175f9d2c345e7b31a73965f0d855481a6e46c5ada94d8 -->
+<!-- cache-key: cdktf-0.20.8 input-ede99f9d8d734260c132a384cb448da749d58142a333452537901de17c4e3ef8 -->

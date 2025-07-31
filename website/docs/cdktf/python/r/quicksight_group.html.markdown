@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_name` - (Required) A name for the group.
 * `aws_account_id` - (Optional) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
 * `description` - (Optional) A description for the group.
@@ -71,4 +72,4 @@ Using `terraform import`, import QuickSight Group using the aws account id, name
 % terraform import aws_quicksight_group.example 123456789123/default/tf-example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4b80dc7995b3a3364f054a8bfdf88c630ccdea1d94a035f1e6fe2bcf10868632 -->
+<!-- cache-key: cdktf-0.20.8 input-356971d5d543df208e68d4f6646bdc9376ae2fbdf09dcf23c1a8fec31f21d129 -->

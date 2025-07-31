@@ -22,15 +22,15 @@ import (
 )
 
 // @SDKResource("aws_inspector_assessment_target", name="Assessment Target")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTarget")
+// @Testing(preIdentityVersion="v6.4.0")
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTargetCreate,
 		ReadWithoutTimeout:   resourceAssessmentTargetRead,
 		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {

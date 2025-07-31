@@ -74,7 +74,7 @@ func (r *drtAccessRoleARNAssociationResource) Create(ctx context.Context, reques
 		RoleArn: aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateDRTRole(ctx, input)
 	}, "role does not have a valid DRT managed policy")
 
@@ -87,7 +87,7 @@ func (r *drtAccessRoleARNAssociationResource) Create(ctx context.Context, reques
 	// Set values for unknowns.
 	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)
 	})
 
@@ -147,7 +147,7 @@ func (r *drtAccessRoleARNAssociationResource) Update(ctx context.Context, reques
 			RoleArn: aws.String(roleARN),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.AssociateDRTRole(ctx, input)
 		}, "role does not have a valid DRT managed policy")
 
@@ -157,7 +157,7 @@ func (r *drtAccessRoleARNAssociationResource) Update(ctx context.Context, reques
 			return
 		}
 
-		_, err = tfresource.RetryWhenNotFound(ctx, r.UpdateTimeout(ctx, new.Timeouts), func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, r.UpdateTimeout(ctx, new.Timeouts), func(ctx context.Context) (any, error) {
 			return findDRTRoleARNAssociation(ctx, conn, roleARN)
 		})
 
@@ -195,7 +195,7 @@ func (r *drtAccessRoleARNAssociationResource) Delete(ctx context.Context, reques
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)
 	})
 

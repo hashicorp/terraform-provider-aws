@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appName` - (Required) The name of the app.
 * `appType` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway`, `TensorBoard`, `CodeEditor`, `JupyterLab`, `DetailedProfiler`, and `Canvas`.
 * `domainId` - (Required) The domain ID.
@@ -101,4 +102,4 @@ Using `terraform import`, import SageMaker AI Apps using the `id`. For example:
 % terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f668c3d5475c62b8b8985f05d5d84e327581a10c6d216a4451fd36b8fd77d277 -->
+<!-- cache-key: cdktf-0.20.8 input-2b9836ce9155c88fda3329ad6bedaafb4f3df2dd937758cbd9f4e16aa8c4c353 -->

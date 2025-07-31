@@ -104,7 +104,7 @@ body:
 
         When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand configuration</summary>
 
         ```hcl
@@ -138,7 +138,7 @@ body:
 
         When providing more general feedback, where this section may not be relevent, feel free to clear out the pre-populated text and enter "n/a" to satisfy this being a required field.
       value: |
-        <details>
+        <details open>
         <summary>Click to expand log output</summary>
 
         ```console

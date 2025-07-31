@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
@@ -157,4 +158,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-84005dc097b2a2ceb5d4b3077a825a1234cf23a38227e29e509ee3ce8851df2f -->
+<!-- cache-key: cdktf-0.20.8 input-2529d5956e4839d85018ea08143718d0593b503ce379bb13074ec31fce505e38 -->

@@ -84,6 +84,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description of the work team.
 * `workforceName` - (Optional) The name of the workforce.
 * `workteamName` - (Required) The name of the Workteam (must be unique).
@@ -161,4 +162,4 @@ Using `terraform import`, import SageMaker AI Workteams using the `workteamName`
 % terraform import aws_sagemaker_workteam.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4821c476d8686f8aeab63b2a56548ce13b250344c457d0f3acf4aea65d7b8b27 -->
+<!-- cache-key: cdktf-0.20.8 input-50e8406dd44745f19ef7cb38b8b6c097090c50797aa22e727f2664a7a7baea2a -->

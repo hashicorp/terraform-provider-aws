@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `network_insights_path_id` - (Optional) ID of the Network Insights Path to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
@@ -66,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source_ip` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-9a63567edaf2eeb7d58ced21f48437730ece3e2040d1915b1101320f541557f7 -->
+<!-- cache-key: cdktf-0.20.8 input-1bd5fbbba7b3d56164de0833355d92d9f02c6aa75618c6f0c22013c576b6848e -->

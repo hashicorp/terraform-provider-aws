@@ -188,6 +188,7 @@ The following arguments are optional:
 * `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created for your database if automated backups are enabled. Must be in the hh24:mi-hh24:mi format. Example: `16:00-16:30`. Specified in Coordinated Universal Time (UTC).
 * `preferredMaintenanceWindow` - (Optional) Weekly time range during which system maintenance can occur on your database. Must be in the ddd:hh24:mi-ddd:hh24:mi format. Specified in Coordinated Universal Time (UTC). Example: `Tue:17:00-Tue:17:30`
 * `publiclyAccessible` - (Optional) Whether the database is accessible to resources outside of your Lightsail account. A value of true specifies a database that is available to resources outside of your Lightsail account. A value of false specifies a database that is available only to your Lightsail resources in the same region as your database.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skipFinalSnapshot` - (Optional) Whether a final database snapshot is created before your database is deleted. If true is specified, no database snapshot is created. If false is specified, a database snapshot is created before your database is deleted. You must specify the final relational database snapshot name parameter if the skip final snapshot parameter is false.
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `defaultTags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -289,4 +290,4 @@ Using `terraform import`, import Lightsail Databases using their name. For examp
 % terraform import aws_lightsail_database.example example-database
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5689e2bc913a8e78ca1229af9b99eca13d90fcd8c918e1f8789e802d32577e49 -->
+<!-- cache-key: cdktf-0.20.8 input-0ad6ea41a90c2fac60b75b04028cd212a5cffde3f730376445a21bcabeb2d45d -->

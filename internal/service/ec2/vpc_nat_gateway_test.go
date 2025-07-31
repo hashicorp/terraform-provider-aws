@@ -691,7 +691,7 @@ resource "aws_eip" "secondary" {
 resource "aws_nat_gateway" "test" {
   allocation_id            = aws_eip.test.id
   subnet_id                = aws_subnet.public.id
-  secondary_allocation_ids = %[2]t ? [aws_eip.secondary.id] : null
+  secondary_allocation_ids = %[2]t ? [aws_eip.secondary.id] : []
 
   tags = {
     Name = %[1]q
@@ -731,8 +731,8 @@ resource "aws_eip" "secondary" {
 resource "aws_nat_gateway" "test" {
   allocation_id                  = aws_eip.test.id
   subnet_id                      = aws_subnet.private.id
-  secondary_allocation_ids       = %[2]t ? [aws_eip.secondary.id] : null
-  secondary_private_ip_addresses = %[2]t ? ["10.0.1.5"] : null
+  secondary_allocation_ids       = %[2]t ? [aws_eip.secondary.id] : []
+  secondary_private_ip_addresses = %[2]t ? ["10.0.1.5"] : []
 
   tags = {
     Name = %[1]q

@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the account to create or update a resource policy for.
 * `policy` - (Required) The content of the resource policy being updated.
 
@@ -93,4 +94,4 @@ Using `terraform import`, import Redshift Resource Policies using the `resourceA
 % terraform import aws_redshift_resource_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9204a9423039f7d94e5ed898bb3da5e1e61a6939d75794dc2fcd863f6426224d -->
+<!-- cache-key: cdktf-0.20.8 input-8fa3140c295a9a6a91e7c67f2e5ffcc14dd437fdfaed71e422c7cfde97fea7a2 -->

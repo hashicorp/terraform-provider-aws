@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the subscription filter
 * `destination_arn` - (Required) The ARN of the destination to deliver matching log events to. Kinesis stream or Lambda function ARN.
 * `filter_pattern` - (Required) A valid CloudWatch Logs filter pattern for subscribing to a filtered stream of log events. Use empty string `""` to match everything. For more information, see the [Amazon CloudWatch Logs User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
@@ -76,4 +77,4 @@ Using `terraform import`, import CloudWatch Logs subscription filter using the l
 % terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1915f72d7cf7bfe35f0416b1375655071d80b2c34d1cd2730d9615b7d32782b7 -->
+<!-- cache-key: cdktf-0.20.8 input-7288759b6c5cff35c95fb747308a50c7c06f176906bfc5ee2d893f8aebb2f6f4 -->

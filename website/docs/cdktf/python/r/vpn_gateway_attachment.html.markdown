@@ -55,6 +55,7 @@ guides for more information.
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the VPC.
 * `vpn_gateway_id` - (Required) The ID of the Virtual Private Gateway.
 
@@ -69,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-2348f137f23e9e2ad9c5fe33e3628594f5ea4a23246976fd2266c1cbe04f05d2 -->
+<!-- cache-key: cdktf-0.20.8 input-9e73d13079d84eae62d4ef8e683e8a8dd6d6fa45e4560ce64c7e4f0fba3e2149 -->

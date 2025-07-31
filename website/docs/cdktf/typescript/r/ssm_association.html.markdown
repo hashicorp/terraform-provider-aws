@@ -227,7 +227,7 @@ class MyConvertedCode extends TerraformStack {
     new Instance(this, "database_server", {
       ami: Token.asString(amazonLinux.id),
       iamInstanceProfile: ec2SsmProfile.name,
-      instanceType: instanceType.stringValue,
+      instanceType: "t3.micro",
       subnetId: Token.asString(defaultVar.id),
       tags: {
         Environment: environment.stringValue,
@@ -245,7 +245,7 @@ class MyConvertedCode extends TerraformStack {
     new Instance(this, "web_server", {
       ami: Token.asString(amazonLinux.id),
       iamInstanceProfile: ec2SsmProfile.name,
-      instanceType: instanceType.stringValue,
+      instanceType: "t3.micro",
       subnetId: Token.asString(defaultVar.id),
       tags: {
         Environment: environment.stringValue,
@@ -285,13 +285,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the SSM document to apply.
 * `applyOnlyAtCronInterval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `associationName` - (Optional) The descriptive name for the association.
 * `automationTargetParameterName` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 * `complianceSeverity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `documentVersion` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
-* `instanceId` - (Optional, **Deprecated**) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above. Use the `targets` attribute instead.
 * `maxConcurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
 * `maxErrors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
 * `outputLocation` - (Optional) An output location block. Output Location is documented below.
@@ -319,7 +319,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the SSM association
 * `associationId` - The ID of the SSM association.
-* `instanceId` - The instance id that the SSM document was applied to.
 * `name` - The name of the SSM document to apply.
 * `parameters` - Additional parameters passed to the SSM document.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -356,4 +355,4 @@ Using `terraform import`, import SSM associations using the `associationId`. For
 % terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-305348235bccc835fc8fc605b1cd0cfeb58fd84354ba3bc6e229b2fb0953f0ec -->
+<!-- cache-key: cdktf-0.20.8 input-5fe5232a9cc9742c566017ff3af937294fa88eaef1762535f8458c37e6d137fc -->

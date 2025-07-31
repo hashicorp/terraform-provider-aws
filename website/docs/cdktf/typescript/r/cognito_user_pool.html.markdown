@@ -109,6 +109,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the user pool.
 * `accountRecoverySetting` - (Optional) Configuration block to define which verified available method a user can use to recover their forgotten password. [Detailed below](#account_recovery_setting).
 * `adminCreateUserConfig` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
@@ -368,4 +369,4 @@ Using `terraform import`, import Cognito User Pools using the `id`. For example:
 % terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bf613de4b3913f417616b1617d2c7cc8079f2f7426813c90fec07e3b902ae516 -->
+<!-- cache-key: cdktf-0.20.8 input-3818f01eb26badc3e930894ec6c23f7a970c9e1316432fbaf2e86b5e425429d9 -->

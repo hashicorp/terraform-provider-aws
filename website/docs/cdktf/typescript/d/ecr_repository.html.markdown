@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the ECR Repository.
 * `registryId` - (Optional) Registry ID where the repository was created.
 
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `scanOnPush` - Whether images are scanned after being pushed to the repository.
 
-<!-- cache-key: cdktf-0.20.8 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->
+<!-- cache-key: cdktf-0.20.8 input-eb507cb59789c4ef3c041568f45b629f5e831a0aced02b4f338af5609eb28d32 -->

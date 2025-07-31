@@ -27,15 +27,14 @@ import (
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_endpoint_group", name="Custom Routing Endpoint Group")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingEndpointGroup")
 func resourceCustomRoutingEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingEndpointGroupCreate,
 		ReadWithoutTimeout:   resourceCustomRoutingEndpointGroupRead,
 		DeleteWithoutTimeout: resourceCustomRoutingEndpointGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),

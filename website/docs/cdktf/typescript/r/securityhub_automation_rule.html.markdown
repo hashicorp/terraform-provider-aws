@@ -81,6 +81,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions` - (Required) A block that specifies one or more actions to update finding fields if a finding matches the conditions specified in `Criteria`. [Documented below](#actions).
 * `criteria` - (Required) A block that specifies a set of ASFF finding field attributes and corresponding expected values that Security Hub uses to filter findings. [Documented below](#criteria).
 * `description` - (Required) The description of the rule.
@@ -259,4 +260,4 @@ Using `terraform import`, import Security Hub automation rule using their ARN. F
 % terraform import aws_securityhub_automation_rule.example arn:aws:securityhub:us-west-2:123456789012:automation-rule/473eddde-f5c4-4ae5-85c7-e922f271fffc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-00034d3bd4657d0cd8bf50d12c351e064ccdf782d95b7f6dc264c344441858c1 -->
+<!-- cache-key: cdktf-0.20.8 input-81c18d1a12d6222b344403790788bd22ca4948c5eff97795f2391c81db89ad2a -->

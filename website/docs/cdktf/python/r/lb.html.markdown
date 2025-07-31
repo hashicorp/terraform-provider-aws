@@ -134,6 +134,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_logs` - (Optional) Access Logs block. See below.
 * `connection_logs` - (Optional) Connection Logs block. See below. Only valid for Load Balancers of type `application`.
 * `client_keep_alive` - (Optional) Client keep alive value in seconds. The valid range is 60-604800 seconds. The default is 3600 seconds.
@@ -199,10 +200,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the load balancer (matches `id`).
+* `arn` - ARN of the load balancer.
 * `arn_suffix` - ARN suffix for use with CloudWatch Metrics.
 * `dns_name` - DNS name of the load balancer.
-* `id` - ARN of the load balancer (matches `arn`).
 * `subnet_mapping.*.outpost_id` - ID of the Outpost containing the load balancer.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zone_id` - Canonical hosted zone ID of the load balancer (to be used in a Route 53 Alias record).
@@ -240,4 +240,4 @@ Using `terraform import`, import LBs using their ARN. For example:
 % terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fcf28913d94f27b7f44046bd94fc20f4207b09457b72e03217397ea864332702 -->
+<!-- cache-key: cdktf-0.20.8 input-b3dc733a11ff63c9438ae99e9ea31b6a7ac6d77ac6ea9f33f210128ccff80986 -->

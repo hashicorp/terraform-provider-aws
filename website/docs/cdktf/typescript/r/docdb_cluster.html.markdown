@@ -23,7 +23,7 @@ phase because a modification has not yet taken place. You can use the
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
--> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `masterPasswordWo` is available to use in place of `masterPassword`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowMajorVersionUpgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `applyImmediately` - (Optional) Specifies whether any cluster modifications
      are applied immediately, or during the next maintenance window. Default is
@@ -115,11 +116,11 @@ The `restoreToPointInTime` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster
-* `clusterMembers` – List of DocumentDB Instances that are a part of this cluster
+* `clusterMembers` - List of DocumentDB Instances that are a part of this cluster
 * `clusterResourceId` - The DocumentDB Cluster Resource ID
 * `endpoint` - The DNS address of the DocumentDB instance
 * `hostedZoneId` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The DocumentDB Cluster Identifier
+* `id` - (**Deprecated**) Amazon Resource Name (ARN) of cluster
 * `readerEndpoint` - A read-only endpoint for the DocumentDB cluster, automatically load-balanced across replicas
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -164,4 +165,4 @@ Using `terraform import`, import DocumentDB Clusters using the `clusterIdentifie
 % terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-08661ba33040431ef3a16b815974d8757d2544b0d257a0d29b574f39fdede533 -->
+<!-- cache-key: cdktf-0.20.8 input-14dc4c488c1d2f4e4af7cd84789d2cb06634bf1421fa232a433e410bc046a5d6 -->

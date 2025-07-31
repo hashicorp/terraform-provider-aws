@@ -60,6 +60,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). The default value is `en`.
 * `active` - (Optional) Whether the product version is active. Inactive provisioning artifacts are invisible to end users. End users cannot launch or update a provisioned product from an inactive provisioning artifact. Default is `true`.
 * `description` - (Optional) Description of the provisioning artifact (i.e., version), including how it differs from the previous provisioning artifact.
@@ -118,4 +119,4 @@ Using `terraform import`, import `aws_servicecatalog_provisioning_artifact` usin
 % terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a7d327a6dfcafe1faac099b2d4490b5d1603912ff87a7717d27d809de4e883f3 -->
+<!-- cache-key: cdktf-0.20.8 input-9f79fb246ba7e05d49857529d82a58311f212e5b62e11a9ea563f09873073d22 -->

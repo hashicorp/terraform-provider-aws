@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `masterId` - (Required) The account ID of the master Security Hub account whose invitation you're accepting.
 
 ## Attribute Reference
@@ -105,4 +106,4 @@ Using `terraform import`, import Security Hub invite acceptance using the accoun
 % terraform import aws_securityhub_invite_accepter.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47799ffb1b46661d89c8c190f8ee1ae51146d3c40022d01eb9ce32bcbbe707ae -->
+<!-- cache-key: cdktf-0.20.8 input-4de4c5d0e7ad1c4613b5cf3801a046b70c662fc22c595ac72eb1ed6204793f53 -->

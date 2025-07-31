@@ -165,6 +165,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The identifier for the proxy. This name must be unique for all proxies owned by your AWS account in the specified AWS Region. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `auth` - (Required) Configuration block(s) with authorization mechanisms to connect to the associated instances or clusters. Described below.
 * `debugLogging` - (Optional) Whether the proxy includes detailed information about SQL statements in its logs. This information helps you to debug issues involving SQL behavior or the performance and scalability of the proxy connections. The debug information includes the text of SQL statements that you submit through the proxy. Thus, only enable this setting when needed for debugging, and only when you have security measures in place to safeguard any sensitive information that appears in the logs.
@@ -230,4 +231,4 @@ Using `terraform import`, import DB proxies using the `name`. For example:
 % terraform import aws_db_proxy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d145839adbe8d3079eab1a6c70438b965ea76c73ccfbdf78c9220b1efcb5b2bf -->
+<!-- cache-key: cdktf-0.20.8 input-2d1741eae1f95335d771f94d7ec8de417810561a472b6d0f5621e6c7cc32a883 -->

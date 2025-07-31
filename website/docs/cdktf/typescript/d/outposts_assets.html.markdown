@@ -86,6 +86,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) Outpost ARN.
 * `hostIdFilter` - (Optional) Filters by list of Host IDs of a Dedicated Host.
 * `statusIdFilter` - (Optional) Filters by list of state status. Valid values: "ACTIVE", "RETIRING".
@@ -96,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `assetIds` - List of all the asset ids found. This data source will fail if none are found.
 
-<!-- cache-key: cdktf-0.20.8 input-99ccb47ab4f9ad99dcd20220176ab80d7d2a523ce444c488ada1146d9922821b -->
+<!-- cache-key: cdktf-0.20.8 input-462f7fad3e0bc8289de377a253da4f2e75e0038f2ff833f9f82c3545bb2bc8b4 -->

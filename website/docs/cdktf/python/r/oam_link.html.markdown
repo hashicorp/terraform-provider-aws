@@ -118,6 +118,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `link_configuration` - (Optional) Configuration for creating filters that specify that only some metric namespaces or log groups are to be shared from the source account to the monitoring account. See [`link_configuration` Block](#link_configuration-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -183,4 +184,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Link us
 % terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8f3db7661fcedd571e3da8a9767f057178a351625c2634a7ed17c4d588ee0b66 -->
+<!-- cache-key: cdktf-0.20.8 input-18c902764133cb62d97480d225754923dba5e9e645462ddb3824dbebfa7e888c -->

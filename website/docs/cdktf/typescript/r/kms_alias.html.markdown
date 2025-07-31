@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 * `namePrefix` - (Optional) Creates an unique alias beginning with the specified prefix.
 The name must start with the word "alias" followed by a forward slash (alias/).  Conflicts with `name`.
@@ -85,4 +86,4 @@ Using `terraform import`, import KMS aliases using the `name`. For example:
 % terraform import aws_kms_alias.a alias/my-key-alias
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ca20383ce5b8fdeb88071f1c945d966a1085da48052143ed4134dcc859d1ae7d -->
+<!-- cache-key: cdktf-0.20.8 input-b86e781afb927ac5351d0560a9ea553517b79aa1472e349a96aa868cd39e7c2d -->

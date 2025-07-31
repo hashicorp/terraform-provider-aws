@@ -51,6 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_retention_period` - (Optional) The number of days for which automatic snapshots are retained. It should be in between 1 and 35. If not specified, the default value of 1 is set.
 * `kms_key_id` - (Optional) ARN of a KMS key that is used to encrypt the Elastic DocumentDB cluster. If not specified, the default encryption key that KMS creates for your account is used.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled, as determined by the `backup_retention_period`.
@@ -102,4 +103,4 @@ Using `terraform import`, import DocDB (DocumentDB) Elastic Cluster using the `a
 % terraform import aws_docdbelastic_cluster.example arn:aws:docdb-elastic:us-east-1:000011112222:cluster/12345678-7abc-def0-1234-56789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-79176c01f96cfa5da049471d15d782a5deb82d65a58222d6ac72de742daac83d -->
+<!-- cache-key: cdktf-0.20.8 input-120ab0dc4dd05aacc15f79c2c915fefb98ed28e0e48054da043401038fa3c8e4 -->

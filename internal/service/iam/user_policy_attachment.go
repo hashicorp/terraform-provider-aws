@@ -77,7 +77,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 

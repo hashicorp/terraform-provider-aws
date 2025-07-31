@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_config_name` - (Required) The name of the endpoint configuration to use.
 * `deployment_config` - (Optional) The deployment configuration for an endpoint, which contains the desired deployment strategy and rollback configurations. See [Deployment Config](#deployment-config).
 * `name` - (Optional) The name of the endpoint. If omitted, Terraform will assign a random, unique name.
@@ -133,4 +134,4 @@ Using `terraform import`, import endpoints using the `name`. For example:
 % terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6919915b91f8d42d3e10bc5e11836c8afb22d5b6b0929f980df1dc6711567108 -->
+<!-- cache-key: cdktf-0.20.8 input-5013713455f4ee4c6debb3e190fc35f4e54c0cfb83b38803b5ba2df97f43f856 -->

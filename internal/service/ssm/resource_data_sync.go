@@ -96,7 +96,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateResourceDataSync(ctx, input)
 	}, "S3 write failed for bucket")
 

@@ -165,7 +165,7 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 		timeout = 30 * time.Second
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDeliveryChannel(ctx, &configservice.DeleteDeliveryChannelInput{
 			DeliveryChannelName: aws.String(d.Id()),
 		})

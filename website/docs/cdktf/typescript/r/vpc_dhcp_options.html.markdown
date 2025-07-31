@@ -70,6 +70,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolv.conf` file.
 * `domainNameServers` - (Optional) List of name servers to configure in `/etc/resolv.conf`. If you want to use the default AWS nameservers you should set this to `AmazonProvidedDNS`.
 * `ipv6AddressPreferredLeaseTime` - (Optional) How frequently, in seconds, a running instance with an IPv6 assigned to it goes through DHCPv6 lease renewal. Acceptable values are between 140 and 2147483647 (approximately 68 years). If no value is entered, the default lease time is 140 seconds. If you use long-term addressing for EC2 instances, you can increase the lease time and avoid frequent lease renewal requests. Lease renewal typically occurs when half of the lease time has elapsed.
@@ -126,4 +127,4 @@ Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. F
 % terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-19fb505b29b6d299dfb8c0c8062064b31eab8b68d174e47bfa7c65ef7fc917e5 -->
+<!-- cache-key: cdktf-0.20.8 input-362bd8ac8e3243385484da78fcc2f52431555ed5f258290977fe3f6ed405cd4a -->

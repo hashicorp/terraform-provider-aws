@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional) AWS account ID.
 * `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities` block](#identities-block).
 * `namespace` - (Optional) Namespace that contains the assignment. Defaults to `default`.
@@ -90,4 +91,4 @@ Using `terraform import`, import QuickSight IAM Policy Assignment using the AWS 
 % terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-97b3c767d8dd342d64374f0ab17a8d1552269f5e1150cc154507923f2000338e -->
+<!-- cache-key: cdktf-0.20.8 input-7684dd9d20b9ad049e2b9ea62bab2ed9be136a1628cf59a56d6c6796ed574b7f -->

@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_point_arn` - (Optional) Specifies the Amazon Resource Name (ARN) of the access point that DataSync uses to access the Amazon EFS file system.
 * `ec2_config` - (Required) Configuration block containing EC2 configurations for connecting to the EFS File System.
 * `efs_file_system_arn` - (Required) Amazon Resource Name (ARN) of EFS File System.
@@ -89,4 +90,4 @@ Using `terraform import`, import `aws_datasync_location_efs` using the DataSync 
 % terraform import aws_datasync_location_efs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fd6bfd5001bb7a9ddd15cbeb18b63b36796ee1633c2d3e03d32a2391d872d1d1 -->
+<!-- cache-key: cdktf-0.20.8 input-fe715d1a805ab8f9f95c85ed3f63065459ef872b8e6d40c603801cae1722b231 -->

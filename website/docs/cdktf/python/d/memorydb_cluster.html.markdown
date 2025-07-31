@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -80,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tls_enabled` - When true, in-transit encryption is enabled for the cluster.
 * `tags` - Map of tags assigned to the cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-4fa9d6fa5d87e0b0c5031a529581a04353360d1f69a02ed4492365aab54afa5d -->
+<!-- cache-key: cdktf-0.20.8 input-50cf9cafc1443f92fe6917dee9cff5f9f6f75e35d5d0b3b224bffc30fadec691 -->

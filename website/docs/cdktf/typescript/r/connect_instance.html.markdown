@@ -98,6 +98,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoResolveBestVoicesEnabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contactFlowLogsEnabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
 * `contactLensEnabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
@@ -161,4 +162,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d1443fd148ff97442c0cbc213c98df8bf41697f92b5cbc99863e02219d26d43d -->
+<!-- cache-key: cdktf-0.20.8 input-f2e084c0aa859d9f072318d65f092f35ec7650e0623ae2a0a96dbf936a362717 -->

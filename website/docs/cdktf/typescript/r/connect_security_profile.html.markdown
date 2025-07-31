@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the Security Profile.
 * `instanceId` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Security Profile.
@@ -94,4 +95,4 @@ Using `terraform import`, import Amazon Connect Security Profiles using the `ins
 % terraform import aws_connect_security_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-220f16e830e0261ed2fda1556d594951dc89e406092f917b2ad3ea75fafbac54 -->
+<!-- cache-key: cdktf-0.20.8 input-e97ac0b3966aba2d59c4e6ab2cb5072d2dee146b41bdef8b630aaf9f4b6f3b3c -->

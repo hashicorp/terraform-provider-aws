@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `experience_id` - (Required) Identifier of the Experience.
 * `index_id` - (Required) Identifier of the index that contains the Experience.
 
@@ -75,4 +76,4 @@ The `endpoints` block supports the following attributes:
 * `endpoint` - Endpoint of your Amazon Kendra Experience.
 * `endpoint_type` - Type of endpoint for your Amazon Kendra Experience.
 
-<!-- cache-key: cdktf-0.20.8 input-98e8ced90da5dcfb3601cde6cf48bb74123c860cd99f5c5ec0f7aaad8d87936f -->
+<!-- cache-key: cdktf-0.20.8 input-1c9a32af9a7898dbc50a164ec2241a14dbc6e382d8f64443f81ef6850f1f1181 -->

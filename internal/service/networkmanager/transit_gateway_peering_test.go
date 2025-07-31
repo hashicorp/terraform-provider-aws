@@ -20,16 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.NetworkManagerServiceID, testAccErrorCheckSkip)
-}
-
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesMatches(t,
-		regexache.MustCompile(`Core Network edge location \([0-9a-z-]+\) not available`),
-	)
-}
-
 func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.TransitGatewayPeering
@@ -91,52 +81,6 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.TransitGatewayPeering
-	resourceName := "aws_networkmanager_transit_gateway_peering.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTransitGatewayPeeringConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTransitGatewayPeeringConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccTransitGatewayPeeringConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckTransitGatewayPeeringExists(ctx context.Context, n string, v *awstypes.TransitGatewayPeering) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -190,8 +134,6 @@ func testAccCheckTransitGatewayPeeringDestroy(ctx context.Context) resource.Test
 
 func testAccTransitGatewayPeeringConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -219,6 +161,8 @@ resource "aws_networkmanager_core_network" "test" {
     Name = %[1]q
   }
 }
+
+data "aws_region" "current" {}
 
 resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
@@ -248,38 +192,10 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
   core_network_id     = aws_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [
+    aws_ec2_transit_gateway_policy_table.test,
+    aws_networkmanager_core_network_policy_attachment.test,
+  ]
 }
 `)
-}
-
-func testAccTransitGatewayPeeringConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
-resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
-  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-  }
-
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccTransitGatewayPeeringConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
-resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = aws_networkmanager_core_network.test.id
-  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }

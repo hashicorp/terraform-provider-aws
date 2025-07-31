@@ -699,7 +699,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Subnets:          add,
 			}
 
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidConfigurationRequestException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.AttachLoadBalancerToSubnets(ctx, input)
 			}, "cannot be attached to multiple subnets in the same AZ")
 

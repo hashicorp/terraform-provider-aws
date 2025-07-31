@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_authentication` - (Required) Specifies client authentication information for the serverless cluster. See below.
 * `cluster_name` - (Required) The name of the serverless cluster.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -113,4 +114,4 @@ Using `terraform import`, import MSK serverless clusters using the cluster `arn`
 % terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0e63850be18ceb3cb19274ea88d7ecf4b527eca1086a9168e6fa968187285fd0 -->
+<!-- cache-key: cdktf-0.20.8 input-ca4f993aae88a8ba07107dfbce72c8bb6309e12f6bcd45153711313107c6d1e2 -->

@@ -137,6 +137,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_action` - (Required) The action that you want AWS WAF Regional to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.
 * `name` - (Required) The name or description of the web ACL.
@@ -212,4 +213,4 @@ Using `terraform import`, import WAF Regional Web ACL using the id. For example:
 % terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-becb283a0bf3a66968d3b5835eb6a5ff193e490c6ee5cb1289a6144e0f32490f -->
+<!-- cache-key: cdktf-0.20.8 input-3dc2677f1f9bc5d35ddb05a1ad2cdf52553dcddb9da1a27fc45856830a9c3a8b -->

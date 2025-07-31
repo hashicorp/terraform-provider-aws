@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the key policy lockout safety check.
 Setting this value to true increases the risk that the KMS key becomes unmanageable. Do not set this value to true indiscriminately.
 For more information, refer to the scenario in the [Default Key Policy](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam) section in the _AWS Key Management Service Developer Guide_.
@@ -107,4 +108,4 @@ Using `terraform import`, import KMS multi-Region replica keys using the `id`. F
 % terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7ff58560e5d333c365657d94a76f29c733a88f3ce8d3e119a8f1086138e57a7c -->
+<!-- cache-key: cdktf-0.20.8 input-e06a80a2f4873c7f65dc08e8544b10984632142a72d119b9ff071ff511209899 -->

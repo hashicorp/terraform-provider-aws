@@ -1377,8 +1377,8 @@ resource "aws_s3_object" "test" {
 
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
-  bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_object.test.id
+  bucket      = aws_s3_object.test.bucket
+  key         = aws_s3_object.test.key
   name        = "%[1]s-1"
 }
 
@@ -1441,8 +1441,8 @@ resource "aws_s3_object" "test" {
 
 resource "aws_elastic_beanstalk_application_version" "test" {
   application = aws_elastic_beanstalk_application.test.name
-  bucket      = aws_s3_bucket.test.id
-  key         = aws_s3_object.test.id
+  bucket      = aws_s3_object.test.bucket
+  key         = aws_s3_object.test.key
   name        = "%[1]s-2"
 }
 

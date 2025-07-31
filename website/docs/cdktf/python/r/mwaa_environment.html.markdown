@@ -156,6 +156,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `airflow_configuration_options` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
 * `dag_s3_path` - (Required) The relative path to the DAG folder on your Amazon S3 storage bucket. For example, dags. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
@@ -253,4 +254,4 @@ Using `terraform import`, import MWAA Environment using `Name`. For example:
 % terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bec17f0bde1bd94efd63272dc2b38446bf5ca107275cab7516e92b71fabe395a -->
+<!-- cache-key: cdktf-0.20.8 input-863e83690acfeb1abc72256d7fefe8676071db4f68872ce05a1e9f98fcd9de66 -->

@@ -38,8 +38,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account` - (Required) AWS account ID to grant access to.
 * `domain_name` - (Required) Name of OpenSearch Service domain to provide access to.
 
@@ -79,4 +80,4 @@ Using `terraform import`, import OpenSearch Authorize Vpc Endpoint Access using 
 % terraform import aws_opensearch_authorize_vpc_endpoint_access.example authorize_vpc_endpoint_access-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0cc45a3309fd497f327a2d764e2b3e2fc5c8773148a5ade7022149c28dbcba61 -->
+<!-- cache-key: cdktf-0.20.8 input-a72fc0c250433ebc1c624df0436ce0641ff1583821336426349c165b6f3ce451 -->

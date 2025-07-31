@@ -77,6 +77,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclude_compliant_resources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `include_compliance_details` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
 * `tag_filter` - (Optional) Specifies a list of Tag Filters (keys and values) to restrict the output to only those resources that have the specified tag and, if included, the specified value. See [Tag Filter](#tag-filter) below. Conflicts with `resource_arn_list`.
@@ -105,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
     * `resource_arn` - ARN of the resource.
     * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->
+<!-- cache-key: cdktf-0.20.8 input-46780ccb992830aeb39aa89bd4c33e60763383a4cd8b74f5f511b753d1cc7db0 -->

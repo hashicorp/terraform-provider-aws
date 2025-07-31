@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorized` - (Optional) If `true`, channel is private (enabled for playback authorization).
 * `latencyMode` - (Optional) Channel latency mode. Valid values: `NORMAL`, `LOW`.
 * `name` - (Optional) Channel name.
@@ -96,4 +97,4 @@ Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. 
 % terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-027eff160d9ed7f8a55e22eabe213339e7ec60ef328ae2f09043ed6203e4c8ab -->
+<!-- cache-key: cdktf-0.20.8 input-9dd6f1ec0799f694a501c18e60fe39696da91a78e6bdb9d25e35b8482f0433bc -->

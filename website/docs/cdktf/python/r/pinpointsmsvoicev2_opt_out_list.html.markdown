@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the opt-out list.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -70,4 +71,4 @@ Using `terraform import`, import opt-out lists using the `name`. For example:
 % terraform import aws_pinpointsmsvoicev2_opt_out_list.example example-opt-out-list
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-08582a837093dea102edd31f2d0df85003da29a5e16450a5e3851483a4d4c234 -->
+<!-- cache-key: cdktf-0.20.8 input-63beea183d173f6e83ff21253ba115757473dd5b49260443f50fb5257ea0f4e7 -->

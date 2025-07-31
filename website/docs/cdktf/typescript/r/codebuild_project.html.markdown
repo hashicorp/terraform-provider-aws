@@ -271,6 +271,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `badgeEnabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badgeUrl` attribute when enabled.
 * `buildBatchConfig` - (Optional) Defines the batch build options for the project.
@@ -358,6 +359,7 @@ The following arguments are optional:
   `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
   `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+* `dockerServer` - (Optional) Configuration block. Detailed below.
 * `fleet` - (Optional) Configuration block. Detailed below.
 * `environmentVariable` - (Optional) Configuration block. Detailed below.
 * `imagePullCredentialsType` - (Optional) Type of credentials AWS CodeBuild uses to pull images in your build. Valid
@@ -375,6 +377,11 @@ The following arguments are optional:
   `LINUX_GPU_CONTAINER`, `ARM_CONTAINER`, `WINDOWS_SERVER_2019_CONTAINER`, `WINDOWS_SERVER_2022_CONTAINER`,
   `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`, `LINUX_EC2`, `ARM_EC2`, `WINDOWS_EC2`, `MAC_ARM`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+
+#### environment: docker_server
+
+* `computeType` - (Required) Compute type for the Docker server. Valid values: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, and `BUILD_GENERAL1_2XLARGE`.
+* `securityGroupIds` - (Optional) List of security group IDs to assign to the Docker server.
 
 #### environment: fleet
 
@@ -602,4 +609,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4e78eae8a915d9c9d356e76631bb3a2bcca6dd5760f52fc33a9f743fc0d4e09d -->
+<!-- cache-key: cdktf-0.20.8 input-1d285dc6a0e8eca612fbf8753268b7c675daa832eb2074da37080085292d4b33 -->

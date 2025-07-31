@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `prefix` - (Required) The repository name prefix that the template matches against.
 
 ## Attribute Reference
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `encryption_type` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kms_key` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
 
-<!-- cache-key: cdktf-0.20.8 input-f1c4bbe12045f65ff162d44fb4a86ac5bbbe85bcc7fe18d7917dbdc3db134be7 -->
+<!-- cache-key: cdktf-0.20.8 input-067c588d58c70adc384828a0005b1b14f460fa320de319853b9fb354d10917a7 -->

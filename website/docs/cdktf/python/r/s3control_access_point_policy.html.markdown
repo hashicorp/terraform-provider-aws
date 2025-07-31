@@ -73,6 +73,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_point_arn` - (Required) The ARN of the access point that you want to associate with the specified policy.
 * `policy` - (Required) The policy that you want to apply to the specified access point.
 
@@ -108,4 +109,4 @@ Using `terraform import`, import Access Point policies using the `access_point_a
 % terraform import aws_s3control_access_point_policy.example arn:aws:s3:us-west-2:123456789012:accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e5c457db50c72d6b30534efccf23fc63cd4d7f721d03d7a1b36a6e8875fa8261 -->
+<!-- cache-key: cdktf-0.20.8 input-94091b27f5f9cfb1a9333f33c20f5c989729b667041a7600015500a6f7dd0c58 -->

@@ -53,6 +53,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocation_id` - (Optional, Forces new resource) ID of the associated Elastic IP.
   This argument is required despite being optional at the resource level due to legacy support for EC2-Classic networking.
 * `allow_reassociation` - (Optional, Forces new resource) Whether to allow an Elastic IP address to be re-associated.
@@ -98,4 +99,4 @@ Using `terraform import`, import EIP Assocations using their association IDs. Fo
 % terraform import aws_eip_association.test eipassoc-ab12c345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-decb1b820d75138782ac9f08324a6699a0e6ba11ddfa41c87d68fe8417478bee -->
+<!-- cache-key: cdktf-0.20.8 input-5271e2228d8190613bd6a1d712122d540cdb8448c79d8b1eccb670f9815733b7 -->

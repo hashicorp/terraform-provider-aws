@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_cluster_identifier` - (Required) The DocumentDB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 
@@ -85,4 +86,4 @@ Using `terraform import`, import `aws_docdb_cluster_snapshot` using the cluster 
 % terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8dd2ea6e382c4e0856668c83fa43a1a39b2e7be56350a64cc442fe4366d3e1c4 -->
+<!-- cache-key: cdktf-0.20.8 input-a1c40d5f22cc1773471bd12192d1fec2743d0f4e0704571093be44b20332f548 -->

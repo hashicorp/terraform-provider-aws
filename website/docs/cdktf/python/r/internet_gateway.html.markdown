@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Optional) The VPC ID to create in.  See the [aws_internet_gateway_attachment](internet_gateway_attachment.html) resource for an alternate way to attach an Internet Gateway to a VPC.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -106,4 +107,4 @@ Using `terraform import`, import Internet Gateways using the `id`. For example:
 % terraform import aws_internet_gateway.gw igw-c0a643a9
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81f1e80b898b03aa78644b4608f5a5bf4c569724d3c844941b04df531a254c3a -->
+<!-- cache-key: cdktf-0.20.8 input-f8893dee722784ec45e93f2ce80017b51c38becd35bf9bc429fe3b55b0139dc4 -->

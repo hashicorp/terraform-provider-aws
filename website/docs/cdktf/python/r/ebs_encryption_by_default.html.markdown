@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether or not default EBS encryption is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
 ## Attribute Reference
@@ -68,4 +69,4 @@ Using `terraform import`, import the default EBS encryption state. For example:
 % terraform import aws_ebs_encryption_by_default.example default
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-26d56aaac9991ae4f8fb9772f7e16551e204f392912f72bea53feb7f7680cc3b -->
+<!-- cache-key: cdktf-0.20.8 input-b49f643466ebebf3c426d4bf258fba32732d04b52ec6de02276292496a435f9b -->

@@ -56,10 +56,10 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `caCertificatesBundleS3Bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
 * `caCertificatesBundleS3Key` - (Required) S3 object key holding the client certificate CA bundle.
 * `caCertificatesBundleS3ObjectVersion` - (Optional) Version Id of CA bundle S3 bucket object, if versioned, defaults to latest if omitted.
-
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Cannot be longer than 6 characters.
 * `name` - (Optional, Forces new resource) Name of the Trust Store. If omitted, Terraform will assign a random, unique name. This name must be unique per region per account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -106,4 +106,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_trust_store.example arn:aws:elasticloadbalancing:us-west-2:187416307283:truststore/my-trust-store/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-34bb0a1e9045deea914ea976441edea2890e4b73835aa15a907bb8a250bbb058 -->
+<!-- cache-key: cdktf-0.20.8 input-9706efee0143cd77bf41122dfe8b7d838fc2c3674434540750e4a362ecc61097 -->

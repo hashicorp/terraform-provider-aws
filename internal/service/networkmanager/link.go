@@ -29,6 +29,9 @@ import (
 
 // @SDKResource("aws_networkmanager_link", name="Link")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true)
+// @Testing(generator=false)
+// @Testing(importStateIdAttribute="arn")
 func resourceLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkCreate,

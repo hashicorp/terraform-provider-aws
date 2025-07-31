@@ -72,6 +72,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) ARN of the private CA to associate with the policy.
 * `policy` - (Required) JSON-formatted IAM policy to attach to the specified private CA resource.
 
@@ -104,4 +105,4 @@ Using `terraform import`, import `aws_acmpca_policy` using the `resource_arn` va
 % terraform import aws_acmpca_policy.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3897a945f24b08cf8623246e958727ed8480522a140850c9c8a5a835f4ee024d -->
+<!-- cache-key: cdktf-0.20.8 input-de9a2d0fa2456cf75827e030e0a2672f0561925a8cad7051f5a4662cb5db1365 -->

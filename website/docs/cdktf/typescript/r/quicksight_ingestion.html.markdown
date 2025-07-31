@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional) AWS account ID.
 
 ## Attribute Reference
@@ -90,4 +91,4 @@ Using `terraform import`, import QuickSight Ingestion using the AWS account ID, 
 % terraform import aws_quicksight_ingestion.example 123456789012,example-dataset-id,example-ingestion-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-31d890ca0d6ed00093cbbdafdda99150291ae49c1b91bc06892ea8eaaaf8c038 -->
+<!-- cache-key: cdktf-0.20.8 input-3c2231c1878dbdbba9bb011be57d2eb13318e48a8fcc8e28962683e58ea469ff -->

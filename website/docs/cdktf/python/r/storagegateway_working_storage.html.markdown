@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disk_id` - (Required) Local disk identifier. For example, `pci-0000:03:00.0-scsi-0:0:0:0`.
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 
@@ -72,4 +73,4 @@ Using `terraform import`, import `aws_storagegateway_working_storage` using the 
 % terraform import aws_storagegateway_working_storage.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678:pci-0000:03:00.0-scsi-0:0:0:0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-70cd2153af665dbf7aff736700a2d421553e7a7e40d49fdf71a96c7ff2a5aa9d -->
+<!-- cache-key: cdktf-0.20.8 input-06960ec39eab7bd7dac208c2a5e037c11d621820ef8c65376d1b49d9d2b9694a -->

@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
 // @IdentityAttribute("name")
 // @ArnFormat("connectorprofile/{name}", attribute="arn")
-// @V60SDKv2Fix
+// @V60SDKv2Fix(v60RefreshError="true")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")

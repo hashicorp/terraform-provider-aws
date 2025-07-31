@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -148,7 +149,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	lg, err := findLogGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -242,7 +243,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	input := cloudwatchlogs.DeleteLogGroupInput{
 		LogGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.OperationAbortedException](ctx, 1*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.OperationAbortedException](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteLogGroup(ctx, &input)
 	}, "try again")
 

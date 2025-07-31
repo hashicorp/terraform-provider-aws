@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the DB cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the DB cluster parameter group.
@@ -96,4 +97,4 @@ Using `terraform import`, import RDS Cluster Parameter Groups using the `name`. 
 % terraform import aws_rds_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-33eec3977c5897f5b40f1eded02e4088f9efa632caa433fa14e96d5badc226bb -->
+<!-- cache-key: cdktf-0.20.8 input-e8c68fcd94cf69b0b81c14a0025ad328435b7a3d29eb940d7af03c3af6240d7a -->

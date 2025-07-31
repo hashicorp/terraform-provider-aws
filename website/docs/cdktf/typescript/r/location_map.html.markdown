@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) An optional description for the map resource.
 * `tags` - (Optional) Key-value tags for the map. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -92,4 +93,4 @@ Using `terraform import`, import `aws_location_map` resources using the map name
 % terraform import aws_location_map.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5dad74dad6d91da85c3886e29aba5949de61bde3e481fa21d1494017c8c095a9 -->
+<!-- cache-key: cdktf-0.20.8 input-e4e52ae55e672f749b9c1311ac692f525b0056ecde5bddd22c97db60228bef1f -->

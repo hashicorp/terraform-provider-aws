@@ -135,6 +135,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `definition` - (Optional) A detailed analysis definition. Only one of `definition` or `sourceEntity` should be configured. See [definition](#definition).
 * `parameters` - (Optional) The parameters for the creation of the analysis, which you want to use to override the default settings. An analysis can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).
@@ -231,4 +232,4 @@ Using `terraform import`, import a QuickSight Analysis using the AWS account ID 
 % terraform import aws_quicksight_analysis.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da63973c1a54eccd64c52cb6d2329e99e5d72cb15c08eeb0242091234a75ffbf -->
+<!-- cache-key: cdktf-0.20.8 input-a0ffd8f2c1f465fa39defe05d4356307483f42d4c37162ce146d095b6f0c576a -->

@@ -85,6 +85,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -120,4 +121,4 @@ Using `terraform import`, import WorkSpaces Web Network Settings using the `netw
 % terraform import aws_workspacesweb_network_settings.example arn:aws:workspacesweb:us-west-2:123456789012:networksettings/abcdef12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f34201254f015c64f35b468f7a12a2731bb17a8feadf5d88d3387c8c834396a2 -->
+<!-- cache-key: cdktf-0.20.8 input-c24deca0a37727c03372d846fd3f9faa010d5a0a27142b25b032f52be52da025 -->

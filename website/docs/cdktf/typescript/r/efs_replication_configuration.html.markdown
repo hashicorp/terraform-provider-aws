@@ -111,6 +111,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination` - (Required) A destination configuration block (documented below).
 * `sourceFileSystemId` - (Required) The ID of the file system that is to be replicated.
 
@@ -173,4 +174,4 @@ Using `terraform import`, import EFS Replication Configurations using the file s
 % terraform import aws_efs_replication_configuration.example fs-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1733ce7a87552e8c77ed074c1d04833b59465654d7b5d51de517434538c91632 -->
+<!-- cache-key: cdktf-0.20.8 input-1780b742f5c8ea1f8849986c1c9116bca129382602972a89398079d29b8075ea -->

@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `task_definition` - (Required) Family for the latest ACTIVE revision, family and revision (family:revision) for a specific revision in the family, the ARN of the task definition to access to.
 
 ## Attribute Reference
@@ -71,7 +72,6 @@ This data source exports the following attributes in addition to the arguments a
 * `execution_role_arn` - ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `family` - A unique name for your task definition.
 The following arguments are optional:
-* `inference_accelerator` - Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipc_mode` - IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -88,11 +88,6 @@ The following arguments are optional:
 ### ephemeral_storage
 
 * `size_in_gib` - The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
-
-### inference_accelerator
-
-* `device_name` - Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `device_type` - Elastic Inference accelerator type to use.
 
 ### placement_constraints
 
@@ -158,4 +153,4 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 * `credentials_parameter` - The authorization credential option to use. The authorization credential options can be provided using either the Amazon Resource Name (ARN) of an AWS Secrets Manager secret or AWS Systems Manager Parameter Store parameter. The ARNs refer to the stored credentials.
 * `domain` - A fully qualified domain name hosted by an AWS Directory Service Managed Microsoft AD (Active Directory) or self-hosted AD on Amazon EC2.
 
-<!-- cache-key: cdktf-0.20.8 input-6305043748207f7a0a834f43375e35cec6369e4696dce4b7463f006e7e3e311e -->
+<!-- cache-key: cdktf-0.20.8 input-573bbdf52af72c6f171581e27c36299ff28f1cb070c1bc075da4c0617ea4dfba -->

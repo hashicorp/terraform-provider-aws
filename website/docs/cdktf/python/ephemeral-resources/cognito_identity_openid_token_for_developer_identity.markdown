@@ -13,7 +13,7 @@ description: |-
 
 Terraform ephemeral resource for managing an AWS Cognito Identity Open ID Token for Developer Identity.
 
-~> Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral).
+~> Ephemeral resources are a new feature and may evolve as we continue to explore their most effective uses. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral).
 
 ## Example Usage
 
@@ -38,12 +38,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_pool_id` - (Required) An identity pool ID in the format REGION:GUID.
 
 The following arguments are optional:
 
+* `region` – (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identity_id` - (Optional) A unique identifier in the format REGION:GUID.
 
 * `logins` - (Optional) A set of optional name-value pairs that map provider names to provider tokens. Each name-value pair represents a user from a public provider or developer provider. If the user is from a developer provider, the name-value pair will follow the syntax `"developer_provider_name": "developer_user_identifier"`. The developer provider is the "domain" by which Cognito will refer to your users; you provided this domain while creating/updating the identity pool. The developer user identifier is an identifier from your backend that uniquely identifies a user. When you create an identity pool, you can specify the supported logins.
@@ -58,4 +60,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `token` - An OpenID token.
 
-<!-- cache-key: cdktf-0.20.8 input-5199e7edaf24925c8551bffdf71b0d7cead15374045305e847613d1bf3a77e7e -->
+<!-- cache-key: cdktf-0.20.8 input-793c0f56e7b99fdb48d0128794c9a0b6b40ee958ac764b60081f95a2dd27fc2f -->

@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -141,7 +141,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
-	if eip.Domain == types.DomainTypeVpc {
+	if eip.Domain == awstypes.DomainTypeVpc {
 		allocationID := aws.ToString(eip.AllocationId)
 		d.SetId(allocationID)
 		d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))

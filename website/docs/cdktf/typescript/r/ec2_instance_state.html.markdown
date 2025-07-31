@@ -71,6 +71,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `force` - (Optional) Whether to request a forced stop when `state` is `stopped`. Otherwise (_i.e._, `state` is `running`), ignored. When an instance is forced to stop, it does not flush file system caches or file system metadata, and you must subsequently perform file system check and repair. Not recommended for Windows instances. Defaults to `false`.
 
 ## Attribute Reference
@@ -119,4 +120,4 @@ Using `terraform import`, import `aws_ec2_instance_state` using the `instanceId`
 % terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55ec6962efa979f04735e3258bd738fd11e346e716880406215eee2600843353 -->
+<!-- cache-key: cdktf-0.20.8 input-e81886535285ebdaa3178d6e3d2e03d19e266715ad698aea787d8451ac6755da -->

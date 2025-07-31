@@ -52,6 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventConfigurations` - (Required) Map. The new event configuration values. You can use only these strings as keys: `THING_GROUP_HIERARCHY`, `THING_GROUP_MEMBERSHIP`, `THING_TYPE`, `THING_TYPE_ASSOCIATION`, `THING_GROUP`, `THING`, `POLICY`, `CA_CERTIFICATE`, `JOB_EXECUTION`, `CERTIFICATE`, `JOB`. Use boolean for values of mapping.
 
 ## Attribute Reference
@@ -90,4 +91,4 @@ Using `terraform import`, import IoT Event Configurations using the AWS Region. 
 % terraform import aws_iot_event_configurations.example us-west-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cd3f52c942d4a7c3802a6a7d44372cf012de6acd36faa8c7a3ec23b7d72504d4 -->
+<!-- cache-key: cdktf-0.20.8 input-e288ca74f7cf470f0d4d5b06dd9a97e93aa85f822552c6dd36adec69fe84d336 -->

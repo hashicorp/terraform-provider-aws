@@ -336,7 +336,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(d.Id()),
 		})

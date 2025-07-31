@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `graph_arn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
 ## Attribute Reference
@@ -81,4 +82,4 @@ Using `terraform import`, import `aws_detective_invitation_accepter` using the g
 % terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81e08d14c73cef5cbc5e343860aa5b69fd1a25bdaeb8b3896e4b2d5eb1c41393 -->
+<!-- cache-key: cdktf-0.20.8 input-01f14a6a4a53bebdd2746daccb63e51eca285f326455a253e0b409f70402b72b -->

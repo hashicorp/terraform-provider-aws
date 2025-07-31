@@ -132,6 +132,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the environment.
 * `instanceType` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
 * `imageId` - (Required) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
@@ -159,4 +160,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.20.8 input-bf29aa87e91680d6409c49045f078211230a30d2b90d0276e519038e29cdc43b -->
+<!-- cache-key: cdktf-0.20.8 input-ce0b830510ee642d37cdce16200104f8b4e81b55f37b9d8f815c04640abd56da -->

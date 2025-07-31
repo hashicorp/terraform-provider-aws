@@ -110,6 +110,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `projectName` - (Required) The name of the build project.
 * `buildType` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
 * `manualCreation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payloadUrl` and `secret` values for the webhook. The `payloadUrl` and `secret` values in the output can be used to manually create a webhook within GitHub.
@@ -172,4 +173,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-733428854118f5f5a2861fd7ba86016c9890d1d11d5350096356f407de6e36af -->
+<!-- cache-key: cdktf-0.20.8 input-11a1fbb3f051a6bc9b6739cee9f8bd533a6b5bd4bd9e188b41570d3be08adbac -->

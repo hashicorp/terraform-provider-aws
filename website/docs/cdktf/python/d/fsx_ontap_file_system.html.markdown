@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
 ## Attribute Reference
@@ -84,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - IP addresses of the file system endpoint.
 
-<!-- cache-key: cdktf-0.20.8 input-cfef0d89a32a7153ba86f9f7386d7c675ba99ef21468d38c06db31f5f03ad2f1 -->
+<!-- cache-key: cdktf-0.20.8 input-17c51b20fd22b46b4f19504556832c4775ff8652c471859ecb2278f8af4f3f81 -->

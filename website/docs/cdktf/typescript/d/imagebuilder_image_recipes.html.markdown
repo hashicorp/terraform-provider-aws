@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owner` - (Optional) Owner of the image recipes. Valid values are `Self`, `Shared`, `Amazon` and `ThirdParty`. Defaults to `Self`.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
@@ -61,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Image Recipes.
 * `names` - Set of names of the matched Image Builder Image Recipes.
 
-<!-- cache-key: cdktf-0.20.8 input-66c72c523ae47ae04997057c46add5f0e41bd94d6a0d6a8326743ef850ddfb89 -->
+<!-- cache-key: cdktf-0.20.8 input-8e41925a0560af9d453d6f2ced6cffd80bbd67d46c86df353e395f083cbf1881 -->

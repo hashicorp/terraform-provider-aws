@@ -596,7 +596,7 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 	if err != nil {

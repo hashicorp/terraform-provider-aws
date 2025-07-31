@@ -33,7 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Name of the Region whose hosted zone is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -41,6 +41,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the hosted zone.
 
-* `region` - Region of the hosted zone.
-
-<!-- cache-key: cdktf-0.20.8 input-60bd6d6f4532d452cc6f6a807c5908969f5a210ed64bd11e96de30770dfc1b8b -->
+<!-- cache-key: cdktf-0.20.8 input-87a1f403483dce66dc797c62bc8831f81a86994d52626dbfc1032a5db1f915a3 -->

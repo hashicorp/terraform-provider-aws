@@ -49,19 +49,25 @@ This resource supports the following arguments:
 * `bytes_scanned_cutoff_per_query` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
 * `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `engine_version` - (Optional) Configuration block for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). See [Engine Version](#engine-version) below.
-* `execution_role` - (Optional) Role used in a notebook session for accessing the user's resources.
+* `execution_role` - (Optional) Role used to access user resources in notebook sessions and IAM Identity Center enabled workgroups. The property is required for IAM Identity Center enabled workgroups.
+* `identity_center_configuration` - (Optional) Configuration block to set up an IAM Identity Center enabled workgroup. See [Identity Center Configuration](#identity-center-configuration) below.
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
-* `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
+* `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 
 #### Engine Version
 
 * `selected_engine_version` - (Optional) Requested engine version. Defaults to `AUTO`.
 
+#### Identity Center Configuration
+
+* `enable_identity_center` - (Optional) Specifies whether the workgroup is IAM Identity Center supported.
+* `identity_center_instance_arn` - (Optional) The IAM Identity Center instance ARN that the workgroup associates to.
+
 #### Result Configuration
 
-* `encryption_configuration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `acl_configuration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
+* `encryption_configuration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `output_location` - (Optional) Location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 

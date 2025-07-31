@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the table.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides.
 * `catalogId` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
@@ -134,4 +135,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the target table.
 * `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.20.8 input-6aa148fa876b8e857555bdad7d827e6584f2528c3ddc31f0e55e804050c5f778 -->
+<!-- cache-key: cdktf-0.20.8 input-c19d3f2a71f47ca32caca19dff6d0604ad37a5023072094a28ae3df0654bde4b -->

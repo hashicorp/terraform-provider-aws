@@ -69,7 +69,7 @@ class MyConvertedCode extends TerraformStack {
       name: "example",
       resourceArn:
         "arn:aws:ec2:${" +
-        dataAwsRegionCurrent.name +
+        dataAwsRegionCurrent.region +
         "}:${" +
         current.accountId +
         "}:eip-allocation/${" +
@@ -86,7 +86,7 @@ class MyConvertedCode extends TerraformStack {
         dependsOn: [awsShieldProtectionExample],
         members: [
           "arn:aws:ec2:${" +
-            dataAwsRegionCurrent.name +
+            dataAwsRegionCurrent.region +
             "}:${" +
             current.accountId +
             "}:eip-allocation/${" +
@@ -175,4 +175,4 @@ Using `terraform import`, import Shield protection group resources using their p
 % terraform import aws_shield_protection_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9103f77296ecb9a47e4f678129df33c848d457b7cd5625270622bbbb051fbbf4 -->
+<!-- cache-key: cdktf-0.20.8 input-cfec216f9581447d6e30878f341ecb5c3b16c629ab1504623b774474a5e69871 -->

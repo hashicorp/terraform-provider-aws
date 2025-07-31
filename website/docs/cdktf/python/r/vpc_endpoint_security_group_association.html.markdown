@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `security_group_id` - (Required) The ID of the security group to be associated with the VPC endpoint.
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint with which the security group will be associated.
 * `replace_default_association` - (Optional) Whether this association should replace the association with the VPC's default security group that is created when no security groups are specified during VPC endpoint creation. At most 1 association per-VPC endpoint should be configured with `replace_default_association = true`. `false` should be used when importing resources.
@@ -79,4 +80,4 @@ Using `terraform import`, import VPC Endpoint Security Group Associations using 
 % terraform import aws_vpc_endpoint_security_group_association.example vpce-aaaaaaaa/sg-bbbbbbbbbbbbbbbbb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-55be6a3bc9efb4a196c61c2562744c5a944f2ec11f35a8f9138208b0bcd2c421 -->
+<!-- cache-key: cdktf-0.20.8 input-2d0a7e945493df9b192856d8467bbb37db997651a30a21e0b1c6282ec167159c -->

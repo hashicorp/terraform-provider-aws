@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tableName` - (Required) The name of the table to enable contributor insights
 * `indexName` - (Optional) The global secondary index name
 
@@ -77,4 +78,4 @@ Using `terraform import`, import `aws_dynamodb_contributor_insights` using the f
 % terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d4f805846bc4797dd113a929cf5b487a41e12a9aff6d1f926f1a2fb7c8b04f60 -->
+<!-- cache-key: cdktf-0.20.8 input-cc90ee8b4810a4d7336aa3cfe1a98235a7f9073fb3fd1067958308dbb312e834 -->

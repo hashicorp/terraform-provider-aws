@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `linkIdentifier` - (Required) ARN of the link.
 
 ## Attribute Reference
@@ -75,4 +76,4 @@ The `metricConfiguration` configuration block supports the following arguments:
 
 * `filter` - Filter string that specifies  which metrics are to be shared with the monitoring account. See [MetricConfiguration](https://docs.aws.amazon.com/OAM/latest/APIReference/API_MetricConfiguration.html) for details.
 
-<!-- cache-key: cdktf-0.20.8 input-434f47653d9717590d7d6136054574462cb78e0df36afe5f9e85294d44c99415 -->
+<!-- cache-key: cdktf-0.20.8 input-588c692473632284f33e4e0eacd5d730c0ceb61d523df67ed52dcde62289d36d -->

@@ -207,6 +207,7 @@ resource "aws_wafregional_web_acl_association" "association" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `webAclId` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resourceArn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
 
@@ -254,4 +255,4 @@ Using `terraform import`, import WAF Regional Web ACL Association using their `w
 % terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-748840947a2a9cc391b869f3bab0bc54cc54f0f6f837b68a1e0e5c25081b9174 -->
+<!-- cache-key: cdktf-0.20.8 input-54047b960a3dc7f076330b46be7a8c145c71b8e7964e98d70467afe36f1cbf1e -->

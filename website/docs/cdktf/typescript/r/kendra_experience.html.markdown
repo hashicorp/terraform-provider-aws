@@ -59,6 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource if removed) A description for your Amazon Kendra experience.
 * `configuration` - (Optional) Configuration information for your Amazon Kendra experience. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#configuration).
 
@@ -139,4 +140,4 @@ Using `terraform import`, import Kendra Experience using the unique identifiers 
 % terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-93f3c5218ba7efdf689932da81da13390005cf5b64596163f47b9e618a9c1de8 -->
+<!-- cache-key: cdktf-0.20.8 input-84518e9e182ca7bc4cf838bb011fd91dd8377b6c0776cd49eec16f6e5099e127 -->

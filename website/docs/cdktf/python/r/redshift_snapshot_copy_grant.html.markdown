@@ -33,10 +33,11 @@ class MyConvertedCode(TerraformStack):
             snapshot_copy_grant_name="my-grant"
         )
         aws_redshift_cluster_test = RedshiftCluster(self, "test_1",
-            snapshot_copy=RedshiftClusterSnapshotCopy(
-                destination_region="us-east-2",
-                grant_name=test.snapshot_copy_grant_name
-            ),
+            snapshot_copy=[{
+                "destination_region": "us-east-2",
+                "grant_name": test.snapshot_copy_grant_name
+            }
+            ],
             cluster_identifier=cluster_identifier,
             node_type=node_type
         )
@@ -48,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `snapshot_copy_grant_name` - (Required, Forces new resource) A friendly name for identifying the grant.
 * `kms_key_id` - (Optional, Forces new resource) The unique identifier for the customer master key (CMK) that the grant applies to. Specify the key ID or the Amazon Resource Name (ARN) of the CMK. To specify a CMK in a different AWS account, you must use the key ARN. If not specified, the default key is used.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -84,4 +86,4 @@ Using `terraform import`, import Redshift Snapshot Copy Grants by name. For exam
 % terraform import aws_redshift_snapshot_copy_grant.test my-grant
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7132ffb13bb997106c250daca68bcc8d4f28e5d2bd7fcb63ef1d3441a64c72d3 -->
+<!-- cache-key: cdktf-0.20.8 input-0ca88ea1a32ffa9dd3d9cd934727bd97e2768aeecd7c529b79f393913a9df9ab -->
