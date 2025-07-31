@@ -3907,7 +3907,7 @@ resource "aws_opensearch_domain" "test" {
     master_user_options {
       master_user_name                = "testmasteruser"
       master_user_password_wo         = %[2]q
-	  master_user_password_wo_version = %[3]q
+      master_user_password_wo_version = %[3]q
     }
   }
 
