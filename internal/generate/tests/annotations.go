@@ -334,13 +334,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 
 	// TF Variables
 	if attr, ok := args.Keyword["generator"]; ok {
-		if attr == "false" {
-		} else if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
-			return fmt.Errorf("%s: %w", attr, err)
-		} else {
-			stuff.Generator = funcName
-			if importSpec != nil {
-				stuff.GoImports = append(stuff.GoImports, *importSpec)
+		if attr != "false" {
+			if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
+				return fmt.Errorf("%s: %w", attr, err)
+			} else {
+				stuff.Generator = funcName
+				if importSpec != nil {
+					stuff.GoImports = append(stuff.GoImports, *importSpec)
+				}
 			}
 		}
 	}
