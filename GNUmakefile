@@ -590,6 +590,10 @@ skaff-check-compile: ## [CI] Skaff Checks / Compile skaff
 	@cd skaff ; \
 	go build
 
+smarterr-parser: prereq-go ## Install smarterr-parser
+	@echo "make: Installing smarterr-parser..."
+	cd tools/smarterr-parser && $(GO_VER) build main.go
+
 smoke: sane ## Smoke tests (alias of sane)
 
 sweep: prereq-go ## Run sweepers

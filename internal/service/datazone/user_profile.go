@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -203,7 +205,7 @@ func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	diff, d := flex.Diff(ctx, plan, state)
-	resp.Diagnostics.Append(d...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -277,11 +279,11 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(in))
 	}
 
 	return out, nil

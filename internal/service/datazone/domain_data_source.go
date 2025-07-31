@@ -6,6 +6,7 @@ package datazone
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -127,7 +128,7 @@ func (d *domainDataSource) ConfigValidators(_ context.Context) []datasource.Conf
 func findDomain(ctx context.Context, conn *datazone.Client, filter tfslices.Predicate[*awstypes.DomainSummary]) (*awstypes.DomainSummary, error) {
 	domain, err := findDomains(ctx, conn, filter)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return tfresource.AssertSingleValueResult(domain)
@@ -140,7 +141,7 @@ func findDomains(ctx context.Context, conn *datazone.Client, filter tfslices.Pre
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, domain := range page.Items {
