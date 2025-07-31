@@ -19,6 +19,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_s3_access_point", name="Access Point")
+// @Tags(identifierAttribute="arn")
 func newAccessPointDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &accessPointDataSource{}, nil
 }
