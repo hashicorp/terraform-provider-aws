@@ -114,11 +114,11 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
 	data.ID = fwflex.StringValueToFramework(ctx, accountID)
+	// Backwards compatibility, don't use AutoFlEx.
+	data.AccessGrantsInstanceARN = fwflex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
+	data.AccessGrantsInstanceID = fwflex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.IdentityCenterApplicationARN = fwflex.StringToFramework(ctx, output.IdentityCenterArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -150,10 +150,10 @@ func (r *accessGrantsInstanceResource) Read(ctx context.Context, request resourc
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// Backwards compatibility, don't use AutoFlEx.
+	data.AccessGrantsInstanceARN = fwflex.StringToFramework(ctx, output.AccessGrantsInstanceArn)
+	data.AccessGrantsInstanceID = fwflex.StringToFramework(ctx, output.AccessGrantsInstanceId)
+	data.IdentityCenterApplicationARN = fwflex.StringToFramework(ctx, output.IdentityCenterArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
