@@ -13,6 +13,8 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Implementation string
@@ -495,8 +497,9 @@ func endpointsConstOrQuote(region string) string {
 	var buf strings.Builder
 	buf.WriteString("endpoints.")
 
+	caser := cases.Title(language.Und, cases.NoLower)
 	for part := range strings.SplitSeq(region, "-") {
-		buf.WriteString(strings.Title(part))
+		buf.WriteString(caser.String(part))
 	}
 	buf.WriteString("RegionID")
 
