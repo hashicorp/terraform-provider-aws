@@ -552,7 +552,7 @@ func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCleanRoomsCollaborationConfigAnalyticsEngine("SPARK"),
+				Config: testAccCollaborationConfigAnalyticsEngine("SPARK"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "analytics_engine", "SPARK"),
 				),
@@ -561,8 +561,8 @@ func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
 	})
 }
 
-func testAccCleanRoomsCollaborationConfigAnalyticsEngine(engine string) string {
-    return fmt.Sprintf(`
+func testAccCollaborationConfigAnalyticsEngine(engine string) string {
+	return fmt.Sprintf(`
 resource "aws_cleanrooms_collaboration" "test" {
   name                      = "tf-test-collab"
   creator_display_name      = "tf-test"
@@ -573,8 +573,8 @@ resource "aws_cleanrooms_collaboration" "test" {
   analytics_engine          = "%s"
 
   member {
-    account_id      = "%s"
-    display_name    = "test-member"
+    account_id       = "%s"
+    display_name     = "test-member"
     member_abilities = ["CAN_QUERY"]
   }
 }
