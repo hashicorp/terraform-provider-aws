@@ -22,12 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_access_point, name="Access Point")
+// @Tags(identifierAttribute="arn")
 func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPointCreate,
@@ -128,6 +130,8 @@ func resourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -175,6 +179,8 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]any)[0].(map[string]any))
 	}
+
+	//input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAccessPoint(ctx, &input)
 
