@@ -126,14 +126,16 @@ func main() {
 			},
 			"NewVersion": version.NewVersion,
 		}
-		templates, err := template.New("identitytests").Funcs(templateFuncMap).Parse(resourceTestGoTmpl)
-		if err != nil {
-			g.Fatalf("parsing base Go test template: %w", err)
-		}
+		templates := template.New("identitytests").Funcs(templateFuncMap)
 
 		templates, err = tests.AddCommonResourceTestTemplates(templates)
 		if err != nil {
 			g.Fatalf(err.Error())
+		}
+
+		templates, err = templates.Parse(resourceTestGoTmpl)
+		if err != nil {
+			g.Fatalf("parsing base Go test template: %w", err)
 		}
 
 		if err := d.BufferTemplateSet(templates, resource); err != nil {

@@ -116,14 +116,21 @@ func main() {
 
 			d := g.NewGoFileDestination(filename)
 
-			templates, err := template.New("taggingtests").Parse(resourceTestGoTmpl)
-			if err != nil {
-				g.Fatalf("parsing base Go test template: %w", err)
+			templateFuncMap := template.FuncMap{
+				"inc": func(i int) int {
+					return i + 1
+				},
 			}
+			templates := template.New("taggingtests").Funcs(templateFuncMap)
 
 			templates, err = tests.AddCommonResourceTestTemplates(templates)
 			if err != nil {
 				g.Fatalf(err.Error())
+			}
+
+			templates, err = templates.Parse(resourceTestGoTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
 			if err := d.BufferTemplateSet(templates, resource); err != nil {
@@ -138,14 +145,16 @@ func main() {
 
 			d := g.NewGoFileDestination(filename)
 
-			templates, err := template.New("taggingtests").Parse(dataSourceTestGoTmpl)
-			if err != nil {
-				g.Fatalf("parsing base Go test template: %w", err)
-			}
+			templates := template.New("taggingtests")
 
 			templates, err = tests.AddCommonDataSourceTestTemplates(templates)
 			if err != nil {
 				g.Fatalf(err.Error())
+			}
+
+			templates, err = templates.Parse(dataSourceTestGoTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
 			if err := d.BufferTemplateSet(templates, resource); err != nil {
