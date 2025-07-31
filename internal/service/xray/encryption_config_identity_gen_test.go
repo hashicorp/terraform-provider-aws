@@ -38,7 +38,7 @@ func testAccXRayEncryptionConfig_Identity_Basic(t *testing.T) {
 	var v awstypes.EncryptionConfig
 	resourceName := "aws_xray_encryption_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func testAccXRayEncryptionConfig_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_xray_encryption_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -223,7 +223,7 @@ func testAccXRayEncryptionConfig_Identity_ExistingResource(t *testing.T) {
 	var v awstypes.EncryptionConfig
 	resourceName := "aws_xray_encryption_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

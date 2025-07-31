@@ -27,7 +27,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_Basic(t *testin
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -111,7 +111,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_Identity_ExistingResourc
 	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

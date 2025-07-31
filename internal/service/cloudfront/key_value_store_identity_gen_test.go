@@ -27,7 +27,7 @@ func TestAccCloudFrontKeyValueStore_Identity_Basic(t *testing.T) {
 	resourceName := "aws_cloudfront_key_value_store.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func TestAccCloudFrontKeyValueStore_Identity_ExistingResource(t *testing.T) {
 	resourceName := "aws_cloudfront_key_value_store.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

@@ -35,7 +35,7 @@ func testAccAuditManagerAccountRegistration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -106,7 +106,7 @@ func testAccAuditManagerAccountRegistration_Identity_RegionOverride(t *testing.T
 
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -215,7 +215,7 @@ func testAccAuditManagerAccountRegistration_Identity_ExistingResource(t *testing
 	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

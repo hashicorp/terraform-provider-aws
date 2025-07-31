@@ -38,7 +38,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_Basic(t *testing.T) {
 	var v devopsguru.DescribeEventSourcesConfigOutput
 	resourceName := "aws_devopsguru_event_sources_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -115,7 +115,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_devopsguru_event_sources_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -229,7 +229,7 @@ func testAccDevOpsGuruEventSourcesConfig_Identity_ExistingResource(t *testing.T)
 	var v devopsguru.DescribeEventSourcesConfigOutput
 	resourceName := "aws_devopsguru_event_sources_config.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

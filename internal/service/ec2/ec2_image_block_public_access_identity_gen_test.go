@@ -33,7 +33,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_block_public_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -61,7 +61,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_image_block_public_access.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
