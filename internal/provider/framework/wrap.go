@@ -64,7 +64,8 @@ func newWrappedDataSource(spec *inttypes.ServicePackageFrameworkDataSource, serv
 		interceptors = append(interceptors, dataSourceTransparentTagging(spec.Tags))
 	}
 
-	inner, _ := spec.Factory(nil)
+	inner, _ := spec.Factory(context.TODO())
+
 	return &wrappedDataSource{
 		inner:              inner,
 		servicePackageName: servicePackageName,
@@ -186,23 +187,40 @@ func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasour
 	}
 }
 
-type wrappedEphemeralResourceOptions struct {
-	interceptors       interceptorInvocations
-	servicePackageName string
-	spec               *inttypes.ServicePackageEphemeralResource
-}
-
 // wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
 type wrappedEphemeralResource struct {
-	inner ephemeral.EphemeralResourceWithConfigure
-	meta  *conns.AWSClient
-	opts  wrappedEphemeralResourceOptions
+	inner              ephemeral.EphemeralResourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageEphemeralResource
+	interceptors       interceptorInvocations
 }
 
-func newWrappedEphemeralResource(inner ephemeral.EphemeralResourceWithConfigure, opts wrappedEphemeralResourceOptions) ephemeral.EphemeralResourceWithConfigure {
+func newWrappedEphemeralResource(spec *inttypes.ServicePackageEphemeralResource, servicePackageName string) ephemeral.EphemeralResourceWithConfigure {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, ephemeralResourceValidateRegion())
+		}
+		interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
+	}
+
+	inner, _ := spec.Factory(context.TODO())
+
 	return &wrappedEphemeralResource{
-		inner: inner,
-		opts:  opts,
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
 	}
 }
 
@@ -212,7 +230,7 @@ func (w *wrappedEphemeralResource) bootstrapContext(ctx context.Context, getAttr
 	var overrideRegion string
 
 	var isRegionOverrideEnabled bool
-	if regionSpec := w.opts.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		isRegionOverrideEnabled = true
 	}
 
@@ -226,7 +244,7 @@ func (w *wrappedEphemeralResource) bootstrapContext(ctx context.Context, getAttr
 		overrideRegion = target.ValueString()
 	}
 
-	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.opts.spec.Name, overrideRegion)
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
 	if c != nil {
 		ctx = c.RegisterLogger(ctx)
 		ctx = fwflex.RegisterLogger(ctx)
@@ -238,7 +256,7 @@ func (w *wrappedEphemeralResource) bootstrapContext(ctx context.Context, getAttr
 
 func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
 	// This method does not call down to the inner ephemeral resource.
-	response.TypeName = w.opts.spec.TypeName
+	response.TypeName = w.spec.TypeName
 }
 
 func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -248,17 +266,17 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.ephemeralResourceSchema(), w.inner.Schema, ephemeralSchemaHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.ephemeralResourceSchema(), w.inner.Schema, ephemeralSchemaHasError, w.meta)(ctx, request, response)
 
 	// Validate the ephemeral resource's model against the schema.
 	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.spec.TypeName)
+			response.Diagnostics.AddError("ephemeral resource model validation error", w.spec.TypeName)
 			return
 		}
 	} else {
-		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.opts.spec.TypeName)
+		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.spec.TypeName)
 	}
 }
 
@@ -269,7 +287,7 @@ func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.O
 		return
 	}
 
-	interceptedHandler(w.opts.interceptors.ephemeralResourceOpen(), w.inner.Open, ephemeralOpenHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.ephemeralResourceOpen(), w.inner.Open, ephemeralOpenHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
@@ -294,7 +312,7 @@ func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.
 			return
 		}
 
-		interceptedHandler(w.opts.interceptors.ephemeralResourceRenew(), v.Renew, ephemeralRenewHasError, w.meta)(ctx, request, response)
+		interceptedHandler(w.interceptors.ephemeralResourceRenew(), v.Renew, ephemeralRenewHasError, w.meta)(ctx, request, response)
 	}
 }
 
@@ -306,7 +324,7 @@ func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.
 			return
 		}
 
-		interceptedHandler(w.opts.interceptors.ephemeralResourceClose(), v.Close, ephemeralCloseHasError, w.meta)(ctx, request, response)
+		interceptedHandler(w.interceptors.ephemeralResourceClose(), v.Close, ephemeralCloseHasError, w.meta)(ctx, request, response)
 	}
 }
 
@@ -315,7 +333,7 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"ephemeral resource":     w.opts.spec.TypeName,
+				"ephemeral resource":     w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
