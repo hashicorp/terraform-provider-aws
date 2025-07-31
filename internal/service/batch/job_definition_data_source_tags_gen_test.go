@@ -21,6 +21,7 @@ import (
 
 func TestAccBatchJobDefinitionDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -49,6 +50,7 @@ func TestAccBatchJobDefinitionDataSource_tags(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -73,6 +75,7 @@ func TestAccBatchJobDefinitionDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -97,6 +100,7 @@ func TestAccBatchJobDefinitionDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -129,6 +133,7 @@ func TestAccBatchJobDefinitionDataSource_tags_DefaultTags_nonOverlapping(t *test
 
 func TestAccBatchJobDefinitionDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -167,6 +172,7 @@ func TestAccBatchJobDefinitionDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *t
 
 func TestAccBatchJobDefinitionDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_batch_job_definition.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

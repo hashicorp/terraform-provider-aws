@@ -21,6 +21,7 @@ import (
 
 func TestAccACMPCACertificate_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_acmpca_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -244,6 +245,7 @@ func TestAccACMPCACertificate_Identity_RegionOverride(t *testing.T) {
 
 func TestAccACMPCACertificate_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_acmpca_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

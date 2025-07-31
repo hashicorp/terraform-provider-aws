@@ -21,6 +21,7 @@ import (
 
 func TestAccAppRunnerObservabilityConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_observability_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccAppRunnerObservabilityConfiguration_Identity_RegionOverride(t *testi
 
 func TestAccAppRunnerObservabilityConfiguration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_observability_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

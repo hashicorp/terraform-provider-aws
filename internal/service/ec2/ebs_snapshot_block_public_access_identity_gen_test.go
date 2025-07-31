@@ -33,6 +33,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_IdentitySerial(t *testing.T) {
 
 func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
 
 	resource.Test(t, resource.TestCase{
@@ -213,6 +214,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_RegionOverride(t *testin
 
 func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ebs_snapshot_block_public_access.test"
 
 	resource.Test(t, resource.TestCase{

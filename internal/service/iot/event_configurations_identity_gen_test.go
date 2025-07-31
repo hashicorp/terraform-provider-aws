@@ -33,6 +33,7 @@ func testAccIoTEventConfigurations_IdentitySerial(t *testing.T) {
 
 func testAccIoTEventConfigurations_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_event_configurations.test"
 
 	resource.Test(t, resource.TestCase{
@@ -213,6 +214,7 @@ func testAccIoTEventConfigurations_Identity_RegionOverride(t *testing.T) {
 
 func testAccIoTEventConfigurations_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_event_configurations.test"
 
 	resource.Test(t, resource.TestCase{

@@ -21,6 +21,7 @@ import (
 
 func TestAccMediaLiveInputDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -49,6 +50,7 @@ func TestAccMediaLiveInputDataSource_tags(t *testing.T) {
 
 func TestAccMediaLiveInputDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -73,6 +75,7 @@ func TestAccMediaLiveInputDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccMediaLiveInputDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -97,6 +100,7 @@ func TestAccMediaLiveInputDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccMediaLiveInputDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -129,6 +133,7 @@ func TestAccMediaLiveInputDataSource_tags_DefaultTags_nonOverlapping(t *testing.
 
 func TestAccMediaLiveInputDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -167,6 +172,7 @@ func TestAccMediaLiveInputDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testi
 
 func TestAccMediaLiveInputDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_medialive_input.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

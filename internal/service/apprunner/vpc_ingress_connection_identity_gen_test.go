@@ -21,6 +21,7 @@ import (
 
 func TestAccAppRunnerVPCIngressConnection_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccAppRunnerVPCIngressConnection_Identity_RegionOverride(t *testing.T) 
 
 func TestAccAppRunnerVPCIngressConnection_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

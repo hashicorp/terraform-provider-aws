@@ -16,6 +16,7 @@ import (
 
 func TestAccACMCertificateDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
@@ -46,6 +47,7 @@ func TestAccACMCertificateDataSource_tags(t *testing.T) {
 
 func TestAccACMCertificateDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
@@ -72,6 +74,7 @@ func TestAccACMCertificateDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccACMCertificateDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
@@ -98,6 +101,7 @@ func TestAccACMCertificateDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccACMCertificateDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
@@ -132,6 +136,7 @@ func TestAccACMCertificateDataSource_tags_DefaultTags_nonOverlapping(t *testing.
 
 func TestAccACMCertificateDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())
@@ -172,6 +177,7 @@ func TestAccACMCertificateDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testi
 
 func TestAccACMCertificateDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_acm_certificate.test"
 	privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, acctest.RandomDomain().String())

@@ -18,6 +18,7 @@ import (
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -214,6 +215,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_null(t *testing.T)
 	t.Skip("Resource DirectConnectGatewayAttachment does not support null tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -277,6 +279,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_null(t *testing.T)
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -328,6 +331,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyMap(t *testin
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -413,6 +417,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyTag_OnCreate(
 	t.Skip("Resource DirectConnectGatewayAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -511,6 +516,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyTag_OnUpdate_
 	t.Skip("Resource DirectConnectGatewayAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -658,6 +664,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyTag_OnUpdate_
 	t.Skip("Resource DirectConnectGatewayAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -751,6 +758,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_EmptyTag_OnUpdate_
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -944,6 +952,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_provid
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1113,6 +1122,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_nonOve
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1298,6 +1308,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_overla
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1391,6 +1402,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_update
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1485,6 +1497,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_emptyR
 	t.Skip("Resource DirectConnectGatewayAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1556,6 +1569,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_emptyP
 	t.Skip("Resource DirectConnectGatewayAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1619,6 +1633,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_nullOv
 	t.Skip("Resource DirectConnectGatewayAttachment does not support null tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1691,6 +1706,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_nullNo
 	t.Skip("Resource DirectConnectGatewayAttachment does not support null tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1763,6 +1779,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_DefaultTags_nullNo
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1821,6 +1838,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnCrea
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1921,6 +1939,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnUpda
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2011,6 +2030,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_ComputedTag_OnUpda
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2173,6 +2193,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_IgnoreTags_Overlap
 
 func TestAccNetworkManagerDirectConnectGatewayAttachment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.DirectConnectGatewayAttachment
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

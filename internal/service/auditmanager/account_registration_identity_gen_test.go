@@ -33,6 +33,7 @@ func testAccAuditManagerAccountRegistration_IdentitySerial(t *testing.T) {
 
 func testAccAuditManagerAccountRegistration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_auditmanager_account_registration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -213,6 +214,7 @@ func testAccAuditManagerAccountRegistration_Identity_RegionOverride(t *testing.T
 
 func testAccAuditManagerAccountRegistration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_auditmanager_account_registration.test"
 
 	resource.Test(t, resource.TestCase{

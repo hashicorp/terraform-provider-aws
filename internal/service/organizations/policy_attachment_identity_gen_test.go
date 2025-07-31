@@ -32,6 +32,7 @@ func testAccOrganizationsPolicyAttachment_IdentitySerial(t *testing.T) {
 
 func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_organizations_policy_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,6 +120,7 @@ func testAccOrganizationsPolicyAttachment_Identity_Basic(t *testing.T) {
 // Resource Identity was added after v6.4.0
 func testAccOrganizationsPolicyAttachment_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_organizations_policy_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

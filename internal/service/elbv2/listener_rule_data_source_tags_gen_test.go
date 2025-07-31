@@ -16,6 +16,7 @@ import (
 
 func TestAccELBV2ListenerRuleDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -44,6 +45,7 @@ func TestAccELBV2ListenerRuleDataSource_tags(t *testing.T) {
 
 func TestAccELBV2ListenerRuleDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -68,6 +70,7 @@ func TestAccELBV2ListenerRuleDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccELBV2ListenerRuleDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -92,6 +95,7 @@ func TestAccELBV2ListenerRuleDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccELBV2ListenerRuleDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -124,6 +128,7 @@ func TestAccELBV2ListenerRuleDataSource_tags_DefaultTags_nonOverlapping(t *testi
 
 func TestAccELBV2ListenerRuleDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -162,6 +167,7 @@ func TestAccELBV2ListenerRuleDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *te
 
 func TestAccELBV2ListenerRuleDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_lb_listener_rule.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

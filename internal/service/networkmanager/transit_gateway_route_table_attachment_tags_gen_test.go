@@ -18,6 +18,7 @@ import (
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -191,6 +192,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -254,6 +256,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_null(t *testin
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -313,6 +316,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyMap(t *te
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -392,6 +396,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnCre
 	t.Skip("Resource TransitGatewayRouteTableAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -478,6 +483,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnUpd
 	t.Skip("Resource TransitGatewayRouteTableAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -611,6 +617,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnUpd
 	t.Skip("Resource TransitGatewayRouteTableAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -696,6 +703,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_EmptyTag_OnUpd
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -868,6 +876,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_pr
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1021,6 +1030,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_no
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1190,6 +1200,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_ov
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1276,6 +1287,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_up
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1363,6 +1375,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_em
 	t.Skip("Resource TransitGatewayRouteTableAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1427,6 +1440,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_em
 	t.Skip("Resource TransitGatewayRouteTableAttachment does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1481,6 +1495,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_em
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1540,6 +1555,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nu
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1599,6 +1615,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_DefaultTags_nu
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1651,6 +1668,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1744,6 +1762,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1827,6 +1846,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_ComputedTag_On
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 
@@ -1985,6 +2005,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_IgnoreTags_Ove
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
 

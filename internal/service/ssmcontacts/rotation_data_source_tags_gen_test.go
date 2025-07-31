@@ -31,6 +31,7 @@ func testAccSSMContactsRotationDataSource_tagsSerial(t *testing.T) {
 
 func testAccSSMContactsRotationDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -59,6 +60,7 @@ func testAccSSMContactsRotationDataSource_tags(t *testing.T) {
 
 func testAccSSMContactsRotationDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -83,6 +85,7 @@ func testAccSSMContactsRotationDataSource_tags_NullMap(t *testing.T) {
 
 func testAccSSMContactsRotationDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -107,6 +110,7 @@ func testAccSSMContactsRotationDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccSSMContactsRotationDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -139,6 +143,7 @@ func testAccSSMContactsRotationDataSource_tags_DefaultTags_nonOverlapping(t *tes
 
 func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -177,6 +182,7 @@ func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *
 
 func testAccSSMContactsRotationDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_ssmcontacts_rotation.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

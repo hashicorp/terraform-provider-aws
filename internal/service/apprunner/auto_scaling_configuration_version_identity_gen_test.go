@@ -21,6 +21,7 @@ import (
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_RegionOverride(t *
 
 func TestAccAppRunnerAutoScalingConfigurationVersion_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

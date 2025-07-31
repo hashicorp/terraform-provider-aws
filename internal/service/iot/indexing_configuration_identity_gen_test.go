@@ -33,6 +33,7 @@ func testAccIoTIndexingConfiguration_IdentitySerial(t *testing.T) {
 
 func testAccIoTIndexingConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -213,6 +214,7 @@ func testAccIoTIndexingConfiguration_Identity_RegionOverride(t *testing.T) {
 
 func testAccIoTIndexingConfiguration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_indexing_configuration.test"
 
 	resource.Test(t, resource.TestCase{

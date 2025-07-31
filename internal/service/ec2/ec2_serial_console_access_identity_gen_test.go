@@ -31,6 +31,7 @@ func testAccEC2SerialConsoleAccess_IdentitySerial(t *testing.T) {
 
 func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ec2_serial_console_access.test"
 
 	resource.Test(t, resource.TestCase{
@@ -97,6 +98,7 @@ func testAccEC2SerialConsoleAccess_Identity_Basic(t *testing.T) {
 
 func testAccEC2SerialConsoleAccess_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ec2_serial_console_access.test"
 
 	resource.Test(t, resource.TestCase{

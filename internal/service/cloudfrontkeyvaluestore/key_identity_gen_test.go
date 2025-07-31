@@ -21,6 +21,7 @@ import (
 
 func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_cloudfrontkeyvaluestore_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -105,6 +106,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 // Resource Identity was added after v6.0.0
 func TestAccCloudFrontKeyValueStoreKey_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_cloudfrontkeyvaluestore_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

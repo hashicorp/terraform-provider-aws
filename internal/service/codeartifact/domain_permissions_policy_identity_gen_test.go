@@ -33,6 +33,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_IdentitySerial(t *testing.T) {
 
 func testAccCodeArtifactDomainPermissionsPolicy_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -237,6 +238,7 @@ func testAccCodeArtifactDomainPermissionsPolicy_Identity_RegionOverride(t *testi
 
 func testAccCodeArtifactDomainPermissionsPolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

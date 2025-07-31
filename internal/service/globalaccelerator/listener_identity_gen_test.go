@@ -21,6 +21,7 @@ import (
 
 func TestAccGlobalAcceleratorListener_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_globalaccelerator_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -103,6 +104,7 @@ func TestAccGlobalAcceleratorListener_Identity_Basic(t *testing.T) {
 // Resource Identity was added after v6.4.0
 func TestAccGlobalAcceleratorListener_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_globalaccelerator_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
