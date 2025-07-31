@@ -40,6 +40,10 @@
 {{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
 {{- end }}
 
+{{ define "Test" -}}
+acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
+{{- end }}
+
 {{ define "ExistsCheck" }}
 	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
 {{ end }}

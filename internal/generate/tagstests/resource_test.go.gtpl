@@ -8,10 +8,6 @@
 	{{ template "commonInit" . }}
 {{ end }}
 
-{{ define "Test" -}}
-acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
-{{- end }}
-
 {{ define "TestCaseSetupNoProviders" -}}
 	{{ template "CommonTestCaseChecks" . }}
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
