@@ -388,45 +388,15 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
-			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
+			p.dataSources = append(p.dataSources, func() datasource.DataSource {
 				return newWrappedDataSource(dataSourceSpec, servicePackageName)
 			})
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			for _, v := range v.EphemeralResources(ctx) {
-				typeName := v.TypeName
-				inner, err := v.Factory(ctx)
-
-				if err != nil {
-					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
-					continue
-				}
-
-				var isRegionOverrideEnabled bool
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-					isRegionOverrideEnabled = true
-				}
-
-				var interceptors interceptorInvocations
-
-				if isRegionOverrideEnabled {
-					v := v.Region.Value()
-
-					interceptors = append(interceptors, ephemeralResourceInjectRegionAttribute())
-					if v.IsValidateOverrideInPartition {
-						interceptors = append(interceptors, ephemeralResourceValidateRegion())
-					}
-					interceptors = append(interceptors, ephemeralResourceSetRegionInResult())
-				}
-
-				opts := wrappedEphemeralResourceOptions{
-					interceptors:       interceptors,
-					servicePackageName: servicePackageName,
-					spec:               v,
-				}
+			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
-					return newWrappedEphemeralResource(inner, opts)
+					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
 				})
 			}
 		}
