@@ -221,8 +221,8 @@ github.com/aws/aws-sdk-go-v2/service/ecr v1.47.1 h1:gwqCrRvz+vnhWyG9/WSzo6HspAO5
 github.com/aws/aws-sdk-go-v2/service/ecr v1.47.1/go.mod h1:VVqrGCL0/zQif1J6axnyUBVRf6lySV5/QhxV9RspEHY=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.34.1 h1:BiOKbndtmSaZypHR0S7lO0DuffGegLvbkGfq4aNJlFc=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.34.1/go.mod h1:rAWV5KSmhcjfXEzn2j+heWufy+JWlNDvkhyirRPB0+o=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.61.0 h1:2VrFedi1M671QYjgwUoBVTLNnYJLHEWziQGxI4b7VP8=
-github.com/aws/aws-sdk-go-v2/service/ecs v1.61.0/go.mod h1:y/YTnHG2QTWQ4dPVyY0oFHMGuwpS2Ys+4TfrcY5eqVs=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.61.1 h1:C9YpiBJwF9ORx1PNLK7hIT9edNcezQs+ioCT64414+8=
+github.com/aws/aws-sdk-go-v2/service/ecs v1.61.1/go.mod h1:NzX/k/6nc9X5l1NShl1p2PLbBZ2IohBcD0d76o7uPtw=
 github.com/aws/aws-sdk-go-v2/service/efs v1.37.0 h1:0UpL/E+lNuSlX4JZz/rtTb+DHIpXbCj5sX6/2m+rww4=
 github.com/aws/aws-sdk-go-v2/service/efs v1.37.0/go.mod h1:I04zQ/3fYhdiCLo1LGtDLxHKDOAn8JcvhPXhlfVF9lg=
 github.com/aws/aws-sdk-go-v2/service/eks v1.67.0 h1:Q6eEFXjq0l2EsOyTiACpHFWMTqPJCI8D/Zqj8m08tlc=
