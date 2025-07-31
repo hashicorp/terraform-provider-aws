@@ -8,5 +8,6 @@ dataSourceName := "data.{{ .TypeName}}.test"
 
 {{ define "Init" }}
 	ctx := acctest.Context(t)
+
 	{{ template "commonInit" . }}
 {{ end }}
