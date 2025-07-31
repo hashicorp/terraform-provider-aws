@@ -195,7 +195,20 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 {{- if .IsDefaultUpdateTags }}
 // {{ .UpdateTagsFunc | Title }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.
-func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
-	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+{{- if .TagResTypeElem }}
+{{- if .TagResTypeIsAccountID }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	c := meta.(*conns.AWSClient)
+	return  {{ .UpdateTagsFunc }}(ctx, c.{{ .ProviderNameUpper }}Client(ctx), identifier, c.AccountID(ctx), oldTags, newTags)
 }
+{{- else }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier, resourceType, oldTags, newTags)
+}
+{{- end }}
+{{- else }}
+func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier, oldTags, newTags)
+}
+{{- end }}
 {{- end }}
