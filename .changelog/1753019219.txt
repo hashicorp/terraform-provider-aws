@@ -1,0 +1,1 @@
+aws_wafv2_web_acl_logging_configuration - Provides a resource to manage AWS WAFv2 Web ACL logging configuration
