@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/iot v1.65.1
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.44.1
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.57.0
