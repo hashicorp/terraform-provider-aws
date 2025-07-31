@@ -285,6 +285,36 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 	})
 }
 
+func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var collaboration cleanrooms.GetCollaborationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	engine := string(types.AnalyticsEngineSpark)
+	resourceName := "aws_cleanrooms_collaboration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollaborationConfig_analyticsEngine(rName, engine),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
+					resource.TestCheckResourceAttr(resourceName, "analytics_engine", engine),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCollaborationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
@@ -542,40 +572,21 @@ resource "aws_cleanrooms_collaboration" "test" {
 		dataEncryptionMetadata, additionalMember)
 }
 
-func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
-	resourceName := "aws_cleanrooms_collaboration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(context.Background(), t)
-		},
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCollaborationConfigAnalyticsEngine("SPARK"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "analytics_engine", "SPARK"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCollaborationConfigAnalyticsEngine(engine string) string {
+func testAccCollaborationConfig_analyticsEngine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_cleanrooms_collaboration" "test" {
-  name                     = "tf-test-collab"
-  creator_display_name     = "tf-test"
+  name                     = %[1]q
+  creator_display_name     = %[1]q
   creator_member_abilities = ["CAN_RECEIVE_RESULTS"]
   description              = "test collaboration"
   query_log_status         = "ENABLED"
-  analytics_engine         = "%s"
+  analytics_engine         = %[2]q
 
   member {
-    account_id       = "%s"
+    account_id       = 123456789012
     display_name     = "test-member"
     member_abilities = ["CAN_QUERY"]
   }
 }
-`, engine, acctest.AccountID(context.Background()))
+`, rName, engine)
 }
