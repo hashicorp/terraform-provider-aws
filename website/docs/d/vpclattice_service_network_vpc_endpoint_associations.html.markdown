@@ -22,14 +22,9 @@ data "aws_vpclattice_service_network_vpc_endpoint_associations" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
-
-* `service_network_identifier` - This is the Id or ARN of the VPC Lattice Service Network for which you want to list the Service Network VPC Endpoint Associations.
-
-## Argument Reference
-
 This data source supports the following arguments:
 
+* `service_network_identifier` - (Required) This is the Id or ARN of the VPC Lattice Service Network for which you want to list the Service Network VPC Endpoint Associations.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
