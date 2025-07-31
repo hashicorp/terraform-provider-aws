@@ -1602,12 +1602,6 @@ service/oam:
           - any-glob-to-any-file:
               - 'internal/service/oam/**/*'
               - 'website/**/oam_*'
-service/odb:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/odb/**/*'
-              - 'website/**/odb_*'
 service/opensearch:
   - any:
       - changed-files:
