@@ -15,6 +15,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,6 +69,7 @@ func (d *accessPointDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"public_access_block_configuration": framework.DataSourceComputedListOfObjectAttribute[publicAccessBlockConfigurationModel](ctx),
+			names.AttrTags:                      tftags.TagsAttributeComputedOnly(),
 			names.AttrVPCConfiguration:          framework.DataSourceComputedListOfObjectAttribute[vpcConfigurationModel](ctx),
 		},
 	}
@@ -118,6 +120,7 @@ type accessPointDataSourceModel struct {
 	Name                           types.String                                                         `tfsdk:"name"`
 	NetworkOrigin                  types.String                                                         `tfsdk:"network_origin"`
 	PublicAccessBlockConfiguration fwtypes.ListNestedObjectValueOf[publicAccessBlockConfigurationModel] `tfsdk:"public_access_block_configuration"`
+	Tags                           tftags.Map                                                           `tfsdk:"tags"`
 	VPCConfiguration               fwtypes.ListNestedObjectValueOf[vpcConfigurationModel]               `tfsdk:"vpc_configuration"`
 }
 
