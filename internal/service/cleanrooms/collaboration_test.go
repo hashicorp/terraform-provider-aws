@@ -57,10 +57,9 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -121,10 +120,9 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -156,10 +154,9 @@ func TestAccCleanRoomsCollaboration_updateCreatorDisplayName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -190,10 +187,9 @@ func TestAccCleanRoomsCollaboration_updateQueryLogStatus(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -236,10 +232,9 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -276,10 +271,9 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -557,6 +551,7 @@ resource "aws_cleanrooms_collaboration" "test" {
   creator_display_name     = %[5]q
   description              = %[2]q
   query_log_status         = %[6]q
+  analytics_engine         = "SPARK"
 
 		%[7]s
 
@@ -566,9 +561,7 @@ resource "aws_cleanrooms_collaboration" "test" {
     Project = %[3]q
   }
 }
-
-
-	`, name, description, tagValue, creatorMemberAbilities, creatorDisplayName, queryLogStatus,
+`, name, description, tagValue, creatorMemberAbilities, creatorDisplayName, queryLogStatus,
 		dataEncryptionMetadata, additionalMember)
 }
 
