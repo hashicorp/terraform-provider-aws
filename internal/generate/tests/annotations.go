@@ -494,7 +494,7 @@ func endpointsConstOrQuote(region string) string {
 	var buf strings.Builder
 	buf.WriteString("endpoints.")
 
-	for _, part := range strings.Split(region, "-") {
+	for part := range strings.SplitSeq(region, "-") {
 		buf.WriteString(strings.Title(part))
 	}
 	buf.WriteString("RegionID")
