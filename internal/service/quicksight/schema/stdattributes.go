@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func AWSAccountIDAttribute() fwschema.StringAttribute {
+func AWSAccountIDAttribute() fwschema.StringAttribute { // nosemgrep:ci.aws-in-func-name
 	return fwschema.StringAttribute{
 		Optional: true,
 		Computed: true,
@@ -33,7 +33,7 @@ func AWSAccountIDAttribute() fwschema.StringAttribute {
 	}
 }
 
-func AWSAccountIDSchema() *sdkschema.Schema {
+func AWSAccountIDSchema() *sdkschema.Schema { // nosemgrep:ci.aws-in-func-name
 	return &sdkschema.Schema{
 		Type:         sdkschema.TypeString,
 		Optional:     true,
@@ -43,7 +43,7 @@ func AWSAccountIDSchema() *sdkschema.Schema {
 	}
 }
 
-func AWSAccountIDDataSourceSchema() *sdkschema.Schema {
+func AWSAccountIDDataSourceSchema() *sdkschema.Schema { // nosemgrep:ci.aws-in-func-name
 	return &sdkschema.Schema{
 		Type:         sdkschema.TypeString,
 		Optional:     true,

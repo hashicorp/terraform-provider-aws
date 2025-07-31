@@ -85,6 +85,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newRoleCustomPermissionResource,
+			TypeName: "aws_quicksight_role_custom_permission",
+			Name:     "Role Custom Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newRoleMembershipResource,
 			TypeName: "aws_quicksight_role_membership",
 			Name:     "Role Membership",
