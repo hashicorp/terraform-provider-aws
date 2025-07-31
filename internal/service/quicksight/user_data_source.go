@@ -6,12 +6,11 @@ package quicksight
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,11 +29,7 @@ func dataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDDataSourceSchema(),
 				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -43,15 +38,7 @@ func dataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrNamespace: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  defaultUserNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-					),
-				},
+				names.AttrNamespace: quicksightschema.NamespaceDataSourceSchema(),
 				"principal_id": {
 					Type:     schema.TypeString,
 					Computed: true,
