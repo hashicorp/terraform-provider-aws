@@ -52,8 +52,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 * `firewall_domain_lists` - List of firewall domain lists with detailed information. Each element contains:
-  * `arn` - The Amazon Resource Name (ARN) of the firewall domain list.
-  * `creator_request_id` - A unique string defined by you to identify the request.
-  * `id` - The ID of the firewall domain list.
-  * `managed_owner_name` - The owner of the firewall domain list. For AWS managed domain lists, this is `Route 53 Resolver DNS Firewall`.
-  * `name` - The name of the firewall domain list.
+    * `arn` - The Amazon Resource Name (ARN) of the firewall domain list.
+    * `creator_request_id` - A unique string defined by you to identify the request.
+    * `id` - The ID of the firewall domain list.
+    * `managed_owner_name` - The owner of the firewall domain list. For AWS managed domain lists, this is `Route 53 Resolver DNS Firewall`.
+    * `name` - The name of the firewall domain list.
