@@ -14,20 +14,16 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -425,31 +421,9 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				}
 
 				opts := wrappedEphemeralResourceOptions{
-					// bootstrapContext is run on all wrapped methods before any interceptors.
-					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-						var diags diag.Diagnostics
-						var overrideRegion string
-
-						if isRegionOverrideEnabled && getAttribute != nil {
-							var target types.String
-							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-							if diags.HasError() {
-								return ctx, diags
-							}
-
-							overrideRegion = target.ValueString()
-						}
-
-						ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
-						if c != nil {
-							ctx = c.RegisterLogger(ctx)
-							ctx = fwflex.RegisterLogger(ctx)
-							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-						}
-						return ctx, diags
-					},
-					interceptors: interceptors,
-					typeName:     v.TypeName,
+					interceptors:       interceptors,
+					servicePackageName: servicePackageName,
+					spec:               v,
 				}
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
 					return newWrappedEphemeralResource(inner, opts)

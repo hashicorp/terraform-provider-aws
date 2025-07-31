@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/identity"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -186,10 +187,9 @@ func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasour
 }
 
 type wrappedEphemeralResourceOptions struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorInvocations
-	typeName         string
+	interceptors       interceptorInvocations
+	servicePackageName string
+	spec               *inttypes.ServicePackageEphemeralResource
 }
 
 // wrappedEphemeralResource represents an interceptor dispatcher for a Plugin Framework ephemeral resource.
@@ -206,13 +206,43 @@ func newWrappedEphemeralResource(inner ephemeral.EphemeralResourceWithConfigure,
 	}
 }
 
+// bootstrapContext is run on all wrapped methods before any interceptors.
+func (w *wrappedEphemeralResource) bootstrapContext(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.opts.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		overrideRegion = target.ValueString()
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.opts.servicePackageName, w.opts.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+	}
+
+	return ctx, diags
+}
+
 func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
 	// This method does not call down to the inner ephemeral resource.
-	response.TypeName = w.opts.typeName
+	response.TypeName = w.opts.spec.TypeName
 }
 
 func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -224,16 +254,16 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	if v, ok := w.inner.(framework.EphemeralResourceValidateModel); ok {
 		response.Diagnostics.Append(v.ValidateModel(ctx, &response.Schema)...)
 		if response.Diagnostics.HasError() {
-			response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.typeName)
+			response.Diagnostics.AddError("ephemeral resource model validation error", w.opts.spec.TypeName)
 			return
 		}
 	} else {
-		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.opts.typeName)
+		response.Diagnostics.AddError("missing framework.EphemeralResourceValidateModel", w.opts.spec.TypeName)
 	}
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -247,7 +277,7 @@ func (w *wrappedEphemeralResource) Configure(ctx context.Context, request epheme
 		w.meta = v
 	}
 
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -258,7 +288,7 @@ func (w *wrappedEphemeralResource) Configure(ctx context.Context, request epheme
 
 func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -270,7 +300,7 @@ func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.
 
 func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -282,10 +312,10 @@ func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.
 
 func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"ephemeral resource":     w.opts.typeName,
+				"ephemeral resource":     w.opts.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -300,7 +330,7 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 
 func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		ctx, diags := w.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
