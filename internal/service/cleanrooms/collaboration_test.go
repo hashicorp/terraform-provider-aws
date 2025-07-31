@@ -564,13 +564,12 @@ func TestAccCleanRoomsCollaboration_analyticsEngine(t *testing.T) {
 func testAccCollaborationConfigAnalyticsEngine(engine string) string {
 	return fmt.Sprintf(`
 resource "aws_cleanrooms_collaboration" "test" {
-  name                      = "tf-test-collab"
-  creator_display_name      = "tf-test"
-  creator_member_abilities  = ["CAN_RECEIVE_RESULTS"]
-  description               = "test collaboration"
-  query_log_status          = "ENABLED"
-
-  analytics_engine          = "%s"
+  name                     = "tf-test-collab"
+  creator_display_name     = "tf-test"
+  creator_member_abilities = ["CAN_RECEIVE_RESULTS"]
+  description              = "test collaboration"
+  query_log_status         = "ENABLED"
+  analytics_engine         = "%s"
 
   member {
     account_id       = "%s"
