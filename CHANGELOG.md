@@ -1,5 +1,23 @@
 ## 6.8.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_quicksight_custom_permissions` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* **New Resource:** `aws_quicksight_role_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* **New Resource:** `aws_quicksight_user_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+
+ENHANCEMENTS:
+
+* data-source/aws_quicksight_user: Add `custom_permissions_name` attribute ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Add plan-time validation of `iam_arn` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Change `user_name` to Optional and Computed ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for `identity_type` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER` as valid values for `user_role` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+
+BUG FIXES:
+
+* provider: Fix failure to detect resources deleted outside of Terraform as missing for numerous resource types ([#43659](https://github.com/hashicorp/terraform-provider-aws/issues/43659))
+
 ## 6.7.0 (July 31, 2025)
 
 FEATURES:
