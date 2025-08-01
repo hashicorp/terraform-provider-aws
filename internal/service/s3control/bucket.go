@@ -186,7 +186,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	log.Printf("[DEBUG] Deleting S3 Control Bucket: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteBucket(ctx, input)
 	}, errCodeInvalidBucketState)
 
