@@ -332,10 +332,12 @@ func (r resourceSetRegionInStateInterceptor) read(ctx context.Context, opts inte
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		// Set region in state after R but skip if the provider just called RemoveResource(ctx) due to disappearance.
+		// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
 		if response.State.Raw.IsNull() {
 			return diags
 		}
+
+		// Set region in state after R.
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
 		if diags.HasError() {
 			return diags
