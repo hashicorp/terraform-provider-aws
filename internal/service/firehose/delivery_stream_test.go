@@ -1089,6 +1089,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtFalse),
 				),
 			},
 			{
@@ -1116,6 +1117,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtTrue),
 				),
 			},
 			{
@@ -4210,6 +4212,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     buffering_interval = 900
     buffering_size     = 100
     retry_duration     = 900
+    append_only        = true
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
