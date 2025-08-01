@@ -36,7 +36,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_Basic(t *testing.T) {
 	var v awstypes.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -107,7 +107,7 @@ func testAccS3ControlAccountPublicAccessBlock_Identity_ExistingResource(t *testi
 	var v awstypes.PublicAccessBlockConfiguration
 	resourceName := "aws_s3_account_public_access_block.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

@@ -27,7 +27,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_Basic(t *testing.T) {
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -118,7 +118,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_RegionOverride(t *testing.T)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -212,7 +212,7 @@ func TestAccVPCSecurityGroupVPCAssociation_Identity_ExistingResource(t *testing.
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

@@ -38,7 +38,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_Basic(t *testing.T) 
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput
 	resourceName := "aws_sagemaker_servicecatalog_portfolio_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_RegionOverride(t *te
 
 	resourceName := "aws_sagemaker_servicecatalog_portfolio_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -223,7 +223,7 @@ func testAccSageMakerServicecatalogPortfolioStatus_Identity_ExistingResource(t *
 	var v sagemaker.GetSagemakerServicecatalogPortfolioStatusOutput
 	resourceName := "aws_sagemaker_servicecatalog_portfolio_status.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

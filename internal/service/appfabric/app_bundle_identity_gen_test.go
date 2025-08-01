@@ -38,7 +38,7 @@ func testAccAppFabricAppBundle_Identity_Basic(t *testing.T) {
 	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -117,7 +117,7 @@ func testAccAppFabricAppBundle_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -234,7 +234,7 @@ func testAccAppFabricAppBundle_Identity_ExistingResource(t *testing.T) {
 	var v awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

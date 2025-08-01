@@ -27,7 +27,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_Identity_Ba
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_Identity_Re
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -233,7 +233,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_Identity_Ex
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

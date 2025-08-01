@@ -15,10 +15,6 @@
 	{{ template "commonInit" . }}
 {{ end }}
 
-{{ define "Test" -}}
-resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
-{{- end }}
-
 {{ define "TestCaseSetupNoProviders" -}}
 	TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 		tfversion.SkipBelow(tfversion.Version1_12_0),
@@ -253,7 +249,7 @@ func {{ template "testname" . }}_IdentitySerial(t *testing.T) {
 func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 	{{- template "Init" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{{ $step := 1 -}}
@@ -382,7 +378,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	{{- template "InitRegionOverride" . }}
 
-	{{ template "Test" . }}(t, resource.TestCase{
+	{{ template "Test" . }}(ctx, t, resource.TestCase{
 		{{ template "TestCaseSetupRegionOverride" . }}
 		Steps: []resource.TestStep{
 			{{ $step := 1 -}}
@@ -545,7 +541,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	func {{ template "testname" . }}_Identity_ExistingResource_fromV5(t *testing.T) {
 		{{- template "Init" . }}
 
-		{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "Test" . }}(ctx, t, resource.TestCase{
 			{{ template "TestCaseSetupNoProviders" . }}
 			Steps: []resource.TestStep{
 				{{ $step := 1 -}}
@@ -630,7 +626,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	func {{ template "testname" . }}_Identity_ExistingResource_fromV6(t *testing.T) {
 		{{- template "Init" . }}
 
-		{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "Test" . }}(ctx, t, resource.TestCase{
 			{{ template "TestCaseSetupNoProviders" . }}
 			Steps: []resource.TestStep{
 				{{ $step := 1 -}}
@@ -747,7 +743,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 	func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 		{{- template "Init" . }}
 
-		{{ template "Test" . }}(t, resource.TestCase{
+		{{ template "Test" . }}(ctx, t, resource.TestCase{
 			{{ template "TestCaseSetupNoProviders" . }}
 			Steps: []resource.TestStep{
 				{{ $step := 1 -}}
@@ -880,7 +876,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{- template "Init" . }}
 
-			{{ template "Test" . }}(t, resource.TestCase{
+			{{ template "Test" . }}(ctx, t, resource.TestCase{
 				{{ template "TestCaseSetupNoProviders" . }}
 				Steps: []resource.TestStep{
 					{{ $step := 1 -}}
@@ -967,7 +963,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{- template "Init" . }}
 
-			{{ template "Test" . }}(t, resource.TestCase{
+			{{ template "Test" . }}(ctx, t, resource.TestCase{
 				{{ template "TestCaseSetupNoProviders" . }}
 				Steps: []resource.TestStep{
 					{{ $step := 1 -}}

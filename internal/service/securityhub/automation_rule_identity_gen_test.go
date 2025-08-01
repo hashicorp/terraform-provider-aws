@@ -39,7 +39,7 @@ func testAccSecurityHubAutomationRule_Identity_Basic(t *testing.T) {
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -124,7 +124,7 @@ func testAccSecurityHubAutomationRule_Identity_RegionOverride(t *testing.T) {
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -245,7 +245,7 @@ func testAccSecurityHubAutomationRule_Identity_ExistingResource(t *testing.T) {
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

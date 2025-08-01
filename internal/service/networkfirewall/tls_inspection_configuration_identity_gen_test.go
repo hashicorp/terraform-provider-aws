@@ -29,7 +29,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_Basic(t *testing.
 	common_name := acctest.RandomDomain()
 	certificate_domain := common_name.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -128,7 +128,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_RegionOverride(t 
 	common_name := acctest.RandomDomain()
 	certificate_domain := common_name.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -270,7 +270,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_Identity_ExistingResource(
 	common_name := acctest.RandomDomain()
 	certificate_domain := common_name.RandomSubdomain()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
