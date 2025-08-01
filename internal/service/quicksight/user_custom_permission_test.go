@@ -209,10 +209,10 @@ func testAccUserCustomPermissionImportStateID(n string) resource.ImportStateIdFu
 func testAccUserCustomPermissionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCustomPermissionsConfig_basic(rName+"-perm"), fmt.Sprintf(`
 resource "aws_quicksight_user" "test" {
-  user_name      = %[1]q
-  email          = %[2]q
-  identity_type  = "QUICKSIGHT"
-  user_role      = "READER"
+  user_name     = %[1]q
+  email         = %[2]q
+  identity_type = "QUICKSIGHT"
+  user_role     = "READER"
 }
 
 resource "aws_quicksight_user_custom_permission" "test" {
@@ -235,10 +235,10 @@ resource "aws_quicksight_custom_permissions" "test2" {
 }
 
 resource "aws_quicksight_user" "test" {
-  user_name      = %[1]q
-  email          = %[2]q
-  identity_type  = "QUICKSIGHT"
-  user_role      = "READER"
+  user_name     = %[1]q
+  email         = %[2]q
+  identity_type = "QUICKSIGHT"
+  user_role     = "READER"
 }
 
 resource "aws_quicksight_user_custom_permission" "test" {
