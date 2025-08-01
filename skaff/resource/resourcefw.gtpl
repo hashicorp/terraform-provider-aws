@@ -359,7 +359,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 4. Remove resource from state if it is not found
 	{{- end }}
 	if tfresource.NotFound(err) {
-		smerr.append(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
