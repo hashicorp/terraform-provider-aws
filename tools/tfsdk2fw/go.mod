@@ -240,6 +240,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.7.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.203.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.14.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.30.1 // indirect
