@@ -410,9 +410,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	var errs []error
 
 	for sp := range p.servicePackages {
-		for _, v := range sp.FrameworkDataSources(ctx) {
-			typeName := v.TypeName
-			ds, err := v.Factory(ctx)
+		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
+			typeName := dataSourceSpec.TypeName
+			inner, err := dataSourceSpec.Factory(ctx)
 
 			if err != nil {
 				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
@@ -420,16 +420,16 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 
 			schemaResponse := datasource.SchemaResponse{}
-			ds.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := dataSourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(dataSourceSpec.Tags) {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
@@ -445,9 +445,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
-			for _, v := range v.EphemeralResources(ctx) {
-				typeName := v.TypeName
-				er, err := v.Factory(ctx)
+			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
+				typeName := ephemeralResourceSpec.TypeName
+				inner, err := ephemeralResourceSpec.Factory(ctx)
 
 				if err != nil {
 					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
@@ -455,9 +455,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				}
 
 				schemaResponse := ephemeral.SchemaResponse{}
-				er.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
+				inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+				if v := ephemeralResourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
 						continue
@@ -466,9 +466,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 		}
 
-		for _, v := range sp.FrameworkResources(ctx) {
-			typeName := v.TypeName
-			r, err := v.Factory(ctx)
+		for _, resourceSpec := range sp.FrameworkResources(ctx) {
+			typeName := resourceSpec.TypeName
+			inner, err := resourceSpec.Factory(ctx)
 
 			if err != nil {
 				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
@@ -476,16 +476,16 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			}
 
 			schemaResponse := resource.SchemaResponse{}
-			r.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
+			inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+			if v := resourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
 					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
 					continue
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if !tfunique.IsHandleNil(resourceSpec.Tags) {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
