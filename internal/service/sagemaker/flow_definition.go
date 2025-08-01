@@ -274,7 +274,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker AI Flow Definition: %#v", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateFlowDefinition(ctx, input)
 	}, ErrCodeValidationException)
 
