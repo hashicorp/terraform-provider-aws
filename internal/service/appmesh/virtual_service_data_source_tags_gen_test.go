@@ -36,6 +36,7 @@ func testAccAppMeshVirtualServiceDataSource_tagsSerial(t *testing.T) {
 
 func testAccAppMeshVirtualServiceDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -64,6 +65,7 @@ func testAccAppMeshVirtualServiceDataSource_tags(t *testing.T) {
 
 func testAccAppMeshVirtualServiceDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -88,6 +90,7 @@ func testAccAppMeshVirtualServiceDataSource_tags_NullMap(t *testing.T) {
 
 func testAccAppMeshVirtualServiceDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -112,6 +115,7 @@ func testAccAppMeshVirtualServiceDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccAppMeshVirtualServiceDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -144,6 +148,7 @@ func testAccAppMeshVirtualServiceDataSource_tags_DefaultTags_nonOverlapping(t *t
 
 func testAccAppMeshVirtualServiceDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -182,6 +187,7 @@ func testAccAppMeshVirtualServiceDataSource_tags_IgnoreTags_Overlap_DefaultTag(t
 
 func testAccAppMeshVirtualServiceDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_appmesh_virtual_service.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

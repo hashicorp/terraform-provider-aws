@@ -16,6 +16,7 @@ import (
 
 func TestAccSecretsManagerSecretDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -44,6 +45,7 @@ func TestAccSecretsManagerSecretDataSource_tags(t *testing.T) {
 
 func TestAccSecretsManagerSecretDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -68,6 +70,7 @@ func TestAccSecretsManagerSecretDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccSecretsManagerSecretDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -92,6 +95,7 @@ func TestAccSecretsManagerSecretDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccSecretsManagerSecretDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -124,6 +128,7 @@ func TestAccSecretsManagerSecretDataSource_tags_DefaultTags_nonOverlapping(t *te
 
 func TestAccSecretsManagerSecretDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -162,6 +167,7 @@ func TestAccSecretsManagerSecretDataSource_tags_IgnoreTags_Overlap_DefaultTag(t 
 
 func TestAccSecretsManagerSecretDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_secretsmanager_secret.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

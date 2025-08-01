@@ -18,6 +18,7 @@ import (
 
 func TestAccDataExchangeRevisionAssets_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -156,6 +157,7 @@ func TestAccDataExchangeRevisionAssets_tags(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -203,6 +205,7 @@ func TestAccDataExchangeRevisionAssets_tags_null(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -240,6 +243,7 @@ func TestAccDataExchangeRevisionAssets_tags_EmptyMap(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -308,6 +312,7 @@ func TestAccDataExchangeRevisionAssets_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -377,6 +382,7 @@ func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -492,6 +498,7 @@ func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 
 func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -570,6 +577,7 @@ func TestAccDataExchangeRevisionAssets_tags_EmptyTag_OnUpdate_Replace(t *testing
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -700,6 +708,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_providerOnly(t *testing.
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -818,6 +827,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nonOverlapping(t *testin
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -946,6 +956,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_overlapping(t *testing.T
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1022,6 +1033,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_updateToProviderOnly(t *
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1098,6 +1110,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_updateToResourceOnly(t *
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1148,6 +1161,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_emptyResourceTag(t *test
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1192,6 +1206,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_emptyProviderOnlyTag(t *
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1242,6 +1257,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nullOverlappingResourceT
 
 func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1294,6 +1310,7 @@ func TestAccDataExchangeRevisionAssets_tags_DefaultTags_nullNonOverlappingResour
 
 func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1338,6 +1355,7 @@ func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1422,6 +1440,7 @@ func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnUpdate_Add(t *testing.
 
 func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1498,6 +1517,7 @@ func TestAccDataExchangeRevisionAssets_tags_ComputedTag_OnUpdate_Replace(t *test
 
 func TestAccDataExchangeRevisionAssets_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1660,6 +1680,7 @@ func TestAccDataExchangeRevisionAssets_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 
 func TestAccDataExchangeRevisionAssets_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v dataexchange.GetRevisionOutput
 	resourceName := "aws_dataexchange_revision_assets.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

@@ -22,6 +22,7 @@ import (
 
 func TestAccKinesisResourcePolicy_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_kinesis_resource_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	providers := make(map[string]*schema.Provider)
@@ -261,6 +262,7 @@ func TestAccKinesisResourcePolicy_Identity_RegionOverride(t *testing.T) {
 
 func TestAccKinesisResourcePolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_kinesis_resource_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	providers := make(map[string]*schema.Provider)

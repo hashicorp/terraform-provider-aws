@@ -33,6 +33,7 @@ func testAccDevOpsGuruServiceIntegration_IdentitySerial(t *testing.T) {
 
 func testAccDevOpsGuruServiceIntegration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_devopsguru_service_integration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -222,6 +223,7 @@ func testAccDevOpsGuruServiceIntegration_Identity_RegionOverride(t *testing.T) {
 
 func testAccDevOpsGuruServiceIntegration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_devopsguru_service_integration.test"
 
 	resource.Test(t, resource.TestCase{

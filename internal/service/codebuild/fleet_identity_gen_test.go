@@ -21,6 +21,7 @@ import (
 
 func TestAccCodeBuildFleet_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codebuild_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccCodeBuildFleet_Identity_RegionOverride(t *testing.T) {
 
 func TestAccCodeBuildFleet_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codebuild_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

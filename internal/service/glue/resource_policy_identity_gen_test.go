@@ -33,6 +33,7 @@ func testAccGlueResourcePolicy_IdentitySerial(t *testing.T) {
 
 func testAccGlueResourcePolicy_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_glue_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{
@@ -213,6 +214,7 @@ func testAccGlueResourcePolicy_Identity_RegionOverride(t *testing.T) {
 
 func testAccGlueResourcePolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_glue_resource_policy.test"
 
 	resource.Test(t, resource.TestCase{

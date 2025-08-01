@@ -21,6 +21,7 @@ import (
 
 func TestAccAppRunnerService_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccAppRunnerService_Identity_RegionOverride(t *testing.T) {
 
 func TestAccAppRunnerService_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_apprunner_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

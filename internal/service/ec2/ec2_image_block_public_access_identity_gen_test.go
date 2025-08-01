@@ -31,6 +31,7 @@ func testAccEC2ImageBlockPublicAccess_IdentitySerial(t *testing.T) {
 
 func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ec2_image_block_public_access.test"
 
 	resource.Test(t, resource.TestCase{
@@ -59,6 +60,7 @@ func testAccEC2ImageBlockPublicAccess_Identity_Basic(t *testing.T) {
 
 func testAccEC2ImageBlockPublicAccess_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_ec2_image_block_public_access.test"
 
 	resource.Test(t, resource.TestCase{

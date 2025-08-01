@@ -33,6 +33,7 @@ func testAccCodeArtifactRepository_IdentitySerial(t *testing.T) {
 
 func testAccCodeArtifactRepository_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_repository.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -239,6 +240,7 @@ func testAccCodeArtifactRepository_Identity_RegionOverride(t *testing.T) {
 
 func testAccCodeArtifactRepository_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codeartifact_repository.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

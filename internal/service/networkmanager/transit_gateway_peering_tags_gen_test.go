@@ -18,6 +18,7 @@ import (
 
 func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -191,6 +192,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -254,6 +256,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_null(t *testing.T) {
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -313,6 +316,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyMap(t *testing.T) {
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -392,6 +396,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnCreate(t *testin
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -478,6 +483,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Add(t *te
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -611,6 +617,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -696,6 +703,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_EmptyTag_OnUpdate_Replace(t
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -868,6 +876,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_providerOnly(t 
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1021,6 +1030,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nonOverlapping(
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1190,6 +1200,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_overlapping(t *
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1276,6 +1287,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToProvide
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1363,6 +1375,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyResourceTa
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1427,6 +1440,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 	t.Skip("Resource TransitGatewayPeering does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1481,6 +1495,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_emptyProviderOn
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1540,6 +1555,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullOverlapping
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1599,6 +1615,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_DefaultTags_nullNonOverlapp
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1651,6 +1668,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnCreate(t *tes
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1744,6 +1762,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Add(t 
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1827,6 +1846,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_ComputedTag_OnUpdate_Replac
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 
@@ -1985,6 +2005,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_DefaultT
 
 func TestAccNetworkManagerTransitGatewayPeering_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v awstypes.TransitGatewayPeering
 	resourceName := "aws_networkmanager_transit_gateway_peering.test"
 

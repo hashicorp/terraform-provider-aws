@@ -21,6 +21,7 @@ import (
 
 func TestAccIAMSAMLProvider_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iam_saml_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -103,6 +104,7 @@ func TestAccIAMSAMLProvider_Identity_Basic(t *testing.T) {
 // Resource Identity was added after v6.4.0
 func TestAccIAMSAMLProvider_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iam_saml_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

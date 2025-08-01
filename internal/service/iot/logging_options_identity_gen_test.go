@@ -34,6 +34,7 @@ func testAccIoTLoggingOptions_IdentitySerial(t *testing.T) {
 
 func testAccIoTLoggingOptions_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_logging_options.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -102,6 +103,7 @@ func testAccIoTLoggingOptions_Identity_RegionOverride(t *testing.T) {
 
 func testAccIoTLoggingOptions_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_iot_logging_options.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

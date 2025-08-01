@@ -18,6 +18,7 @@ import (
 
 func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -199,6 +200,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags(t *testing.T) {
 
 func TestAccWorkSpacesWebNetworkSettings_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -260,6 +262,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_null(t *testing.T) {
 
 func TestAccWorkSpacesWebNetworkSettings_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -309,6 +312,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyMap(t *testing.T) {
 
 func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -387,6 +391,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -476,6 +481,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -613,6 +619,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T
 
 func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -701,6 +708,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_EmptyTag_OnUpdate_Replace(t *testi
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -881,6 +889,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_providerOnly(t *testin
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1040,6 +1049,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nonOverlapping(t *test
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1215,6 +1225,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_overlapping(t *testing
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1303,6 +1314,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToProviderOnly(t
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1390,6 +1402,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_updateToResourceOnly(t
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1455,6 +1468,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyResourceTag(t *te
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1512,6 +1526,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_emptyProviderOnlyTag(t
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1580,6 +1595,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullOverlappingResourc
 
 func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1650,6 +1666,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_DefaultTags_nullNonOverlappingReso
 
 func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1704,6 +1721,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnCreate(t *testing.T)
 
 func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1799,6 +1817,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Add(t *testin
 
 func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -1884,6 +1903,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_ComputedTag_OnUpdate_Replace(t *te
 
 func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
@@ -2042,6 +2062,7 @@ func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_DefaultTag(t *t
 
 func TestAccWorkSpacesWebNetworkSettings_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings.test"
 
