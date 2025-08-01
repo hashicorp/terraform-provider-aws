@@ -422,7 +422,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			inner, err := dataSourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating data source (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating data source type (%s): %w", typeName, err))
 				continue
 			}
 
@@ -430,7 +430,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
 			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("data source %q: %w", typeName, err))
+				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
 				continue
 			}
 
@@ -446,7 +446,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				inner, err := ephemeralResourceSpec.Factory(ctx)
 
 				if err != nil {
-					errs = append(errs, fmt.Errorf("creating ephemeral resource (%s): %w", typeName, err))
+					errs = append(errs, fmt.Errorf("creating ephemeral resource type (%s): %w", typeName, err))
 					continue
 				}
 
@@ -454,7 +454,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
 				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
-					errs = append(errs, fmt.Errorf("ephemeral resource %q: %w", typeName, err))
+					errs = append(errs, fmt.Errorf("ephemeral resource type %q: %w", typeName, err))
 					continue
 				}
 			}
@@ -465,7 +465,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			inner, err := resourceSpec.Factory(ctx)
 
 			if err != nil {
-				errs = append(errs, fmt.Errorf("creating resource (%s): %w", typeName, err))
+				errs = append(errs, fmt.Errorf("creating resource type (%s): %w", typeName, err))
 				continue
 			}
 
@@ -473,7 +473,7 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
 			if err := validateSchemaRegionForResource(resourceSpec.Region, schemaResponse.Schema); err != nil {
-				errs = append(errs, fmt.Errorf("resource %q: %w", typeName, err))
+				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
 				continue
 			}
 
@@ -485,13 +485,13 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			if resourceSpec.Import.WrappedImport {
 				if resourceSpec.Import.SetIDAttr {
 					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
-						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", resourceSpec.TypeName))
+						errs = append(errs, fmt.Errorf("resource type %q: importer sets `%s` attribute, but creator isn't configured", resourceSpec.TypeName, names.AttrID))
 						continue
 					}
 				}
 
 				if _, ok := inner.(framework.ImportByIdentityer); !ok {
-					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]()))
+					errs = append(errs, fmt.Errorf("resource type %q: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]()))
 					continue
 				}
 			}
