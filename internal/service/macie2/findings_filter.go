@@ -169,7 +169,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Position = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateFindingsFilter(ctx, &input)
 	}, errCodeClientError)
 
