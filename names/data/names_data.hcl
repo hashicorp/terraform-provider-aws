@@ -7364,6 +7364,29 @@ service "s3tables" {
   brand      = "Amazon"
 }
 
+service "s3vectors" {
+  sdk {
+    id            = "S3Vectors"
+    arn_namespace = "s3vectors"
+  }
+
+  names {
+    provider_name_upper = "S3Vectors"
+    human_friendly      = "S3 Vectors"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListVectorBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3vectors_"
+  }
+
+  doc_prefix = ["s3vectors_"]
+  brand      = "Amazon"
+}
+
 service "glacier" {
   sdk {
     id            = "Glacier"
