@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -400,18 +399,11 @@ func newWrappedResource(spec *inttypes.ServicePackageFrameworkResource, serviceP
 	inner, _ := spec.Factory(context.TODO())
 
 	if spec.Import.WrappedImport {
-		if spec.Import.SetIDAttr {
-			if _, ok := spec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
-				panic(fmt.Sprintf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", spec.TypeName))
-			}
-		}
-		switch v := inner.(type) {
-		case framework.ImportByIdentityer:
+		if v, ok := inner.(framework.ImportByIdentityer); ok {
 			v.SetIdentitySpec(spec.Identity, spec.Import)
-
-		default:
-			panic(fmt.Sprintf("resource type %s: cannot configure importer", spec.TypeName))
 		}
+		// If the resource does not implement framework.ImportByIdentityer,
+		// it will be caught by `validateResourceSchemas`, so we can ignore it here.
 	}
 	return &wrappedResource{
 		inner:              inner,
