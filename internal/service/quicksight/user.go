@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,9 +46,10 @@ func resourceUser() *schema.Resource {
 					Required: true,
 				},
 				"iam_arn": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
 				"identity_type": {
 					Type:             schema.TypeString,

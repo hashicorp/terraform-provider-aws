@@ -21,3 +21,7 @@ resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for
 ```release-note:enhancement
 resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER` as valid values for `user_role`
 ```
+
+```release-note:enhancement
+resource/aws_quicksight_user: Add plan-time validation of `iam_arn`
+```
