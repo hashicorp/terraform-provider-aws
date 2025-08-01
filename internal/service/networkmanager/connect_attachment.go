@@ -27,6 +27,10 @@ import (
 
 // @SDKResource("aws_networkmanager_connect_attachment", name="Connect Attachment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.ConnectAttachment")
+// @Testing(skipEmptyTags=true)
+// @Testing(importIgnore="state")
+// @Testing(generator=false)
 func resourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,

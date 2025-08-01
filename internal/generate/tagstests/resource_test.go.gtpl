@@ -8,10 +8,10 @@
 	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
 	rName := {{ .Generator }}
 {{- end }}
-{{ range .InitCodeBlocks -}}
-{{ .Code }}
+{{- range .InitCodeBlocks }}
+	{{ .Code }}
 {{- end }}
-{{- if .UseAlternateAccount -}}
+{{- if .UseAlternateAccount }}
 	providers := make(map[string]*schema.Provider)
 {{ end }}
 {{ end }}
@@ -30,7 +30,7 @@ acctest.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Paral
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t)
 		{{- range .PreChecks }}
-		{{ .Code }}
+			{{ .Code }}
 		{{- end -}}
 	},
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
@@ -125,10 +125,14 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 
 {{ define "AdditionalTfVars" -}}
 	{{ range $name, $value := .AdditionalTfVars -}}
-	{{ $name }}: config.StringVariable({{ $value }}),
+		{{ if eq $value.Type "string" -}}
+			{{ $name }}: config.StringVariable({{ $value.GoVarName }}),
+		{{- else if eq $value.Type "int" -}}
+			{{ $name }}: config.IntegerVariable({{ $value.GoVarName }}),
+		{{- end }}
 	{{ end -}}
 	{{ if .AlternateRegionProvider -}}
-	"alt_region": config.StringVariable(acctest.AlternateRegion()),
+		"alt_region": config.StringVariable(acctest.AlternateRegion()),
 	{{ end }}
 {{ end }}
 
