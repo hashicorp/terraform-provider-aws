@@ -31,6 +31,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newCustomPermissionsResource,
+			TypeName: "aws_quicksight_custom_permissions",
+			Name:     "Custom Permissions",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newFolderMembershipResource,
 			TypeName: "aws_quicksight_folder_membership",
 			Name:     "Folder Membership",
@@ -76,6 +85,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newRoleCustomPermissionResource,
+			TypeName: "aws_quicksight_role_custom_permission",
+			Name:     "Role Custom Permission",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newRoleMembershipResource,
 			TypeName: "aws_quicksight_role_membership",
 			Name:     "Role Membership",
@@ -85,6 +100,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newTemplateAliasResource,
 			TypeName: "aws_quicksight_template_alias",
 			Name:     "Template Alias",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newUserCustomPermissionResource,
+			TypeName: "aws_quicksight_user_custom_permission",
+			Name:     "User Custom Permission",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
