@@ -1941,6 +1941,12 @@ service/s3tables:
           - any-glob-to-any-file:
               - 'internal/service/s3tables/**/*'
               - 'website/**/s3tables_*'
+service/s3vectors:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3vectors/**/*'
+              - 'website/**/s3vectors_*'
 service/sagemaker:
   - any:
       - changed-files:

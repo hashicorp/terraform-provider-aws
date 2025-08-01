@@ -294,6 +294,7 @@ variable "service_labels" {
     "s3control",
     "s3outposts",
     "s3tables",
+    "s3vectors",
     "sagemaker",
     "sagemakera2iruntime",
     "sagemakeredge",
