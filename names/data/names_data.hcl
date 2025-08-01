@@ -6010,9 +6010,6 @@ service "odb" {
 
   endpoint_info {
     endpoint_api_call = "ListCloudExadataInfrastructures"
-    endpoint_region_overrides = {
-      "aws" = "us-east-1"
-    }
   }
 
   resource_prefix {
