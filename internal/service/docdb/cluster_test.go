@@ -1742,8 +1742,8 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot = true
 
   serverless_v2_scaling_configuration {
-	min_capacity = %[2]f
-	max_capacity = %[3]f
+    min_capacity = %[2]f
+    max_capacity = %[3]f
   }
 }
 `, rName, minCapacity, maxCapacity))
