@@ -248,12 +248,12 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				input := ec2.ModifyManagedPrefixListInput{
+				removeInput := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
 				}
-				_, err := conn.ModifyManagedPrefixList(ctx, &input)
+				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
