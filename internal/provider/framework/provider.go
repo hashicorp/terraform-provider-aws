@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"iter"
 	"log"
+	"reflect"
 	"slices"
 	"sync"
 
@@ -22,9 +23,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -504,6 +507,20 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 					}
 				} else {
 					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
+					continue
+				}
+			}
+
+			if resourceSpec.Import.WrappedImport {
+				if resourceSpec.Import.SetIDAttr {
+					if _, ok := resourceSpec.Import.ImportID.(inttypes.FrameworkImportIDCreator); !ok {
+						errs = append(errs, fmt.Errorf("resource type %s: importer sets \"id\" attribute, but creator isn't configured", resourceSpec.TypeName))
+						continue
+					}
+				}
+
+				if _, ok := inner.(framework.ImportByIdentityer); !ok {
+					errs = append(errs, fmt.Errorf("resource type %s: cannot configure importer, does not implement %q", resourceSpec.TypeName, reflect.TypeFor[framework.ImportByIdentityer]()))
 					continue
 				}
 			}
