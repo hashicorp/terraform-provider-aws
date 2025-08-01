@@ -388,13 +388,17 @@ func resourceCluster() *schema.Resource {
 }
 
 func validateServerlessCapacity(i any, k string) (ws []string, es []error) {
+	const (
+		epsilon = 1.0e-10
+	)
+
 	v, ok := i.(float64)
 	if !ok {
 		es = append(es, fmt.Errorf("expected type of %s to be float64", k))
 		return
 	}
 	// add a small epsilon to avoid floating point precision issues
-	if int(v*10+1.0e-10)%5 != 0 {
+	if int(v*10+epsilon)%5 != 0 {
 		es = append(es, fmt.Errorf("%s must be a multiple of 0.5", k))
 		return
 	}
