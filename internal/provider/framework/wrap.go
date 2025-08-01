@@ -30,9 +30,6 @@ import (
 // Implemented by (Config|Plan|State).GetAttribute().
 type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 
-// contextFunc augments Context.
-type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
-
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
 	inner              datasource.DataSourceWithConfigure
