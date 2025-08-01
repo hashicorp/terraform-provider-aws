@@ -113,7 +113,7 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	cred, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.ServiceSpecificCredentialMetadata, error) {
 		return FindServiceSpecificCredential(ctx, conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 
@@ -126,8 +126,6 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
-
-	cred := outputRaw.(*awstypes.ServiceSpecificCredentialMetadata)
 
 	d.Set("service_specific_credential_id", cred.ServiceSpecificCredentialId)
 	d.Set("service_user_name", cred.ServiceUserName)

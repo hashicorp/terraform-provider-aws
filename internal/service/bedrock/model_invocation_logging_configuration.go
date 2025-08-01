@@ -237,8 +237,8 @@ func (r *modelInvocationLoggingConfigurationResource) putModelInvocationLoggingC
 	// Example:
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",

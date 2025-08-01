@@ -38,6 +38,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newBucketMetadataConfigurationResource,
+			TypeName: "aws_s3_bucket_metadata_configuration",
+			Name:     "Bucket Metadata Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDirectoryBucketResource,
 			TypeName: "aws_s3_directory_bucket",
 			Name:     "Directory Bucket",
@@ -119,6 +125,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket,
 				inttypes.WithV6_0SDKv2Fix(),
 			),
+			Import: inttypes.SDKv2Import{
+				CustomImport: true,
+			},
 		},
 		{
 			Factory:  resourceBucketAccelerateConfiguration,

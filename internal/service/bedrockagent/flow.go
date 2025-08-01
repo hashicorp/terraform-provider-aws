@@ -118,9 +118,6 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 					Blocks: map[string]schema.Block{
 						"connection": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowConnectionModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(0, 20),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -204,9 +201,6 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 						},
 						"node": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[flowNodeModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeBetween(0, 40),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrName: schema.StringAttribute{
@@ -812,7 +806,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																			},
 																			NestedObject: schema.NestedBlockObject{
 																				Attributes: map[string]schema.Attribute{
-																					names.AttrResourceARN: schema.StringAttribute{
+																					"prompt_arn": schema.StringAttribute{
 																						CustomType: fwtypes.ARNType,
 																						Required:   true,
 																					},
@@ -1781,7 +1775,7 @@ type promptFlowNodeInlineConfigurationModel struct {
 }
 
 type promptFlowNodeResourceConfigurationModel struct {
-	ResourceARN fwtypes.ARN `tfsdk:"resource_arn"`
+	PromptARN fwtypes.ARN `tfsdk:"prompt_arn"`
 }
 
 type retrievalFlowNodeConfigurationModel struct {

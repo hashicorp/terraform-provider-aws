@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subjectAlternativeNames` - (Optional) Set of domains that should be SANs in the issued certificate. `domainName` attribute is automatically added as a Subject Alternative Name.
 
 ## Attribute Reference
@@ -107,4 +108,4 @@ Using `terraform import`, import `aws_lightsail_lb_certificate` using the id att
 % terraform import aws_lightsail_lb_certificate.example example-load-balancer,example-load-balancer-certificate
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2c99f46cd0b9dd2be0911e815a5dfcea1b1106ae2bf59b1cec2212e08c43380d -->
+<!-- cache-key: cdktf-0.20.8 input-81275cbc6b240ffb395fbb3d439dcb6c2f4ef75ce0e816dea73ce0dfb8ad9e7d -->

@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repositoryName` - (Required) Name of the repository.
 * `catalogData` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -114,4 +115,4 @@ Using `terraform import`, import ECR Public Repositories using the `repositoryNa
 % terraform import aws_ecrpublic_repository.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0eb50922129c99699d4703ec9d9700079393eb47686643926f7ecccc4d057b7c -->
+<!-- cache-key: cdktf-0.20.8 input-4de95f66ada8bf61a8a550573f5ee857d57e4f09d28bb8444c629bbffb6e9856 -->

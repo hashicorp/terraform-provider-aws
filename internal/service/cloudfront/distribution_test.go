@@ -590,11 +590,11 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtFalse, `""`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"US East (Ohio)"`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003

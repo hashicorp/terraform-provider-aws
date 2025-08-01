@@ -175,6 +175,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -431,6 +432,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		notifications.ServicePackage(ctx),
 		notificationscontacts.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
+		odb.ServicePackage(ctx),
 		opensearch.ServicePackage(ctx),
 		opensearchserverless.ServicePackage(ctx),
 		organizations.ServicePackage(ctx),

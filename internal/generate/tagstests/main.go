@@ -408,7 +408,7 @@ type ResourceDatum struct {
 	GoImports                        []goImport
 	GenerateConfig                   bool
 	InitCodeBlocks                   []codeBlock
-	additionalTfVars                 map[string]string
+	additionalTfVars                 map[string]tfVar
 	AlternateRegionProvider          bool
 	TagsUpdateForceNew               bool
 	TagsUpdateGetTagsIn              bool // TODO: Works around a bug when getTagsIn() is used to pass tags directly to Update call
@@ -417,9 +417,10 @@ type ResourceDatum struct {
 	DataSourceResourceImplementation implementation
 	overrideIdentifierAttribute      string
 	OverrideResourceType             string
+	UseAlternateAccount              bool
 }
 
-func (d ResourceDatum) AdditionalTfVars() map[string]string {
+func (d ResourceDatum) AdditionalTfVars() map[string]tfVar {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
@@ -449,6 +450,18 @@ type goImport struct {
 type codeBlock struct {
 	Code string
 }
+
+type tfVar struct {
+	GoVarName string
+	Type      tfVarType
+}
+
+type tfVarType string
+
+const (
+	tfVarTypeString tfVarType = "string"
+	tfVarTypeInt    tfVarType = "int"
+)
 
 type commonConfig struct {
 	AdditionalTfVars        []string
@@ -537,7 +550,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		additionalTfVars: make(map[string]string),
+		additionalTfVars: make(map[string]tfVar),
 	}
 	tagged := false
 	skip := false
@@ -636,6 +649,43 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						)
 					}
 				}
+				if attr, ok := args.Keyword["randomBgpAsn"]; ok {
+					parts := strings.Split(attr, ";")
+					varName := "rBgpAsn"
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+							Alias: "sdkacctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
+					})
+					d.additionalTfVars[varName] = tfVar{
+						GoVarName: varName,
+						Type:      tfVarTypeInt,
+					}
+				}
+				if attr, ok := args.Keyword["randomIPv4Address"]; ok {
+					varName := "rIPv4Address"
+					d.GoImports = append(d.GoImports,
+						goImport{
+							Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+							Alias: "sdkacctest",
+						},
+					)
+					d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+						Code: fmt.Sprintf(`%s, err := sdkacctest.RandIpAddress("%s")
+if err != nil {
+	t.Fatal(err)
+}
+`, varName, attr),
+					})
+					d.additionalTfVars[varName] = tfVar{
+						GoVarName: varName,
+						Type:      tfVarTypeString,
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -721,6 +771,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 							Path: "github.com/hashicorp/aws-sdk-go-base/v2/endpoints",
 						},
 					)
+				}
+				if attr, ok := args.Keyword["useAlternateAccount"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid useAlternateAccount value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.UseAlternateAccount = true
+						d.PreChecks = append(d.PreChecks, codeBlock{
+							Code: "acctest.PreCheckAlternateAccount(t)",
+						})
+						d.GoImports = append(d.GoImports,
+							goImport{
+								Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+							},
+						)
+					}
 				}
 				if attr, ok := args.Keyword["serialize"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -836,8 +902,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.additionalTfVars["certificate_pem"] = "certificatePEM"
-		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
+		d.additionalTfVars["certificate_pem"] = tfVar{
+			GoVarName: "certificatePEM",
+			Type:      tfVarTypeString,
+		}
+		d.additionalTfVars["private_key_pem"] = tfVar{
+			GoVarName: "privateKeyPEM",
+			Type:      tfVarTypeString,
+		}
 	}
 
 	if tagged {

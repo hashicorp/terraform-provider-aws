@@ -44,6 +44,10 @@ The following arguments are required:
 
 * `domainName` - (Required) Name of the Lightsail domain to manage.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -51,4 +55,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Lightsail domain.
 * `id` - Name used for this domain.
 
-<!-- cache-key: cdktf-0.20.8 input-bbf27faf15b544628b7a712d410c3f1e0d894437e7e48130a4d4f1504a64036f -->
+<!-- cache-key: cdktf-0.20.8 input-c1d68855cb25e61ba5ab24092db8df4d2bf240c2f2344b22249f955a5668dd78 -->

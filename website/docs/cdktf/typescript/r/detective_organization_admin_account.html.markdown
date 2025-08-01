@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Required) AWS account identifier to designate as a delegated administrator for Detective.
 
 ## Attribute Reference
@@ -74,4 +75,4 @@ Using `terraform import`, import `aws_detective_organization_admin_account` usin
 % terraform import aws_detective_organization_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-005a48c4d4a7a2435df026152f5a680d903e435d7c96215744943ee90b41117a -->
+<!-- cache-key: cdktf-0.20.8 input-7413d7d42e99993457404055737178101a323254d2d367bd0aad2458d41910a6 -->

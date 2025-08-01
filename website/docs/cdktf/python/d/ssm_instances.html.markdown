@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - Set of instance IDs of the matched SSM managed instances.
 
-<!-- cache-key: cdktf-0.20.8 input-2726b54e4befe6643db8d9c9f3afa0da20fc26beb167458a7412528ef15b0717 -->
+<!-- cache-key: cdktf-0.20.8 input-01352a3ae3b1b4f4d38ef9b098bdb91947fe93096b8f0ea7c147567035a1862e -->

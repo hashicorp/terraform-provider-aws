@@ -2068,12 +2068,12 @@ service "cognitoidp" {
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk)"
+    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
+  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
   brand                    = "AWS"
 }
 
@@ -5995,6 +5995,29 @@ service "oam" {
   provider_package_correct = "oam"
   doc_prefix               = ["oam_"]
   brand                    = "AWS"
+}
+
+service "odb" {
+  sdk {
+    id            = "ODB"
+    arn_namespace = "odb"
+  }
+
+  names {
+    provider_name_upper = "ODB"
+    human_friendly      = "Oracle Database@AWS"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCloudExadataInfrastructures"
+  }
+
+  resource_prefix {
+    correct = "aws_odb_"
+  }
+
+  doc_prefix = ["odb_"]
+  brand      = "AWS"
 }
 
 service "opensearch" {

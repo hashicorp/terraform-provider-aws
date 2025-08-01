@@ -100,6 +100,7 @@ All of the bots, slot types, and slots used by the intent must have the same loc
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot type.
 * `composite_slot_type_setting` - (Optional) Specifications for a composite slot type.
 See [`composite_slot_type_setting` argument reference](#composite_slot_type_setting-argument-reference) below.
@@ -215,4 +216,4 @@ Using `terraform import`, import Lex V2 Models Slot Type using using a comma-del
 % terraform import aws_lexv2models_slot_type.example bot-1234,DRAFT,en_US,slot_type-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-df48b27c4e4585ae06dabeb5903193a3b43e575a64b68abb0d9175ccbbc92f0a -->
+<!-- cache-key: cdktf-0.20.8 input-4a8af9ec3ca87306aeb6483462b519f44302f7822806ec8c9cbd20978c8fc851 -->

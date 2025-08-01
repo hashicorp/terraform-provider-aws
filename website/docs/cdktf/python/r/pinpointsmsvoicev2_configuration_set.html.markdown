@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the configuration set.
 * `default_sender_id` - (Optional) The default sender ID to use for this configuration set.
 * `default_message_type` - (Optional) The default message type. Must either be "TRANSACTIONAL" or "PROMOTIONAL"
@@ -74,4 +75,4 @@ Using `terraform import`, import configuration sets using the `name`. For exampl
 % terraform import aws_pinpointsmsvoicev2_configuration_set.example example-configuration-set
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-792d52afc674001e9d758333d17116c3faa937d8b51c6008a480467f9b8da95f -->
+<!-- cache-key: cdktf-0.20.8 input-14d675df8a71afe20e7eacfb81a406c4347ed2d6c5e2e19f6ed572a177d80a25 -->

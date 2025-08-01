@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `custom_key_store_id` - (Optional) The ID for the custom key store.
 * `custom_key_store_name` - (Optional) The user-specified friendly name for the custom key store.
 
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_date` - The date and time when the custom key store was created.
 * `trust_anchor_certificate` - The trust anchor certificate of the associated CloudHSM cluster.
 
-<!-- cache-key: cdktf-0.20.8 input-521afc4759abd94646fb15395b70fca2daf4d26406d5273ead2d288d6aa13682 -->
+<!-- cache-key: cdktf-0.20.8 input-9e8257ea82e1c53fe63d0501e0fa6816a0018ffa505c0c77d50b73bccdce7142 -->

@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcId` - (Required) The ID of the VPC whose main route table should be set
 * `routeTableId` - (Required) The ID of the Route Table to set as the new
   main route table for the target VPC
@@ -74,4 +75,4 @@ the `main_route_table_association` delete to work properly.
 [tf-route-tables]: /docs/providers/aws/r/route_table.html
 [tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
 
-<!-- cache-key: cdktf-0.20.8 input-85ce9464624a099dd063ef1f0d0569910365b562160b38d00d28cc7887154353 -->
+<!-- cache-key: cdktf-0.20.8 input-a91cafc12938c68aeefea9f86a4c8b544026649eff784d8a5a7cef340673b09d -->

@@ -29,3 +29,8 @@ rule "aws_acm_certificate_lifecycle" {
 rule "aws_accessanalyzer_analyzer_invalid_type" {
   enabled = false
 }
+
+# Avoids errant findings related to directory paths in generated configuration files
+rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
+  enabled = false
+}

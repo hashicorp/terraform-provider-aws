@@ -15,7 +15,9 @@ import (
 )
 
 func SingleParameterized(ctx context.Context, client AWSClient, request resource.ImportStateRequest, identitySpec *inttypes.Identity, importSpec *inttypes.FrameworkImport, response *resource.ImportStateResponse) {
-	attrPath := path.Root(identitySpec.IdentityAttribute)
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+	identityPath := path.Root(attr.Name())
+	resourcePath := path.Root(attr.ResourceAttributeName())
 
 	parameterVal := request.ID
 
@@ -26,18 +28,18 @@ func SingleParameterized(ctx context.Context, client AWSClient, request resource
 		}
 
 		var parameterAttr types.String
-		response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
+		response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 		parameterVal = parameterAttr.ValueString()
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
 
 	if identity := response.Identity; identity != nil {
 		response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(names.AttrAccountID), client.AccountID(ctx))...)
-		response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
+		response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
 	}
 
 	if !identitySpec.IsGlobalResource {
@@ -75,23 +77,25 @@ func MultipleParameterized(ctx context.Context, client AWSClient, request resour
 		}
 
 		for _, attr := range identitySpec.Attributes {
-			switch attr.Name {
+			switch attr.Name() {
 			case names.AttrAccountID, names.AttrRegion:
 				// Do nothing
 
 			default:
-				attrPath := path.Root(attr.Name)
+				identityPath := path.Root(attr.Name())
+				resourcePath := path.Root(attr.ResourceAttributeName())
+
 				var parameterAttr types.String
-				response.Diagnostics.Append(identity.GetAttribute(ctx, attrPath, &parameterAttr)...)
+				response.Diagnostics.Append(identity.GetAttribute(ctx, identityPath, &parameterAttr)...)
 				if response.Diagnostics.HasError() {
 					return
 				}
 				parameterVal := parameterAttr.ValueString()
 
-				response.Diagnostics.Append(response.State.SetAttribute(ctx, attrPath, parameterVal)...)
+				response.Diagnostics.Append(response.State.SetAttribute(ctx, resourcePath, parameterVal)...)
 
 				if identity := response.Identity; identity != nil {
-					response.Diagnostics.Append(identity.SetAttribute(ctx, attrPath, parameterVal)...)
+					response.Diagnostics.Append(identity.SetAttribute(ctx, identityPath, parameterVal)...)
 				}
 			}
 		}

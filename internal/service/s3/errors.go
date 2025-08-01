@@ -20,6 +20,7 @@ const (
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
 	errCodeMalformedPolicy                      = "MalformedPolicy"
+	errCodeMetadataConfigurationNotFound        = "MetadataConfigurationNotFound"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchBucket                         = "NoSuchBucket"
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
@@ -29,6 +30,7 @@ const (
 	errCodeNoSuchKey                            = "NoSuchKey"
 	errCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
+	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
 	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
