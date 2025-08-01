@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
       description: "My IPAM",
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
       tags: {
@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
     });
     const current = new DataAwsRegion(this, "current", {});
     const allIpamRegions = Fn.distinct(
-      Token.asAny(Fn.concat([[current.name], ipamRegions.value]))
+      Token.asAny(Fn.concat([[current.region], ipamRegions.value]))
     );
     /*In most cases loops should be handled in the programming language context and 
     not inside of the Terraform context. If you are looping over something external, e.g. a variable or a file input
@@ -100,6 +100,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
 * `enablePrivateGua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
@@ -153,4 +154,4 @@ Using `terraform import`, import IPAMs using the IPAM `id`. For example:
 % terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dc6646edefe1ef6f9374e324a414d7da4e9c6769dd1699494c854e5f93500100 -->
+<!-- cache-key: cdktf-0.20.8 input-41a160287db88dd545c3f1a2c18b23ba0f7bd115ca91f86152dc636cf70f7e23 -->

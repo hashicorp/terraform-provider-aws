@@ -98,6 +98,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
 * `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.
@@ -150,4 +151,4 @@ Using `terraform import`, import S3 bucket intelligent tiering configurations us
 % terraform import aws_s3_bucket_intelligent_tiering_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-edbf222c0509de935ae7e968f1135a975907d699aec103595f6bbe9c75bcbff7 -->
+<!-- cache-key: cdktf-0.20.8 input-080fd992ca26c97c18fa263c805f1286bc3acb805fee64480665442bdf06189d -->

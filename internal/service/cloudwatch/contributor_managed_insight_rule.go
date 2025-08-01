@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -17,13 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -89,7 +90,7 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var plan contributorManagedInsightRuleResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -102,7 +103,7 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 			},
 		},
 	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -112,25 +113,16 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 	if plan.State.ValueEnum() == stateValueEnabled || plan.State.IsNull() {
 		out, err := conn.PutManagedInsightRules(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceArn.String())
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ResourceArn.String())
 			return
 		}
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionReading, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceArn.String())
 			return
 		}
 
@@ -141,10 +133,7 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 	} else if plan.State.ValueEnum() == stateValueDisabled {
 		rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, plan.ResourceArn.ValueString(), plan.TemplateName.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceArn.String())
 			return
 		}
 		input := cloudwatch.DisableInsightRulesInput{
@@ -153,22 +142,19 @@ func (r *contributorManagedInsightRuleResource) Create(ctx context.Context, req 
 		_, err = conn.DisableInsightRules(ctx, &input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorManagedInsightRule, plan.ResourceArn.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ResourceArn.String())
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *contributorManagedInsightRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var state contributorManagedInsightRuleResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -179,10 +165,7 @@ func (r *contributorManagedInsightRuleResource) Read(ctx context.Context, req re
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionSetting, ResNameContributorManagedInsightRule, state.ResourceArn.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceArn.String())
 		return
 	}
 
@@ -192,18 +175,18 @@ func (r *contributorManagedInsightRuleResource) Read(ctx context.Context, req re
 		state.ARN = fwflex.StringValueToFramework(ctx, cmirARN)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.ResourceArn.String())
 }
 
 func (r *contributorManagedInsightRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var old, new contributorManagedInsightRuleResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &old))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -222,52 +205,40 @@ func (r *contributorManagedInsightRuleResource) Update(ctx context.Context, req 
 			}
 			_, err := conn.PutManagedInsightRules(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorManagedInsightRule, new.ResourceArn.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.ResourceArn.String())
 			}
 		} else if new.State.ValueEnum() == stateValueDisabled {
 			rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, new.ResourceArn.ValueString(), new.TemplateName.ValueString())
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorManagedInsightRule, new.ResourceArn.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.ResourceArn.String())
 			}
 			input := cloudwatch.DisableInsightRulesInput{
 				RuleNames: []string{aws.ToString(rule.RuleState.RuleName)},
 			}
 			_, err = conn.DisableInsightRules(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorManagedInsightRule, new.ResourceArn.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.ResourceArn.String())
 			}
 		}
 	}
 
 	new.RuleName = old.RuleName
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &new))
 }
 
 func (r *contributorManagedInsightRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var state contributorManagedInsightRuleResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	rule, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, conn, state.ResourceArn.ValueString(), state.TemplateName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionDeleting, ResNameContributorManagedInsightRule, state.ResourceArn.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceArn.String())
 		return
 	}
 
@@ -284,10 +255,7 @@ func (r *contributorManagedInsightRuleResource) Delete(ctx context.Context, req 
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionDeleting, ResNameContributorManagedInsightRule, state.ResourceArn.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ResourceArn.String())
 		return
 	}
 }
@@ -296,10 +264,7 @@ func (r *contributorManagedInsightRuleResource) ImportState(ctx context.Context,
 	const resourceIDParts = 2
 	idParts, err := flex.ExpandResourceId(req.ID, resourceIDParts, false)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Resource Import Invalid ID",
-			fmt.Sprintf("Wrong format for import ID (%s), use: 'resource-arn,template-name'", req.ID),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, req.ID)
 		return
 	}
 	resourceARN := idParts[0]
@@ -307,14 +272,12 @@ func (r *contributorManagedInsightRuleResource) ImportState(ctx context.Context,
 
 	cmir, err := findContributorManagedInsightRuleDescriptionByTemplateName(ctx, r.Meta().CloudWatchClient(ctx), resourceARN, templateName)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Importing Resource",
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, resourceARN)
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), aws.ToString(cmir.ResourceARN))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("template_name"), templateName)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrResourceARN), aws.ToString(cmir.ResourceARN)), smerr.ID, resourceARN)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root("template_name"), templateName), smerr.ID, resourceARN)
 }
 
 type contributorManagedInsightRuleResourceModel struct {
@@ -336,14 +299,14 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
-			}
+			})
 		}
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, rule := range page.ManagedRules {
@@ -359,10 +322,10 @@ func findContributorManagedInsightRules(ctx context.Context, conn *cloudwatch.Cl
 func findContributorManagedInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.ListManagedInsightRulesInput, filter tfslices.Predicate[*awstypes.ManagedRuleDescription]) (*awstypes.ManagedRuleDescription, error) {
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Context, conn *cloudwatch.Client, resourceARN string, templateName string) (*awstypes.ManagedRuleDescription, error) {
@@ -375,7 +338,7 @@ func findContributorManagedInsightRuleDescriptionByTemplateName(ctx context.Cont
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return rule, nil

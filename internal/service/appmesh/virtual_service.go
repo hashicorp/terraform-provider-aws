@@ -173,7 +173,7 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	vs, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualServiceData, error) {
 		return findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -186,8 +186,6 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service (%s): %s", d.Id(), err)
 	}
-
-	vs := outputRaw.(*awstypes.VirtualServiceData)
 
 	d.Set(names.AttrARN, vs.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))

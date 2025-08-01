@@ -126,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
@@ -204,4 +205,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7c2d2f5e6a9c0975851c0ea283f85a31d7d9aae5f2d9db1a81ea428b518d050e -->
+<!-- cache-key: cdktf-0.20.8 input-8aa8bc85eb7fbe041bfccce50da66fa179fb20e8dca7c121e1459eb714c7b80c -->

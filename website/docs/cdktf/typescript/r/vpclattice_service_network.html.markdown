@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authType` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -87,4 +88,4 @@ Using `terraform import`, import VPC Lattice Service Network using the `id`. For
 % terraform import aws_vpclattice_service_network.example sn-0158f91c1e3358dba
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bd399060a3ff40174d174d00151279d434802a5189dee061f444da739500f832 -->
+<!-- cache-key: cdktf-0.20.8 input-5151841286d9a81091f237ac62d86cb7a2f19a6b8eef1ef8371589574463457f -->

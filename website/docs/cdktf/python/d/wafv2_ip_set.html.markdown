@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the WAFv2 IP Set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
@@ -49,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Unique identifier for the set.
 * `ip_address_version` - IP address version of the set.
 
-<!-- cache-key: cdktf-0.20.8 input-d7ec9696daa356516487e670fd980b4d44f0e307cfc20630bd6d1fb8fc4322b0 -->
+<!-- cache-key: cdktf-0.20.8 input-9442cdbbc894c29ee7ebdaa76fe0d1dc26d87d891c5875e5bf6fd37745dc988f -->

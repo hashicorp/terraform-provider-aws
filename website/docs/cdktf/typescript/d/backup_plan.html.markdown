@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `planId` - (Required) Backup plan ID.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.
 
-<!-- cache-key: cdktf-0.20.8 input-7c9faa1009394bae11fe135d4c10cca75cdf7772457b91405575d687d1d6ef9a -->
+<!-- cache-key: cdktf-0.20.8 input-f468aa115eff7065c466dc53b03fd54d62d8e991700be4f35d11b8ed3dfc0c53 -->

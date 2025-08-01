@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_infrastructure_configuration", name="Infrastructure Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInfrastructureConfigurationCreate,
 		ReadWithoutTimeout:   resourceInfrastructureConfigurationRead,
 		UpdateWithoutTimeout: resourceInfrastructureConfigurationUpdate,
 		DeleteWithoutTimeout: resourceInfrastructureConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

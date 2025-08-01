@@ -55,7 +55,7 @@ class MyConvertedCode extends TerraformStack {
         'version: "2"\nexample-pipeline:\n  source:\n    http:\n      path: "/example"\n  sink:\n    - s3:\n        aws:\n          sts_role_arn: "${' +
         example.arn +
         '}"\n          region: "${' +
-        current.name +
+        current.region +
         '}"\n        bucket: "example"\n        threshold:\n          event_collect_timeout: "60s"\n        codec:\n          ndjson:\n\n',
       pipelineName: "example",
     });
@@ -102,6 +102,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bufferOptions` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`bufferOptions`](#buffer_options) below.
 * `encryptionAtRestOptions` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryptionAtRestOptions`](#encryption_at_rest_options) below.
 * `logPublishingOptions` - (Optional) Key-value pairs to configure log publishing. See [`logPublishingOptions`](#log_publishing_options) below.
@@ -175,4 +176,4 @@ Using `terraform import`, import OpenSearch Ingestion Pipeline using the `id`. F
 % terraform import aws_osis_pipeline.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-134e17d9770cd5502f9bf14e16ac29a0ac8e5df68321a1c639433c32b796d042 -->
+<!-- cache-key: cdktf-0.20.8 input-817bcbbf4e9bfa4e3a60baf5c33695fdcd1f212f25e98f4625d85e2863577c16 -->

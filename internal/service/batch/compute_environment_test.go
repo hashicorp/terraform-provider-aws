@@ -44,6 +44,18 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 		{
 			flattened: []any{
 				map[string]any{
+					"image_kubernetes_version": "1.31",
+				},
+			},
+			expected: []awstypes.Ec2Configuration{
+				{
+					ImageKubernetesVersion: aws.String("1.31"),
+				},
+			},
+		},
+		{
+			flattened: []any{
+				map[string]any{
 					"image_type": "ECS_AL1",
 				},
 			},
@@ -68,14 +80,16 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 		{
 			flattened: []any{
 				map[string]any{
-					"image_id_override": "ami-deadbeef",
-					"image_type":        "ECS_AL1",
+					"image_id_override":        "ami-deadbeef",
+					"image_kubernetes_version": "1.31",
+					"image_type":               "ECS_AL1",
 				},
 			},
 			expected: []awstypes.Ec2Configuration{
 				{
-					ImageIdOverride: aws.String("ami-deadbeef"),
-					ImageType:       aws.String("ECS_AL1"),
+					ImageIdOverride:        aws.String("ami-deadbeef"),
+					ImageKubernetesVersion: aws.String("1.31"),
+					ImageType:              aws.String("ECS_AL1"),
 				},
 			},
 		},
@@ -1332,6 +1346,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.1.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
@@ -1822,6 +1837,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.ec2_key_pair", ec2KeyPairResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
@@ -3092,8 +3108,9 @@ resource "aws_batch_compute_environment" "test" {
     instance_type = ["optimal"]
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
 
     ec2_configuration {
@@ -3270,8 +3287,9 @@ resource "aws_batch_compute_environment" "test" {
     ec2_key_pair        = aws_key_pair.test.id
     instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
     launch_template {
       launch_template_id = aws_launch_template.test.id

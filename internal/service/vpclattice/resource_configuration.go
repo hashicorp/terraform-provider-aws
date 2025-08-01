@@ -372,7 +372,7 @@ func (r *resourceConfigurationResource) Delete(ctx context.Context, request reso
 	const (
 		timeout = 1 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteResourceConfiguration(ctx, &vpclattice.DeleteResourceConfigurationInput{
 			ResourceConfigurationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 		})

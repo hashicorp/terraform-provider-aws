@@ -30,6 +30,9 @@ const (
 )
 
 // @SDKResource("aws_inspector_assessment_template", name="Assessment Template")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTemplate")
+// @Testing(preIdentityVersion="v6.4.0")
 // @Tags(identifierAttribute="id")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -37,10 +40,6 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		ReadWithoutTimeout:   resourceAssessmentTemplateRead,
 		UpdateWithoutTimeout: resourceAssessmentTemplateUpdate,
 		DeleteWithoutTimeout: resourceAssessmentTemplateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

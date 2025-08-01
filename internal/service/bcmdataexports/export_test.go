@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -372,60 +371,6 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccBCMDataExportsExport_upgradeFromV5(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var export bcmdataexports.GetExportOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bcmdataexports_export.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
-		CheckDestroy: testAccCheckExportDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccExportConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccExportConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
 			},
 		},
 	})

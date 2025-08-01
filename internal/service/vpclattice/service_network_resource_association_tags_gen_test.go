@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -21,9 +20,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -203,9 +202,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_null(t *testing.T) 
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -265,9 +264,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyMap(t *testing
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -315,9 +314,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_AddOnUpdate(t *test
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -395,9 +394,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnCreate(t
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -485,9 +484,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_A
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -624,9 +623,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_EmptyTag_OnUpdate_R
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy:             testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -714,9 +713,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_provide
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -895,9 +894,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nonOver
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1055,9 +1054,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_overlap
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1231,9 +1230,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateT
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1321,9 +1320,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_updateT
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1410,9 +1409,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyRe
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1476,9 +1475,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_emptyPr
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1534,9 +1533,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullOve
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1603,9 +1602,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_DefaultTags_nullNon
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1674,9 +1673,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnCreat
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1729,9 +1728,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdat
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1826,9 +1825,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_ComputedTag_OnUpdat
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -1913,9 +1912,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_IgnoreTags_Overlap_
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),
@@ -2075,9 +2074,9 @@ func TestAccVPCLatticeServiceNetworkResourceAssociation_tags_IgnoreTags_Overlap_
 	ctx := acctest.Context(t)
 	var v vpclattice.GetServiceNetworkResourceAssociationOutput
 	resourceName := "aws_vpclattice_service_network_resource_association.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		CheckDestroy: testAccCheckServiceNetworkResourceAssociationDestroy(ctx),

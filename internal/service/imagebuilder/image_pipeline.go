@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_image_pipeline", name="Image Pipeline")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImagePipelineCreate,
 		ReadWithoutTimeout:   resourceImagePipelineRead,
 		UpdateWithoutTimeout: resourceImagePipelineUpdate,
 		DeleteWithoutTimeout: resourceImagePipelineDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

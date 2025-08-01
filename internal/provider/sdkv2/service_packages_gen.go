@@ -175,6 +175,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -214,6 +215,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
@@ -430,6 +432,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		notifications.ServicePackage(ctx),
 		notificationscontacts.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
+		odb.ServicePackage(ctx),
 		opensearch.ServicePackage(ctx),
 		opensearchserverless.ServicePackage(ctx),
 		organizations.ServicePackage(ctx),
@@ -469,6 +472,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		s3control.ServicePackage(ctx),
 		s3outposts.ServicePackage(ctx),
 		s3tables.ServicePackage(ctx),
+		s3vectors.ServicePackage(ctx),
 		sagemaker.ServicePackage(ctx),
 		scheduler.ServicePackage(ctx),
 		schemas.ServicePackage(ctx),

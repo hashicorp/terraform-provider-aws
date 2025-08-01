@@ -47,12 +47,13 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `botId` - (Required) Idientifier of the bot to create the version for.
 * `localeSpecification` - (Required) Specifies the locales that Amazon Lex adds to this version. You can choose the draft version or any other previously published version for each locale. When you specify a source version, the locale data is copied from the source version to the new version.
-
-   The attribute value is a map with one or more entries, each of which has a locale name as the key and an object with the following attribute as the value:
-    * `sourceBotVersion` - (Required) The version of a bot used for a bot locale. Valid values: `DRAFT`, a numeric version.
 * `description` - (Optional) A description of the version. Use the description to help identify the version in lists.
+* `sourceBotVersion` - (Required) The version of a bot used for a bot locale. Valid values: `DRAFT`, a numeric version.
+
+The `localeSpecification` attribute value is a map with one or more entries, each of which has a locale name as the key and an object with the following attribute as the value:
 
 ## Attribute Reference
 
@@ -100,4 +101,4 @@ Using `terraform import`, import Lex V2 Models Bot Version using the `id`. For e
 % terraform import aws_lexv2models_bot_version.example id-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1083d8e00d95e96391a8f8ae1d36ea86d249c001a0286867966cba1d749c0b69 -->
+<!-- cache-key: cdktf-0.20.8 input-a9977bad7c15523d642e7ffaf74fbfeab4511e7b35e981ee9bb91c427616acd5 -->

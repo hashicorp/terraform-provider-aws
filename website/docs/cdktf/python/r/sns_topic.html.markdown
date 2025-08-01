@@ -100,6 +100,7 @@ The `<endpoint>_success_feedback_role_arn` and `<endpoint>_failure_feedback_role
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the topic. Topic names must be made up of only uppercase and lowercase ASCII letters, numbers, underscores, and hyphens, and must be between 1 and 256 characters long. For a FIFO (first-in-first-out) topic, the name must end with the `.fifo` suffix. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`
 * `display_name` - (Optional) The display name for the topic
@@ -164,4 +165,4 @@ Using `terraform import`, import SNS Topics using the topic `arn`. For example:
 % terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:123456789012:my-topic
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3572c0901033505818751fdffdee5bd7230377c0603310d0ccb04360b6386058 -->
+<!-- cache-key: cdktf-0.20.8 input-ed0f67557e435c2c9394ea7e885e3b460ec3c33646217efbfb1ef736bdd08a59 -->

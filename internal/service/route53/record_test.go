@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -68,6 +70,9 @@ func TestAccRoute53Record_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}"),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -75,86 +80,6 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
-		},
-	})
-}
-
-func TestAccRoute53Record_Identity_Basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Setup
-			{
-				Config: testAccRecordConfig_basic(zoneName.String(), recordName.String()),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &v),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-					// 	names.AttrAccountID: tfknownvalue.AccountID(),
-					// 	"zone_id":           knownvalue.NotNull(),
-					// 	names.AttrName:      knownvalue.NotNull(),
-					// 	names.AttrType:      knownvalue.NotNull(),
-					// 	"set_identifier":    knownvalue.Null(),
-					// }),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
-				},
-			},
-
-			// Step 2: Import command
-			{
-				ImportStateKind:   resource.ImportCommandWithID,
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-
-			// Step 3: Import block with Import ID
-			{
-				ImportStateKind: resource.ImportBlockWithID,
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportPlanChecks: resource.ImportPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-					},
-				},
-			},
-
-			// // Step 4: Import block with Resource Identity
-			// {
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(recordName.String())),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("A")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(fmt.Sprintf(`^[[:alnum:]]+_%s_A$`, recordName.String())))),
-			// 		},
-			// 	},
-			// },
 		},
 	})
 }
@@ -180,18 +105,18 @@ func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
-					// statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-					// 	names.AttrAccountID: tfknownvalue.AccountID(),
-					// 	"zone_id":           knownvalue.NotNull(),
-					// 	names.AttrName:      knownvalue.NotNull(),
-					// 	names.AttrType:      knownvalue.NotNull(),
-					// 	"set_identifier":    knownvalue.NotNull(),
-					// }),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
-					// statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}_{set_identifier}"),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
 				},
 			},
 
@@ -219,21 +144,87 @@ func TestAccRoute53Record_Identity_SetIdentifier(t *testing.T) {
 				},
 			},
 
-			// // Step 4: Import block with Resource Identity
-			// {
-			// 	ImportStateKind: resource.ImportBlockWithResourceIdentity,
-			// 	ResourceName:    resourceName,
-			// 	ImportState:     true,
-			// 	ImportPlanChecks: resource.ImportPlanChecks{
-			// 		PreApply: []plancheck.PlanCheck{
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
-			// 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
-			// 		},
-			// 	},
-			// },
+			// Step 4: Import block with Resource Identity
+			{
+				ImportStateKind: resource.ImportBlockWithResourceIdentity,
+				ResourceName:    resourceName,
+				ImportState:     true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("zone_id"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact("test")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrType), knownvalue.StringExact("CNAME")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("set_identifier"), knownvalue.StringExact("set-id")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringRegexp(regexache.MustCompile(`^[[:alnum:]]+_test_CNAME_set-id$`))),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_Identity_ChangeOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_12_0),
+		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Create
+			{
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("before"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}_{set_identifier}"),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
+				},
+			},
+
+			// Step 2: Update
+			{
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("after"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}_{set_identifier}"),
+					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						"zone_id":           knownvalue.NotNull(),
+						names.AttrName:      knownvalue.NotNull(),
+						names.AttrType:      knownvalue.NotNull(),
+						"set_identifier":    knownvalue.NotNull(),
+					}),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("zone_id")),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrName)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrType)),
+					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("set_identifier")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
@@ -671,8 +662,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 	var record1 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
-	rs := sdkacctest.RandString(10)
-	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELB, rs)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
@@ -680,7 +670,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_config,
+				Config: testAccRecordConfig_aliasELB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -760,8 +750,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 	var record1 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.alias"
 
-	rs := sdkacctest.RandString(10)
-	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELBUppercase, rs)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
@@ -769,7 +758,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_config,
+				Config: testAccRecordConfig_aliasELBUppercase(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -788,6 +777,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2, record3, record4, record5, record6 awstypes.ResourceRecordSet
 	resourceName := "aws_route53_record.elb_weighted_alias_live"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -796,7 +786,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_weightedELBAlias,
+				Config: testAccRecordConfig_weightedELBAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.elb_weighted_alias_dev", &record2),
@@ -1001,6 +991,9 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}_{set_identifier}"),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -1013,6 +1006,9 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{zone_id}_{name}_{type}_{set_identifier}"),
+				},
 			},
 		},
 	})
@@ -1511,7 +1507,7 @@ func TestAccRoute53Record_SetIdentifierRename_multiValueAnswer(t *testing.T) {
 func TestAccRoute53Record_SetIdentifierRename_weighted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2 awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.set_identifier_rename_weighted"
+	resourceName := "aws_route53_record.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1932,12 +1928,12 @@ func testAccCheckRecordDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			parts := tfroute53.RecordParseResourceID(rs.Primary.ID)
-			zone := parts[0]
-			recordName := parts[1]
-			recordType := parts[2]
-
-			_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, tfroute53.CleanZoneID(zone), recordName, recordType, rs.Primary.Attributes["set_identifier"])
+			_, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+				tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
+				rs.Primary.Attributes[names.AttrName],
+				rs.Primary.Attributes[names.AttrType],
+				rs.Primary.Attributes["set_identifier"],
+			)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1963,12 +1959,12 @@ func testAccCheckRecordExists(ctx context.Context, n string, v *awstypes.Resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		parts := tfroute53.RecordParseResourceID(rs.Primary.ID)
-		zone := parts[0]
-		recordName := parts[1]
-		recordType := parts[2]
-
-		output, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn, tfroute53.CleanZoneID(zone), recordName, recordType, rs.Primary.Attributes["set_identifier"])
+		output, _, err := tfroute53.FindResourceRecordSetByFourPartKey(ctx, conn,
+			tfroute53.CleanZoneID(rs.Primary.Attributes["zone_id"]),
+			rs.Primary.Attributes[names.AttrName],
+			rs.Primary.Attributes[names.AttrType],
+			rs.Primary.Attributes["set_identifier"],
+		)
 
 		if err != nil {
 			return err
@@ -2564,16 +2560,10 @@ resource "aws_route53_record" "third_region" {
 `, firstRegion, secondRegion, thirdRegion)
 }
 
-const testAccRecordConfig_aliasELB = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccRecordConfig_aliasELB(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2591,8 +2581,10 @@ resource "aws_route53_record" "alias" {
 }
 
 resource "aws_elb" "main" {
-  name               = "foobar-terraform-elb-%s"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2601,18 +2593,13 @@ resource "aws_elb" "main" {
     lb_protocol       = "http"
   }
 }
-`
-
-const testAccRecordConfig_aliasELBUppercase = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+`, rName))
 }
 
+func testAccRecordConfig_aliasELBUppercase(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2630,8 +2617,10 @@ resource "aws_route53_record" "alias" {
 }
 
 resource "aws_elb" "main" {
-  name               = "FOOBAR-TERRAFORM-ELB-%s"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2640,7 +2629,8 @@ resource "aws_elb" "main" {
     lb_protocol       = "http"
   }
 }
-`
+`, rName))
+}
 
 func testAccRecordConfig_aliasS3(rName string) string {
 	return fmt.Sprintf(`
@@ -2851,23 +2841,18 @@ resource "aws_route53_record" "test" {
 `)
 }
 
-const testAccRecordConfig_weightedELBAlias = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccRecordConfig_weightedELBAlias(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2), `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
 resource "aws_elb" "live" {
-  name               = "foobar-terraform-elb-live"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = "foobar-terraform-elb-live"
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2896,8 +2881,10 @@ resource "aws_route53_record" "elb_weighted_alias_live" {
 }
 
 resource "aws_elb" "dev" {
-  name               = "foobar-terraform-elb-dev"
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = "foobar-terraform-elb-dev"
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -2924,7 +2911,8 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
     evaluate_target_health = true
   }
 }
-`
+`)
+}
 
 const testAccRecordConfig_weightedAlias = `
 resource "aws_route53_zone" "main" {
@@ -3292,7 +3280,7 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_route53_record" "set_identifier_rename_weighted" {
+resource "aws_route53_record" "test" {
   zone_id        = aws_route53_zone.main.zone_id
   name           = "sample"
   type           = "A"
@@ -3308,23 +3296,18 @@ resource "aws_route53_record" "set_identifier_rename_weighted" {
 }
 
 func testAccRecordConfig_aliasChangePre(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3345,7 +3328,7 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccRecordConfig_aliasChangePost() string {
@@ -3379,23 +3362,18 @@ resource "aws_route53_record" "empty" {
 `
 
 func testAccRecordConfig_aliasChangeDualstackPre(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3416,27 +3394,22 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
- `, rName)
+ `, rName))
 }
 
 func testAccRecordConfig_aliasChangeDualstackPost(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name = "domain.test"
 }
 
 resource "aws_elb" "test" {
-  name               = %[1]q
-  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+  name = %[1]q
+
+  internal = true
+  subnets  = aws_subnet.test[*].id
 
   listener {
     instance_port     = 80
@@ -3457,7 +3430,7 @@ resource "aws_route53_record" "test" {
     evaluate_target_health = true
   }
 }
- `, rName)
+ `, rName))
 }
 
 const testAccRecordConfig_longTxt = `

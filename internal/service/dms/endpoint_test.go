@@ -948,6 +948,34 @@ func TestAccDMSEndpoint_Oracle_secretID(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Oracle_kerberos(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_kerberos(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "oracle_settings.0.authentication_method", "kerberos"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1133,6 +1161,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.authentication_method", "iam"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.capture_ddls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.ddl_artifacts_schema", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
@@ -1145,6 +1174,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.map_long_varchar_as", "wstring"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.max_file_size", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.plugin_name", "pglogical"),
+					resource.TestCheckResourceAttrSet(resourceName, "postgres_settings.0.service_access_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.slot_name", "test"),
 				),
 			},
@@ -1169,6 +1199,7 @@ func TestAccDMSEndpoint_PostgreSQL_settings_target(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.after_connect_script", "SET search_path TO pg_catalog,public;"),
+					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.authentication_method", names.AttrPassword),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.babelfish_database_name", "babelfish"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.database_mode", "babelfish"),
 					resource.TestCheckResourceAttr(resourceName, "postgres_settings.0.execute_timeout", "100"),
@@ -3024,6 +3055,33 @@ resource "aws_dms_endpoint" "test" {
 `, rName))
 }
 
+func testAccEndpointConfig_kerberos(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  oracle_settings {
+    authentication_method = "kerberos"
+  }
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
 func testAccEndpointConfig_postgreSQL(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
@@ -3094,6 +3152,29 @@ resource "aws_dms_endpoint" "test" {
 
 func testAccEndpointConfig_postgreSQLSourceSettings(rName string) string {
 	return fmt.Sprintf(`
+
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
@@ -3108,6 +3189,7 @@ resource "aws_dms_endpoint" "test" {
 
   postgres_settings {
     after_connect_script         = "SET search_path TO pg_catalog,public;"
+    authentication_method        = "iam"
     capture_ddls                 = true
     ddl_artifacts_schema         = true
     execute_timeout              = 100
@@ -3120,6 +3202,7 @@ resource "aws_dms_endpoint" "test" {
     map_long_varchar_as          = "wstring"
     max_file_size                = 1024
     plugin_name                  = "pglogical"
+    service_access_role_arn      = aws_iam_role.test.arn
     slot_name                    = "test"
   }
 }
@@ -3142,6 +3225,7 @@ resource "aws_dms_endpoint" "test" {
 
   postgres_settings {
     after_connect_script    = "SET search_path TO pg_catalog,public;"
+    authentication_method   = "password"
     babelfish_database_name = "babelfish"
     database_mode           = "babelfish"
     execute_timeout         = 100
@@ -3647,12 +3731,11 @@ resource "aws_redshift_cluster" "test" {
   database_name      = "mydb"
   master_username    = "foo"
   master_password    = "Mustbe8characters"
-  node_type          = "dc2.large"
+  node_type          = "ra3.large"
   cluster_type       = "single-node"
   encrypted          = true
 
-  automated_snapshot_retention_period = 0
-  skip_final_snapshot                 = true
+  skip_final_snapshot = true
 }
 
 data "aws_partition" "current" {}

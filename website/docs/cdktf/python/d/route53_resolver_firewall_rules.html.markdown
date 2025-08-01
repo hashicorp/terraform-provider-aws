@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group that you want to retrieve the rules for.
 * `action` - (Optional) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list.
 * `priority` - (Optional) The setting that determines the processing order of the rules in a rule group.
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `modification_time` - The date and time that the rule was last modified, in Unix time format and Coordinated Universal Time (UTC).
 * `name` - The name of the rule.
 
-<!-- cache-key: cdktf-0.20.8 input-70d995e777780343142077b2399fbecb095fd7927b7a223f855734a8aa789930 -->
+<!-- cache-key: cdktf-0.20.8 input-5ada4df21cd5a4fef0f5b602cfec7f0ae8ac12bcdc7c3e26d4c269400414e394 -->
