@@ -202,27 +202,27 @@ resource "aws_vpclattice_service_network_resource_association" "parent-test" {
 
 data "aws_vpclattice_service_network_resource_associations" "test-sn-1" {
   service_network_identifier = aws_vpclattice_service_network.test-sn-1.id
-  depends_on = [aws_vpclattice_service_network_resource_association.dns-test, aws_vpclattice_service_network_resource_association.parent-test]
+  depends_on                 = [aws_vpclattice_service_network_resource_association.dns-test, aws_vpclattice_service_network_resource_association.parent-test]
 }
 
 data "aws_vpclattice_service_network_resource_associations" "test-sn-2" {
   service_network_identifier = aws_vpclattice_service_network.test-sn-2.id
-  depends_on = [aws_vpclattice_service_network_resource_association.ip-test]
+  depends_on                 = [aws_vpclattice_service_network_resource_association.ip-test]
 }
 
 data "aws_vpclattice_service_network_resource_associations" "test-dns-resource" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.dns-test.id
-  depends_on = [aws_vpclattice_service_network_resource_association.dns-test]
+  depends_on                        = [aws_vpclattice_service_network_resource_association.dns-test]
 }
 
 data "aws_vpclattice_service_network_resource_associations" "test-ip-resource" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.ip-test.id
-  depends_on = [aws_vpclattice_service_network_resource_association.ip-test]
+  depends_on                        = [aws_vpclattice_service_network_resource_association.ip-test]
 }
 
 data "aws_vpclattice_service_network_resource_associations" "test-parent-resource" {
   resource_configuration_identifier = aws_vpclattice_resource_configuration.parent-test.id
-  depends_on = [aws_vpclattice_service_network_resource_association.parent-test]
+  depends_on                        = [aws_vpclattice_service_network_resource_association.parent-test]
 }
 
 `, rName)
