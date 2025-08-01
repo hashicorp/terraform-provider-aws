@@ -332,7 +332,10 @@ func (r resourceSetRegionInStateInterceptor) read(ctx context.Context, opts inte
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
-		// Set region in state after R.
+		// Set region in state after R but skip if the provider just called RemoveResource(ctx) due to disappearance.
+		if response.State.Raw.IsNull() {
+			return diags
+		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), c.Region(ctx))...)
 		if diags.HasError() {
 			return diags
