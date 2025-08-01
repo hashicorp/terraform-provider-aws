@@ -68,6 +68,97 @@ func TestAccQuickSightUserCustomPermission_basic(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightUserCustomPermission_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "tfacctest" + sdkacctest.RandString(10)
+	resourceName := "aws_quicksight_user_custom_permission.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserCustomPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserCustomPermissionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserCustomPermissionExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceUserCustomPermission, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightUserCustomPermission_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "tfacctest" + sdkacctest.RandString(10)
+	resourceName := "aws_quicksight_user_custom_permission.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserCustomPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserCustomPermissionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserCustomPermissionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_permissions_name"), knownvalue.StringExact(rName+"-perm")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrUserName), knownvalue.StringExact(rName)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccUserCustomPermissionImportStateID(resourceName),
+				ImportStateVerifyIdentifierAttribute: "custom_permissions_name",
+			},
+			{
+				Config: testAccUserCustomPermissionConfig_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserCustomPermissionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_permissions_name"), knownvalue.StringExact(rName+"-perm2")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrUserName), knownvalue.StringExact(rName)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckUserCustomPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
@@ -127,6 +218,32 @@ resource "aws_quicksight_user" "test" {
 resource "aws_quicksight_user_custom_permission" "test" {
   user_name               = aws_quicksight_user.test.user_name
   custom_permissions_name = aws_quicksight_custom_permissions.test.custom_permissions_name
+}
+`, rName, acctest.DefaultEmailAddress))
+}
+
+func testAccUserCustomPermissionConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccCustomPermissionsConfig_basic(rName+"-perm"), fmt.Sprintf(`
+resource "aws_quicksight_custom_permissions" "test2" {
+  custom_permissions_name = "%[1]s-perm2"
+
+  capabilities {
+    create_and_update_datasets     = "DENY"
+    create_and_update_data_sources = "DENY"
+    export_to_pdf                  = "DENY"
+  }
+}
+
+resource "aws_quicksight_user" "test" {
+  user_name      = %[1]q
+  email          = %[2]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "READER"
+}
+
+resource "aws_quicksight_user_custom_permission" "test" {
+  user_name               = aws_quicksight_user.test.user_name
+  custom_permissions_name = aws_quicksight_custom_permissions.test2.custom_permissions_name
 }
 `, rName, acctest.DefaultEmailAddress))
 }
