@@ -12,13 +12,13 @@ ENHANCEMENTS:
 * data-source/aws_codebuild_fleet: Add `instance_type` attribute in `compute_configuration` block ([#43449](https://github.com/hashicorp/terraform-provider-aws/issues/43449))
 * data-source/aws_ebs_volume: Add `volume_initialization_rate` attribute ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
 * data-source/aws_ecs_service: Support `load_balancer` attribute ([#43582](https://github.com/hashicorp/terraform-provider-aws/issues/43582))
-* data-source/aws_s3_access_point: Add `tags` attribute. This functionality requires the `s3:ListTagsForResource` IAM permission ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
+* data-source/aws_s3_access_point: Add `tags` attribute. This functionality requires the `s3:ListTagsForResource` IAM permission with S3 Access Points for general purpose buckets and the `s3express:ListTagsForResource` IAM permission with S3 Access Points for directory buckets ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
 * data-source/aws_verifiedpermissions_policy_store: Add `deletion_protection` attribute ([#43452](https://github.com/hashicorp/terraform-provider-aws/issues/43452))
 * resource/aws_athena_workgroup: Add `configuration.identity_center_configuration` argument ([#38717](https://github.com/hashicorp/terraform-provider-aws/issues/38717))
 * resource/aws_cleanrooms_collaboration: Add `analytics_engine` argument ([#43614](https://github.com/hashicorp/terraform-provider-aws/issues/43614))
 * resource/aws_codebuild_fleet: Add `instance_type` argument in `compute_configuration` block to support custom instance types ([#43449](https://github.com/hashicorp/terraform-provider-aws/issues/43449))
 * resource/aws_ebs_volume: Add `volume_initialization_rate` argument ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
-* resource/aws_s3_access_point: Add `tags` argument and `tags_all` attribute. This functionality requires the `s3:ListTagsForResource`, `s3:TagResource`, and `s3:UntagResource` IAM permissions ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
+* resource/aws_s3_access_point: Add `tags` argument and `tags_all` attribute. This functionality requires the `s3:ListTagsForResource`, `s3:TagResource`, and `s3:UntagResource` IAM permissions with S3 Access Points for general purpose buckets and the `s3express:ListTagsForResource`, `s3express:TagResource`, and `s3express:UntagResource` IAM permissions with S3 Access Points for directory buckets ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
 * resource/aws_verifiedpermissions_policy_store: Add `deletion_protection` argument ([#43452](https://github.com/hashicorp/terraform-provider-aws/issues/43452))
 
 BUG FIXES:
