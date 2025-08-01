@@ -123,7 +123,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		IntelligentTieringConfiguration: intelligentTieringConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketIntelligentTieringConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
