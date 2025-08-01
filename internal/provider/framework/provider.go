@@ -434,18 +434,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				continue
 			}
 
-			if !tfunique.IsHandleNil(dataSourceSpec.Tags) {
-				// The data source has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s data source", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s data source", names.AttrTags, typeName))
-					continue
-				}
+			if err := validateSchemaTagsForDataSource(dataSourceSpec.Tags, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("data source type %q: %w", typeName, err))
+				continue
 			}
 		}
 
@@ -486,27 +477,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				continue
 			}
 
-			if !tfunique.IsHandleNil(resourceSpec.Tags) {
-				// The resource has opted in to transparent tagging.
-				// Ensure that the schema look OK.
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s resource", names.AttrTags, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTags, typeName))
-					continue
-				}
-				if v, ok := schemaResponse.Schema.Attributes[names.AttrTagsAll]; ok {
-					if !v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s resource", names.AttrTagsAll, typeName))
-						continue
-					}
-				} else {
-					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s resource", names.AttrTagsAll, typeName))
-					continue
-				}
+			if err := validateSchemaTagsForResource(resourceSpec.Tags, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("resource type %q: %w", typeName, err))
+				continue
 			}
 
 			if resourceSpec.Import.WrappedImport {
@@ -550,6 +523,39 @@ func validateSchemaRegionForResource(regionSpec unique.Handle[inttypes.ServicePa
 	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		if _, ok := schema.Attributes[names.AttrRegion]; ok {
 			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaTagsForDataSource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema datasourceschema.Schema) error {
+	if !tfunique.IsHandleNil(tagsSpec) {
+		if v, ok := schema.Attributes[names.AttrTags]; ok {
+			if !v.IsComputed() {
+				return fmt.Errorf("`%s` attribute must be Computed", names.AttrTags)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTags)
+		}
+	}
+	return nil
+}
+
+func validateSchemaTagsForResource(tagsSpec unique.Handle[inttypes.ServicePackageResourceTags], schema resourceschema.Schema) error {
+	if !tfunique.IsHandleNil(tagsSpec) {
+		if v, ok := schema.Attributes[names.AttrTags]; ok {
+			if v.IsComputed() {
+				return fmt.Errorf("`%s` attribute cannot be Computed", names.AttrTags)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTags)
+		}
+		if v, ok := schema.Attributes[names.AttrTagsAll]; ok {
+			if !v.IsComputed() {
+				return fmt.Errorf("`%s` attribute must be Computed", names.AttrTagsAll)
+			}
+		} else {
+			return fmt.Errorf("configured for tags but no `%s` attribute defined in schema", names.AttrTagsAll)
 		}
 	}
 	return nil
