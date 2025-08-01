@@ -196,6 +196,45 @@ func TestAccECRRepository_immutabilityWithExclusion(t *testing.T) {
 	})
 }
 
+func TestAccECRRepository_mutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Repository
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_mutabilityWithExclusion(rName, "prod-*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "prod-*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_mutabilityWithExclusion(rName, "release-*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "release-*"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECRRepository_immutabilityWithExclusion_validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -537,6 +576,20 @@ func testAccRepositoryConfig_immutabilityWithExclusion(rName, filter string) str
 resource "aws_ecr_repository" "test" {
   name                 = %[1]q
   image_tag_mutability = "IMMUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+}
+`, rName, filter)
+}
+
+func testAccRepositoryConfig_mutabilityWithExclusion(rName, filter string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "MUTABLE_WITH_EXCLUSION"
 
   image_tag_mutability_exclusion_filter {
     filter      = %[2]q
