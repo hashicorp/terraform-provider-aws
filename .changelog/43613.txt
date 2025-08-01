@@ -9,3 +9,7 @@ aws_quicksight_role_custom_permission
 ```release-note:new-resource
 aws_quicksight_user_custom_permission
 ```
+
+```release-note:enhancement
+resource/aws_quicksight_user: Change `user_name` to Optional and Computed
+```

@@ -72,6 +72,7 @@ func resourceUser() *schema.Resource {
 				names.AttrUserName: {
 					Type:         schema.TypeString,
 					Optional:     true,
+					Computed:     true,
 					ValidateFunc: validation.NoZeroValues,
 				},
 				"user_role": {
@@ -103,7 +104,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	email := d.Get(names.AttrEmail).(string)
 	namespace := d.Get(names.AttrNamespace).(string)
-	input := &quicksight.RegisterUserInput{
+	input := quicksight.RegisterUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Email:        aws.String(email),
 		IdentityType: awstypes.IdentityType(d.Get("identity_type").(string)),
@@ -123,7 +124,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		input.UserName = aws.String(v.(string))
 	}
 
-	output, err := conn.RegisterUser(ctx, input)
+	output, err := conn.RegisterUser(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering QuickSight User (%s): %s", email, err)
@@ -179,7 +180,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &quicksight.UpdateUserInput{
+	input := quicksight.UpdateUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Email:        aws.String(d.Get(names.AttrEmail).(string)),
 		Namespace:    aws.String(namespace),
@@ -187,7 +188,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		UserName:     aws.String(userName),
 	}
 
-	_, err = conn.UpdateUser(ctx, input)
+	_, err = conn.UpdateUser(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating QuickSight User (%s): %s", d.Id(), err)
@@ -205,11 +206,13 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteUser(ctx, &quicksight.DeleteUserInput{
+	log.Printf("[INFO] Deleting QuickSight User: %s", d.Id())
+	input := quicksight.DeleteUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 		UserName:     aws.String(userName),
-	})
+	}
+	_, err = conn.DeleteUser(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -242,13 +245,13 @@ func userParseResourceID(id string) (string, string, string, error) {
 }
 
 func findUserByThreePartKey(ctx context.Context, conn *quicksight.Client, awsAccountID, namespace, userName string) (*awstypes.User, error) {
-	input := &quicksight.DescribeUserInput{
+	input := quicksight.DescribeUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 		UserName:     aws.String(userName),
 	}
 
-	return findUser(ctx, conn, input)
+	return findUser(ctx, conn, &input)
 }
 
 func findUser(ctx context.Context, conn *quicksight.Client, input *quicksight.DescribeUserInput) (*awstypes.User, error) {
