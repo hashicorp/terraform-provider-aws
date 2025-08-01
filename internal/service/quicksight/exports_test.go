@@ -55,7 +55,7 @@ var (
 	FindNamespaceByTwoPartKey              = findNamespaceByTwoPartKey
 	FindRefreshScheduleByThreePartKey      = findRefreshScheduleByThreePartKey
 	FindRoleCustomPermissionByThreePartKey = findRoleCustomPermissionByThreePartKey
-	FindRoleMembershipByMultiPartKey       = findRoleMembershipByMultiPartKey
+	FindRoleMembershipByFourPartKey        = findRoleMembershipByFourPartKey
 	FindTemplateAliasByThreePartKey        = findTemplateAliasByThreePartKey
 	FindTemplateByTwoPartKey               = findTemplateByTwoPartKey
 	FindThemeByTwoPartKey                  = findThemeByTwoPartKey
