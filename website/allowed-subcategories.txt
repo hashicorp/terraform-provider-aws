@@ -208,6 +208,7 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 Tables
+S3 Vectors
 S3 on Outposts
 SES (Simple Email)
 SESv2 (Simple Email V2)
