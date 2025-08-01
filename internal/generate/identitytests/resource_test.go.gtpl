@@ -874,7 +874,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 			},
 		})
 	}
-{{ else }}
+{{ else if .PreIdentityVersion }}
 	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
