@@ -71,7 +71,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -146,7 +146,7 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
