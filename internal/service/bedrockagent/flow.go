@@ -1070,7 +1070,7 @@ func (r *flowResource) Update(ctx context.Context, request resource.UpdateReques
 		}
 
 		// Set values for unknowns.
-		new.CreatedAt = timetypes.NewRFC3339TimePointerValue(output.CreatedAt)
+		new.CreatedAt = old.CreatedAt
 		new.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
 		new.Version = fwflex.StringToFramework(ctx, output.Version)
 		new.Status = fwtypes.StringEnumValue(output.Status)
