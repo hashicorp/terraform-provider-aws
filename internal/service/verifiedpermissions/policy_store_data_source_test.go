@@ -38,6 +38,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyStoreExists(ctx, dataSourceName, &policystore),
 					resource.TestCheckResourceAttrPair(resourceName, "validation_settings.0.mode", dataSourceName, "validation_settings.0.mode"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),

@@ -170,8 +170,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `column_groups` - (Optional) Groupings of columns that work together in certain Amazon QuickSight features. Currently, only geospatial hierarchy is supported. See [column_groups](#column_groups).
 * `column_level_permission_rules` - (Optional) A set of 1 or more definitions of a [ColumnLevelPermissionRule](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnLevelPermissionRule.html). See [column_level_permission_rules](#column_level_permission_rules).
 * `data_set_usage_configuration` - (Optional) The usage configuration to apply to child datasets that reference this dataset as a source. See [data_set_usage_configuration](#data_set_usage_configuration).
@@ -179,6 +178,7 @@ The following arguments are optional:
 * `logical_table_map` - (Optional) Configures the combination and transformation of the data from the physical tables. Maximum of 1 entry. See [logical_table_map](#logical_table_map).
 * `permissions` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [permissions](#permissions).
 * `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `row_level_permission_data_set` - (Optional) The row-level security configuration for the data that you want to create. See [row_level_permission_data_set](#row_level_permission_data_set).
 * `row_level_permission_tag_configuration` - (Optional) The configuration of tags on a dataset to set row-level security. Row-level security tags are currently supported for anonymous embedding only. See [row_level_permission_tag_configuration](#row_level_permission_tag_configuration).
 * `refresh_properties` - (Optional) The refresh properties for the data set. **NOTE**: Only valid when `import_mode` is set to `SPICE`. See [refresh_properties](#refresh_properties).

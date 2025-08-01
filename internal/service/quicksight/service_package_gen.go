@@ -49,6 +49,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newIPRestrictionResource,
+			TypeName: "aws_quicksight_ip_restriction",
+			Name:     "IP Restriction",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newKeyRegistrationResource,
 			TypeName: "aws_quicksight_key_registration",
 			Name:     "Key Registration",

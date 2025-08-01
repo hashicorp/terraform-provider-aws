@@ -2174,24 +2174,6 @@ func waitTransitGatewayCreated(ctx context.Context, conn *ec2.Client, id string,
 	return nil, err
 }
 
-func waitTransitGatewayDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:        enum.Slice(awstypes.TransitGatewayStateAvailable, awstypes.TransitGatewayStateDeleting),
-		Target:         []string{},
-		Refresh:        statusTransitGateway(ctx, conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.TransitGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitTransitGatewayMulticastDomainCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayMulticastDomain, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayMulticastDomainStatePending),
