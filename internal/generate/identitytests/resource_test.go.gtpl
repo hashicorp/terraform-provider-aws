@@ -15,48 +15,15 @@
 	{{ template "commonInit" . }}
 {{ end }}
 
-{{ define "commonInit" -}}
-{{ range .RequiredEnvVars -}}
-	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
-{{ end -}}
-	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
-	rName := {{ .Generator }}
-{{- end }}
-{{- range .InitCodeBlocks }}
-{{ .Code }}
-{{- end -}}
-{{ if .UseAlternateAccount }}
-	providers := make(map[string]*schema.Provider)
-{{ end }}
-{{ end }}
-
 {{ define "Test" -}}
 resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
-{{- end }}
-
-{{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . }}
-{{- if not .UseAlternateAccount }}
-	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
 	TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 		tfversion.SkipBelow(tfversion.Version1_12_0),
 	},
-	PreCheck:     func() { acctest.PreCheck(ctx, t)
-		{{- if gt (len .PreCheckRegions) 0 }}
-			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
-		{{- end -}}
-		{{- range .PreChecks }}
-			{{ .Code }}
-		{{- end -}}
-		{{- range .PreChecksWithRegion }}
-			{{ .Code }}(ctx, t, acctest.Region())
-		{{- end -}}
-	},
-	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+	{{ template "CommonTestCaseChecks" . }}
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
@@ -64,8 +31,8 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 	tfversion.SkipBelow(tfversion.Version1_12_0),
 },
-PreCheck:     func() { acctest.PreCheck(ctx, t)
-	{{- if gt (len .PreCheckRegions) 0 }}
+PreCheck: func() { acctest.PreCheck(ctx, t)
+	{{- if .PreCheckRegions }}
 		acctest.PreCheckAlternateRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
 	{{- end -}}
 	{{- range .PreChecks }}
@@ -242,31 +209,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 },
 {{- end }}
 
-{{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
-{{- end }}
-
-{{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
-{{ end }}
-
-{{ define "AdditionalTfVars" -}}
-	{{ range $name, $value := .AdditionalTfVars -}}
-	{{ $name }}: config.StringVariable({{ $value }}),
-	{{ end -}}
-{{ end }}
-
 package {{ .ProviderPackage }}_test
 
 import (
-	{{ if .OverrideIdentifier }}
-	"context"
-	{{- end }}
 	"testing"
 
-	{{ if .UseAlternateAccount }}
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	{{- end }}
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -279,10 +226,6 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	{{- if .OverrideIdentifier }}
-	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
