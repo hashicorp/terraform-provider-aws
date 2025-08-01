@@ -12,14 +12,18 @@ import (
 	"reflect"
 	"slices"
 	"sync"
+	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	empemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -425,11 +429,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := datasource.SchemaResponse{}
 			inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
 
-			if v := dataSourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s data source", names.AttrRegion, typeName))
-					continue
-				}
+			if err := validateSchemaRegionForDataSource(dataSourceSpec.Region, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("data source %q: %w", typeName, err))
+				continue
 			}
 
 			if !tfunique.IsHandleNil(dataSourceSpec.Tags) {
@@ -460,11 +462,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 				schemaResponse := ephemeral.SchemaResponse{}
 				inner.Schema(ctx, ephemeral.SchemaRequest{}, &schemaResponse)
 
-				if v := ephemeralResourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-					if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-						errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s ephemeral resource", names.AttrRegion, typeName))
-						continue
-					}
+				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
+					errs = append(errs, fmt.Errorf("ephemeral resource %q: %w", typeName, err))
+					continue
 				}
 			}
 		}
@@ -481,11 +481,9 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 			schemaResponse := resource.SchemaResponse{}
 			inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
-			if v := resourceSpec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
-				if _, ok := schemaResponse.Schema.Attributes[names.AttrRegion]; ok {
-					errs = append(errs, fmt.Errorf("`%s` attribute is defined: %s resource", names.AttrRegion, typeName))
-					continue
-				}
+			if err := validateSchemaRegionForResource(resourceSpec.Region, schemaResponse.Schema); err != nil {
+				errs = append(errs, fmt.Errorf("resource %q: %w", typeName, err))
+				continue
 			}
 
 			if !tfunique.IsHandleNil(resourceSpec.Tags) {
@@ -528,4 +526,31 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func validateSchemaRegionForDataSource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema datasourceschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema empemeralschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForResource(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schema resourceschema.Schema) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if _, ok := schema.Attributes[names.AttrRegion]; ok {
+			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
 }
