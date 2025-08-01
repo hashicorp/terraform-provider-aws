@@ -5997,6 +5997,29 @@ service "oam" {
   brand                    = "AWS"
 }
 
+service "odb" {
+  sdk {
+    id            = "ODB"
+    arn_namespace = "odb"
+  }
+
+  names {
+    provider_name_upper = "ODB"
+    human_friendly      = "Oracle Database@AWS"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCloudExadataInfrastructures"
+  }
+
+  resource_prefix {
+    correct = "aws_odb_"
+  }
+
+  doc_prefix = ["odb_"]
+  brand      = "AWS"
+}
+
 service "opensearch" {
   go_packages {
     v1_package = "opensearchservice"
@@ -7338,6 +7361,29 @@ service "s3tables" {
   }
 
   doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
+}
+
+service "s3vectors" {
+  sdk {
+    id            = "S3Vectors"
+    arn_namespace = "s3vectors"
+  }
+
+  names {
+    provider_name_upper = "S3Vectors"
+    human_friendly      = "S3 Vectors"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListVectorBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3vectors_"
+  }
+
+  doc_prefix = ["s3vectors_"]
   brand      = "Amazon"
 }
 

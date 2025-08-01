@@ -41,7 +41,7 @@ class MyConvertedCode(TerraformStack):
             data_access_role_arn=Token.as_string(aws_iam_role_example.arn),
             depends_on=[aws_iam_role_policy_example],
             input_data_config=ComprehendDocumentClassifierInputDataConfig(
-                s3_uri="s3://${" + test.bucket + "}/${" + documents.id + "}"
+                s3_uri="s3://${" + test.bucket + "}/${" + documents.key + "}"
             ),
             language_code="en",
             name="example"
@@ -166,4 +166,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4af629e294b01ca1442c39138ff55ca609ec54b70a3b1088c1d2663747e60231 -->
+<!-- cache-key: cdktf-0.20.8 input-cc259bf7ecbb6f8e46398eaa9e07d953aa96a2746be4eb7426332e194ab53797 -->

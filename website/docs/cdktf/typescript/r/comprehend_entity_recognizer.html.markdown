@@ -52,12 +52,16 @@ class MyConvertedCode extends TerraformStack {
             "s3://${" +
             awsS3BucketDocuments.bucket +
             "}/${" +
-            documents.id +
+            documents.key +
             "}",
         },
         entityList: {
           s3Uri:
-            "s3://${" + awsS3BucketEntities.bucket + "}/${" + entities.id + "}",
+            "s3://${" +
+            awsS3BucketEntities.bucket +
+            "}/${" +
+            entities.key +
+            "}",
         },
         entityTypes: [
           {
@@ -213,4 +217,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-32380dd4aac3d0cc4db7f12a767105b8c53b1f27df4e87bf32344b94f5e2e19f -->
+<!-- cache-key: cdktf-0.20.8 input-a322b23d77ddec60dd96293537854094550b4b3142e94fd0a14ebac19e3ef22e -->

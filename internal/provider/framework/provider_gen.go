@@ -1354,6 +1354,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// odb
+
+				"odb": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// opensearch
 
 				"opensearch": schema.StringAttribute{
@@ -1658,6 +1665,13 @@ func endpointsBlock() schema.SetNestedBlock {
 				// s3tables
 
 				"s3tables": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// s3vectors
+
+				"s3vectors": schema.StringAttribute{
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",
 				},

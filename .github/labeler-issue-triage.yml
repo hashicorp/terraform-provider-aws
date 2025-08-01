@@ -505,6 +505,8 @@ service/notificationscontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/odb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -611,6 +613,8 @@ service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
 service/s3tables:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
+service/s3vectors:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3vectors_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:

@@ -137,7 +137,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreatePlatformApplication(ctx, input)
 	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -229,7 +229,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.SetPlatformApplicationAttributes(ctx, input)
 	}, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 

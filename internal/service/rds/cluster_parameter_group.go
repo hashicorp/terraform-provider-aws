@@ -243,7 +243,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 			const (
 				timeout = 3 * time.Minute
 			)
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidDBParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 				return conn.ResetDBClusterParameterGroup(ctx, &input)
 			}, "has pending changes")
 

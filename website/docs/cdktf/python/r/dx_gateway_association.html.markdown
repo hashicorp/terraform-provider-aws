@@ -156,6 +156,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
 * `dx_gateway_association_id` - The ID of the Direct Connect gateway association.
 * `dx_gateway_owner_account_id` - The ID of the AWS account that owns the Direct Connect gateway.
+* `transit_gateway_attachment_id` - The ID of the Transit Gateway Attachment when the type is `transitGateway`.
 
 ## Timeouts
 
@@ -190,4 +191,4 @@ Using `terraform import`, import Direct Connect gateway associations using `dx_g
 % terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4814ec39f55737f809c9c7466a92a6d0788d2ea2e947819e9e902f27ce4bb16c -->
+<!-- cache-key: cdktf-0.20.8 input-309639547f2c82233b9d612273ea37770fb65986d4dce8651a0ba1b373506db2 -->

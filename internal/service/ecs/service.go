@@ -2818,8 +2818,10 @@ func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 			apiObject.AdvancedConfiguration = &awstypes.AdvancedConfiguration{
 				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
 				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
-				TestListenerRule:        aws.String(config["test_listener_rule"].(string)),
 				RoleArn:                 aws.String(config[names.AttrRoleARN].(string)),
+			}
+			if v, ok := config["test_listener_rule"].(string); ok && v != "" {
+				apiObject.AdvancedConfiguration.TestListenerRule = aws.String(v)
 			}
 		}
 
@@ -2851,9 +2853,11 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 				map[string]any{
 					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
 					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
-					"test_listener_rule":         aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule),
 					names.AttrRoleARN:            aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
 				},
+			}
+			if apiObject.AdvancedConfiguration.TestListenerRule != nil {
+				tfMap["advanced_configuration"].([]any)[0].(map[string]any)["test_listener_rule"] = aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule)
 			}
 		}
 
