@@ -1,17 +1,16 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package validators_test
+package stringvalidator_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
 )
 
 func TestSuffixNoneOfValidator(t *testing.T) {
@@ -69,7 +68,7 @@ func TestSuffixNoneOfValidator(t *testing.T) {
 				ConfigValue: test.in,
 			}
 			res := validator.StringResponse{}
-			validators.SuffixNoneOf(test.suffixNoneOfValues...).ValidateString(context.TODO(), req, &res)
+			tfstringvalidator.SuffixNoneOf(test.suffixNoneOfValues...).ValidateString(t.Context(), req, &res)
 
 			if !res.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -101,9 +100,9 @@ func TestSuffixNoneOfValidator_Description(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			v := validators.SuffixNoneOf(test.in...)
+			v := tfstringvalidator.SuffixNoneOf(test.in...)
 
-			got := v.MarkdownDescription(context.Background())
+			got := v.MarkdownDescription(t.Context())
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected difference: %s", diff)
