@@ -50,14 +50,10 @@ func resourceUser() *schema.Resource {
 					ForceNew: true,
 				},
 				"identity_type": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					// TODO ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
-					ValidateFunc: validation.StringInSlice(enum.Slice(
-						awstypes.IdentityTypeIam,
-						awstypes.IdentityTypeQuicksight,
-					), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
 				},
 				names.AttrNamespace: quicksightschema.NamespaceSchema(),
 				"session_name": {
@@ -76,18 +72,10 @@ func resourceUser() *schema.Resource {
 					ValidateFunc: validation.NoZeroValues,
 				},
 				"user_role": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					// TODO ValidateDiagFunc: enum.Validate[awstypes.UserRole](),
-					ValidateFunc: validation.StringInSlice(enum.Slice(
-						awstypes.UserRoleReader,
-						awstypes.UserRoleAuthor,
-						awstypes.UserRoleAdmin,
-						awstypes.UserRoleReaderPro,
-						awstypes.UserRoleAuthorPro,
-						awstypes.UserRoleAdminPro,
-					), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UserRole](),
 				},
 			}
 		},

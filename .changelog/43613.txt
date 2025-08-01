@@ -13,3 +13,11 @@ aws_quicksight_user_custom_permission
 ```release-note:enhancement
 resource/aws_quicksight_user: Change `user_name` to Optional and Computed
 ```
+
+```release-note:enhancement
+resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for `identity_type`
+```
+
+```release-note:enhancement
+resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER` as valid values for `user_role`
+```

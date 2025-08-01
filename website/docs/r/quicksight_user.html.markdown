@@ -52,8 +52,8 @@ resource "aws_quicksight_user" "example" {
 The following arguments are required:
 
 * `email` - (Required) Email address of the user that you want to register.
-* `identity_type` - (Required) Identity type that your Amazon QuickSight account uses to manage the identity of users. Valid values: `IAM`, `QUICKSIGHT`.
-* `user_role` - (Required) Amazon QuickSight role for the user. Value values: `READER`, `AUTHOR`, `ADMIN`, `READER_PRO`, `AUTHOR_PRO`, `ADMIN_PRO`.
+* `identity_type` - (Required) Identity type that your Amazon QuickSight account uses to manage the identity of users. Valid values: `IAM`, `QUICKSIGHT`, `IAM_IDENTITY_CENTER`.
+* `user_role` - (Required) Amazon QuickSight role for the user. Valid values: `READER`, `AUTHOR`, `ADMIN`, `READER_PRO`, `AUTHOR_PRO`, `ADMIN_PRO`, `RESTRICTED_AUTHOR`, `RESTRICTED_READER`.
 
 The following arguments are optional:
 
