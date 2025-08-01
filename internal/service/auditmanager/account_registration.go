@@ -28,6 +28,7 @@ import (
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(generator=false)
 // @Testing(hasExistsFunction=false, checkDestroyNoop=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountRegistrationResource{}, nil
 }
