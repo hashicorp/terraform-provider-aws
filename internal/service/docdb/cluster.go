@@ -308,7 +308,7 @@ func resourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -1006,7 +1006,7 @@ func expandServerlessV2ScalingConfiguration(v map[string]any) *awstypes.Serverle
 	}
 
 	apiObject := &awstypes.ServerlessV2ScalingConfiguration{}
-	if v, ok := v["max_capacity"].(float64); ok {
+	if v, ok := v[names.AttrMaxCapacity].(float64); ok {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 	if v, ok := v["min_capacity"].(float64); ok {
@@ -1024,7 +1024,7 @@ func flattenServerlessV2ScalingConfiguration(v *awstypes.ServerlessV2ScalingConf
 	tfMap := map[string]any{}
 
 	if v.MaxCapacity != nil {
-		tfMap["max_capacity"] = aws.ToFloat64(v.MaxCapacity)
+		tfMap[names.AttrMaxCapacity] = aws.ToFloat64(v.MaxCapacity)
 	}
 	if v.MinCapacity != nil {
 		tfMap["min_capacity"] = aws.ToFloat64(v.MinCapacity)
