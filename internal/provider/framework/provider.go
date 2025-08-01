@@ -12,6 +12,7 @@ import (
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -40,11 +41,13 @@ var (
 
 var (
 	_ provider.Provider                       = &frameworkProvider{}
+	_ provider.ProviderWithActions            = &frameworkProvider{}
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
+	actions            []func() action.Action
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
 	primary            interface{ Meta() any }
@@ -58,6 +61,7 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &frameworkProvider{
+		actions:            make([]func() action.Action, 0),
 		dataSources:        make([]func() datasource.DataSource, 0),
 		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
 		primary:            primary,
@@ -378,6 +382,14 @@ func (p *frameworkProvider) EphemeralResources(ctx context.Context) []func() eph
 	return slices.Clone(p.ephemeralResources)
 }
 
+// Actions returns a slice of functions to instantiate each Action
+// implementation.
+//
+// All actions must have unique type names.
+func (p *frameworkProvider) Actions(ctx context.Context) []func() action.Action {
+	return slices.Clone(p.actions)
+}
+
 // Functions returns a slice of functions to instantiate each Function
 // implementation.
 //
@@ -519,6 +531,65 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 				}
 				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
 					return newWrappedEphemeralResource(inner, opts)
+				})
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithActions); ok {
+			for _, v := range v.Actions(ctx) {
+				typeName := v.TypeName
+				inner, err := v.Factory(ctx)
+
+				if err != nil {
+					errs = append(errs, fmt.Errorf("creating action (%s): %w", typeName, err))
+					continue
+				}
+
+				var isRegionOverrideEnabled bool
+				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+					isRegionOverrideEnabled = true
+				}
+
+				var interceptors interceptorInvocations
+
+				if isRegionOverrideEnabled {
+					v := v.Region.Value()
+
+					interceptors = append(interceptors, actionInjectRegionAttribute())
+					if v.IsValidateOverrideInPartition {
+						interceptors = append(interceptors, actionValidateRegion())
+					}
+				}
+
+				opts := wrappedActionOptions{
+					// bootstrapContext is run on all wrapped methods before any interceptors.
+					bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+						var diags diag.Diagnostics
+						var overrideRegion string
+
+						if isRegionOverrideEnabled && getAttribute != nil {
+							var target types.String
+							diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+							if diags.HasError() {
+								return ctx, diags
+							}
+
+							overrideRegion = target.ValueString()
+						}
+
+						ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+						if c != nil {
+							ctx = c.RegisterLogger(ctx)
+							ctx = fwflex.RegisterLogger(ctx)
+							ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+						}
+						return ctx, diags
+					},
+					interceptors: interceptors,
+					typeName:     v.TypeName,
+				}
+				p.actions = append(p.actions, func() action.Action {
+					return newWrappedAction(inner, opts)
 				})
 			}
 		}
