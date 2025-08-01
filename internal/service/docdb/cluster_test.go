@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -1005,6 +1006,79 @@ func TestAccDocDBCluster_manageMasterUserPassword(t *testing.T) {
 	})
 }
 
+func TestAccDocDBCluster_serverless(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_serverless(rName, 0.6, 1.0),
+				ExpectError: regexache.MustCompile(`must be a multiple of 0.5`),
+			},
+			{
+				Config: testAccClusterConfig_serverless(rName, 0.5, 1.0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"skip_final_snapshot",
+					"manage_master_user_password",
+				},
+			},
+			{
+				Config: testAccClusterConfig_serverless(rName, 1.0, 1.5),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "1.5"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_serverlessRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
@@ -1636,4 +1710,33 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, passwordConfig))
+}
+
+func testAccClusterConfig_serverless(rName string, minCapacity, maxCapacity float64) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+
+  serverless_v2_scaling_configuration {
+	min_capacity = %[2]f
+	max_capacity = %[3]f
+  }
+}
+`, rName, minCapacity, maxCapacity))
+}
+
+func testAccClusterConfig_serverlessRemoved(rName string) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName))
 }
