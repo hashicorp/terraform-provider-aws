@@ -70,9 +70,7 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 		return nil, err
 	}
 
-	if err := provider.initialize(ctx); err != nil {
-		return nil, err
-	}
+	provider.initialize(ctx)
 
 	return provider, nil
 }
@@ -379,10 +377,8 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
-func (p *frameworkProvider) initialize(ctx context.Context) error {
+func (p *frameworkProvider) initialize(ctx context.Context) {
 	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
-
-	var errs []error
 
 	for sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
@@ -407,8 +403,6 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 			})
 		}
 	}
-
-	return errors.Join(errs...)
 }
 
 // validateResourceSchemas is called from `New` to validate Terraform Plugin Framework-style resource schemas.
