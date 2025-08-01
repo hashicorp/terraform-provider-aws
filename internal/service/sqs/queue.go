@@ -238,7 +238,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// create is 2 phase: 1. create, 2. wait for propagation
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.CreateQueue(ctx, input)
 	}, errCodeQueueDeletedRecently)
 
@@ -246,7 +246,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 			return conn.CreateQueue(ctx, input)
 		}, errCodeQueueDeletedRecently)
 	}

@@ -304,7 +304,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		snapshotID := aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId)
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return waitSnapshotCompleted(ctx, conn, snapshotID, d.Timeout(schema.TimeoutDelete))
 			},
 			errCodeResourceNotReady)
@@ -319,7 +319,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta a
 		VolumeId: aws.String(d.Id()),
 	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteVolume(ctx, &input)
 		},
 		errCodeVolumeInUse)

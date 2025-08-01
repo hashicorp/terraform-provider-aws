@@ -114,7 +114,7 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.CreateDeviceFleet(ctx, input)
 	}, ErrCodeValidationException)
 	if err != nil {

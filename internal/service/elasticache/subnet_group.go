@@ -178,7 +178,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteCacheSubnetGroup(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})

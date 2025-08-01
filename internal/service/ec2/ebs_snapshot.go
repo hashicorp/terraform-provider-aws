@@ -139,7 +139,7 @@ func resourceEBSSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*ec2.CreateSnapshotOutput).SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return waitSnapshotCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		},
 		errCodeResourceNotReady)
@@ -253,7 +253,7 @@ func resourceEBSSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := ec2.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSnapshot(ctx, &input)
 	}, errCodeInvalidSnapshotInUse)
 

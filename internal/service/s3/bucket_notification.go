@@ -309,7 +309,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		NotificationConfiguration: notificationConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 

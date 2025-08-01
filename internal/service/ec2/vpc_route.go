@@ -254,7 +254,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -457,7 +457,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting Route: %v", input)
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,

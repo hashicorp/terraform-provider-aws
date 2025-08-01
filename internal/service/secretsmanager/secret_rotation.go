@@ -113,7 +113,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.RotateSecret(ctx, input)
 	}, "AccessDeniedException")
 
@@ -176,7 +176,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 			return conn.RotateSecret(ctx, input)
 		}, "AccessDeniedException", "InvalidRequestException")
 

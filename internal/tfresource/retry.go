@@ -96,19 +96,8 @@ func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, 
 }
 
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
-func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (any, error), codes ...string) (any, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr.ErrCodeEquals(err, codes...) {
-			return true, err
-		}
-
-		return false, err
-	})
-}
-
-// RetryGWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
-func RetryGWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duration, f func() (T, error), codes ...string) (T, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+func RetryWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), codes ...string) (T, error) { // nosemgrep:ci.aws-in-func-name
+	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) {
 			return true, err
 		}

@@ -109,7 +109,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
 

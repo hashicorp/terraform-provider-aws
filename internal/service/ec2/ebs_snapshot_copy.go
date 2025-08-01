@@ -151,7 +151,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(output.SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return waitSnapshotCompleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		},
 		errCodeResourceNotReady)

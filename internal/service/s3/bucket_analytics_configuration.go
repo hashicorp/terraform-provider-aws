@@ -158,7 +158,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 

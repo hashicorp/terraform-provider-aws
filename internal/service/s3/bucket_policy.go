@@ -63,7 +63,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
