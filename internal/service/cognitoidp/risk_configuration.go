@@ -115,7 +115,7 @@ func resourceRiskConfiguration() *schema.Resource {
 						},
 						"notify_configuration": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -201,7 +201,7 @@ func resourceRiskConfiguration() *schema.Resource {
 									},
 									"source_arn": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
