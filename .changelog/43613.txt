@@ -5,3 +5,7 @@ aws_quicksight_custom_permissions
 ```release-note:new-resource
 aws_quicksight_role_custom_permission
 ```
+
+```release-note:new-resource
+aws_quicksight_user_custom_permission
+```
