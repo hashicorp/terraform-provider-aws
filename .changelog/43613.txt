@@ -25,3 +25,7 @@ resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER
 ```release-note:enhancement
 resource/aws_quicksight_user: Add plan-time validation of `iam_arn`
 ```
+
+```release-note:enhancement
+data-source/aws_quicksight_user: Add `custom_permissions_name` attribute
+```

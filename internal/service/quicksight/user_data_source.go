@@ -30,6 +30,10 @@ func dataSourceUser() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrAWSAccountID: quicksightschema.AWSAccountIDDataSourceSchema(),
+				"custom_permissions_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -78,6 +82,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("active", user.Active)
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set("custom_permissions_name", user.CustomPermissionsName)
 	d.Set(names.AttrEmail, user.Email)
 	d.Set("identity_type", user.IdentityType)
 	d.Set("principal_id", user.PrincipalId)
