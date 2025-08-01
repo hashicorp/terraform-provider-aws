@@ -388,21 +388,21 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 		servicePackageName := sp.ServicePackageName()
 
 		for _, dataSourceSpec := range sp.FrameworkDataSources(ctx) {
-			p.dataSources = append(p.dataSources, func() datasource.DataSource {
+			p.dataSources = append(p.dataSources, func() datasource.DataSource { //nolint:contextcheck // must be a func()
 				return newWrappedDataSource(dataSourceSpec, servicePackageName)
 			})
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
 			for _, ephemeralResourceSpec := range v.EphemeralResources(ctx) {
-				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource {
+				p.ephemeralResources = append(p.ephemeralResources, func() ephemeral.EphemeralResource { //nolint:contextcheck // must be a func()
 					return newWrappedEphemeralResource(ephemeralResourceSpec, servicePackageName)
 				})
 			}
 		}
 
 		for _, resourceSpec := range sp.FrameworkResources(ctx) {
-			p.resources = append(p.resources, func() resource.Resource {
+			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
 		}
