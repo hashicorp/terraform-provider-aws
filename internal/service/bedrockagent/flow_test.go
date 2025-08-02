@@ -60,9 +60,10 @@ func TestAccBedrockAgentFlow_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"prepare_flow"},
 			},
 			{
 				Config: testAccFlowConfig_basicUpdate(rName, foundationModel),
@@ -159,9 +160,10 @@ func TestAccBedrockAgentFlow_withEncryptionKey(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"prepare_flow"},
 			},
 		},
 	})
@@ -202,9 +204,10 @@ func TestAccBedrockAgentFlow_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"prepare_flow"},
 			},
 			{
 				Config: testAccFlowConfig_tags2(rName, foundationModel, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -408,9 +411,10 @@ func TestAccBedrockAgentFlow_withPromptResource(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"prepare_flow"},
 			},
 		},
 	})
@@ -527,6 +531,7 @@ resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
   description        = "basic"
+  prepare_flow       = false
 }
 `, rName))
 }
@@ -537,6 +542,7 @@ resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
   description        = "update"
+  prepare_flow       = false
 }
 `, rName))
 }
@@ -552,6 +558,7 @@ resource "aws_bedrockagent_flow" "test" {
   name                        = %[1]q
   execution_role_arn          = aws_iam_role.test.arn
   customer_encryption_key_arn = aws_kms_key.test.arn
+  prepare_flow                = false
 }
 `, rName))
 }
@@ -561,6 +568,7 @@ func testAccFlowConfig_tags1(rName, model, tag1Key, tag1Value string) string {
 resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
+  prepare_flow       = false
 
   tags = {
     %[2]q = %[3]q
@@ -574,6 +582,7 @@ func testAccFlowConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Valu
 resource "aws_bedrockagent_flow" "test" {
   name               = %[1]q
   execution_role_arn = aws_iam_role.test.arn
+  prepare_flow       = false
 
   tags = {
     %[2]q = %[3]q
@@ -703,6 +712,7 @@ resource "aws_bedrockagent_prompt" "test" {
 resource "aws_bedrockagent_flow" "test" {
   name               = %[2]q
   execution_role_arn = aws_iam_role.test.arn
+  prepare_flow       = false
 
   definition {
     node {
