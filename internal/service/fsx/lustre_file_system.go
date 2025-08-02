@@ -108,9 +108,8 @@ func resourceLustreFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrSize: {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(32, 131072),
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"sizing_mode": {
 							Type:             schema.TypeString,
@@ -343,6 +342,7 @@ func resourceLustreFileSystem() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceLustreFileSystemStorageCapacityCustomizeDiff,
 			resourceLustreFileSystemMetadataConfigCustomizeDiff,
+			resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff,
 		),
 	}
 }
@@ -396,6 +396,34 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 						if err := d.ForceNew("metadata_configuration.0.iops"); err != nil {
 							return err
 						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if v, ok := d.Get(names.AttrStorageType).(string); ok && v == string(awstypes.StorageTypeIntelligentTiering) {
+		var throughputCapacity int
+		if v, ok := d.Get("throughput_capacity").(int); ok && v != 0 {
+			throughputCapacity = v
+		} else {
+			return fmt.Errorf("Validation Error: ThroughputCapacity is a required parameter for Lustre file systems with StorageType  %s", awstypes.StorageTypeIntelligentTiering)
+		}
+
+		if v, ok := d.Get("data_read_cache_configuration").([]any); ok && len(v) > 0 && v[0] != nil {
+			config := v[0].(map[string]any)
+
+			if sizingMode, ok := config["sizing_mode"].(string); ok && sizingMode == string(awstypes.LustreReadCacheSizingModeUserProvisioned) {
+				if size, ok := config[names.AttrSize].(int); ok && size > 0 {
+					factor := throughputCapacity / 4000
+					minSize := 32 * factor
+					maxSize := 131072 * factor
+					if size < minSize || size > maxSize {
+						return fmt.Errorf("File systems with throughput capacity of %d MB/s support a minimum read cache size of %d GiB and maximum read cache size of %d GiB", throughputCapacity, minSize, maxSize)
 					}
 				}
 			}
