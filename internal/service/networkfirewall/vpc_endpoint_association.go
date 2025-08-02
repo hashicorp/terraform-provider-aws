@@ -13,9 +13,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -103,6 +105,9 @@ func (r *resourceVPCEndpointAssociation) Schema(ctx context.Context, req resourc
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrStatus: schema.StringAttribute{
@@ -156,23 +161,18 @@ func (r *resourceVPCEndpointAssociation) Create(ctx context.Context, req resourc
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	var plan resourceVPCEndpointAssociationModel
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	planVpcEndpointAssociationStatusModel, diags := plan.VpcEndpointAssociationStatus.ToPtr(ctx)
-	// "VpcEndpointAssociationStatusModel.AZSyncState" cannot be handled by AutoFlex, since the parameter in the AWS API is a map
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
 	var input networkfirewall.CreateVpcEndpointAssociationInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithIgnoredFieldNamesAppend("VpcEndpointAssociationStatus"))...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	input.Tags = getTagsIn(ctx)
 	out, err := conn.CreateVpcEndpointAssociation(ctx, &input)
 	if err != nil {
@@ -190,16 +190,18 @@ func (r *resourceVPCEndpointAssociation) Create(ctx context.Context, req resourc
 		return
 	}
 	arn := aws.ToString(out.VpcEndpointAssociation.VpcEndpointAssociationArn)
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcEndpointAssociation, &plan, flex.WithIgnoredFieldNamesAppend("VpcEndpointAssociationStatus"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcEndpointAssociation, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.VpcEndpointAssociationId = flex.StringToFramework(ctx, out.VpcEndpointAssociation.VpcEndpointAssociationId)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcEndpointAssociationStatus, &plan.VpcEndpointAssociationStatus, flex.WithIgnoredFieldNamesAppend("AssociationSyncState"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	plan.VpcEndpointAssociationArn = flex.StringValueToFramework(ctx, arn)
 	plan.setID()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
 	created, err := waitVPCEndpointAssociationCreated(ctx, conn, arn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -208,9 +210,13 @@ func (r *resourceVPCEndpointAssociation) Create(ctx context.Context, req resourc
 		)
 		return
 	}
-
-	plan.flattenVpcEndpointAssociationStatus(ctx, created.VpcEndpointAssociationStatus)
-
+	// AZState is a map and needs to be flattened into a set of objects
+	vpcEndpointAssociationStatusModel, d := plan.VpcEndpointAssociationStatus.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(vpcEndpointAssociationStatusModel.flattenAZSyncState(ctx, created.VpcEndpointAssociationStatus.AssociationSyncState)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -237,12 +243,20 @@ func (r *resourceVPCEndpointAssociation) Read(ctx context.Context, req resource.
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcEndpointAssociation, &state, flex.WithIgnoredFieldNamesAppend("VpcEndpointAssociationStatus"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("VpcEndpointAssociationStatus"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.flattenVpcEndpointAssociationStatus(ctx, out.VpcEndpointAssociationStatus)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcEndpointAssociationStatus, &state.VpcEndpointAssociationStatus, flex.WithIgnoredFieldNamesAppend("AssociationSyncState"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	vpcEndpointAssociationStatusModel, d := state.VpcEndpointAssociationStatus.ToPtr(ctx)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(vpcEndpointAssociationStatusModel.flattenAZSyncState(ctx, out.VpcEndpointAssociationStatus.AssociationSyncState)...)
 
 	setTagsOut(ctx, out.VpcEndpointAssociation.Tags)
 
@@ -250,6 +264,7 @@ func (r *resourceVPCEndpointAssociation) Read(ctx context.Context, req resource.
 }
 
 func (r *resourceVPCEndpointAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	var state resourceVPCEndpointAssociationModel
@@ -384,8 +399,8 @@ func (model *resourceVPCEndpointAssociationModel) setID() {
 }
 
 type subnetMappingModel struct {
-	SubnetId      types.String `tfsdk:"subnet_id"`
-	IPAddressType types.String `tfsdk:"ip_address_type"`
+	SubnetId      types.String                               `tfsdk:"subnet_id"`
+	IPAddressType fwtypes.StringEnum[awstypes.IPAddressType] `tfsdk:"ip_address_type"`
 }
 
 type vpcEndpointAssociationStatusModel struct {
@@ -405,33 +420,26 @@ type attachmentModel struct {
 	StatusMessage types.String `tfsdk:"status_message"`
 }
 
-func (m *resourceVPCEndpointAssociationModel) flattenVpcEndpointAssociationStatus(ctx context.Context, vpcEndpointAssociationStatus *awstypes.VpcEndpointAssociationStatus) {
+func (m *vpcEndpointAssociationStatusModel) flattenAZSyncState(ctx context.Context, azSyncStateMap map[string]awstypes.AZSyncState) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	statusModel.Status = flex.StringValueToFramework(ctx, string(vpcEndpointAssociationStatus.Status))
-
-	if len(vpcEndpointAssociationStatus.AssociationSyncState) == 0 {
-		statusModel.AssociationSyncState = fwtypes.NewSetNestedObjectValueOfNull[AZSyncStateModel](ctx)
-		return
+	if len(azSyncStateMap) == 0 {
+		return diags
 	}
-	azSyncStates := make([]*AZSyncStateModel, 0, len(vpcEndpointAssociationStatus.AssociationSyncState))
-	for az, syncState := range vpcEndpointAssociationStatus.AssociationSyncState {
+	azSyncStates := make([]*AZSyncStateModel, 0, len(azSyncStateMap))
+	for az, syncState := range azSyncStateMap {
 		azSyncState := &AZSyncStateModel{
 			AvailabilityZone: flex.StringValueToFramework(ctx, az),
 		}
-		if syncState.Attachment != nil {
-			attachment := &attachmentModel{
-				EndpointId:    flex.StringToFramework(ctx, syncState.Attachment.EndpointId),
-				SubnetId:      flex.StringToFramework(ctx, syncState.Attachment.SubnetId),
-				Status:        flex.StringValueToFramework(ctx, string(syncState.Attachment.Status)),
-				StatusMessage: flex.StringToFramework(ctx, syncState.Attachment.StatusMessage),
-			}
-			azSyncState.Attachment = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*attachmentModel{attachment})
-		} else {
-			azSyncState.Attachment = fwtypes.NewListNestedObjectValueOfNull[attachmentModel](ctx)
+		var attachment attachmentModel
+		diags.Append(flex.Flatten(ctx, syncState.Attachment, &attachment)...)
+		if diags.HasError() {
+			return diags
 		}
-
+		azSyncState.Attachment = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &attachment)
 		azSyncStates = append(azSyncStates, azSyncState)
 	}
+	m.AssociationSyncState = fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, azSyncStates)
 
-	statusModel.AssociationSyncState = fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, azSyncStates)
+	return diags
 }

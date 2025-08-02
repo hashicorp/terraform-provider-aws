@@ -33,9 +33,9 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 	var vpcendpointassociation networkfirewall.DescribeVpcEndpointAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_vpc_endpoint_association.test"
-	// firewallResourceName := "aws_networkfirewall_firewall.test"
-	// vpcResourceName := "aws_vpc.target"
-	//subnetResourceName := "aws_subnet.target"
+	firewallResourceName := "aws_networkfirewall_firewall.test"
+	vpcResourceName := "aws_vpc.target"
+	subnetResourceName := "aws_subnet.target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -50,9 +50,9 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 				Config: testAccVPCEndpointAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &vpcendpointassociation),
-					// resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
-					// resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, names.AttrID),
-					//resource.TestCheckResourceAttrPair(resourceName, "subnet_mapping.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_mapping.0.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "vpc_endpoint_association_status.0.association_sync_state.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
 					}),
@@ -167,63 +167,46 @@ func testAccVPCEndpointAssociationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-// func testAccVPCEndpointAssociationConfig_basic(rName string) string {
-// 	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
-// resource "aws_networkfirewall_firewall" "test" {
-//   name                = %[1]q
-//   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-//   vpc_id              = aws_vpc.test.id
-
-//   subnet_mapping {
-//     subnet_id = aws_subnet.test[0].id
-//   }
-// }
-
-// resource "aws_vpc" "target" {
-//   cidr_block = "10.0.0.0/16"
-
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-
-// resource "aws_subnet" "target" {
-//   vpc_id            = aws_vpc.target.id
-//   availability_zone = data.aws_availability_zones.available.names[0]
-//   cidr_block        = cidrsubnet(aws_vpc.target.cidr_block, 8, 1)
-
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// resource "aws_networkfirewall_vpc_endpoint_association" "test" {
-//   firewall_arn = aws_networkfirewall_firewall.test.arn
-//   vpc_id       = aws_vpc.target.id
-
-//   subnet_mapping {
-//     subnet_id = aws_subnet.target.id
-//   }
-
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// `, rName))
-// }
-
 func testAccVPCEndpointAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_networkfirewall_vpc_endpoint_association" "test" {
-  firewall_arn = "arn:aws:network-firewall:ap-southeast-2:922421696073:firewall/tf-acc-test-3237751493501276692"
-  vpc_id       = "vpc-08d9d6d6e21fa4afc"
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
 
   subnet_mapping {
-    subnet_id = "subnet-0c58d6ca32f04ce8f"
+    subnet_id = aws_subnet.test[0].id
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "target" {
+  vpc_id            = aws_vpc.target.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.target.cidr_block, 8, 1)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_networkfirewall_vpc_endpoint_association" "test" {
+  firewall_arn = aws_networkfirewall_firewall.test.arn
+  vpc_id       = aws_vpc.target.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.target.id
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
