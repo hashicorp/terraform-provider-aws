@@ -118,9 +118,9 @@ func (e *invocationEphemeralResource) Open(ctx context.Context, req ephemeral.Op
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	data.Result = flex.StringValueToFramework(ctx, string(output.Payload))
-	// data.Payload field is originally intended to store the input payload.
-	// However, it is inadvertently overwritten by the result data during the flattening process.
-	// Therefore, it is necessary to restore the original input payload manually after flattening.
+	// data.Payload field is originally meant to hold the input payload.
+	// However, during the flattening process, it is populated with the result payload.
+	// To correct this, the original input payload needs to be manually restored to data.Payload after flattening.
 	data.Payload = flex.StringValueToFramework(ctx, string(input.Payload))
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
