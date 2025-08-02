@@ -17,3 +17,14 @@ func AppliedToEach[S ~[]E, E any, T any](s S, f func(E) T) iter.Seq[T] {
 		}
 	}
 }
+
+// Backward returns an iterator that yields the slice elements in reverse order.
+func BackwardValues[Slice ~[]E, E any](s Slice) iter.Seq[E] {
+	return func(yield func(E) bool) {
+		for i := len(s) - 1; i >= 0; i-- {
+			if !yield(s[i]) {
+				return
+			}
+		}
+	}
+}
