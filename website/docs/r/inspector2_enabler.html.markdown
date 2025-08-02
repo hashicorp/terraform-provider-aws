@@ -47,7 +47,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-* `id` - A unique identifier, formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:....`, where `account_ids` are sored in ascending order and `resource_types` are sorted in alphabetical order.
+* `id` – A unique identifier formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_id`s are sorted in ascending order and `resource_type`s are sorted in alphabetical order.
 
 ## Timeouts
 
