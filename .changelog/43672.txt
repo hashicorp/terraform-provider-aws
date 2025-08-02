@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lightsail_static_ip: Support resource import
+```
