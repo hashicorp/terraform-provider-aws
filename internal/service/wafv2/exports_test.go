@@ -22,4 +22,7 @@ var (
 	FindWebACLByThreePartKey          = findWebACLByThreePartKey
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
+
+	IsCloudFrontDistributionARN     = isCloudFrontDistributionARN
+	CloudFrontDistributionIDFromARN = cloudFrontDistributionIDFromARN
 )
