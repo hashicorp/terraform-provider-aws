@@ -51,7 +51,7 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &vpcendpointassociation),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_mapping.0.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "vpc_endpoint_association_status.0.association_sync_state.*", map[string]*regexp.Regexp{
 						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
@@ -196,6 +196,7 @@ resource "aws_subnet" "target" {
     Name = %[1]q
   }
 }
+
 resource "aws_networkfirewall_vpc_endpoint_association" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
   vpc_id       = aws_vpc.target.id

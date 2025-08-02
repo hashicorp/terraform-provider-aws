@@ -264,7 +264,6 @@ func (r *resourceVPCEndpointAssociation) Read(ctx context.Context, req resource.
 }
 
 func (r *resourceVPCEndpointAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	var state resourceVPCEndpointAssociationModel
