@@ -71,7 +71,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance)...),
+					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance, awstypes.ResourceTypeAuroraDbClusterStorage)...),
 				},
 			},
 			"savings_estimation_mode": schema.StringAttribute{
