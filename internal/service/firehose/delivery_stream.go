@@ -895,6 +895,12 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.IcebergS3BackupMode](),
 							},
 							"s3_configuration": s3ConfigurationSchema(),
+							"append_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+								ForceNew: true, // Currently, you can set this flag only with the CreateDeliveryStream API operation.
+							},
 						},
 					},
 				},
@@ -2541,6 +2547,7 @@ func expandIcebergDestinationConfiguration(tfMap map[string]any) *types.IcebergD
 		},
 		RoleARN:         aws.String(roleARN),
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]any)),
+		AppendOnly:      aws.Bool(tfMap["append_only"].(bool)),
 	}
 
 	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
@@ -2573,7 +2580,8 @@ func expandIcebergDestinationUpdate(tfMap map[string]any) *types.IcebergDestinat
 			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
-		RoleARN: aws.String(roleARN),
+		RoleARN:    aws.String(roleARN),
+		AppendOnly: aws.Bool(tfMap["append_only"].(bool)),
 	}
 
 	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
@@ -4246,6 +4254,7 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
 		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
 		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),
+		"append_only":      aws.ToBool(apiObject.AppendOnly),
 	}
 
 	if apiObject.BufferingHints != nil {
