@@ -47,9 +47,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` – A unique identifier formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_id`s are sorted in ascending order and `resource_type`s are sorted in alphabetical order.
+This resource exports no additional attributes.
 
 ## Timeouts
 
@@ -61,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Enabler using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Enabler using `account_ids` and `region_types` formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_ids` are sorted in ascending order and `resource_types` are sorted in alphabetical order. For example:
 
 ```terraform
 import {
@@ -70,7 +68,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Inspector Enabler using the `id`. For example:
+Using `terraform import`, import Inspector Enabler using using `account_ids` and `region_types` formatted as `[account_id1]:[account_id2]:...-[resource_type1]:[resource_type2]:...`, where `account_ids` are sorted in ascending order and `resource_types` are sorted in alphabetical order. For example:
 
 ```console
 % terraform import aws_inspector2_enabler.example 123456789012:234567890123-EC2:ECR
