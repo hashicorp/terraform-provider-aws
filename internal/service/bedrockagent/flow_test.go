@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -267,7 +268,7 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.FlowStatusPrepared)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
@@ -345,6 +346,89 @@ func TestAccBedrockAgentFlow_withDefinition(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFlowConfig_withDefinitionUpdate(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flow),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`flow/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.FlowStatusPrepared)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_encryption_key_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.#", "3"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.name", "FlowInputNodeFlowInputNode0ToPromptPromptsNode0"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.source", "FlowInputNode"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.target", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.type", "Data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.configuration.0.data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.configuration.0.data.0.source_output", "document"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.0.configuration.0.data.0.target_input", "topic"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.name", "PromptPromptsNode0ToFlowOutputNodeFlowOutputNode0"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.source", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.target", "FlowOutputNode"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.type", "Data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.configuration.0.data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.configuration.0.data.0.source_output", "modelCompletion"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.connection.1.configuration.0.data.0.target_input", "document"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.name", "FlowInputNode"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.type", "Input"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.configuration.0.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.name", "document"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.0.output.0.type", "String"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.name", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.type", "Prompt"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.model_id", foundationModel),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_type", "TEXT"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.0.max_tokens", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.0.stop_sequences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.0.stop_sequences.0", "User:"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.0.temperature", "0"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.inference_configuration.0.text.0.top_p", "0.8999999761581421"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_configuration.0.text.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_configuration.0.text.0.text", "Write a paragraph about {{topic}}."),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_configuration.0.text.0.input_variable.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.configuration.0.prompt.0.source_configuration.0.inline.0.template_configuration.0.text.0.input_variable.0.name", "topic"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.input.0.expression", "$.data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.input.0.name", "topic"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.input.0.type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.output.0.name", "modelCompletion"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.1.output.0.type", "String"),
+
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.name", "FlowOutputNode"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.type", "Output"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.configuration.0.output.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.input.0.expression", "$.data"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.input.0.name", "document"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.node.2.input.0.type", "String"),
+				),
 			},
 		},
 	})
@@ -634,6 +718,116 @@ resource "aws_bedrockagent_flow" "test" {
     }
     node {
       name = "Prompt_1"
+      type = "Prompt"
+
+      configuration {
+        prompt {
+          source_configuration {
+            inline {
+              model_id      = %[2]q
+              template_type = "TEXT"
+
+              inference_configuration {
+                text {
+                  max_tokens     = 2048
+                  stop_sequences = ["User:"]
+                  temperature    = 0
+                  top_p          = 0.8999999761581421
+                }
+              }
+
+              template_configuration {
+                text {
+                  text = "Write a paragraph about {{topic}}."
+
+                  input_variable {
+                    name = "topic"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      input {
+        expression = "$.data"
+        name       = "topic"
+        type       = "String"
+      }
+
+      output {
+        name = "modelCompletion"
+        type = "String"
+      }
+    }
+    node {
+      name = "FlowOutputNode"
+      type = "Output"
+
+      configuration {
+        output {}
+      }
+
+      input {
+        expression = "$.data"
+        name       = "document"
+        type       = "String"
+      }
+    }
+  }
+}
+`, rName, model))
+}
+
+func testAccFlowConfig_withDefinitionUpdate(rName, model string) string {
+	return acctest.ConfigCompose(testAccFlowConfig_base(model), fmt.Sprintf(`
+resource "aws_bedrockagent_flow" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  definition {
+    connection {
+      name   = "FlowInputNodeFlowInputNode0ToPromptPromptsNode0"
+      source = "FlowInputNode"
+      target = "Prompt"
+      type   = "Data"
+
+      configuration {
+        data {
+          source_output = "document"
+          target_input  = "topic"
+        }
+      }
+    }
+    connection {
+      name   = "PromptPromptsNode0ToFlowOutputNodeFlowOutputNode0"
+      source = "Prompt"
+      target = "FlowOutputNode"
+      type   = "Data"
+
+      configuration {
+        data {
+          source_output = "modelCompletion"
+          target_input  = "document"
+        }
+      }
+    }
+    node {
+      name = "FlowInputNode"
+      type = "Input"
+
+      configuration {
+        input {}
+      }
+
+      output {
+        name = "document"
+        type = "String"
+      }
+    }
+    node {
+      name = "Prompt"
       type = "Prompt"
 
       configuration {
