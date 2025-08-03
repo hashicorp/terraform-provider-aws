@@ -1,6 +1,6 @@
 plugin "aws" {
   enabled = true
-  version = "0.39.0"
+  version = "0.41.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
@@ -23,10 +23,6 @@ rule "terraform_required_version" {
 # https://github.com/terraform-linters/tflint-ruleset-aws/blob/master/docs/rules/README.md
 
 rule "aws_acm_certificate_lifecycle" {
-  enabled = false
-}
-
-rule "aws_accessanalyzer_analyzer_invalid_type" {
   enabled = false
 }
 
