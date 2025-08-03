@@ -26,6 +26,18 @@ rule "aws_acm_certificate_lifecycle" {
   enabled = false
 }
 
+rule "aws_dms_s3_endpoint_invalid_compression_type" {
+  enabled=  false
+}
+
+rule "aws_dms_s3_endpoint_invalid_date_partition_sequence" {
+  enabled=  false
+}
+
+rule "aws_dms_s3_endpoint_invalid_encryption_mode" {
+  enabled=  false
+}
+
 # Avoids errant findings related to directory paths in generated configuration files
 rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
   enabled = false
