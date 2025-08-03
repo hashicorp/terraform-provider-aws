@@ -54,6 +54,7 @@ type resourceVPCEndpointAssociation struct {
 	framework.ResourceWithModel[resourceVPCEndpointAssociationModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
+	framework.WithImportByID
 }
 
 func (r *resourceVPCEndpointAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -298,10 +299,6 @@ func (r *resourceVPCEndpointAssociation) Delete(ctx context.Context, req resourc
 		)
 		return
 	}
-}
-
-func (r *resourceVPCEndpointAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitVPCEndpointAssociationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeVpcEndpointAssociationOutput, error) {
