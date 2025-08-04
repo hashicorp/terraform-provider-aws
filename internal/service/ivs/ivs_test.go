@@ -18,6 +18,7 @@ func TestAccIVS_serial(t *testing.T) {
 			"update":             testAccPlaybackKeyPair_update,
 			"tags":               testAccPlaybackKeyPair_tags,
 			acctest.CtDisappears: testAccPlaybackKeyPair_disappears,
+			"identity":           testAccIVSPlaybackKeyPair_IdentitySerial,
 		},
 	}
 
