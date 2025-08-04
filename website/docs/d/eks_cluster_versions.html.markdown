@@ -63,7 +63,6 @@ Valid values are `STANDARD_SUPPORT` or `UNSUPPORTED` or `EXTENDED_SUPPORT`.
 This data source exports the following attributes in addition to the arguments above:
 
 * `cluster_versions` - A list of Kubernetes version information.
-
     * `cluster_type` - Type of cluster that the version belongs to.
     * `cluster_version` - Kubernetes version supported by EKS.
     * `default_platform_version` - Default eks platform version for the cluster version.
