@@ -44,6 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/billing v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.11.1

@@ -423,7 +423,7 @@ func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, reque
 
 	input.LifecycleConfiguration = &lifecycleConfiguraton
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "LifecycleConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -542,7 +542,7 @@ func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, reque
 
 	input.LifecycleConfiguration = &lifecycleConfiguraton
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
 	if err != nil {
