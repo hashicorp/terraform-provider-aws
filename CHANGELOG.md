@@ -9,9 +9,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_quicksight_user: Add `custom_permissions_name` attribute ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_bedrock_guardrail: Add `input_action`, `output_action`, `input_enabled`, and `output_enabled` fields to `pii_entities_config` and `regexes_config` blocks for enhanced granular control over guardrail actions
 * resource/aws_inspector2_enabler: Support resource import ([#43673](https://github.com/hashicorp/terraform-provider-aws/issues/43673))
-* resource/aws_ivschat_logging_configuration: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
-* resource/aws_ivschat_room: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
 * resource/aws_lightsail_static_ip: Support resource import ([#43672](https://github.com/hashicorp/terraform-provider-aws/issues/43672))
 * resource/aws_opensearch_domain_policy: Support resource import ([#43674](https://github.com/hashicorp/terraform-provider-aws/issues/43674))
 * resource/aws_quicksight_user: Add plan-time validation of `iam_arn` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
@@ -22,7 +21,6 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Fix failure to detect resources deleted outside of Terraform as missing for numerous resource types ([#43659](https://github.com/hashicorp/terraform-provider-aws/issues/43659))
-* resource/aws_ec2_managed_prefix_list: Fix `PrefixListVersionMismatch: The prefix list has the incorrect version number` errors when updating entry description ([#43661](https://github.com/hashicorp/terraform-provider-aws/issues/43661))
 
 ## 6.7.0 (July 31, 2025)
 
