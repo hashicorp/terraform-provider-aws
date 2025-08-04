@@ -21,6 +21,7 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,14 +32,14 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStopInstanceActionConfig_basic(),
+				Config: testAccStopInstanceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
 				),
 			},
 			{
-				Config: testAccStopInstanceActionConfig_withAction(),
+				Config: testAccStopInstanceActionConfig_withAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
@@ -52,6 +53,7 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -62,14 +64,14 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStopInstanceActionConfig_basic(),
+				Config: testAccStopInstanceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
 				),
 			},
 			{
-				Config: testAccStopInstanceActionConfig_withForce(),
+				Config: testAccStopInstanceActionConfig_withForce(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
@@ -83,6 +85,7 @@ func TestAccEC2StopInstanceAction_customTimeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -93,14 +96,14 @@ func TestAccEC2StopInstanceAction_customTimeout(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStopInstanceActionConfig_basic(),
+				Config: testAccStopInstanceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
 				),
 			},
 			{
-				Config: testAccStopInstanceActionConfig_withTimeout(),
+				Config: testAccStopInstanceActionConfig_withTimeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
@@ -137,26 +140,26 @@ func testAccCheckInstanceState(ctx context.Context, n string, expectedState awst
 	}
 }
 
-func testAccStopInstanceActionConfig_basic() string {
+func testAccStopInstanceActionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
-		`
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   
   tags = {
-    Name = "terraform-testacc-stop-instance-action"
+    Name = %[1]q
   }
 }
-`)
+`, rName))
 }
 
-func testAccStopInstanceActionConfig_withAction() string {
+func testAccStopInstanceActionConfig_withAction(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStopInstanceActionConfig_basic(),
+		testAccStopInstanceActionConfig_basic(rName),
 		`
 action "aws_ec2_stop_instance" "test" {
   config {
@@ -166,9 +169,9 @@ action "aws_ec2_stop_instance" "test" {
 `)
 }
 
-func testAccStopInstanceActionConfig_withForce() string {
+func testAccStopInstanceActionConfig_withForce(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStopInstanceActionConfig_basic(),
+		testAccStopInstanceActionConfig_basic(rName),
 		`
 action "aws_ec2_stop_instance" "test" {
   config {
@@ -179,9 +182,9 @@ action "aws_ec2_stop_instance" "test" {
 `)
 }
 
-func testAccStopInstanceActionConfig_withTimeout() string {
+func testAccStopInstanceActionConfig_withTimeout(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStopInstanceActionConfig_basic(),
+		testAccStopInstanceActionConfig_basic(rName),
 		`
 action "aws_ec2_stop_instance" "test" {
   config {
