@@ -99,6 +99,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.2 h1:RF6r/HIBx3Ox1d8QBjSFf3jW
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.2/go.mod h1:ZTp/fekiiAUkmAU4CDYjtk/hlRpPJnbGKaFzMNr+Hq4=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.46.1 h1:+964aZWEhatObFc4aShL6yyLXcmr4rA6NPGd+y6TlSM=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.46.1/go.mod h1:PYXdjAxfDP6jvOtgZIlXn+7DS2rYfMONfDiYxx1I3T0=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.1.1 h1:B5TtLHc5RV/ezQo3BsFfDxKUdbnRl6Ni3b927eGLxsk=
+github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.1.1/go.mod h1:YpZIw5tCg/UZMYIrqCvK5wv2Uze3IKeB2lhq8yQU8j0=
 github.com/aws/aws-sdk-go-v2/service/billing v1.3.1 h1:ubne5J3y/pp9c/ojwPhTbBy5PJB7Gs1WM6JooUQJzCg=
 github.com/aws/aws-sdk-go-v2/service/billing v1.3.1/go.mod h1:YeisxBuT89KEnsEw/BXZy+En8LjBzP4wfVqHf9Lkqzw=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.33.1 h1:Iai284Y0UvwLD8Bz/qDXbmdMGzrYOHCnvAKStFIn78A=
@@ -660,8 +662,8 @@ github.com/hashicorp/terraform-exec v0.23.0 h1:MUiBM1s0CNlRFsCLJuM5wXZrzA3MnPYEs
 github.com/hashicorp/terraform-exec v0.23.0/go.mod h1:mA+qnx1R8eePycfwKkCRk3Wy65mwInvlpAeOwmA7vlY=
 github.com/hashicorp/terraform-json v0.25.0 h1:rmNqc/CIfcWawGiwXmRuiXJKEiJu1ntGoxseG1hLhoQ=
 github.com/hashicorp/terraform-json v0.25.0/go.mod h1:sMKS8fiRDX4rVlR6EJUMudg1WcanxCMoWwTLkgZP/vc=
-github.com/hashicorp/terraform-plugin-framework v1.15.0 h1:LQ2rsOfmDLxcn5EeIwdXFtr03FVsNktbbBci8cOKdb4=
-github.com/hashicorp/terraform-plugin-framework v1.15.0/go.mod h1:hxrNI/GY32KPISpWqlCoTLM9JZsGH3CyYlir09bD/fI=
+github.com/hashicorp/terraform-plugin-framework v1.15.1 h1:2mKDkwb8rlx/tvJTlIcpw0ykcmvdWv+4gY3SIgk8Pq8=
+github.com/hashicorp/terraform-plugin-framework v1.15.1/go.mod h1:hxrNI/GY32KPISpWqlCoTLM9JZsGH3CyYlir09bD/fI=
 github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 h1:SJXL5FfJJm17554Kpt9jFXngdM6fXbnUnZ6iT2IeiYA=
 github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0/go.mod h1:p0phD0IYhsu9bR4+6OetVvvH59I6LwjXGnTVEr8ox6E=
 github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 h1:I/N0g/eLZ1ZkLZXUQ0oRSXa8YG/EF0CEuQP1wXdrzKw=

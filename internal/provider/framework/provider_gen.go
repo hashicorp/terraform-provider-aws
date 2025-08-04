@@ -226,6 +226,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// bedrockagentcore
+
+				"bedrockagentcore": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// billing
 
 				"billing": schema.StringAttribute{

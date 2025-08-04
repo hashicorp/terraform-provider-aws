@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +43,7 @@ func testAccAccountSettings_basic(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_namespace"), knownvalue.StringExact("default")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_namespace"), knownvalue.StringExact(tfquicksight.DefaultNamespace)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("termination_protection_enabled"), knownvalue.Bool(false)),
 				},
 			},

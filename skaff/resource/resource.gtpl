@@ -165,7 +165,7 @@ func Resource{{ .Resource }}() *schema.Resource {
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		{{- end }}
 		Schema: map[string]*schema.Schema{
-			"arn": { {{- if .IncludeComments }} // TIP: Many, but not all, resources have an `arn` attribute.{{- end }}
+			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, resources have an `arn` attribute.{{- end }}
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -232,8 +232,8 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
 		{{- end }}
-		{{ .Resource }}Name: aws.String(d.Get("name").(string)),
-		{{ .Resource }}Type: aws.String(d.Get("type").(string)),
+		{{ .Resource }}Name: aws.String(d.Get(names.AttrName).(string)),
+		{{ .Resource }}Type: aws.String(d.Get(names.AttrType).(string)),
 		{{ if .IncludeComments }}
 		// TIP: Not all resources support tags and tags don't always make sense. If
 		// your resource doesn't need tags, you can remove the tags lines here and
@@ -269,11 +269,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
 		// in error messages at this point.
 		{{- end }}
-		return smerr.Append(ctx, diags, err, smerr.ID, d.Get("name").(string))
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Get(names.AttrName).(string))
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return smerr.Append(ctx, diags, errors.New("empty output"), smerr.ID, d.Get("name").(string))
+		return smerr.Append(ctx, diags, errors.New("empty output"), smerr.ID, d.Get(names.AttrName).(string))
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
@@ -333,7 +333,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	//
 	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
 	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
+	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
 	// necessary.
 	//
 	// However, there are some situations where more handling is needed.
@@ -343,8 +343,8 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	{{- end }}
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
