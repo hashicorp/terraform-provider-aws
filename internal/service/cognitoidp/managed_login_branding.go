@@ -6,14 +6,13 @@ package cognitoidp
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -65,6 +65,10 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 			"use_cognito_provided_values": schema.BoolAttribute{
 				Optional: true,
 				Validators: []validator.Bool{
+					boolvalidator.ExactlyOneOf(
+						path.MatchRoot("settings"),
+						path.MatchRoot("use_cognito_provided_values"),
+					),
 					boolvalidator.ConflictsWith(
 						path.MatchRoot("asset"),
 						path.MatchRoot("settings"),
@@ -79,10 +83,10 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"asset": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[assetTypeModel](ctx),
-				Validators: []validator.Set{
-					setvalidator.SizeBetween(0, 40),
+			"asset": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[assetTypeModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeBetween(0, 40),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -235,9 +239,13 @@ func (r *managedLoginBrandingResource) Delete(ctx context.Context, request resou
 }
 
 func (r *managedLoginBrandingResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, "/")
-	if len(parts) != 2 {
-		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/managed-login-branding-id'", request.ID)))
+	const (
+		managedLoginBrandingIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, managedLoginBrandingIDParts, true)
+
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 
 		return
 	}
@@ -275,12 +283,12 @@ func findManagedLoginBrandingByTwoPartKey(ctx context.Context, conn *cognitoiden
 
 type managedLoginBrandingResourceModel struct {
 	framework.WithRegionModel
-	Asset                    fwtypes.SetNestedObjectValueOf[assetTypeModel] `tfsdk:"asset"`
-	ClientID                 types.String                                   `tfsdk:"client_id"`
-	ManagedLoginBrandingID   types.String                                   `tfsdk:"managed_login_branding_id"`
-	Settings                 fwtypes.SmithyJSON[document.Interface]         `tfsdk:"settings"`
-	UseCognitoProvidedValues types.Bool                                     `tfsdk:"use_cognito_provided_values"`
-	UserPoolID               types.String                                   `tfsdk:"user_pool_id"`
+	Asset                    fwtypes.ListNestedObjectValueOf[assetTypeModel] `tfsdk:"asset"`
+	ClientID                 types.String                                    `tfsdk:"client_id"`
+	ManagedLoginBrandingID   types.String                                    `tfsdk:"managed_login_branding_id"`
+	Settings                 fwtypes.SmithyJSON[document.Interface]          `tfsdk:"settings"`
+	UseCognitoProvidedValues types.Bool                                      `tfsdk:"use_cognito_provided_values"`
+	UserPoolID               types.String                                    `tfsdk:"user_pool_id"`
 }
 
 type assetTypeModel struct {
