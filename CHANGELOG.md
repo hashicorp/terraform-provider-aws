@@ -9,6 +9,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_quicksight_user: Add `custom_permissions_name` attribute ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_inspector2_enabler: Support resource import ([#43673](https://github.com/hashicorp/terraform-provider-aws/issues/43673))
+* resource/aws_lightsail_static_ip: Support resource import ([#43672](https://github.com/hashicorp/terraform-provider-aws/issues/43672))
+* resource/aws_opensearch_domain_policy: Support resource import ([#43674](https://github.com/hashicorp/terraform-provider-aws/issues/43674))
 * resource/aws_quicksight_user: Add plan-time validation of `iam_arn` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * resource/aws_quicksight_user: Change `user_name` to Optional and Computed ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for `identity_type` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
