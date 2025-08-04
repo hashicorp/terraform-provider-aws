@@ -3064,7 +3064,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
 
-  enable_deletion_protection       = false
+  enable_deletion_protection             = false
   secondary_ips_auto_assigned_per_subnet = %[2]d
 
   dynamic "subnet_mapping" {
