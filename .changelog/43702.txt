@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrock_guardrail: Add `input_action`, `output_action`, `input_enabled`, and `output_enabled` fields to `pii_entities_config` and `regexes_config` blocks for enhanced granular control over guardrail actions
+```
