@@ -30,6 +30,16 @@ resource "aws_cognito_managed_login_branding" "client" {
   client_id    = aws_cognito_user_pool_client.example.id
   user_pool_id = aws_cognito_user_pool.example.id
 
+  asset {
+    bytes      = filebase64("login_branding_asset.svg")
+    category   = "PAGE_HEADER_BACKGROUND"
+    color_mode = "DARK"
+    extension  = "SVG"
+  }
+
+  settings = jsonencode({
+    # Your settings here.
+  })
 }
 ```
 
