@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,8 +40,9 @@ import (
 // @FrameworkResource("aws_appsync_api", name="API")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("id")
-// @Testing(importStateIdAttribute="id")
+// @#Testing(importStateIdAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
+// @Testing(preIdentityVersion="")
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAPI{}
 
@@ -74,6 +76,9 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"created": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"dns": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
@@ -98,6 +103,9 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 			},
 			"xray_enabled": schema.BoolAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
