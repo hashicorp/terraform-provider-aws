@@ -652,7 +652,7 @@ resource "aws_bedrock_guardrail" "test" {
       output_enabled = true
       description    = "enhanced regex example"
       name           = "enhanced_regex"
-      pattern        = "^\d{3}-\d{2}-\d{4}$"
+      pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
 }
