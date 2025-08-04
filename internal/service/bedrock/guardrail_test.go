@@ -637,6 +637,7 @@ resource "aws_bedrock_guardrail" "test" {
 
   sensitive_information_policy_config {
     pii_entities_config {
+      action         = "BLOCK"
       input_action   = "BLOCK"
       output_action  = "ANONYMIZE"
       input_enabled  = true
@@ -644,6 +645,7 @@ resource "aws_bedrock_guardrail" "test" {
       type           = "NAME"
     }
     regexes_config {
+      action         = "ANONYMIZE"
       input_action   = "ANONYMIZE"
       output_action  = "BLOCK"
       input_enabled  = false
