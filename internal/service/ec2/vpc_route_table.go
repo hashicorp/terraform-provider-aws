@@ -487,7 +487,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 		// created by AWS so probably doesn't need a retry but just to be sure
 		// we provide a small one
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return routeFinder(ctx, conn, routeTableID, destination)
 			},
 			errCodeInvalidRouteNotFound,
@@ -505,7 +505,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRoute(ctx, input)
 		},
 		errCodeInvalidParameterException,
@@ -636,7 +636,7 @@ func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.Client, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.EnableVgwRoutePropagation(ctx, input)
 		},
 		errCodeGatewayNotAttached,
