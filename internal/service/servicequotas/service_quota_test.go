@@ -267,7 +267,7 @@ func TestAccServiceQuotasServiceQuota_valueLessThanCurrent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
-				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value less than current`),
+				ExpectError: regexache.MustCompile(`"value" \(\d+(\.\d+)?\) should be greater than the default or current value \(\d+(\.\d+)?\) for Service Quota \([^)]+\)`),
 			},
 		},
 	})
