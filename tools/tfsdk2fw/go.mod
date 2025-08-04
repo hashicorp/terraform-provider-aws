@@ -52,9 +52,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.55.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/backup v1.44.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/batch v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/batch v1.55.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.9.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.46.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.3.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.33.1 // indirect
@@ -79,7 +79,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.26.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.26.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.31.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.43.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.31.1 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.52.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.17.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.48.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.54.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.35.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.36.1 // indirect
@@ -114,7 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.6.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.45.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.238.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.239.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.61.1 // indirect
@@ -123,7 +123,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.47.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.30.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.47.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.47.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elastictranscoder v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emr v1.51.1 // indirect
@@ -140,7 +140,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.43.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.28.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.120.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.121.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.28.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.34.1 // indirect
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.43.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.27.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.39.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.1 // indirect
@@ -158,7 +158,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.22.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.3.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iot v1.65.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iot v1.66.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.44.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.18.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.40.1 // indirect
@@ -200,7 +200,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.3.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.2.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.19.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opensearch v1.48.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/odb v1.1.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearch v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.21.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.16.1 // indirect
@@ -215,7 +216,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.27.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.89.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.90.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.31.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.100.1 // indirect
@@ -236,9 +237,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rum v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.85.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.61.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.7.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.1.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.203.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.14.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.30.1 // indirect
@@ -251,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ses v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.48.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/shield v1.31.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.28.1 // indirect
@@ -274,7 +276,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.48.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.62.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.62.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.15.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/waf v1.27.1 // indirect
@@ -282,7 +284,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.64.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.59.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.28.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.32.1 // indirect
 	github.com/aws/smithy-go v1.22.5 // indirect
 	github.com/beevik/etree v1.5.1 // indirect
@@ -316,7 +318,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.23.0 // indirect
 	github.com/hashicorp/terraform-json v0.25.0 // indirect
-	github.com/hashicorp/terraform-plugin-framework v1.15.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework v1.15.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 // indirect

@@ -1,4 +1,24 @@
-## 6.7.0 (Unreleased)
+## 6.8.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_quicksight_custom_permissions` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* **New Resource:** `aws_quicksight_role_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* **New Resource:** `aws_quicksight_user_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+
+ENHANCEMENTS:
+
+* data-source/aws_quicksight_user: Add `custom_permissions_name` attribute ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Add plan-time validation of `iam_arn` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Change `user_name` to Optional and Computed ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for `identity_type` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER` as valid values for `user_role` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+
+BUG FIXES:
+
+* provider: Fix failure to detect resources deleted outside of Terraform as missing for numerous resource types ([#43659](https://github.com/hashicorp/terraform-provider-aws/issues/43659))
+
+## 6.7.0 (July 31, 2025)
 
 FEATURES:
 
@@ -10,11 +30,13 @@ ENHANCEMENTS:
 * data-source/aws_codebuild_fleet: Add `instance_type` attribute in `compute_configuration` block ([#43449](https://github.com/hashicorp/terraform-provider-aws/issues/43449))
 * data-source/aws_ebs_volume: Add `volume_initialization_rate` attribute ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
 * data-source/aws_ecs_service: Support `load_balancer` attribute ([#43582](https://github.com/hashicorp/terraform-provider-aws/issues/43582))
+* data-source/aws_s3_access_point: Add `tags` attribute. This functionality requires the `s3:ListTagsForResource` IAM permission with S3 Access Points for general purpose buckets and the `s3express:ListTagsForResource` IAM permission with S3 Access Points for directory buckets ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
 * data-source/aws_verifiedpermissions_policy_store: Add `deletion_protection` attribute ([#43452](https://github.com/hashicorp/terraform-provider-aws/issues/43452))
 * resource/aws_athena_workgroup: Add `configuration.identity_center_configuration` argument ([#38717](https://github.com/hashicorp/terraform-provider-aws/issues/38717))
 * resource/aws_cleanrooms_collaboration: Add `analytics_engine` argument ([#43614](https://github.com/hashicorp/terraform-provider-aws/issues/43614))
 * resource/aws_codebuild_fleet: Add `instance_type` argument in `compute_configuration` block to support custom instance types ([#43449](https://github.com/hashicorp/terraform-provider-aws/issues/43449))
 * resource/aws_ebs_volume: Add `volume_initialization_rate` argument ([#43565](https://github.com/hashicorp/terraform-provider-aws/issues/43565))
+* resource/aws_s3_access_point: Add `tags` argument and `tags_all` attribute. This functionality requires the `s3:ListTagsForResource`, `s3:TagResource`, and `s3:UntagResource` IAM permissions with S3 Access Points for general purpose buckets and the `s3express:ListTagsForResource`, `s3express:TagResource`, and `s3express:UntagResource` IAM permissions with S3 Access Points for directory buckets ([#43630](https://github.com/hashicorp/terraform-provider-aws/issues/43630))
 * resource/aws_verifiedpermissions_policy_store: Add `deletion_protection` argument ([#43452](https://github.com/hashicorp/terraform-provider-aws/issues/43452))
 
 BUG FIXES:
