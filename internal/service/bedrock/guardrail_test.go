@@ -579,3 +579,78 @@ resource "aws_bedrock_guardrail" "test" {
 }
 `, rName)
 }
+
+func TestAccBedrockGuardrail_enhancedActions(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var guardrail bedrock.GetGuardrailOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_guardrail.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGuardrailConfig_enhancedActions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.input_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.output_action", "ANONYMIZE"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.output_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.input_action", "ANONYMIZE"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.output_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.input_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.output_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccGuardrailImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "guardrail_id",
+			},
+		},
+	})
+}
+
+func testAccGuardrailConfig_enhancedActions(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_guardrail" "test" {
+  name                      = %[1]q
+  blocked_input_messaging   = "test"
+  blocked_outputs_messaging = "test"
+  description               = "test"
+
+  sensitive_information_policy_config {
+    pii_entities_config {
+      input_action   = "BLOCK"
+      output_action  = "ANONYMIZE"
+      input_enabled  = true
+      output_enabled = false
+      type           = "NAME"
+    }
+    regexes_config {
+      input_action   = "ANONYMIZE"
+      output_action  = "BLOCK"
+      input_enabled  = false
+      output_enabled = true
+      description    = "enhanced regex example"
+      name           = "enhanced_regex"
+      pattern        = "^\d{3}-\d{2}-\d{4}$"
+    }
+  }
+}
+`, rName)
+}
