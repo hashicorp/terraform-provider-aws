@@ -97,6 +97,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/bedrockagentcore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
 service/billing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:

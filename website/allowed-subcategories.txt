@@ -26,6 +26,7 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
 Billing
 CE (Cost Explorer)
