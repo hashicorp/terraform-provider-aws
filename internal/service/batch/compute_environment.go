@@ -673,7 +673,7 @@ func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.R
 				if v := v.AsValueSlice()[0].GetAttr(names.AttrLaunchTemplate); v.IsKnown() && v.LengthInt() == 1 {
 					if v := v.AsValueSlice()[0].GetAttr(names.AttrVersion); !v.IsKnown() {
 						out := expandComputeResource(ctx, diff.Get("compute_resources").([]any)[0].(map[string]any))
-						out.LaunchTemplate.Version = aws.String("") // Forces new if version has changed
+						out.LaunchTemplate.Version = aws.String(" ") // set version to a new empty value  to trigger a replacement
 						if err := diff.SetNew("compute_resources", []any{flattenComputeResource(ctx, out)}); err != nil {
 							return err
 						}
