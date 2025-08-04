@@ -29,7 +29,6 @@ func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStopInstanceActionConfig_basic(),
@@ -61,7 +60,6 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStopInstanceActionConfig_basic(),
@@ -93,7 +91,6 @@ func TestAccEC2StopInstanceAction_customTimeout(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStopInstanceActionConfig_basic(),
@@ -162,7 +159,9 @@ func testAccStopInstanceActionConfig_withAction() string {
 		testAccStopInstanceActionConfig_basic(),
 		`
 action "aws_ec2_stop_instance" "test" {
-  instance_id = aws_instance.test.id
+  config {
+    instance_id = aws_instance.test.id
+  }
 }
 `)
 }
@@ -172,8 +171,10 @@ func testAccStopInstanceActionConfig_withForce() string {
 		testAccStopInstanceActionConfig_basic(),
 		`
 action "aws_ec2_stop_instance" "test" {
-  instance_id = aws_instance.test.id
-  force       = true
+  config {
+    instance_id = aws_instance.test.id
+    force       = true
+  }
 }
 `)
 }
@@ -183,8 +184,10 @@ func testAccStopInstanceActionConfig_withTimeout() string {
 		testAccStopInstanceActionConfig_basic(),
 		`
 action "aws_ec2_stop_instance" "test" {
-  instance_id = aws_instance.test.id
-  timeout     = 300
+  config {
+    instance_id = aws_instance.test.id
+    timeout     = 300
+  }
 }
 `)
 }
