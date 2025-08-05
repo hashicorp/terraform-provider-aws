@@ -202,7 +202,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -257,7 +257,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -285,7 +285,7 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -318,7 +318,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// We repeat the exact same test so that we can be sure
 			// that the user data hash stuff is working without generating
@@ -451,7 +451,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -480,7 +480,7 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -515,7 +515,7 @@ func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -550,7 +550,7 @@ func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -586,7 +586,7 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -636,7 +636,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -776,7 +776,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -807,7 +807,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -876,7 +876,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -918,7 +918,7 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_sourceDestEnable(rName),
@@ -962,7 +962,7 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_autoRecovery(rName, "disabled"),
@@ -999,7 +999,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_disableAPIStop(rName, false),
@@ -1035,7 +1035,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
@@ -1065,14 +1065,14 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1135,7 +1135,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1223,7 +1223,7 @@ func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1278,7 +1278,7 @@ func TestAccEC2Instance_IPv6_primaryEnable(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1315,7 +1315,7 @@ func TestAccEC2Instance_IPv6_primaryDisable(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1344,7 +1344,7 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1438,7 +1438,7 @@ func TestAccEC2Instance_IPv6AddressesExplicit(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -1567,7 +1567,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_blockDeviceTagsVolumeTags(rName),
@@ -1700,7 +1700,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"ephemeral_block_device", "force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device", names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2059,7 +2059,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_profile(rName1),
@@ -2118,7 +2118,7 @@ func TestAccEC2Instance_iamInstanceProfile(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2147,7 +2147,7 @@ func TestAccEC2Instance_iamInstanceProfilePath(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2186,7 +2186,7 @@ func TestAccEC2Instance_privateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2225,7 +2225,7 @@ func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2266,7 +2266,7 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2298,7 +2298,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2330,7 +2330,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_PrivateDNSNameOptions_configured(rName, true, true, "ip-name"),
@@ -2436,7 +2436,7 @@ func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2482,7 +2482,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_instanceType(rName, "t2.large"),
@@ -2640,7 +2640,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -2678,7 +2678,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3157,7 +3157,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3208,7 +3208,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3384,7 +3384,7 @@ func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_addSecurityGroupAfter(rName),
@@ -3432,7 +3432,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3464,7 +3464,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3513,7 +3513,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3546,7 +3546,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3596,7 +3596,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3627,7 +3627,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3658,7 +3658,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3689,7 +3689,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3720,7 +3720,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3751,7 +3751,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -3782,7 +3782,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4084,7 +4084,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, true),
@@ -4177,7 +4177,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// test DiffSuppressFunc to suppress "" to "disabled"
@@ -4244,7 +4244,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// expect recreation when it is enabled
@@ -4309,7 +4309,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
@@ -4353,7 +4353,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
@@ -4404,7 +4404,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationDisabled), updatedCoreCount, updatedThreadsPerCore),
@@ -4451,7 +4451,7 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_cpuOptionsCoreThreads(rName, updatedCoreCount, updatedThreadsPerCore),
@@ -4495,7 +4495,7 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				// EC2 instance should not be recreated
@@ -4609,7 +4609,7 @@ func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationEmptyNonBurstable(rName),
@@ -4645,7 +4645,7 @@ func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *tes
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4675,7 +4675,7 @@ func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecified(rName),
@@ -4713,7 +4713,7 @@ func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecified(rName),
@@ -4751,7 +4751,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4781,7 +4781,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4811,7 +4811,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4841,7 +4841,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4871,7 +4871,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCredits(rName),
@@ -4945,7 +4945,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -4975,7 +4975,7 @@ func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecifiedT3(rName),
@@ -5013,7 +5013,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnspecifiedT3(rName),
@@ -5051,7 +5051,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCreditsT3(rName),
@@ -5097,7 +5097,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationStandardCPUCreditsT3(rName),
@@ -5136,7 +5136,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecificationUnlimitedCPUCreditsT3(rName),
@@ -5237,7 +5237,7 @@ func TestAccEC2Instance_UserData_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5277,7 +5277,7 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5311,7 +5311,7 @@ func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5344,7 +5344,7 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data", "user_data_replace_on_change"},
 			},
 			// Switching should show no difference
 			{
@@ -5389,7 +5389,7 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should show no difference
 			{
@@ -5433,7 +5433,7 @@ func TestAccEC2Instance_UserData_ReplaceOnChange_On(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should force a recreate
 			{
@@ -5519,7 +5519,7 @@ func TestAccEC2Instance_UserData_ReplaceOnChange_Off(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Switching should not force a recreate
 			{
@@ -5605,7 +5605,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_hibernation(rName, false),
@@ -5695,7 +5695,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5725,7 +5725,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			{
 				Config: testAccInstanceConfig_enclaveOptions(rName, false),
@@ -5770,7 +5770,7 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 			// Adding 'open' preference should show no difference
 			{
@@ -5813,7 +5813,7 @@ func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5844,7 +5844,7 @@ func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5875,7 +5875,7 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
@@ -5995,7 +5995,7 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
 			},
 		},
 	})
