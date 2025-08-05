@@ -255,12 +255,14 @@ func (r *tableBucketResource) Read(ctx context.Context, req resource.ReadRequest
 			err.Error(),
 		)
 	}
-	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
+	if awsMaintenanceConfig != nil {
+		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.MaintenanceConfiguration = maintenanceConfiguration
 	}
-	state.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, state.ARN.ValueString())
 	switch {
