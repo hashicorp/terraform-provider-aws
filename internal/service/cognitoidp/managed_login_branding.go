@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -64,15 +65,18 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 			},
 			"use_cognito_provided_values": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.Bool{
 					boolvalidator.ExactlyOneOf(
 						path.MatchRoot("settings"),
-						path.MatchRoot("use_cognito_provided_values"),
 					),
 					boolvalidator.ConflictsWith(
 						path.MatchRoot("asset"),
 						path.MatchRoot("settings"),
 					),
+				},
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrUserPoolID: schema.StringAttribute{
@@ -141,6 +145,7 @@ func (r *managedLoginBrandingResource) Create(ctx context.Context, request resou
 	// Set values for unknowns.
 	mlb := output.ManagedLoginBranding
 	data.ManagedLoginBrandingID = fwflex.StringToFramework(ctx, mlb.ManagedLoginBrandingId)
+	data.UseCognitoProvidedValues = fwflex.BoolValueToFramework(ctx, mlb.UseCognitoProvidedValues)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
