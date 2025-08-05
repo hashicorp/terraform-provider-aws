@@ -22,6 +22,13 @@ type Delay interface {
 	Next(uint) time.Duration
 }
 
+type DelayWithSetIncrementDelay interface {
+	Delay
+
+	// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+	SetIncrementDelay(bool)
+}
+
 // DelayFunc returns the duration to wait before the next attempt.
 type DelayFunc func(uint) time.Duration
 
@@ -110,6 +117,10 @@ func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time
 func DefaultSDKv2HelperRetryCompatibleDelay() Delay {
 	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
+
+var (
+	_ DelayWithSetIncrementDelay = (*sdkv2HelperRetryCompatibleDelay)(nil)
+)
 
 // LoopConfig configures a loop.
 type LoopConfig struct {
