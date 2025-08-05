@@ -6,10 +6,10 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"slices"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -22,17 +22,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @Action(aws_ec2_stop_instance, name="Stop Instance")
-func newStopInstanceAction(_ context.Context) (action.Action, error) {
-	fmt.Printf("DEBUG: newStopInstanceAction() called - creating stopInstanceAction\n")
+func newStopInstanceAction(_ context.Context) (action.ActionWithConfigure, error) {
 	return &stopInstanceAction{}, nil
 }
 
-//var (
-//	_ action.Action = (*stopInstanceAction)(nil)
-//)
+var (
+	_ action.Action = (*stopInstanceAction)(nil)
+)
 
 type stopInstanceAction struct {
 	framework.ActionWithModel[stopInstanceModel]
@@ -45,23 +45,17 @@ type stopInstanceModel struct {
 	Region     types.String `tfsdk:"region"`
 }
 
-func (a *stopInstanceAction) Metadata(ctx context.Context, req action.MetadataRequest, resp *action.MetadataResponse) {
-	fmt.Printf("DEBUG: stopInstanceAction.Metadata() called, setting TypeName to: %s\n", req.ProviderTypeName+"_ec2_stop_instance")
-	resp.TypeName = req.ProviderTypeName + "_ec2_stop_instance"
-}
-
 func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaRequest, resp *action.SchemaResponse) {
-	fmt.Printf("DEBUG: stopInstanceAction.Schema() called at %v\n", time.Now().Format("15:04:05.000"))
 
 	resp.Schema = schema.UnlinkedSchema{
 		Description: "Stops an EC2 instance. This action will gracefully stop the instance and wait for it to reach the stopped state.",
 		Attributes: map[string]schema.Attribute{
-			"instance_id": schema.StringAttribute{
+			names.AttrInstanceID: schema.StringAttribute{
 				Description: "The ID of the EC2 instance to stop",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^i-[0-9a-f]{8,17}$`),
+						regexache.MustCompile(`^i-[0-9a-f]{8,17}$`),
 						"must be a valid EC2 instance ID (e.g., i-1234567890abcdef0)",
 					),
 				},
@@ -70,7 +64,7 @@ func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaReques
 				Description: "Forces the instance to stop. The instance does not have an opportunity to flush file system caches or file system metadata. If you use this option, you must perform file system check and repair procedures. This option is not recommended for Windows instances.",
 				Optional:    true,
 			},
-			"timeout": schema.Int64Attribute{
+			names.AttrTimeout: schema.Int64Attribute{
 				Description: "Timeout in seconds to wait for the instance to stop (default: 600)",
 				Optional:    true,
 				Validators: []validator.Int64{
@@ -80,8 +74,6 @@ func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaReques
 			},
 		},
 	}
-
-	fmt.Printf("DEBUG: stopInstanceAction.Schema() returning schema with %d attributes at %v\n", len(resp.Schema.(schema.UnlinkedSchema).Attributes), time.Now().Format("15:04:05.000"))
 }
 
 func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
@@ -106,9 +98,9 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	}
 
 	tflog.Info(ctx, "Starting EC2 stop instance action", map[string]any{
-		"instance_id": instanceID,
-		"force":       force,
-		"timeout":     timeout.String(),
+		names.AttrInstanceID: instanceID,
+		"force":              force,
+		names.AttrTimeout:    timeout.String(),
 	})
 
 	// Send initial progress update
@@ -135,8 +127,8 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	currentState := string(instance.State.Name)
 	tflog.Debug(ctx, "Current instance state", map[string]any{
-		"instance_id": instanceID,
-		"state":       currentState,
+		names.AttrInstanceID: instanceID,
+		names.AttrState:      currentState,
 	})
 
 	// Check if instance is already stopped
@@ -145,7 +137,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 			Message: fmt.Sprintf("EC2 instance %s is already stopped", instanceID),
 		})
 		tflog.Info(ctx, "Instance already stopped", map[string]any{
-			"instance_id": instanceID,
+			names.AttrInstanceID: instanceID,
 		})
 		return
 	}
@@ -205,7 +197,7 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 	})
 
 	tflog.Info(ctx, "EC2 stop instance action completed successfully", map[string]any{
-		"instance_id": instanceID,
+		names.AttrInstanceID: instanceID,
 	})
 }
 
