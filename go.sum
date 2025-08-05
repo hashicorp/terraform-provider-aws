@@ -127,8 +127,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.11.0 h1:iaCqgJY6
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.11.0/go.mod h1:vYTN8GiXfF6PAeyueEsqS0C9t0X3c4ELvX6a8XdDWSc=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.32.0 h1:6OKTiz2vZO39/1WIbD1qp1+fWdXkkSNRWaV6yslKjyY=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.32.0/go.mod h1:VMuT9tI291dMpyjO8fo6YybLejDn7yZwPF5LcgEolVA=
-github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.28.1 h1:ggLVSG9dPkP02VXhRAWLpq7FpNxM9S8F6M2UGqKsv98=
-github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.28.1/go.mod h1:2+h6rZKo2OMnxiE5gyqLwB50cfGm25PsDYSiamOQ9Dg=
+github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.29.0 h1:gXu97OvveSwWxTSKF81O/FeGh773qrXI3lhS1YSv7X4=
+github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.29.0/go.mod h1:DytnWBTZOnhwCWKehIXDqmo+Ixppa3wAurbgDE7isg4=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.50.1 h1:f+n0I/ayFBFUrq/x9Y7YwJlQr+SkoNjJpWy24scdtps=
 github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.50.1/go.mod h1:OE2RTaxbHdirCXEtYu4/2K2VNDT2fJdW2XsGngXLEKA=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.46.1 h1:jdaLx0Fle7TsNNpd4fe1C5JOtIQCUtYveT5qOsmTHdg=
