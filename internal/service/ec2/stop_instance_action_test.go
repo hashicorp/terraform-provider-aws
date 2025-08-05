@@ -138,7 +138,7 @@ action "aws_ec2_stop_instance" "test" {
 }
 
 // Step 1: Get the AWS provider as a ProviderServerWithActions
-func getAWSProviderWithActions(t *testing.T, ctx context.Context) tfprotov5.ProviderServerWithActions {
+func providerWithActions(t *testing.T, ctx context.Context) tfprotov5.ProviderServerWithActions {
 	t.Helper()
 
 	// Use the existing configured provider factories that handle muxing
@@ -260,7 +260,7 @@ func invokeStopInstanceAction(t *testing.T, ctx context.Context, instanceID stri
 	t.Helper()
 
 	// Get the provider
-	awsProvider := getAWSProviderWithActions(t, ctx)
+	awsProvider := providerWithActions(t, ctx)
 
 	// Build configuration
 	configType, configMap := buildStopInstanceActionConfig(instanceID, force)
