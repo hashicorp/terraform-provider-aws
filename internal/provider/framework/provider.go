@@ -388,14 +388,6 @@ func (p *frameworkProvider) EphemeralResources(ctx context.Context) []func() eph
 //
 // All actions must have unique type names.
 func (p *frameworkProvider) Actions(ctx context.Context) []func() action.Action {
-	fmt.Printf("DEBUG: frameworkProvider.Actions() called, returning %d actions\n", len(p.actions))
-	for i, actionFunc := range p.actions {
-		// Create a temporary instance to get the type name
-		tempAction := actionFunc()
-		if wrappedAction, ok := tempAction.(*wrappedAction); ok {
-			fmt.Printf("DEBUG:   Action %d: %s\n", i, wrappedAction.opts.typeName)
-		}
-	}
 	return slices.Clone(p.actions)
 }
 
@@ -553,8 +545,6 @@ func (p *frameworkProvider) initialize(ctx context.Context) error {
 					errs = append(errs, fmt.Errorf("creating action (%s): %w", typeName, err))
 					continue
 				}
-
-				fmt.Printf("DEBUG: Registering action: %s from service package: %s\n", typeName, sp.ServicePackageName())
 
 				var isRegionOverrideEnabled bool
 				if v := v.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
