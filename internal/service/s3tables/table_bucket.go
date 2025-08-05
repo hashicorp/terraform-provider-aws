@@ -192,12 +192,14 @@ func (r *tableBucketResource) Create(ctx context.Context, req resource.CreateReq
 			err.Error(),
 		)
 	}
-	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
+	if awsMaintenanceConfig != nil {
+		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.MaintenanceConfiguration = maintenanceConfiguration
 	}
-	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, plan.ARN.ValueString())
 	switch {
@@ -367,12 +369,14 @@ func (r *tableBucketResource) Update(ctx context.Context, req resource.UpdateReq
 				err.Error(),
 			)
 		}
-		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
+		if awsMaintenanceConfig != nil {
+			maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			plan.MaintenanceConfiguration = maintenanceConfiguration
 		}
-		plan.MaintenanceConfiguration = maintenanceConfiguration
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
