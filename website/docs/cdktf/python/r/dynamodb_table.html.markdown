@@ -16,6 +16,8 @@ Provides a DynamoDB table resource.
 
 ~> **Note:** When using [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) with this resource, use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `replica`, _e.g._, `lifecycle { ignore_changes = [replica] }`.
 
+~> **Note:** If the replica configuration block is used you **must** set `stream_enabled = true` as AWS will require this for global tables.
+
 ## DynamoDB Table attributes
 
 Only define attributes on the table object that are going to be used as:
