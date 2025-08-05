@@ -89,8 +89,6 @@ iam_role_arn,IAMRoleARN
 id,ID
 identifier,Identifier
 ids,IDs
-input_action,InputAction
-input_enabled,InputEnabled
 instance_count,InstanceCount
 instance_id,InstanceID
 instance_type,InstanceType
@@ -129,8 +127,6 @@ network_interface_id,NetworkInterfaceID
 owner,Owner
 owner_account_id,OwnerAccountID
 owner_id,OwnerID
-output_action,OutputAction
-output_enabled,OutputEnabled
 parameter,Parameter
 parameter_group_name,ParameterGroupName
 parameters,Parameters

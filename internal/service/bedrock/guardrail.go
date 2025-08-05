@@ -226,7 +226,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
 									},
-									names.AttrInputAction: schema.StringAttribute{
+									"input_action": schema.StringAttribute{
 										Optional:   true,
 										Computed:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
@@ -234,14 +234,14 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrInputEnabled: schema.BoolAttribute{
+									"input_enabled": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
 											boolplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrOutputAction: schema.StringAttribute{
+									"output_action": schema.StringAttribute{
 										Optional:   true,
 										Computed:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
@@ -249,7 +249,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrOutputEnabled: schema.BoolAttribute{
+									"output_enabled": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
@@ -281,7 +281,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrInputAction: schema.StringAttribute{
+									"input_action": schema.StringAttribute{
 										Optional:   true,
 										Computed:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
@@ -289,7 +289,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrInputEnabled: schema.BoolAttribute{
+									"input_enabled": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
@@ -302,7 +302,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringvalidator.LengthBetween(1, 100),
 										},
 									},
-									names.AttrOutputAction: schema.StringAttribute{
+									"output_action": schema.StringAttribute{
 										Optional:   true,
 										Computed:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailSensitiveInformationAction](),
@@ -310,7 +310,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											stringplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrOutputEnabled: schema.BoolAttribute{
+									"output_enabled": schema.BoolAttribute{
 										Optional: true,
 										Computed: true,
 										PlanModifiers: []planmodifier.Bool{
