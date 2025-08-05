@@ -18,15 +18,15 @@ type Timer interface {
 }
 
 type Delay interface {
-	// Get returns the duration to wait before the next attempt.
-	Get(uint) time.Duration
+	// Next returns the duration to wait before the next attempt.
+	Next(uint) time.Duration
 }
 
 // DelayFunc returns the duration to wait before the next attempt.
 type DelayFunc func(uint) time.Duration
 
-// Get returns the duration to wait before the next attempt.
-func (f DelayFunc) Get(n uint) time.Duration {
+// Next returns the duration to wait before the next attempt.
+func (f DelayFunc) Next(n uint) time.Duration {
 	return f(n)
 }
 
@@ -56,8 +56,8 @@ type sdkv2HelperRetryCompatibleDelay struct {
 	pollInterval   time.Duration
 }
 
-// Get returns the duration to wait before the next attempt.
-func (d *sdkv2HelperRetryCompatibleDelay) Get(n uint) time.Duration {
+// Next returns the duration to wait before the next attempt.
+func (d *sdkv2HelperRetryCompatibleDelay) Next(n uint) time.Duration {
 	if n == 0 {
 		return d.initialDelay
 	}
@@ -204,7 +204,7 @@ func (r *Loop) Continue(ctx context.Context) bool {
 		r.gracePeriod = 0
 	}
 
-	r.sleep(ctx, r.config.delay.Get(r.attempt))
+	r.sleep(ctx, r.config.delay.Next(r.attempt))
 	r.attempt++
 
 	return context.Cause(ctx) == nil
