@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/acmpca v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.32.1
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/athena v1.52.1
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/backup v1.44.1
@@ -44,6 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.46.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/billing v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.11.1
@@ -130,9 +131,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/glue v1.121.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/greengrass v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.58.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.58.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.29.1
@@ -141,7 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/invoicing v1.3.1
-	github.com/aws/aws-sdk-go-v2/service/iot v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/iot v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.40.1
@@ -151,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.74.1
@@ -159,7 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.44.1
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.22.1
@@ -183,6 +184,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.19.1
+	github.com/aws/aws-sdk-go-v2/service/odb v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.40.1
@@ -190,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.12.1
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.20.1
@@ -222,11 +224,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.203.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.59.1
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.35.1
@@ -238,7 +241,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/signer v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/sns v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/sns v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.61.1
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.28.1
@@ -285,7 +288,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-json v0.25.0
-	github.com/hashicorp/terraform-plugin-framework v1.15.0
+	github.com/hashicorp/terraform-plugin-framework v1.15.1
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0

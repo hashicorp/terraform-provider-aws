@@ -276,7 +276,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return conn.DeleteSlackChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
