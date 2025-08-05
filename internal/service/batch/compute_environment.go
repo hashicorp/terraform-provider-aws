@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -23,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -316,13 +317,13 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateComputeEnvironment(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Batch Compute Environment (%s): %s", computeEnvironmentName, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, computeEnvironmentName)
 	}
 
 	d.SetId(aws.ToString(output.ComputeEnvironmentName))
 
 	if _, err := waitComputeEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) create: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	// UpdatePolicy is not possible to set with CreateComputeEnvironment
@@ -335,11 +336,11 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		_, err := conn.UpdateComputeEnvironment(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s) update policy: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
@@ -359,7 +360,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
@@ -367,7 +368,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID)
 		}
 	} else {
 		d.Set("compute_resources", nil)
@@ -375,7 +376,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	if computeEnvironment.EksConfiguration != nil {
 		if err := d.Set("eks_configuration", []any{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting eks_configuration: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID)
 		}
 	} else {
 		d.Set("eks_configuration", nil)
@@ -386,7 +387,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID)
 	}
 
 	setTagsOut(ctx, computeEnvironment.Tags)
@@ -525,11 +526,11 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 		_, err := conn.UpdateComputeEnvironment(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
@@ -552,7 +553,7 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Batch Compute Environment (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -566,11 +567,11 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	_, err = conn.DeleteComputeEnvironment(ctx, &deleteInput)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Batch Compute Environment (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if _, err := waitComputeEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) delete: %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -718,14 +719,14 @@ func findComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Client,
 	output, err := findComputeEnvironmentDetail(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if status := output.Status; status == awstypes.CEStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
-		}
+		})
 	}
 
 	return output, nil
@@ -735,10 +736,10 @@ func findComputeEnvironmentDetail(ctx context.Context, conn *batch.Client, input
 	output, err := findComputeEnvironmentDetails(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findComputeEnvironmentDetails(ctx context.Context, conn *batch.Client, input *batch.DescribeComputeEnvironmentsInput) ([]awstypes.ComputeEnvironmentDetail, error) {
@@ -749,7 +750,7 @@ func findComputeEnvironmentDetails(ctx context.Context, conn *batch.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		output = append(output, page.ComputeEnvironments...)
@@ -790,7 +791,7 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) { //nolint:unparam
@@ -809,7 +810,7 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) {
@@ -828,7 +829,7 @@ func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func isFargateType(computeResourceType awstypes.CRType) bool {

@@ -8,6 +8,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-sdkdiag-appenderrorf
     languages: [go]
@@ -28,6 +29,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-diagnostics-adderror
     languages: [go]
@@ -41,6 +43,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-create-adderror
     languages: [go]
@@ -50,6 +53,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-direct-diag-adderror
     languages: [go]
@@ -61,6 +65,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-direct-diag-appenderrorf
     languages: [go]
@@ -70,6 +75,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-direct-diag-appendfromerr
     languages: [go]
@@ -79,6 +85,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-direct-diag-append
     languages: [go]
@@ -90,6 +97,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-bare-return-err
     languages: [go]
@@ -103,6 +111,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-bare-assertsinglevalueresult
     languages: [go]
@@ -115,6 +124,7 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
 
   - id: go-no-bare-empty-result-error
     languages: [go]
@@ -127,3 +137,4 @@ rules:
     paths:
       include:
         - internal/service/cloudwatch/
+        - internal/service/batch/
