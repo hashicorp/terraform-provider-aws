@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
@@ -305,17 +304,13 @@ func newWrappedAction(inner action.ActionWithConfigure, opts wrappedActionOption
 
 func (w *wrappedAction) Metadata(ctx context.Context, request action.MetadataRequest, response *action.MetadataResponse) {
 	// This method does not call down to the inner action.
-	fmt.Printf("DEBUG: wrappedAction.Metadata() called, setting TypeName to: %s\n", w.opts.typeName)
 	response.TypeName = w.opts.typeName
 }
 
 func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
-	fmt.Printf("DEBUG: wrappedAction.Schema() called for action: %s\n", w.opts.typeName)
-
 	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
-		fmt.Printf("DEBUG: wrappedAction.Schema() bootstrap context failed for %s\n", w.opts.typeName)
 		return
 	}
 
@@ -325,41 +320,19 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 	}
 	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.actionSchema(), f, w.meta)(ctx, &request, response)...)
 
-	fmt.Printf("DEBUG: wrappedAction.Schema() after interceptors, schema type: %T\n", response.Schema)
-
 	// Validate the action's model against the schema.
 	if v, ok := w.inner.(framework.ActionValidateModel); ok {
-		fmt.Printf("DEBUG: wrappedAction.Schema() action implements ActionValidateModel for %s\n", w.opts.typeName)
 		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
-			fmt.Printf("DEBUG: wrappedAction.Schema() schema is UnlinkedSchema with %d attributes for %s\n", len(schema.Attributes), w.opts.typeName)
 			response.Diagnostics.Append(v.ValidateModel(ctx, &schema)...)
 			if response.Diagnostics.HasError() {
-				fmt.Printf("DEBUG: wrappedAction.Schema() model validation failed for %s\n", w.opts.typeName)
 				response.Diagnostics.AddError("action model validation error", w.opts.typeName)
 				return
 			}
-			fmt.Printf("DEBUG: wrappedAction.Schema() model validation succeeded for %s\n", w.opts.typeName)
 		} else {
-			fmt.Printf("DEBUG: wrappedAction.Schema() schema is NOT UnlinkedSchema, got %T for %s\n", response.Schema, w.opts.typeName)
 			response.Diagnostics.AddError("unsupported action schema type", w.opts.typeName)
 		}
 	} else {
-		fmt.Printf("DEBUG: wrappedAction.Schema() action does NOT implement ActionValidateModel for %s\n", w.opts.typeName)
 		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.opts.typeName)
-	}
-
-	fmt.Printf("DEBUG: wrappedAction.Schema() completed for %s, has errors: %t\n", w.opts.typeName, response.Diagnostics.HasError())
-
-	// Final debug: show what we're actually returning
-	if !response.Diagnostics.HasError() {
-		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
-			fmt.Printf("DEBUG: wrappedAction.Schema() FINAL SCHEMA for %s:\n", w.opts.typeName)
-			fmt.Printf("DEBUG:   Description: %s\n", schema.Description)
-			fmt.Printf("DEBUG:   Attributes (%d):\n", len(schema.Attributes))
-			for name, attr := range schema.Attributes {
-				fmt.Printf("DEBUG:     - %s: %T\n", name, attr)
-			}
-		}
 	}
 }
 
