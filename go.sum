@@ -269,8 +269,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.29.0 h1:Fbm8Od3/crUN82KmW7GyX7yt
 github.com/aws/aws-sdk-go-v2/service/glacier v1.29.0/go.mod h1:YtF4euf0dO4hPHj0qOM5ae8irG/qkCBJLlrf8cIh6X4=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.32.0 h1:5i6DYz0BE1x2o+2Ig++dmjohzlNjlA7nNA/cNTCU60U=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.32.0/go.mod h1:FCpLBbV4XEcc768mvlBb2Ovz66V+DwOjemPlBIWk6/E=
-github.com/aws/aws-sdk-go-v2/service/glue v1.121.0 h1:b+B71JBhFSVOifMMcnilfqPcrskBgDYruY8mQ7Au8Hg=
-github.com/aws/aws-sdk-go-v2/service/glue v1.121.0/go.mod h1:GrfuFuhLuhdZy8Tx0W29A6avb0+Xey8DDS0izAj3/gY=
+github.com/aws/aws-sdk-go-v2/service/glue v1.122.0 h1:KgFpvwctTUZM8+hpk0iK7Zg+rB1spjOXk063dRHSrNk=
+github.com/aws/aws-sdk-go-v2/service/glue v1.122.0/go.mod h1:UnMg9irwCEC9F0qiaOGFwcXatZH+QNxj1hcXe0PPU0U=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.28.1 h1:xef5GSQwdnBBEodb67YGYE7CanW5uuQyI/8q+rMs6IE=
 github.com/aws/aws-sdk-go-v2/service/grafana v1.28.1/go.mod h1:wejuc0EF416jLYLVi4yyRZiZLtBwIPHR+L0fUnTlMeU=
 github.com/aws/aws-sdk-go-v2/service/greengrass v1.29.2 h1:sUwdjTF+gsxgeQ5EDloohEfrridf46LAv4liH11CSiE=
