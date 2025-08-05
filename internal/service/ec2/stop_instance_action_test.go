@@ -64,14 +64,7 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStopInstanceActionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
-				),
-			},
-			{
-				Config: testAccStopInstanceActionConfig_withForce(rName),
+				Config: testAccStopInstanceActionConfig_force(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
@@ -169,17 +162,35 @@ action "aws_ec2_stop_instance" "test" {
 `)
 }
 
-func testAccStopInstanceActionConfig_withForce(rName string) string {
+func testAccStopInstanceActionConfig_force(rName string) string {
 	return acctest.ConfigCompose(
-		testAccStopInstanceActionConfig_basic(rName),
-		`
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  
+  tags = {
+    Name = %[1]q
+  }
+
+  lifecycle {
+    action_trigger {
+      events = [after_create]
+      actions = [action.aws_ec2_stop_instance.test]
+    }
+  }
+}
+
 action "aws_ec2_stop_instance" "test" {
   config {
     instance_id = aws_instance.test.id
     force       = true
   }
 }
-`)
+`, rName))
 }
 
 func testAccStopInstanceActionConfig_withTimeout(rName string) string {
