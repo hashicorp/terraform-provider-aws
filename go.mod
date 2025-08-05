@@ -268,7 +268,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/xray v1.32.1
+	github.com/aws/aws-sdk-go-v2/service/xray v1.33.0
 	github.com/aws/smithy-go v1.22.5
 	github.com/beevik/etree v1.5.1
 	github.com/cedar-policy/cedar-go v0.1.0
