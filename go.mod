@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/odb v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.20.1
