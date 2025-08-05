@@ -81,7 +81,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
