@@ -192,14 +192,12 @@ func (r *tableBucketResource) Create(ctx context.Context, req resource.CreateReq
 			err.Error(),
 		)
 	}
-	if awsMaintenanceConfig != nil {
-		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		plan.MaintenanceConfiguration = maintenanceConfiguration
+	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, plan.ARN.ValueString())
 	switch {
@@ -257,14 +255,12 @@ func (r *tableBucketResource) Read(ctx context.Context, req resource.ReadRequest
 			err.Error(),
 		)
 	}
-	if awsMaintenanceConfig != nil {
-		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		state.MaintenanceConfiguration = maintenanceConfiguration
+	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	state.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := findTableBucketEncryptionConfiguration(ctx, conn, state.ARN.ValueString())
 	switch {
@@ -369,14 +365,12 @@ func (r *tableBucketResource) Update(ctx context.Context, req resource.UpdateReq
 				err.Error(),
 			)
 		}
-		if awsMaintenanceConfig != nil {
-			maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			plan.MaintenanceConfiguration = maintenanceConfiguration
+		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
+		plan.MaintenanceConfiguration = maintenanceConfiguration
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
