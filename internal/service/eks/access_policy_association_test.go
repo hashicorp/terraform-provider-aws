@@ -186,7 +186,7 @@ resource "aws_iam_role" "test" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "${data.aws_service_principal.eks.name}"
+        "Service": data.aws_service_principal.eks.name
       },
       "Action": "sts:AssumeRole"
     }
