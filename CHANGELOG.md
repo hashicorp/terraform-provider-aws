@@ -24,6 +24,7 @@ BUG FIXES:
 * provider: Fix failure to detect resources deleted outside of Terraform as missing for numerous resource types ([#43659](https://github.com/hashicorp/terraform-provider-aws/issues/43659))
 * resource/aws_batch_compute_environment: Fix `inconsistent final plan` error when `compute_resource.launch_template.version` is unknown during an update ([#43337](https://github.com/hashicorp/terraform-provider-aws/issues/43337))
 * resource/aws_ec2_managed_prefix_list: Fix `PrefixListVersionMismatch: The prefix list has the incorrect version number` errors when updating entry description ([#43661](https://github.com/hashicorp/terraform-provider-aws/issues/43661))
+* resource/aws_wafv2_regex_pattern_set: Remove maximum items limit on the `regular_expression` argument ([#43693](https://github.com/hashicorp/terraform-provider-aws/issues/43693))
 
 ## 6.7.0 (July 31, 2025)
 
