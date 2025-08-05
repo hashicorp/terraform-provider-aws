@@ -17,8 +17,18 @@ type Timer interface {
 	After(time.Duration) <-chan time.Time
 }
 
+type Delay interface {
+	// Get returns the duration to wait before the next attempt.
+	Get(uint) time.Duration
+}
+
 // DelayFunc returns the duration to wait before the next attempt.
 type DelayFunc func(uint) time.Duration
+
+// Get returns the duration to wait before the next attempt.
+func (f DelayFunc) Get(n uint) time.Duration {
+	return f(n)
+}
 
 // FixedDelay returns a delay. The first attempt has no delay (0), and subsequent attempts use the fixed delay.
 func FixedDelay(delay time.Duration) DelayFunc {
@@ -34,7 +44,7 @@ func FixedDelay(delay time.Duration) DelayFunc {
 // ZeroDelay returns 0 for all attempts.
 //
 // This DelayFunc should only be used for testing.
-var ZeroDelay = func(n uint) time.Duration {
+var ZeroDelay DelayFunc = func(n uint) time.Duration {
 	return 0
 }
 
@@ -95,7 +105,7 @@ func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
 
 // LoopConfig configures a loop.
 type LoopConfig struct {
-	delay       DelayFunc
+	delay       Delay
 	gracePeriod time.Duration
 	timer       Timer
 }
@@ -111,7 +121,7 @@ func WithGracePeriod(d time.Duration) Option {
 	}
 }
 
-func WithDelay(d DelayFunc) Option {
+func WithDelay(d Delay) Option {
 	if d == nil {
 		return emptyOption
 	}
@@ -186,7 +196,7 @@ func (r *Loop) Continue(ctx context.Context) bool {
 		r.gracePeriod = 0
 	}
 
-	r.sleep(ctx, r.config.delay(r.attempt))
+	r.sleep(ctx, r.config.delay.Get(r.attempt))
 	r.attempt++
 
 	return context.Cause(ctx) == nil

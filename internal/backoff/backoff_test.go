@@ -29,7 +29,7 @@ func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Get(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -50,7 +50,7 @@ func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Get(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -71,7 +71,7 @@ func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Get(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
