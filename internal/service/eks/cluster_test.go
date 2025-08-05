@@ -1558,6 +1558,10 @@ func testAccClusterConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "cluster" {
   name = %[1]q
 
@@ -1568,7 +1572,7 @@ resource "aws_iam_role" "cluster" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -1666,6 +1670,10 @@ func testAccClusterConfig_computeConfigBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "cluster" {
   name = %[1]q
 
@@ -1676,7 +1684,7 @@ resource "aws_iam_role" "cluster" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": [
         "sts:AssumeRole",
@@ -1713,6 +1721,10 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
   role       = aws_iam_role.cluster.name
 }
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "node" {
   name = "%[1]s-node"
 
@@ -1723,7 +1735,7 @@ resource "aws_iam_role" "node" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Action": ["sts:AssumeRole"]
     }
@@ -1752,7 +1764,7 @@ resource "aws_iam_role" "node2" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Action": ["sts:AssumeRole"]
     }

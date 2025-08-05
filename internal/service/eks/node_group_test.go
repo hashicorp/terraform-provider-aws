@@ -1092,6 +1092,14 @@ func testAccNodeGroupConfig_iamAndVPCBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
+data "aws_service_principal" "eks_nodegroup" {
+  service_name = "eks-nodegroup"
+}
+
 resource "aws_iam_role" "cluster" {
   name = "%[1]s-cluster"
 
@@ -1101,8 +1109,8 @@ resource "aws_iam_role" "cluster" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "eks.${data.aws_partition.current.dns_suffix}",
-          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
+          data.aws_service_principal.eks.name,
+          data.aws_service_principal.eks_nodegroup.name,
         ]
       }
     }]
@@ -1115,6 +1123,10 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.cluster.name
 }
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "node" {
   name = "%[1]s-node"
 
@@ -1123,7 +1135,7 @@ resource "aws_iam_role" "node" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.ec2.name
       }
     }]
     Version = "2012-10-17"
