@@ -9442,3 +9442,32 @@ service "evs" {
   doc_prefix               = ["evs_"]
   brand                    = "Amazon"
 }
+service "odb" {
+  sdk {
+    id = "ODB"
+    arn_namespace = "odb"
+  }
+  names {
+    provider_name_upper = "ODB"
+    human_friendly = "Oracle Database@AWS"
+  }
+  endpoint_info {
+    endpoint_api_call = " ListGiVersions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+  go_packages {
+    v1_package = ""
+    v2_package = "odb"
+  }
+  client{
+    skip_client_generate = true
+  }
+  resource_prefix{
+    correct = "aws_odb_"
+  }
+  provider_package_correct = "odb"
+  doc_prefix = ["odb_"]
+  brand = "AWS"
+}
