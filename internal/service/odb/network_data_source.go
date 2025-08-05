@@ -44,43 +44,56 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Required: true,
 			},
 			"display_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Display name for the network resource.",
 			},
 			"availability_zone_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The AZ ID of the AZ where the ODB network is located.",
 			},
 			"availability_zone": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The availability zone where the ODB network is located.",
 			},
 			"backup_subnet_cidr": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: " The CIDR range of the backup subnet for the ODB network.",
 			},
 			"client_subnet_cidr": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The CIDR notation for the network resource.",
 			},
 			"custom_domain_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the custom domain that the network is located.",
 			},
 			"default_dns_prefix": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The default DNS prefix for the network resource.",
 			},
 			"oci_network_anchor_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique identifier of the OCI network anchor for the ODB network.",
 			},
 			"oci_network_anchor_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The URL of the OCI network anchor for the ODB network.",
 			},
 			"oci_resource_anchor_name": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The name of the OCI resource anchor for the ODB network.",
 			},
 			"oci_vcn_id": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The unique identifier  Oracle Cloud ID (OCID) of the OCI VCN for the ODB network.",
 			},
 			"oci_vcn_url": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The URL of the OCI VCN for the ODB network.",
 			},
 			"percent_progress": schema.Float64Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The amount of progress made on the current operation on the ODB network, expressed as a percentage.",
 			},
 			"peered_cidrs": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
@@ -89,18 +102,22 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Description: "The list of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.",
 			},
 			"status": schema.StringAttribute{
-				CustomType: statusType,
-				Computed:   true,
+				CustomType:  statusType,
+				Computed:    true,
+				Description: "The status of the network resource.",
 			},
 			"status_reason": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "Additional information about the current status of the ODB network.",
 			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The date and time when the ODB network was created.",
 			},
 			"managed_services": schema.ObjectAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewObjectTypeOf[odbNetworkManagedServicesDataSourceModel](ctx),
+				Computed:    true,
+				CustomType:  fwtypes.NewObjectTypeOf[odbNetworkManagedServicesDataSourceModel](ctx),
+				Description: "The managed services configuration for the ODB network.",
 				AttributeTypes: map[string]attr.Type{
 					"service_network_arn":  types.StringType,
 					"resource_gateway_arn": types.StringType,
@@ -141,8 +158,9 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"oci_dns_forwarding_configs": schema.ListAttribute{
-				Computed:   true,
-				CustomType: fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigDataSourceModel](ctx),
+				Computed:    true,
+				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigDataSourceModel](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"domain_name":         types.StringType,
