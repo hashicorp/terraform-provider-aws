@@ -78,13 +78,13 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		conf.ContinuousTargetOccurence = 1
 	}
 
-	// Set a default DelayFunc using the StateChangeConf values
-	delayFunc := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
+	// Set a default Delay using the StateChangeConf values
+	delay := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
 
 	// When VCR testing in replay mode, override the default DelayFunc
 	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
-			delayFunc = backoff.ZeroDelay
+			delay = backoff.ZeroDelay
 		}
 	}
 
@@ -95,7 +95,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 		notFoundTick, targetOccurence int
 		l                             *backoff.Loop
 	)
-	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(delayFunc)); l.Continue(ctx); {
+	for l = backoff.NewLoopWithOptions(conf.Timeout, backoff.WithDelay(delay)); l.Continue(ctx); {
 		t, currentState, err = conf.refreshWithTimeout(ctx, l.Remaining())
 
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -150,6 +150,12 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 					State:         string(currentState),
 					ExpectedState: tfslices.Strings(conf.Target),
 				}
+			}
+
+			// Wait between refreshes using exponential backoff, except when
+			// waiting for the target state to reoccur.
+			if v, ok := delay.(backoff.DelayWithSetIncrementDelay); ok {
+				v.SetIncrementDelay(targetOccurence == 0)
 			}
 		}
 	}
