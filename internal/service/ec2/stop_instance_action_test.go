@@ -6,10 +6,11 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -35,18 +36,20 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 			{
 				Config: testAccStopInstanceActionConfig_force(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceExistsLocal(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameRunning),
 				),
 			},
 			{
 				PreConfig: func() {
-					//acctest.Provider
-					// Use terraform CLI to invoke the action
-					cmd := exec.Command("terraform", "invoke", "action.aws_ec2_stop_instance.test")
-					//cmd.Dir = testWorkingDirectory
-					if err := cmd.Run(); err != nil {
-						t.Fatalf("Failed to invoke action: %v", err)
+					// Get the instance ID and invoke the action programmatically
+					if v.InstanceId == nil {
+						t.Fatal("Instance ID is nil")
+					}
+
+					// Invoke the action programmatically with force=true
+					if err := invokeStopInstanceAction(t, ctx, *v.InstanceId, true); err != nil {
+						t.Fatalf("Failed to invoke stop instance action: %v", err)
 					}
 				},
 				Config: testAccStopInstanceActionConfig_force(rName),
@@ -56,6 +59,31 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccCheckInstanceExistsLocal checks that an instance exists and populates the instance variable
+func testAccCheckInstanceExistsLocal(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Instance ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		instance, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*v = *instance
+
+		return nil
+	}
 }
 
 // testAccCheckInstanceState checks that an instance is in the expected state
@@ -94,17 +122,10 @@ func testAccStopInstanceActionConfig_force(rName string) string {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  
+
   tags = {
     Name = %[1]q
   }
-
-  #lifecycle {
-  #  action_trigger {
-  #    events = [after_create]
-  #    actions = [action.aws_ec2_stop_instance.test]
-  #  }
-  #}
 }
 
 action "aws_ec2_stop_instance" "test" {
@@ -114,4 +135,168 @@ action "aws_ec2_stop_instance" "test" {
   }
 }
 `, rName))
+}
+
+// Step 1: Get the AWS provider as a ProviderServerWithActions
+func getAWSProviderWithActions(t *testing.T, ctx context.Context) tfprotov5.ProviderServerWithActions {
+	t.Helper()
+
+	// Use the existing configured provider factories that handle muxing
+	factories := acctest.ProtoV5ProviderFactories
+
+	// Get the AWS provider factory
+	providerFactory, exists := factories["aws"]
+	if !exists {
+		t.Fatal("AWS provider factory not found in ProtoV5ProviderFactories")
+	}
+
+	// Create the provider server
+	providerServer, err := providerFactory()
+	if err != nil {
+		t.Fatalf("Failed to create provider server: %v", err)
+	}
+
+	// Cast to ProviderServerWithActions
+	providerWithActions, ok := providerServer.(tfprotov5.ProviderServerWithActions)
+	if !ok {
+		t.Fatal("Provider does not implement ProviderServerWithActions")
+	}
+
+	// Initialize the provider similar to what Terraform core would do
+	// This mimics the external provider example
+
+	// 1. Get the provider schema
+	schemaResp, err := providerWithActions.GetProviderSchema(ctx, &tfprotov5.GetProviderSchemaRequest{})
+	if err != nil {
+		t.Fatalf("Failed to get provider schema: %v", err)
+	}
+
+	// Verify we have action schemas
+	if len(schemaResp.ActionSchemas) == 0 {
+		t.Fatal("Expected to find action schemas but didn't find any!")
+	}
+
+	// 2. Configure the provider - this is the key step that was missing!
+	// Build a minimal configuration that satisfies the schema
+	// We'll set all attributes to null and let them pick up from environment variables
+	providerConfigValue, err := buildProviderConfiguration(t, schemaResp.Provider)
+	if err != nil {
+		t.Fatalf("Failed to build provider configuration: %v", err)
+	}
+
+	configureResp, err := providerWithActions.ConfigureProvider(ctx, &tfprotov5.ConfigureProviderRequest{
+		TerraformVersion: "1.0.0",
+		Config:           providerConfigValue,
+	})
+	if err != nil {
+		t.Fatalf("Failed to configure provider: %v", err)
+	}
+
+	if len(configureResp.Diagnostics) > 0 {
+		var diagMessages []string
+		for _, diag := range configureResp.Diagnostics {
+			diagMessages = append(diagMessages, fmt.Sprintf("Severity: %s, Summary: %s, Detail: %s", diag.Severity, diag.Summary, diag.Detail))
+		}
+		t.Fatalf("Provider configuration failed: %v", diagMessages)
+	}
+
+	return providerWithActions
+}
+
+// buildProviderConfiguration creates a minimal provider configuration from the schema
+func buildProviderConfiguration(t *testing.T, providerSchema *tfprotov5.Schema) (*tfprotov5.DynamicValue, error) {
+	t.Helper()
+
+	// Extract the provider schema type
+	providerType := providerSchema.Block.ValueType()
+
+	// Build a configuration with all attributes set to null
+	// This allows the provider to pick up values from environment variables
+	configMap := make(map[string]tftypes.Value)
+
+	// Iterate through all attributes in the schema and set them to null
+	if objType, ok := providerType.(tftypes.Object); ok {
+		for attrName, attrType := range objType.AttributeTypes {
+			configMap[attrName] = tftypes.NewValue(attrType, nil)
+		}
+	}
+
+	// Create the dynamic value with all attributes present but set to null
+	configValue, err := tfprotov5.NewDynamicValue(
+		providerType,
+		tftypes.NewValue(providerType, configMap),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config: %w", err)
+	}
+
+	return &configValue, nil
+}
+
+// Step 2: Build action configuration
+func buildStopInstanceActionConfig(instanceID string, force bool) (tftypes.Type, map[string]tftypes.Value) {
+	// This matches the schema from stop_instance_action.go
+	configType := tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			names.AttrInstanceID: tftypes.String,
+			"force":              tftypes.Bool,
+			names.AttrTimeout:    tftypes.Number,
+			names.AttrRegion:     tftypes.String, // Added missing region attribute
+		},
+	}
+
+	config := map[string]tftypes.Value{
+		names.AttrInstanceID: tftypes.NewValue(tftypes.String, instanceID),
+		"force":              tftypes.NewValue(tftypes.Bool, force),
+		names.AttrTimeout:    tftypes.NewValue(tftypes.Number, nil), // Optional
+		names.AttrRegion:     tftypes.NewValue(tftypes.String, nil), // Optional, will be injected by framework
+	}
+
+	return configType, config
+}
+
+// Step 3: Programmatic action invocation
+func invokeStopInstanceAction(t *testing.T, ctx context.Context, instanceID string, force bool) error {
+	t.Helper()
+
+	// Get the provider
+	awsProvider := getAWSProviderWithActions(t, ctx)
+
+	// Build configuration
+	configType, configMap := buildStopInstanceActionConfig(instanceID, force)
+
+	actionTypeName := "aws_ec2_stop_instance"
+
+	// Create dynamic value for config
+	testConfig, err := tfprotov5.NewDynamicValue(
+		configType,
+		tftypes.NewValue(configType, configMap),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create config: %w", err)
+	}
+
+	// Step 3: Invoke the action directly (provider should already be configured)
+	invokeResp, err := awsProvider.InvokeAction(ctx, &tfprotov5.InvokeActionRequest{
+		ActionType: actionTypeName,
+		Config:     &testConfig,
+	})
+	if err != nil {
+		return fmt.Errorf("invoke failed: %w", err)
+	}
+
+	// Process events and check for completion
+	for event := range invokeResp.Events {
+		switch eventType := event.Type.(type) {
+		case tfprotov5.ProgressInvokeActionEventType:
+			t.Logf("Progress: %s", eventType.Message)
+		case tfprotov5.CompletedInvokeActionEventType:
+			return nil
+		default:
+			// Handle any other event types or errors
+			t.Logf("Received event type: %T", eventType)
+		}
+	}
+
+	return nil
 }
