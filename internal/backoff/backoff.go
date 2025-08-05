@@ -49,12 +49,17 @@ var ZeroDelay DelayFunc = func(n uint) time.Duration {
 }
 
 type sdkv2HelperRetryCompatibleDelay struct {
+	initialDelay time.Duration
 	minTimeout   time.Duration
 	pollInterval time.Duration
 	wait         time.Duration
 }
 
-func (d *sdkv2HelperRetryCompatibleDelay) delay() time.Duration {
+func (d *sdkv2HelperRetryCompatibleDelay) Get(n uint) time.Duration {
+	if n == 0 {
+		return d.initialDelay
+	}
+
 	wait := d.wait
 
 	// First round had no wait.
@@ -82,24 +87,17 @@ func (d *sdkv2HelperRetryCompatibleDelay) delay() time.Duration {
 }
 
 // SDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay.
-func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) DelayFunc {
-	delay := &sdkv2HelperRetryCompatibleDelay{
+func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) Delay {
+	return &sdkv2HelperRetryCompatibleDelay{
+		initialDelay: initialDelay,
 		minTimeout:   minTimeout,
 		pollInterval: pollInterval,
-	}
-
-	return func(n uint) time.Duration {
-		if n == 0 {
-			return initialDelay
-		}
-
-		return delay.delay()
 	}
 }
 
 // DefaultSDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay
 // with default values (from the `RetryContext` function).
-func DefaultSDKv2HelperRetryCompatibleDelay() DelayFunc {
+func DefaultSDKv2HelperRetryCompatibleDelay() Delay {
 	return SDKv2HelperRetryCompatibleDelay(0, 0, 500*time.Millisecond) //nolint:mnd // 500ms is the Plugin SDKv2 default
 }
 
