@@ -7013,7 +7013,7 @@ resource "aws_instance" "test" {
   instance_type           = "t2.small"
   subnet_id               = aws_subnet.test.id
   disable_api_termination = %[2]t
-force_destroy = true
+  force_destroy           = true
 
   tags = {
     Name = %[1]q
