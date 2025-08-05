@@ -49,49 +49,59 @@ var ZeroDelay DelayFunc = func(n uint) time.Duration {
 }
 
 type sdkv2HelperRetryCompatibleDelay struct {
-	initialDelay time.Duration
-	minTimeout   time.Duration
-	pollInterval time.Duration
-	wait         time.Duration
+	delay          time.Duration
+	incrementDelay bool
+	initialDelay   time.Duration
+	minTimeout     time.Duration
+	pollInterval   time.Duration
 }
 
+// Get returns the duration to wait before the next attempt.
 func (d *sdkv2HelperRetryCompatibleDelay) Get(n uint) time.Duration {
 	if n == 0 {
 		return d.initialDelay
 	}
 
-	wait := d.wait
+	delay := d.delay
 
 	// First round had no wait.
-	if wait == 0 {
-		wait = 100 * time.Millisecond
+	if delay == 0 {
+		delay = 100 * time.Millisecond
 	}
 
-	wait *= 2
+	if d.incrementDelay {
+		delay *= 2
+	}
 
 	// If a poll interval has been specified, choose that interval.
 	// Otherwise bound the default value.
 	if d.pollInterval > 0 && d.pollInterval < 180*time.Second {
-		wait = d.pollInterval
+		delay = d.pollInterval
 	} else {
-		if wait < d.minTimeout {
-			wait = d.minTimeout
-		} else if wait > 10*time.Second {
-			wait = 10 * time.Second
+		if delay < d.minTimeout {
+			delay = d.minTimeout
+		} else if delay > 10*time.Second {
+			delay = 10 * time.Second
 		}
 	}
 
-	d.wait = wait
+	d.delay = delay
 
-	return wait
+	return delay
+}
+
+// SetIncrementDelay sets a flag to determine whether or not the next call to Next increments the delay duration.
+func (d *sdkv2HelperRetryCompatibleDelay) SetIncrementDelay(incrementDelay bool) {
+	d.incrementDelay = incrementDelay
 }
 
 // SDKv2HelperRetryCompatibleDelay returns a Terraform Plugin SDK v2 helper/retry-compatible delay.
 func SDKv2HelperRetryCompatibleDelay(initialDelay, pollInterval, minTimeout time.Duration) Delay {
 	return &sdkv2HelperRetryCompatibleDelay{
-		initialDelay: initialDelay,
-		minTimeout:   minTimeout,
-		pollInterval: pollInterval,
+		incrementDelay: true,
+		initialDelay:   initialDelay,
+		minTimeout:     minTimeout,
+		pollInterval:   pollInterval,
 	}
 }
 
