@@ -772,7 +772,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
-	d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfiguration(dbc.ServerlessV2ScalingConfiguration))
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfiguration(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
+	}
 	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
