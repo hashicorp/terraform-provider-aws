@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Update maximum and default value for `maximum_message_size` to 1 MiB
+```
