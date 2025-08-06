@@ -31,11 +31,9 @@ resource "aws_workspacesweb_browser_settings" "example" {
 
 resource "aws_workspacesweb_browser_settings_association" "example" {
   browser_settings_arn = aws_workspacesweb_browser_settings.example.browser_settings_arn
-  portal_arn          = aws_workspacesweb_portal.example.portal_arn
+  portal_arn           = aws_workspacesweb_portal.example.portal_arn
 }
 ```
-
-
 
 ## Argument Reference
 

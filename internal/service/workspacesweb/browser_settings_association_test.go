@@ -6,6 +6,7 @@ package workspacesweb_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
@@ -128,10 +129,8 @@ func testAccCheckBrowserSettingsAssociationDestroy(ctx context.Context) resource
 
 			// Check if the portal is still associated
 			portalARN := rs.Primary.Attributes["portal_arn"]
-			for _, associatedPortalARN := range browserSettings.AssociatedPortalArns {
-				if associatedPortalARN == portalARN {
-					return fmt.Errorf("WorkSpaces Web Browser Settings Association %s still exists", rs.Primary.Attributes["browser_settings_arn"])
-				}
+			if slices.Contains(browserSettings.AssociatedPortalArns, portalARN) {
+				return fmt.Errorf("WorkSpaces Web Browser Settings Association %s still exists", rs.Primary.Attributes["browser_settings_arn"])
 			}
 		}
 
@@ -156,15 +155,7 @@ func testAccCheckBrowserSettingsAssociationExists(ctx context.Context, n string,
 
 		// Check if the portal is associated
 		portalARN := rs.Primary.Attributes["portal_arn"]
-		found := false
-		for _, associatedPortalARN := range output.AssociatedPortalArns {
-			if associatedPortalARN == portalARN {
-				found = true
-				break
-			}
-		}
-
-		if !found {
+		if !slices.Contains(output.AssociatedPortalArns, portalARN) {
 			return fmt.Errorf("Association not found")
 		}
 
