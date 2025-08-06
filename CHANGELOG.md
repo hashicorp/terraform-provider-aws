@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_instance: Adds `force_destroy` argument that allows destruction even when `disable_api_termination` and `disable_api_stop` are `true` ([#43722](https://github.com/hashicorp/terraform-provider-aws/issues/43722))
 * resource/aws_ivschat_logging_configuration: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
 * resource/aws_ivschat_room: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
+* resource/aws_kinesis_firehose_delivery_stream: Add `iceberg_configuration.append_only` argument ([#43647](https://github.com/hashicorp/terraform-provider-aws/issues/43647))
 * resource/aws_lightsail_static_ip: Support resource import ([#43672](https://github.com/hashicorp/terraform-provider-aws/issues/43672))
 * resource/aws_opensearch_domain_policy: Support resource import ([#43674](https://github.com/hashicorp/terraform-provider-aws/issues/43674))
 * resource/aws_quicksight_user: Add plan-time validation of `iam_arn` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
