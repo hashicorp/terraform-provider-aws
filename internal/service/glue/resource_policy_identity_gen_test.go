@@ -36,7 +36,7 @@ func testAccGlueResourcePolicy_Identity_Basic(t *testing.T) {
 
 	resourceName := "aws_glue_resource_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -107,7 +107,7 @@ func testAccGlueResourcePolicy_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_glue_resource_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -217,7 +217,7 @@ func testAccGlueResourcePolicy_Identity_ExistingResource(t *testing.T) {
 
 	resourceName := "aws_glue_resource_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

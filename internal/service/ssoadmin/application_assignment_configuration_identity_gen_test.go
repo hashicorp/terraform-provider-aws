@@ -25,7 +25,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_Basic(t *testing
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -114,7 +114,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_RegionOverride(t
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -238,7 +238,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -299,7 +299,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource
 	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
