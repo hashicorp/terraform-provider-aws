@@ -31,6 +31,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newResourceWebACLRule,
+			TypeName: "aws_wafv2_web_acl_rule",
+			Name:     "Web ACL Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newResourceWebACLRuleGroupAssociation,
 			TypeName: "aws_wafv2_web_acl_rule_group_association",
 			Name:     "Web ACL Rule Group Association",
