@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/action"
@@ -417,8 +418,11 @@ func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts
 
 	switch response, when := opts.response, opts.when; when {
 	case After:
+		fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() called AFTER, schema type: %T\n", response.Schema)
 		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
+			fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() processing UnlinkedSchema with %d attributes\n", len(schema.Attributes))
 			if _, exists := schema.Attributes[names.AttrRegion]; !exists {
+				fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() injecting region attribute\n")
 				// Inject a top-level "region" attribute.
 				if schema.Attributes == nil {
 					schema.Attributes = make(map[string]aschema.Attribute)
@@ -428,8 +432,15 @@ func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts
 					Description: names.TopLevelRegionAttributeDescription,
 				}
 				response.Schema = schema
+				fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() region attribute injected, now %d attributes\n", len(schema.Attributes))
+			} else {
+				fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() region attribute already exists\n")
 			}
+		} else {
+			fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() schema is NOT UnlinkedSchema, got %T\n", response.Schema)
 		}
+	default:
+		fmt.Printf("DEBUG: actionInjectRegionAttributeInterceptor.schema() called with when=%v\n", when)
 	}
 
 	return diags
