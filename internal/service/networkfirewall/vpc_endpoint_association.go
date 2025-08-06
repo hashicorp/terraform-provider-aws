@@ -336,7 +336,7 @@ func waitVPCEndpointAssociationDeleted(ctx context.Context, conn *networkfirewal
 	return nil, err
 }
 
-func flattenVPCEndpointAssociationStatus(ctx context.Context, veas *awstypes.VpcEndpointAssociationStatus) (fwtypes.ListNestedObjectValueOf[vpcEndpointAssociationStatusModel], diag.Diagnostics) {
+func flattenVPCEndpointAssociationStatus(ctx context.Context, veas *awstypes.VpcEndpointAssociationStatus) (fwtypes.ListNestedObjectValueOf[vpcEndpointAssociationStatusModel], diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	var diags diag.Diagnostics
 
 	if veas == nil {
