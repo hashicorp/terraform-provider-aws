@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.10.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.41.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.2.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.4.0 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.38.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.68.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.69.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.31.0 // indirect
@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.54.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.46.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/location v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.34.0 // indirect
@@ -220,7 +220,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.91.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ram v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.24.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.101.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.102.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.35.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.29.0 // indirect
@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.2.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.204.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.205.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.15.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.37.0 // indirect
