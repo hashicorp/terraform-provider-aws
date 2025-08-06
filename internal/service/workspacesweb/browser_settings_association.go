@@ -6,6 +6,7 @@ package workspacesweb
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
@@ -104,15 +105,7 @@ func (r *browserSettingsAssociationResource) Read(ctx context.Context, request r
 	}
 
 	// Check if the portal is in the associated portals list
-	found := false
-	for _, portalARN := range output.AssociatedPortalArns {
-		if portalARN == data.PortalARN.ValueString() {
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	if !slices.Contains(output.AssociatedPortalArns, data.PortalARN.ValueString()) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(fmt.Errorf("association not found")))
 		response.State.RemoveResource(ctx)
 		return
