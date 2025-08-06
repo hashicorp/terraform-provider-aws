@@ -45,10 +45,6 @@ func newVPCEndpointAssociationResource(_ context.Context) (resource.ResourceWith
 	return r, nil
 }
 
-const (
-	ResNameVPCEndpointAssociation = "VPC Endpoint Association"
-)
-
 type vpcEndpointAssociationResource struct {
 	framework.ResourceWithModel[vpcEndpointAssociationResourceModel]
 	framework.WithTimeouts
