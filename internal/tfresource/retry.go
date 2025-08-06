@@ -5,8 +5,9 @@ package tfresource
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"sync"
 	"time"
 
@@ -256,7 +257,21 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
+		maxMs := delayRand.Milliseconds()
+		if maxMs <= 0 {
+			o.Delay = 0
+			return
+		}
+		
+		// Use crypto/rand for cryptographically secure random number generation
+		randomMs, err := rand.Int(rand.Reader, big.NewInt(maxMs))
+		if err != nil {
+			// Fallback to no delay if random generation fails
+			o.Delay = 0
+			return
+		}
+		
+		o.Delay = time.Duration(randomMs.Int64()) * time.Millisecond
 	}
 }
 
