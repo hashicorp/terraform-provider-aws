@@ -22,6 +22,7 @@ import (
 
 func TestAccS3Bucket_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -196,6 +197,7 @@ func TestAccS3Bucket_Identity_RegionOverride(t *testing.T) {
 
 func TestAccS3Bucket_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

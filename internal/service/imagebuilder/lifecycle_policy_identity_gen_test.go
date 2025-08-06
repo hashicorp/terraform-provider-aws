@@ -21,6 +21,7 @@ import (
 
 func TestAccImageBuilderLifecyclePolicy_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -227,6 +228,7 @@ func TestAccImageBuilderLifecyclePolicy_Identity_RegionOverride(t *testing.T) {
 
 func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -34,6 +34,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial(t *testing
 
 func testAccBedrockModelInvocationLoggingConfiguration_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -233,6 +234,7 @@ func testAccBedrockModelInvocationLoggingConfiguration_Identity_RegionOverride(t
 
 func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

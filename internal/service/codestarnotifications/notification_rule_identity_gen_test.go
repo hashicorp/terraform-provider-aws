@@ -21,6 +21,7 @@ import (
 
 func TestAccCodeStarNotificationsNotificationRule_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,6 +226,7 @@ func TestAccCodeStarNotificationsNotificationRule_Identity_RegionOverride(t *tes
 
 func TestAccCodeStarNotificationsNotificationRule_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_codestarnotifications_notification_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -21,6 +21,7 @@ import (
 
 func TestAccImageBuilderWorkflow_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_imagebuilder_workflow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -226,6 +227,7 @@ func TestAccImageBuilderWorkflow_Identity_RegionOverride(t *testing.T) {
 // Resource Identity was added after v6.3.0
 func TestAccImageBuilderWorkflow_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_imagebuilder_workflow.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -32,6 +32,7 @@ func testAccResourceExplorer2Index_IdentitySerial(t *testing.T) {
 
 func testAccResourceExplorer2Index_Identity_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
@@ -220,6 +221,7 @@ func testAccResourceExplorer2Index_Identity_RegionOverride(t *testing.T) {
 
 func testAccResourceExplorer2Index_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_resourceexplorer2_index.test"
 
 	resource.Test(t, resource.TestCase{
