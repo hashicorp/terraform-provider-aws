@@ -113,7 +113,7 @@ func testAccCheckVPCEndpointAssociationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfnetworkfirewall.FindVPCEndpointAssociationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfnetworkfirewall.FindVPCEndpointAssociationByARN(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -141,7 +141,7 @@ func testAccCheckVPCEndpointAssociationExists(ctx context.Context, name string, 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-		resp, err := tfnetworkfirewall.FindVPCEndpointAssociationByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfnetworkfirewall.FindVPCEndpointAssociationByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameVPCEndpointAssociation, rs.Primary.ID, err)
 		}

@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `vpc_endpoint_association_arn` - ARN of the VPC Endpoint Association.
 * `vpc_endpoint_association_id` - The unique identifier of the VPC endpoint association.
 * `vpc_endpoint_association_status` - Nested list of information about the current status of the VPC Endpoint Association.
-    * `association_sync_state` - Set of subnets configured for use by the VPC Endpoint Association.
+    * `association_sync_states` - Set of subnets configured for use by the VPC Endpoint Association.
         * `attachment` - Nested list describing the attachment status of the firewall's VPC Endpoint Association with a single VPC subnet.
             * `endpoint_id` - The identifier of the VPC endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a VPC Endpoint Association endpoint.

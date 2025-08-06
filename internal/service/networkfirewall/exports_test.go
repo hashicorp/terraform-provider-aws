@@ -20,5 +20,5 @@ var (
 	FindResourcePolicyByARN             = findResourcePolicyByARN
 	FindRuleGroupByARN                  = findRuleGroupByARN
 	FindTLSInspectionConfigurationByARN = findTLSInspectionConfigurationByARN
-	FindVPCEndpointAssociationByID      = findVPCEndpointAssociationByID
+	FindVPCEndpointAssociationByARN     = findVPCEndpointAssociationByARN
 )
