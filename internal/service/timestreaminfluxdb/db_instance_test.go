@@ -519,6 +519,11 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
+		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
+			Plan: resource.PlanOptions{
+				NoRefresh: true,
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -545,30 +550,6 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccDBInstanceConfig_basicV5_90_0(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"Name": knownvalue.StringExact(rName),
-					})),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccDBInstanceConfig_basicV5_90_0(rName, rName+"-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
@@ -585,7 +566,7 @@ func TestAccTimestreamInfluxDBDBInstance_upgradeV5_90_0(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.StringExact(string(awstypes.NetworkTypeIpv4))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_type"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						"Name": knownvalue.StringExact(rName + "-updated"),
 					})),

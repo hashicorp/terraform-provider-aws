@@ -48,6 +48,10 @@ func ResourceEnabler() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"account_ids": {
 				Type:     schema.TypeSet,
@@ -556,8 +560,10 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
-			if k == "LambdaCode" {
-				k = "LAMBDA_CODE"
+			if strings.ToUpper(k) == "LAMBDACODE" {
+				k = string(types.ResourceScanTypeLambdaCode)
+			} else if strings.ToUpper(k) == "CODEREPOSITORY" {
+				k = string(types.ResourceScanTypeCodeRepository)
 			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}

@@ -1412,6 +1412,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, v.([]any))
 	}
 
+	operationTime := time.Now().UTC()
 	output, err := retryServiceCreate(ctx, conn, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
@@ -1428,11 +1429,11 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(aws.ToString(output.Service.ServiceArn))
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
-	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
-		fn = waitServiceStable
-	}
-	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
+		}
+	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -1766,6 +1767,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			serviceUpdateTimeout = 2 * time.Minute
 			timeout              = propagationTimeout + serviceUpdateTimeout
 		)
+		operationTime := time.Now().UTC()
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func() (any, error) {
 				return conn.UpdateService(ctx, &input)
@@ -1787,11 +1789,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
 
-		fn := waitServiceActive
 		if d.Get("wait_for_steady_state").(bool) {
-			fn = waitServiceStable
-		}
-		if _, err := fn(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
+			}
+		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -2094,106 +2096,109 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
-	cachedDeploymentArn := new(string)
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time) retry.StateRefreshFunc {
+	var primaryTaskSet *awstypes.Deployment
+	var primaryDeploymentArn *string
+	var isNewPrimaryDeployment bool
 
 	return func() (any, string, error) {
-		outputRaw, status, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
-
+		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
 		if err != nil {
 			return nil, "", err
 		}
 
-		if status != serviceStatusActive {
-			return outputRaw, status, nil
+		if serviceStatus != serviceStatusActive {
+			return outputRaw, serviceStatus, nil
 		}
 
 		output := outputRaw.(*awstypes.Service)
 
-		// For ECS deployment controller, check the deployment status
-		if output.DeploymentController != nil && output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs {
-			status, err := checkServiceDeploymentStatus(ctx, conn, aws.ToString(output.ServiceArn), clusterNameOrARN, cachedDeploymentArn)
+		if primaryTaskSet == nil {
+			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+
+			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
+				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
+				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
+			}
+		}
+
+		isNewECSDeployment := output.DeploymentController != nil &&
+			output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs &&
+			isNewPrimaryDeployment
+
+		// For new deployments with ECS deployment controller, check the deployment status
+		if isNewECSDeployment {
+			if primaryDeploymentArn == nil {
+				serviceArn := aws.ToString(output.ServiceArn)
+
+				var err error
+				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
+
+				if err != nil {
+					return nil, "", err
+				}
+				if primaryDeploymentArn == nil {
+					return output, serviceStatusPending, nil
+				}
+			}
+			deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 			if err != nil {
 				return nil, "", err
 			}
-			return output, status, nil
+			return output, deploymentStatus, nil
 		}
 
-		// For other deployment controllers, check based on desired count
+		// For other deployment controllers or in-place updates, check based on desired count
 		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
-			status = serviceStatusStable
+			serviceStatus = serviceStatusStable
 		} else {
-			status = serviceStatusPending
+			serviceStatus = serviceStatusPending
 		}
 
-		return output, status, nil
+		return output, serviceStatus, nil
 	}
 }
 
-func checkServiceDeploymentStatus(ctx context.Context, conn *ecs.Client, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (string, error) {
-	primaryDeployment, err := getPrimaryDeployment(ctx, conn, serviceArn, clusterNameOrARN)
-	if err != nil {
-		return "", err
+func findPrimaryTaskSet(deployments []awstypes.Deployment) *awstypes.Deployment {
+	for _, deployment := range deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			return &deployment
+		}
 	}
-	if primaryDeployment == nil {
-		return serviceStatusPending, nil
-	}
-
-	deploymentArn, err := getDeploymentARN(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN, cachedDeploymentArn)
-	if err != nil {
-		return "", err
-	}
-	if deploymentArn == nil {
-		return serviceStatusPending, nil
-	}
-
-	return getDeploymentStatus(ctx, conn, *deploymentArn)
+	return nil
 }
 
-func getPrimaryDeployment(ctx context.Context, conn *ecs.Client, serviceArn, clusterNameOrARN string) (*awstypes.Deployment, error) {
-	input := ecs.DescribeServicesInput{
-		Services: []string{serviceArn},
-		Cluster:  aws.String(clusterNameOrARN),
+func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceArn, clusterNameOrARN string, operationTime time.Time) (*string, error) {
+	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
+	}
+	taskSetID := parts[1]
+
+	input := &ecs.ListServiceDeploymentsInput{
+		Cluster: aws.String(clusterNameOrARN),
+		Service: aws.String(serviceNameFromARN(serviceArn)),
+		CreatedAt: &awstypes.CreatedAt{
+			After: &operationTime,
+		},
 	}
 
-	output, err := conn.DescribeServices(ctx, &input)
+	output, err := conn.ListServiceDeployments(ctx, input)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output.Services) == 0 {
-		return nil, fmt.Errorf("service not found")
-	}
-
-	service := output.Services[0]
-
-	for _, deployment := range service.Deployments {
-		if aws.ToString(deployment.Status) == "PRIMARY" {
-			return &deployment, nil
+	// Find deployment matching task set
+	for _, deployment := range output.ServiceDeployments {
+		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
+			return deployment.ServiceDeploymentArn, nil
 		}
 	}
 
 	return nil, nil
 }
 
-func getDeploymentARN(ctx context.Context, conn *ecs.Client, primaryDeployment *awstypes.Deployment, serviceArn, clusterNameOrARN string, cachedDeploymentArn *string) (*string, error) {
-	if aws.ToString(cachedDeploymentArn) != "" {
-		return cachedDeploymentArn, nil
-	}
-
-	deploymentArn, err := getLatestDeployment(ctx, conn, primaryDeployment, serviceArn, clusterNameOrARN)
-	if err != nil {
-		return nil, err
-	}
-
-	if deploymentArn != nil {
-		*cachedDeploymentArn = *deploymentArn
-	}
-
-	return deploymentArn, nil
-}
-
-func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
+func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
 	input := ecs.DescribeServiceDeploymentsInput{
 		ServiceDeploymentArns: []string{deploymentArn},
 	}
@@ -2227,43 +2232,13 @@ func getDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn st
 	}
 }
 
-func getLatestDeployment(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceArn, clusterNameOrARN string) (*string, error) {
-	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
-	}
-	taskSetID := parts[1]
-
-	input := ecs.ListServiceDeploymentsInput{
-		Cluster: aws.String(clusterNameOrARN),
-		Service: aws.String(serviceNameFromARN(serviceArn)),
-		CreatedAt: &awstypes.CreatedAt{
-			After: primaryTaskSet.CreatedAt,
-		},
-	}
-
-	output, err := conn.ListServiceDeployments(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find deployment matching task set
-	for _, deployment := range output.ServiceDeployments {
-		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
-			return deployment.ServiceDeploymentArn, nil
-		}
-	}
-
-	return nil, nil
-}
-
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -2277,7 +2252,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 }
 
 // Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
@@ -2843,8 +2818,10 @@ func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
 			apiObject.AdvancedConfiguration = &awstypes.AdvancedConfiguration{
 				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
 				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
-				TestListenerRule:        aws.String(config["test_listener_rule"].(string)),
 				RoleArn:                 aws.String(config[names.AttrRoleARN].(string)),
+			}
+			if v, ok := config["test_listener_rule"].(string); ok && v != "" {
+				apiObject.AdvancedConfiguration.TestListenerRule = aws.String(v)
 			}
 		}
 
@@ -2876,9 +2853,11 @@ func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
 				map[string]any{
 					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
 					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
-					"test_listener_rule":         aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule),
 					names.AttrRoleARN:            aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
 				},
+			}
+			if apiObject.AdvancedConfiguration.TestListenerRule != nil {
+				tfMap["advanced_configuration"].([]any)[0].(map[string]any)["test_listener_rule"] = aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule)
 			}
 		}
 

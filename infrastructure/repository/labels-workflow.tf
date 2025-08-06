@@ -169,6 +169,10 @@ variable "workflow_labels" {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
     },
+    "resource-identity" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to resource identity."
+    },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient
       description = "Managed by automation to categorize the size of a PR."

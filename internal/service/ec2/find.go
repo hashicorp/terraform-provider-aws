@@ -1704,6 +1704,22 @@ func findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, con
 	}))
 }
 
+func findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if v := output.Status; v != awstypes.NatGatewayAddressStatusSucceeded {
+		return nil, &retry.NotFoundError{
+			Message: string(v),
+		}
+	}
+
+	return output, nil
+}
+
 func findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) (*awstypes.NatGatewayAddress, error) {
 	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
 

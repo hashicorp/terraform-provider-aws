@@ -358,6 +358,11 @@ func resourceInstance() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -2232,12 +2237,12 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
-	}
+	if d.Get(names.AttrForceDestroy).(bool) {
+		if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
+		}
 
-	if v, ok := d.GetOk("disable_api_stop"); ok {
-		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.(bool)); err != nil {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
 			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
 		}
 	}

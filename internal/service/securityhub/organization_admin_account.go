@@ -57,7 +57,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.EnableOrganizationAdminAccount(ctx, input)
 	}, errCodeResourceConflictException)
 

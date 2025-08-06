@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
 		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

@@ -166,7 +166,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Validity = validity
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func(ctx context.Context) (any, error) {
 		return conn.IssueCertificate(ctx, &input)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 

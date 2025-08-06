@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
         application: "tf-test-name",
         bucket: Token.asString(awsS3BucketDefault.id),
         description: "application version created by terraform",
-        key: Token.asString(awsS3ObjectDefault.id),
+        key: Token.asString(awsS3ObjectDefault.key),
         name: "tf-test-version-label",
       });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -94,4 +94,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-f4cf64f648f6b3fb11dc8b9bf05300e27a9b835539a1430db0a55058412aeeb1 -->
+<!-- cache-key: cdktf-0.20.8 input-5842d548570f5bde5f23ea961b4e7f4778cf076094d5cebf0b90969386ce5e3d -->
