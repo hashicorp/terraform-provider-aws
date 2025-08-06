@@ -461,7 +461,7 @@ Exactly one of the following action blocks must be specified:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the association.
+None.
 
 ## Timeouts
 
