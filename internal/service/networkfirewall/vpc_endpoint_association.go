@@ -54,28 +54,39 @@ type resourceVPCEndpointAssociation struct {
 	framework.ResourceWithModel[resourceVPCEndpointAssociationModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
-	framework.WithImportByID
 }
 
 func (r *resourceVPCEndpointAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"firewall_arn": schema.StringAttribute{
-				Required: true,
-			},
-			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
-			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
-			},
-			"vpc_endpoint_association_id": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"vpc_endpoint_association_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"vpc_endpoint_association_arn": framework.ARNAttributeComputedOnly(),
+			names.AttrVPCID: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"subnet_mapping": schema.ListNestedBlock{
@@ -199,7 +210,7 @@ func (r *resourceVPCEndpointAssociation) Create(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.VpcEndpointAssociationArn = flex.StringValueToFramework(ctx, arn)
+	plan.VPCEndpointAssociationARN = flex.StringValueToFramework(ctx, arn)
 	plan.setID()
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -301,6 +312,10 @@ func (r *resourceVPCEndpointAssociation) Delete(ctx context.Context, req resourc
 	}
 }
 
+func (r *resourceVPCEndpointAssociation) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(""), request.ID)...)
+}
+
 func waitVPCEndpointAssociationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeVpcEndpointAssociationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.FirewallStatusValueProvisioning),
@@ -378,20 +393,15 @@ func findVPCEndpointAssociationByID(ctx context.Context, conn *networkfirewall.C
 type resourceVPCEndpointAssociationModel struct {
 	framework.WithRegionModel
 	Description                  types.String                                                       `tfsdk:"description"`
-	FirewallArn                  types.String                                                       `tfsdk:"firewall_arn"`
-	ID                           types.String                                                       `tfsdk:"id"`
+	FirewallARN                  fwtypes.ARN                                                        `tfsdk:"firewall_arn"`
 	SubnetMapping                fwtypes.ListNestedObjectValueOf[subnetMappingModel]                `tfsdk:"subnet_mapping"`
 	Tags                         tftags.Map                                                         `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                                     `tfsdk:"timeouts"`
-	VpcEndpointAssociationArn    types.String                                                       `tfsdk:"arn"`
-	VpcEndpointAssociationId     types.String                                                       `tfsdk:"vpc_endpoint_association_id"`
+	VPCEndpointAssociationARN    types.String                                                       `tfsdk:"vpc_endpoint_association_arn"`
+	VPCEndpointAssociationID     types.String                                                       `tfsdk:"vpc_endpoint_association_id"`
 	VpcEndpointAssociationStatus fwtypes.ListNestedObjectValueOf[vpcEndpointAssociationStatusModel] `tfsdk:"vpc_endpoint_association_status"`
 	VPCID                        types.String                                                       `tfsdk:"vpc_id"`
-}
-
-func (model *resourceVPCEndpointAssociationModel) setID() {
-	model.ID = model.VpcEndpointAssociationArn
 }
 
 type subnetMappingModel struct {
