@@ -65,16 +65,16 @@ func (t *testAction) ValidateModel(ctx context.Context, schema *schema.UnlinkedS
 
 // Ensure testAction implements required interfaces
 var (
-	_ action.Action                  = (*testAction)(nil)
-	_ framework.ActionValidateModel  = (*testAction)(nil)
+	_ action.Action                 = (*testAction)(nil)
+	_ framework.ActionValidateModel = (*testAction)(nil)
 )
 
 func TestWrappedAction_Basic(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Create test action
 	inner := &testAction{}
-	
+
 	// Create wrapped action with minimal options
 	opts := wrappedActionOptions{
 		bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
@@ -83,29 +83,29 @@ func TestWrappedAction_Basic(t *testing.T) {
 		interceptors: interceptorInvocations{},
 		typeName:     "aws_test_action",
 	}
-	
+
 	wrapped := newWrappedAction(inner, opts)
-	
+
 	// Test Metadata
 	metaReq := action.MetadataRequest{
 		ProviderTypeName: "aws",
 	}
 	var metaResp action.MetadataResponse
 	wrapped.Metadata(ctx, metaReq, &metaResp)
-	
+
 	if metaResp.TypeName != "aws_test_action" {
 		t.Errorf("Expected TypeName 'aws_test_action', got '%s'", metaResp.TypeName)
 	}
-	
+
 	// Test Schema
 	schemaReq := action.SchemaRequest{}
 	var schemaResp action.SchemaResponse
 	wrapped.Schema(ctx, schemaReq, &schemaResp)
-	
+
 	if schemaResp.Diagnostics.HasError() {
 		t.Errorf("Schema method returned errors: %v", schemaResp.Diagnostics)
 	}
-	
+
 	if unlinkedSchema, ok := schemaResp.Schema.(schema.UnlinkedSchema); ok {
 		if _, exists := unlinkedSchema.Attributes["test_param"]; !exists {
 			t.Error("Expected 'test_param' attribute in schema")
@@ -117,10 +117,10 @@ func TestWrappedAction_Basic(t *testing.T) {
 
 func TestActionInterceptors_RegionInjection(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Create test action
 	inner := &testAction{}
-	
+
 	// Create wrapped action with region interceptor
 	opts := wrappedActionOptions{
 		bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
@@ -131,18 +131,18 @@ func TestActionInterceptors_RegionInjection(t *testing.T) {
 		},
 		typeName: "aws_test_action",
 	}
-	
+
 	wrapped := newWrappedAction(inner, opts)
-	
+
 	// Test Schema with region injection
 	schemaReq := action.SchemaRequest{}
 	var schemaResp action.SchemaResponse
 	wrapped.Schema(ctx, schemaReq, &schemaResp)
-	
+
 	if schemaResp.Diagnostics.HasError() {
 		t.Errorf("Schema method returned errors: %v", schemaResp.Diagnostics)
 	}
-	
+
 	if unlinkedSchema, ok := schemaResp.Schema.(schema.UnlinkedSchema); ok {
 		if _, exists := unlinkedSchema.Attributes["region"]; !exists {
 			t.Error("Expected 'region' attribute to be injected into schema")
