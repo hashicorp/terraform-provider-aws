@@ -4,6 +4,7 @@ package bedrockagentcore
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -21,7 +22,26 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newResourceAgentRuntime,
+			TypeName: "aws_bedrockagentcore_agent_runtime",
+			Name:     "Agent Runtime",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceGateway,
+			TypeName: "aws_bedrockagentcore_gateway",
+			Name:     "Gateway",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newResourceOAuth2CredentialProvider,
+			TypeName: "aws_bedrockagentcore_oauth2_credential_provider",
+			Name:     "OAuth2 Credential Provider",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
