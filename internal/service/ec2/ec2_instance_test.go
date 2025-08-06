@@ -1008,6 +1008,13 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 				),
 			},
+			{
+				Config: testAccInstanceConfig_disableAPIStop(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
@@ -6995,6 +7002,8 @@ resource "aws_instance" "test" {
   instance_type    = "t2.small"
   subnet_id        = aws_subnet.test.id
   disable_api_stop = %[2]t
+
+  force_destroy = true
 
   tags = {
     Name = %[1]q
