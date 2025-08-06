@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1054,6 +1055,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_readFromTimestamp(t *testing.T) {
 }
 
 func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
+	// In main test account:
 	// "InvalidArgumentException: Role ... is not authorized to perform: glue:GetTable for the given table or the table does not exist."
 	acctest.Skip(t, "Unresolvable Glue permission issue")
 
@@ -1076,6 +1078,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", "1"),
@@ -1089,8 +1092,12 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
-					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1105,6 +1112,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "900"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", "1"),
@@ -1117,8 +1125,12 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccDeliveryStream_icebergUpdatesMetadataProcessor(rName),
@@ -1128,6 +1140,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", "1"),
@@ -1154,6 +1167,11 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccDeliveryStream_icebergUpdatesLambdaProcessor(rName),
@@ -1162,6 +1180,7 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.append_only", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", "1"),
@@ -1185,6 +1204,11 @@ func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace), // Changes to destination_table_configuration and append_only
+					},
+				},
 			},
 		},
 	})
@@ -4212,7 +4236,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     buffering_interval = 900
     buffering_size     = 100
     retry_duration     = 900
-    append_only        = true
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
@@ -4287,6 +4310,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn       = aws_iam_role.firehose.arn
     s3_backup_mode = "FailedDataOnly"
     catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:catalog"
+    append_only    = true
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
