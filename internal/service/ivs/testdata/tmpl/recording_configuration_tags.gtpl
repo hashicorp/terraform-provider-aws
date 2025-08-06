@@ -1,9 +1,3 @@
-resource "aws_s3_bucket" "test" {
-{{- template "region" }}
-  bucket        = var.rName
-  force_destroy = true
-}
-
 resource "aws_ivs_recording_configuration" "test" {
 {{- template "region" }}
   destination_configuration {
@@ -12,4 +6,10 @@ resource "aws_ivs_recording_configuration" "test" {
     }
   }
 {{- template "tags" }}
+}
+
+resource "aws_s3_bucket" "test" {
+{{- template "region" }}
+  bucket        = var.rName
+  force_destroy = true
 }
