@@ -253,8 +253,8 @@ func (r *vpcEndpointAssociationResource) Delete(ctx context.Context, request res
 	}
 }
 
-func (r *vpcEndpointAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) { // nosemgrep:ci.semgrep.framework.with-import-by-id
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(""), request.ID)...)
+func (r *vpcEndpointAssociationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("vpc_endpoint_association_arn"), request, response)
 }
 
 func findVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.DescribeVpcEndpointAssociationInput) (*networkfirewall.DescribeVpcEndpointAssociationOutput, error) {

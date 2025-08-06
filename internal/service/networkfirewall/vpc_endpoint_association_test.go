@@ -63,7 +63,7 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_arn"), tfknownvalue.RegionalARNRegexp("networkfirewall", regexache.MustCompile(`vpc-endpoint-association/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_arn"), tfknownvalue.RegionalARNRegexp("network-firewall", regexache.MustCompile(`vpc-endpoint-association/.+`))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_status"), knownvalue.ListSizeExact(1)),
 				},
