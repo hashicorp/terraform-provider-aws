@@ -322,16 +322,6 @@ func (s interceptorInvocations) actionSchema() []interceptorFunc[action.SchemaRe
 	})
 }
 
-// actionNoOpInvokeInterceptor is a no-op implementation of the actionInvokeInterceptor interface.
-// It can be embedded into a struct to provide default behavior for the invoke method.
-type actionNoOpInvokeInterceptor struct{}
-
-func (a actionNoOpInvokeInterceptor) invoke(ctx context.Context, opts interceptorOptions[action.InvokeRequest, action.InvokeResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	return diags
-}
-
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
 	action.SchemaRequest |

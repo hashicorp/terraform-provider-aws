@@ -441,7 +441,6 @@ func actionInjectRegionAttribute() actionSchemaInterceptor {
 }
 
 type actionValidateRegionInterceptor struct {
-	actionNoOpInvokeInterceptor
 }
 
 func (a actionValidateRegionInterceptor) invoke(ctx context.Context, opts interceptorOptions[action.InvokeRequest, action.InvokeResponse]) diag.Diagnostics {

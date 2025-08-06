@@ -290,12 +290,12 @@ type wrappedActionOptions struct {
 
 // wrappedAction represents an interceptor dispatcher for a Plugin Framework action.
 type wrappedAction struct {
-	inner action.Action
+	inner action.ActionWithConfigure
 	meta  *conns.AWSClient
 	opts  wrappedActionOptions
 }
 
-func newWrappedAction(inner action.Action, opts wrappedActionOptions) action.Action {
+func newWrappedAction(inner action.ActionWithConfigure, opts wrappedActionOptions) action.ActionWithConfigure {
 	return &wrappedAction{
 		inner: inner,
 		opts:  opts,
@@ -348,6 +348,20 @@ func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest
 		return response.Diagnostics
 	}
 	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.actionInvoke(), f, w.meta)(ctx, &request, response)...)
+}
+
+func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureRequest, response *action.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
 }
 
 func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigValidator {

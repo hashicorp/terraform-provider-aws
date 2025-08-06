@@ -46,7 +46,7 @@ type ServicePackageResourceTags struct {
 // ServicePackageAction represents a Terraform Plugin Framework action
 // implemented by a service package.
 type ServicePackageAction struct {
-	Factory  func(context.Context) (action.Action, error)
+	Factory  func(context.Context) (action.ActionWithConfigure, error)
 	TypeName string
 	Name     string
 	Region   unique.Handle[ServicePackageResourceRegion]

@@ -356,6 +356,7 @@ func (p *frameworkProvider) Configure(ctx context.Context, request provider.Conf
 	response.DataSourceData = v
 	response.ResourceData = v
 	response.EphemeralResourceData = v
+	response.ActionData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
