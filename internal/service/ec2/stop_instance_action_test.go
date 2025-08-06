@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2StopInstanceAction_force(t *testing.T) {
+func TestAccEC2StopInstanceAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -54,6 +54,31 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 				},
 				Config: testAccStopInstanceActionConfig_force(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2StopInstanceAction_trigger(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStopInstanceActionConfig_trigger(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExistsLocal(ctx, resourceName, &v),
 					testAccCheckInstanceState(ctx, resourceName, awstypes.InstanceStateNameStopped),
 				),
 			},
@@ -132,6 +157,40 @@ action "aws_ec2_stop_instance" "test" {
   config {
     instance_id = aws_instance.test.id
     force       = true
+  }
+}
+`, rName))
+}
+
+func testAccStopInstanceActionConfig_trigger(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+action "aws_ec2_stop_instance" "test" {
+  config {
+    instance_id = aws_instance.test.id
+    force       = true
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_ec2_stop_instance.test]
+    }
   }
 }
 `, rName))
