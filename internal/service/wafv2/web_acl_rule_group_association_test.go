@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -162,10 +161,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -253,10 +253,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_ruleActionOverrid
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -328,10 +329,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_priorityUpdate(t 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -369,10 +371,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_RuleGroupReference_overrideActionUpd
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -472,10 +475,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_basic(t *testing.T)
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -508,10 +512,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_withVersion(t *test
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -547,10 +552,11 @@ func TestAccWAFV2WebACLRuleGroupAssociation_ManagedRuleGroup_ruleActionOverride(
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
 			},
 		},
 	})
@@ -565,17 +571,27 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			// Parse the ID using the standard flex utility
-			// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
-			parts, err := flex.ExpandResourceId(rs.Primary.ID, 4, false)
-			if err != nil {
-				continue
-			}
+			// Use resource attributes directly instead of parsing ID
+			webACLARN := rs.Primary.Attributes["web_acl_arn"]
+			ruleName := rs.Primary.Attributes["rule_name"]
 
-			webACLARN := parts[0]
-			ruleName := parts[1]
-			ruleGroupType := parts[2]
-			ruleGroupIdentifier := parts[3]
+			// Determine rule group type and identifier from attributes
+			var ruleGroupType, ruleGroupIdentifier string
+			if rs.Primary.Attributes["rule_group_reference.0.arn"] != "" {
+				ruleGroupType = "custom"
+				ruleGroupIdentifier = rs.Primary.Attributes["rule_group_reference.0.arn"]
+			} else if rs.Primary.Attributes["managed_rule_group.0.name"] != "" {
+				ruleGroupType = "managed"
+				vendorName := rs.Primary.Attributes["managed_rule_group.0.vendor_name"]
+				ruleGroupName := rs.Primary.Attributes["managed_rule_group.0.name"]
+				version := rs.Primary.Attributes["managed_rule_group.0.version"]
+				ruleGroupIdentifier = fmt.Sprintf("%s:%s", vendorName, ruleGroupName)
+				if version != "" {
+					ruleGroupIdentifier += ":" + version
+				}
+			} else {
+				continue // Skip if no rule group configuration found
+			}
 
 			// Parse Web ACL ARN to get ID, name, and scope
 			webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
@@ -619,7 +635,7 @@ func testAccCheckWebACLRuleGroupAssociationDestroy(ctx context.Context) resource
 				}
 
 				if matchesRuleGroup {
-					return fmt.Errorf("WAFv2 Web ACL Rule Group Association still exists: %s", rs.Primary.ID)
+					return fmt.Errorf("WAFv2 Web ACL Rule Group Association still exists in Web ACL %s for rule %s", webACLARN, ruleName)
 				}
 			}
 		}
@@ -635,21 +651,31 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAFv2 WebACLRuleGroupAssociation ID is set")
+		// Use resource attributes directly instead of parsing ID
+		webACLARN := rs.Primary.Attributes["web_acl_arn"]
+		ruleName := rs.Primary.Attributes["rule_name"]
+
+		if webACLARN == "" || ruleName == "" {
+			return fmt.Errorf("Missing required attributes: web_acl_arn=%s, rule_name=%s", webACLARN, ruleName)
 		}
 
-		// Parse the ID using the standard flex utility
-		// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
-		parts, err := flex.ExpandResourceId(rs.Primary.ID, 4, false)
-		if err != nil {
-			return fmt.Errorf("Invalid ID format: %s", rs.Primary.ID)
+		// Determine rule group type and identifier from attributes
+		var ruleGroupType, ruleGroupIdentifier string
+		if rs.Primary.Attributes["rule_group_reference.0.arn"] != "" {
+			ruleGroupType = "custom"
+			ruleGroupIdentifier = rs.Primary.Attributes["rule_group_reference.0.arn"]
+		} else if rs.Primary.Attributes["managed_rule_group.0.name"] != "" {
+			ruleGroupType = "managed"
+			vendorName := rs.Primary.Attributes["managed_rule_group.0.vendor_name"]
+			ruleGroupName := rs.Primary.Attributes["managed_rule_group.0.name"]
+			version := rs.Primary.Attributes["managed_rule_group.0.version"]
+			ruleGroupIdentifier = fmt.Sprintf("%s:%s", vendorName, ruleGroupName)
+			if version != "" {
+				ruleGroupIdentifier += ":" + version
+			}
+		} else {
+			return fmt.Errorf("No rule group configuration found in state")
 		}
-
-		webACLARN := parts[0]
-		ruleName := parts[1]
-		ruleGroupType := parts[2]
-		ruleGroupIdentifier := parts[3]
 
 		// Parse Web ACL ARN to get ID, name, and scope
 		webACLID, webACLName, webACLScope, err := tfwafv2.ParseWebACLARN(webACLARN)
@@ -698,7 +724,7 @@ func testAccCheckWebACLRuleGroupAssociationExists(ctx context.Context, n string,
 		}
 
 		if !found {
-			return fmt.Errorf("WAFv2 Web ACL Rule Group Association not found in Web ACL: %s", rs.Primary.ID)
+			return fmt.Errorf("WAFv2 Web ACL Rule Group Association not found in Web ACL %s for rule %s", webACLARN, ruleName)
 		}
 
 		*v = *webACL
@@ -718,7 +744,8 @@ func testAccWebACLRuleGroupAssociationImportStateIDFunc(resourceName string) res
 		ruleGroupARN := rs.Primary.Attributes["rule_group_reference.0.arn"]
 		ruleName := rs.Primary.Attributes["rule_name"]
 
-		return fmt.Sprintf("%s,%s,%s", webACLARN, ruleGroupARN, ruleName), nil
+		// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
+		return fmt.Sprintf("%s,%s,%s,%s", webACLARN, ruleName, "custom", ruleGroupARN), nil
 	}
 }
 
@@ -741,7 +768,8 @@ func testAccWebACLRuleGroupAssociationManagedRuleGroupImportStateIDFunc(resource
 			ruleGroupIdentifier += ":" + version
 		}
 
-		return fmt.Sprintf("%s,%s,%s", webACLARN, ruleGroupIdentifier, ruleName), nil
+		// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
+		return fmt.Sprintf("%s,%s,%s,%s", webACLARN, ruleName, "managed", ruleGroupIdentifier), nil
 	}
 }
 
