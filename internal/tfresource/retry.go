@@ -262,7 +262,7 @@ func WithDelayRand(delayRand time.Duration) OptionsFunc {
 			o.Delay = 0
 			return
 		}
-		
+
 		// Use crypto/rand for cryptographically secure random number generation
 		randomMs, err := rand.Int(rand.Reader, big.NewInt(maxMs))
 		if err != nil {
@@ -270,7 +270,7 @@ func WithDelayRand(delayRand time.Duration) OptionsFunc {
 			o.Delay = 0
 			return
 		}
-		
+
 		o.Delay = time.Duration(randomMs.Int64()) * time.Millisecond
 	}
 }
