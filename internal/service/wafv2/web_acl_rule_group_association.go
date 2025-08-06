@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -319,7 +319,6 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 	}
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			"rule_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -648,27 +647,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 		return
 	}
 
-	// Set the ID using the standard flex utility with comma separators
-	// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
-	ruleGroupType := "custom"
-	if ruleGroupARN == "" {
-		ruleGroupType = "managed"
-	}
-	id, err := flex.FlattenResourceId([]string{
-		plan.WebACLARN.ValueString(),
-		plan.RuleName.ValueString(),
-		ruleGroupType,
-		ruleGroupIdentifier,
-	}, webACLRuleGroupAssociationResourceIDPartCount, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating resource ID",
-			fmt.Sprintf("Could not create resource ID: %s", err),
-		)
-		return
-	}
-	plan.ID = types.StringValue(id)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -681,21 +659,9 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 
 	conn := r.Meta().WAFV2Client(ctx)
 
-	// Parse the ID using the standard flex utility
-	// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
-	parts, err := flex.ExpandResourceId(state.ID.ValueString(), webACLRuleGroupAssociationResourceIDPartCount, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Resource ID",
-			fmt.Sprintf("Could not parse resource ID: %s", err),
-		)
-		return
-	}
-
-	webACLARN := parts[0]
-	ruleName := parts[1]
-	ruleGroupType := parts[2]
-	ruleGroupIdentifier := parts[3]
+	// Use attributes directly instead of parsing ID
+	webACLARN := state.WebACLARN.ValueString()
+	ruleName := state.RuleName.ValueString()
 
 	// Parse Web ACL ARN to get ID, name, and scope
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -730,78 +696,86 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 			continue
 		}
 
-		// Check if this rule matches our rule group type and identifier
+		// Check if this rule matches our rule group configuration from state
 		if rule.Statement != nil {
 			var matchesRuleGroup bool
 			var ruleActionOverrides fwtypes.ListNestedObjectValueOf[ruleActionOverrideModel]
 
-			if ruleGroupType == "custom" && rule.Statement.RuleGroupReferenceStatement != nil {
-				// For custom rule groups, the identifier is the ARN
-				if aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupIdentifier {
-					matchesRuleGroup = true
-					// Handle rule action overrides with autoflex
-					if rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides != nil {
-						resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides, &ruleActionOverrides)...)
-						if resp.Diagnostics.HasError() {
-							return
-						}
-					} else {
-						ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
-					}
-
-					// Set the rule group reference nested structure
-					ruleGroupRefModel := ruleGroupReferenceModel{
-						ARN:                types.StringValue(ruleGroupIdentifier),
-						RuleActionOverride: ruleActionOverrides,
-					}
-
-					listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{&ruleGroupRefModel}, nil)
-					resp.Diagnostics.Append(diags...)
+			// Check if we have a custom rule group in state
+			if !state.RuleGroupReference.IsNull() && !state.RuleGroupReference.IsUnknown() && rule.Statement.RuleGroupReferenceStatement != nil {
+				// Get the ARN from state for comparison
+				ruleGroupRefs := state.RuleGroupReference.Elements()
+				if len(ruleGroupRefs) > 0 {
+					var ruleGroupRefModel ruleGroupReferenceModel
+					resp.Diagnostics.Append(ruleGroupRefs[0].(fwtypes.ObjectValueOf[ruleGroupReferenceModel]).As(ctx, &ruleGroupRefModel, basetypes.ObjectAsOptions{})...)
 					if resp.Diagnostics.HasError() {
 						return
 					}
-					state.RuleGroupReference = listValue
-					state.ManagedRuleGroup = fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupModel](ctx)
-				}
-			} else if ruleGroupType == "managed" && rule.Statement.ManagedRuleGroupStatement != nil {
-				// For managed rule groups, construct identifier and compare
-				managedStmt := rule.Statement.ManagedRuleGroupStatement
-				managedIdentifier := fmt.Sprintf("%s:%s", aws.ToString(managedStmt.VendorName), aws.ToString(managedStmt.Name))
-				if managedStmt.Version != nil && aws.ToString(managedStmt.Version) != "" {
-					managedIdentifier += ":" + aws.ToString(managedStmt.Version)
-				}
 
-				if managedIdentifier == ruleGroupIdentifier {
-					matchesRuleGroup = true
-					// Handle rule action overrides with autoflex
-					if managedStmt.RuleActionOverrides != nil {
-						resp.Diagnostics.Append(fwflex.Flatten(ctx, managedStmt.RuleActionOverrides, &ruleActionOverrides)...)
+					if aws.ToString(rule.Statement.RuleGroupReferenceStatement.ARN) == ruleGroupRefModel.ARN.ValueString() {
+						matchesRuleGroup = true
+						// Handle rule action overrides with autoflex
+						if rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides != nil {
+							resp.Diagnostics.Append(fwflex.Flatten(ctx, rule.Statement.RuleGroupReferenceStatement.RuleActionOverrides, &ruleActionOverrides)...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+						} else {
+							ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
+						}
+
+						// Update the rule group reference nested structure
+						ruleGroupRefModel.RuleActionOverride = ruleActionOverrides
+						listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{&ruleGroupRefModel}, nil)
+						resp.Diagnostics.Append(diags...)
 						if resp.Diagnostics.HasError() {
 							return
 						}
-					} else {
-						ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
+						state.RuleGroupReference = listValue
+						state.ManagedRuleGroup = fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupModel](ctx)
 					}
-
-					// Set the managed rule group nested structure
-					managedRuleGroupRef := managedRuleGroupModel{
-						Name:               types.StringValue(aws.ToString(managedStmt.Name)),
-						VendorName:         types.StringValue(aws.ToString(managedStmt.VendorName)),
-						RuleActionOverride: ruleActionOverrides,
-					}
-					if managedStmt.Version != nil && aws.ToString(managedStmt.Version) != "" {
-						managedRuleGroupRef.Version = types.StringValue(aws.ToString(managedStmt.Version))
-					} else {
-						managedRuleGroupRef.Version = types.StringNull()
-					}
-
-					listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*managedRuleGroupModel{&managedRuleGroupRef}, nil)
-					resp.Diagnostics.Append(diags...)
+				}
+			} else if !state.ManagedRuleGroup.IsNull() && !state.ManagedRuleGroup.IsUnknown() && rule.Statement.ManagedRuleGroupStatement != nil {
+				// Check if we have a managed rule group in state
+				managedRuleGroups := state.ManagedRuleGroup.Elements()
+				if len(managedRuleGroups) > 0 {
+					var managedRuleGroupRef managedRuleGroupModel
+					resp.Diagnostics.Append(managedRuleGroups[0].(fwtypes.ObjectValueOf[managedRuleGroupModel]).As(ctx, &managedRuleGroupRef, basetypes.ObjectAsOptions{})...)
 					if resp.Diagnostics.HasError() {
 						return
 					}
-					state.ManagedRuleGroup = listValue
-					state.RuleGroupReference = fwtypes.NewListNestedObjectValueOfNull[ruleGroupReferenceModel](ctx)
+
+					managedStmt := rule.Statement.ManagedRuleGroupStatement
+					// Check if this matches our managed rule group from state
+					if aws.ToString(managedStmt.Name) == managedRuleGroupRef.Name.ValueString() &&
+						aws.ToString(managedStmt.VendorName) == managedRuleGroupRef.VendorName.ValueString() {
+
+						// Check version match (both can be empty/null)
+						stateVersion := managedRuleGroupRef.Version.ValueString()
+						ruleVersion := aws.ToString(managedStmt.Version)
+						if stateVersion == ruleVersion {
+							matchesRuleGroup = true
+							// Handle rule action overrides with autoflex
+							if managedStmt.RuleActionOverrides != nil {
+								resp.Diagnostics.Append(fwflex.Flatten(ctx, managedStmt.RuleActionOverrides, &ruleActionOverrides)...)
+								if resp.Diagnostics.HasError() {
+									return
+								}
+							} else {
+								ruleActionOverrides = fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx)
+							}
+
+							// Update the managed rule group nested structure
+							managedRuleGroupRef.RuleActionOverride = ruleActionOverrides
+							listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*managedRuleGroupModel{&managedRuleGroupRef}, nil)
+							resp.Diagnostics.Append(diags...)
+							if resp.Diagnostics.HasError() {
+								return
+							}
+							state.ManagedRuleGroup = listValue
+							state.RuleGroupReference = fwtypes.NewListNestedObjectValueOfNull[ruleGroupReferenceModel](ctx)
+						}
+					}
 				}
 			}
 
@@ -833,10 +807,7 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 		return
 	}
 
-	// Update state with current values
-	state.WebACLARN = types.StringValue(webACLARN)
-	state.RuleName = types.StringValue(ruleName)
-
+	// Update state with current values (WebACLARN and RuleName should already be set from current state)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -1012,20 +983,9 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 
 	conn := r.Meta().WAFV2Client(ctx)
 
-	// Parse the ID using the standard flex utility
-	// Format: webACLARN,ruleName,ruleGroupType,ruleGroupIdentifier
-	parts, err := flex.ExpandResourceId(state.ID.ValueString(), webACLRuleGroupAssociationResourceIDPartCount, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Resource ID",
-			fmt.Sprintf("Could not parse resource ID: %s", err),
-		)
-		return
-	}
-
-	webACLARN := parts[0]
-	ruleName := parts[1]
-	// We don't need parts[2] (ruleGroupType) or parts[3] (ruleGroupIdentifier) for deletion
+	// Use attributes directly instead of parsing ID
+	webACLARN := state.WebACLARN.ValueString()
+	ruleName := state.RuleName.ValueString()
 
 	// Parse Web ACL ARN to get ID, name, and scope
 	webACLID, webACLName, webACLScope, err := parseWebACLARN(webACLARN)
@@ -1046,7 +1006,7 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.RuleName.String(), err),
 			err.Error(),
 		)
 		return
@@ -1096,7 +1056,7 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.WAFV2, create.ErrActionDeleting, ResNameWebACLRuleGroupAssociation, state.RuleName.String(), err),
 			err.Error(),
 		)
 		return
@@ -1104,24 +1064,22 @@ func (r *resourceWebACLRuleGroupAssociation) Delete(ctx context.Context, req res
 }
 
 func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Import format can be:
-	// 1. webACLARN,ruleGroupARN,ruleName (custom rule group - has ARN)
-	// 2. webACLARN,vendorName:ruleName[:version],ruleName (managed rule group - no ARN)
-	parts := strings.Split(req.ID, ",")
-	if len(parts) != 3 {
+	parts, err := intflex.ExpandResourceId(req.ID, webACLRuleGroupAssociationResourceIDPartCount, true)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import ID should be in format 'webACLARN,ruleGroupIdentifier,ruleName' where ruleGroupIdentifier is either an ARN (custom) or vendorName:ruleName[:version] (managed)",
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: web_acl_arn,rule_name,rule_group_type,rule_group_identifier. Got: %q", req.ID),
 		)
 		return
 	}
 
 	webACLARN := parts[0]
-	ruleGroupIdentifier := parts[1]
-	ruleName := parts[2]
+	ruleName := parts[1]
+	ruleGroupType := parts[2]
+	ruleGroupIdentifier := parts[3]
 
 	// Parse Web ACL ARN to get ID, name, and scope
-	_, _, _, err := parseWebACLARN(webACLARN)
+	_, _, _, err = parseWebACLARN(webACLARN)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Web ACL ARN",
@@ -1130,21 +1088,35 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		return
 	}
 
-	// Determine rule group type based on identifier format
-	var ruleGroupType string
-	var ruleGroupRefModel *ruleGroupReferenceModel
-	var managedRuleGroupRef *managedRuleGroupModel
+	// Set basic attributes
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)
 
-	if arn.IsARN(ruleGroupIdentifier) {
+	// Set the appropriate rule group nested structure based on type
+	if ruleGroupType == "custom" {
 		// Custom rule group (ARN format)
-		ruleGroupType = "custom"
-		ruleGroupRefModel = &ruleGroupReferenceModel{
+		if !arn.IsARN(ruleGroupIdentifier) {
+			resp.Diagnostics.AddError(
+				"Invalid Custom Rule Group Identifier",
+				"Custom rule group identifier should be an ARN",
+			)
+			return
+		}
+
+		ruleGroupRefModel := &ruleGroupReferenceModel{
 			ARN:                types.StringValue(ruleGroupIdentifier),
 			RuleActionOverride: fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx),
 		}
-	} else {
+
+		listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{ruleGroupRefModel}, nil)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), listValue)...)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_rule_group"), fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupModel](ctx))...)
+	} else if ruleGroupType == "managed" {
 		// Managed rule group (vendorName:ruleName[:version] format)
-		ruleGroupType = "managed"
 		identifierParts := strings.Split(ruleGroupIdentifier, ":")
 		if len(identifierParts) < 2 {
 			resp.Diagnostics.AddError(
@@ -1161,7 +1133,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 			version = identifierParts[2]
 		}
 
-		managedRuleGroupRef = &managedRuleGroupModel{
+		managedRuleGroupRef := &managedRuleGroupModel{
 			Name:               types.StringValue(ruleGroupName),
 			VendorName:         types.StringValue(vendorName),
 			RuleActionOverride: fwtypes.NewListNestedObjectValueOfNull[ruleActionOverrideModel](ctx),
@@ -1171,32 +1143,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		} else {
 			managedRuleGroupRef.Version = types.StringNull()
 		}
-	}
 
-	// Set the ID using the standard flex utility with comma separators
-	id, err := flex.FlattenResourceId([]string{webACLARN, ruleName, ruleGroupType, ruleGroupIdentifier}, webACLRuleGroupAssociationResourceIDPartCount, false)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating resource ID",
-			fmt.Sprintf("Could not create resource ID: %s", err),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("web_acl_arn"), webACLARN)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)
-
-	// Set the appropriate rule group nested structure
-	if ruleGroupRefModel != nil {
-		listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*ruleGroupReferenceModel{ruleGroupRefModel}, nil)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), listValue)...)
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_rule_group"), fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupModel](ctx))...)
-	} else if managedRuleGroupRef != nil {
 		listValue, diags := fwtypes.NewListNestedObjectValueOfSlice(ctx, []*managedRuleGroupModel{managedRuleGroupRef}, nil)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
@@ -1204,6 +1151,12 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		}
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_rule_group"), listValue)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), fwtypes.NewListNestedObjectValueOfNull[ruleGroupReferenceModel](ctx))...)
+	} else {
+		resp.Diagnostics.AddError(
+			"Invalid Rule Group Type",
+			fmt.Sprintf("Rule group type must be 'custom' or 'managed', got: %s", ruleGroupType),
+		)
+		return
 	}
 }
 
@@ -1241,7 +1194,6 @@ func parseWebACLARN(arn string) (id, name, scope string, err error) {
 
 type resourceWebACLRuleGroupAssociationModel struct {
 	framework.WithRegionModel
-	ID                 types.String                                             `tfsdk:"id"`
 	RuleName           types.String                                             `tfsdk:"rule_name"`
 	Priority           types.Int32                                              `tfsdk:"priority"`
 	RuleGroupReference fwtypes.ListNestedObjectValueOf[ruleGroupReferenceModel] `tfsdk:"rule_group_reference"`
