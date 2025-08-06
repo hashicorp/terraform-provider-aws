@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -82,15 +81,22 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"routing_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[agentAliasRoutingConfigurationListItemModel](ctx),
-				Optional:   true,
-				Computed:   true,
+			"routing_configuration": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"agent_version": schema.StringAttribute{
+							Optional: true,
+							Computed: true,
+						},
+						"provisioned_throughput": schema.StringAttribute{
+							Optional: true,
+						},
+					},
+				},
+				Optional: true,
+				Computed: true,
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[agentAliasRoutingConfigurationListItemModel](ctx),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -171,18 +177,6 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	// Handle the case where routing_configuration was not provided in the plan but AWS returns it with a default agent_version
-	// This prevents the "Provider produced inconsistent result" error
-	var planData agentAliasResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &planData)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if planData.RoutingConfiguration.IsNull() {
-		// If routing_configuration was not specified in the plan, keep it as null in the state
-		data.RoutingConfiguration = planData.RoutingConfiguration
-	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -219,22 +213,9 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	// Store the original state to check if routing_configuration should remain null
-	var originalData agentAliasResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &originalData)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	// Handle the case where routing_configuration was null in the original state
-	// This maintains consistency when AWS returns a default agent_version
-	if originalData.RoutingConfiguration.IsNull() {
-		data.RoutingConfiguration = originalData.RoutingConfiguration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -292,17 +273,7 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		}
 	}
 
-	// Handle routing_configuration state consistency
-	var planData agentAliasResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &planData)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if planData.RoutingConfiguration.IsNull() {
-		// If routing_configuration was not specified in the plan, keep it as null in the state
-		new.RoutingConfiguration = planData.RoutingConfiguration
-	} else if new.RoutingConfiguration.IsUnknown() {
+	if new.RoutingConfiguration.IsUnknown() {
 		// set unknowns if a tags only update
 		new.RoutingConfiguration = old.RoutingConfiguration
 	}
@@ -422,7 +393,7 @@ type agentAliasResourceModel struct {
 	AgentID              types.String                                                                 `tfsdk:"agent_id"`
 	Description          types.String                                                                 `tfsdk:"description"`
 	ID                   types.String                                                                 `tfsdk:"id"`
-	RoutingConfiguration fwtypes.ListNestedObjectValueOf[agentAliasRoutingConfigurationListItemModel] `tfsdk:"routing_configuration"`
+	RoutingConfiguration types.List `tfsdk:"routing_configuration"`
 	Tags                 tftags.Map                                                                   `tfsdk:"tags"`
 	TagsAll              tftags.Map                                                                   `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                               `tfsdk:"timeouts"`

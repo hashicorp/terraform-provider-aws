@@ -177,7 +177,7 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAgentAlias_routingConfigurationNull(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_routingConfigurationComputed(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -190,7 +190,7 @@ func TestAccBedrockAgentAgentAlias_routingConfigurationNull(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentAliasConfig_routingConfigurationNull(rName),
+				Config: testAccAgentAliasConfig_routingConfigurationComputed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
@@ -198,8 +198,9 @@ func TestAccBedrockAgentAgentAlias_routingConfigurationNull(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
-					// The key assertion: routing_configuration should remain null even if AWS returns a default
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "0"),
+					// AWS returns the computed routing configuration with agent_version
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "routing_configuration.0.agent_version"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -482,7 +483,7 @@ resource "aws_bedrockagent_agent_alias" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAgentAliasConfig_routingConfigurationNull(rName string) string {
+func testAccAgentAliasConfig_routingConfigurationComputed(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		fmt.Sprintf(`
@@ -504,7 +505,7 @@ resource "aws_bedrockagent_agent_alias" "test" {
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test Alias"
   routing_configuration {
-    agent_version = null
+    # agent_version is computed by AWS
   }
 }
 `, rName))
