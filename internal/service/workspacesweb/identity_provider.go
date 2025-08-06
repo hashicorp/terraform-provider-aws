@@ -6,6 +6,7 @@ package workspacesweb
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
@@ -109,11 +110,13 @@ func (r *identityProviderResource) Create(ctx context.Context, request resource.
 	data.IdentityProviderARN = fwflex.StringToFramework(ctx, output.IdentityProviderArn)
 
 	// Get the identity provider details to populate other fields
-	identityProvider, err := findIdentityProviderByARN(ctx, conn, data.IdentityProviderARN.ValueString())
+	identityProvider, portalARN, err := findIdentityProviderByARN(ctx, conn, data.IdentityProviderARN.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameIdentityProvider, data.IdentityProviderARN.ValueString()), err.Error())
 		return
 	}
+
+	data.PortalARN = types.StringValue(portalARN)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, identityProvider, &data)...)
 	if response.Diagnostics.HasError() {
@@ -132,7 +135,7 @@ func (r *identityProviderResource) Read(ctx context.Context, request resource.Re
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
-	output, err := findIdentityProviderByARN(ctx, conn, data.IdentityProviderARN.ValueString())
+	output, portalARN, err := findIdentityProviderByARN(ctx, conn, data.IdentityProviderARN.ValueString())
 	if tfretry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -144,6 +147,7 @@ func (r *identityProviderResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	data.PortalARN = types.StringValue(portalARN)
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -221,28 +225,52 @@ func (r *identityProviderResource) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root("identity_provider_arn"), request, response)
 }
 
-func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.IdentityProvider, error) {
+func portalARNFromIdentityProviderARN(identityProviderARN string) (string, error) {
+	// Identity Provider ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
+	// Portal ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:portal/{PORTAL_ID}
+	parts := strings.Split(identityProviderARN, ":")
+	if len(parts) != 6 {
+		return "", fmt.Errorf("invalid identity provider ARN format: %s", identityProviderARN)
+	}
+
+	resourcePart := parts[5] // identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
+	resourceParts := strings.Split(resourcePart, "/")
+	if len(resourceParts) != 3 || resourceParts[0] != "identityProvider" {
+		return "", fmt.Errorf("invalid identity provider ARN resource format: %s", identityProviderARN)
+	}
+
+	portalID := resourceParts[1]
+	portalARN := fmt.Sprintf("%s:%s:%s:%s:%s:portal/%s", parts[0], parts[1], parts[2], parts[3], parts[4], portalID)
+	return portalARN, nil
+}
+
+func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.IdentityProvider, string, error) {
 	input := workspacesweb.GetIdentityProviderInput{
 		IdentityProviderArn: &arn,
 	}
 	output, err := conn.GetIdentityProvider(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, "", tfresource.NewEmptyResultError(input)
 	}
 
-	return output.IdentityProvider, nil
+	portalARN, err := portalARNFromIdentityProviderARN(arn)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return output.IdentityProvider, portalARN, nil
 }
 
 type identityProviderResourceModel struct {

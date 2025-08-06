@@ -5,24 +5,52 @@ page_title: "AWS: aws_workspacesweb_identity_provider"
 description: |-
   Terraform resource for managing an AWS WorkSpaces Web Identity Provider.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_workspacesweb_identity_provider
 
 Terraform resource for managing an AWS WorkSpaces Web Identity Provider.
 
 ## Example Usage
 
-### Basic Usage
+### Basic Usage with SAML
 
 ```terraform
+resource "aws_workspacesweb_portal" "example" {
+  display_name = "example"
+}
+
 resource "aws_workspacesweb_identity_provider" "example" {
+  identity_provider_name = "example-saml"
+  identity_provider_type = "SAML"
+  portal_arn            = aws_workspacesweb_portal.example.portal_arn
+
+  identity_provider_details = {
+    MetadataURL = "https://example.com/metadata"
+  }
+}
+```
+
+### OIDC Identity Provider
+
+```terraform
+resource "aws_workspacesweb_portal" "example" {
+  display_name = "example"
+}
+
+resource "aws_workspacesweb_identity_provider" "example" {
+  identity_provider_name = "example-oidc"
+  identity_provider_type = "OIDC"
+  portal_arn            = aws_workspacesweb_portal.example.portal_arn
+
+  identity_provider_details = {
+    client_id     = "example-client-id"
+    client_secret = "example-client-secret"
+    oidc_issuer   = "https://example.com/issuer"
+  }
+
+  tags = {
+    Name = "example-identity-provider"
+  }
 }
 ```
 
@@ -30,40 +58,66 @@ resource "aws_workspacesweb_identity_provider" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `identity_provider_details` - (Required) Identity provider details. The following list describes the provider detail keys for each identity provider type:
+  * For Google and Login with Amazon:
+    * `client_id`
+    * `client_secret`
+    * `authorize_scopes`
+  * For Facebook:
+    * `client_id`
+    * `client_secret`
+    * `authorize_scopes`
+    * `api_version`
+  * For Sign in with Apple:
+    * `client_id`
+    * `team_id`
+    * `key_id`
+    * `private_key`
+    * `authorize_scopes`
+  * For OIDC providers:
+    * `client_id`
+    * `client_secret`
+    * `attributes_request_method`
+    * `oidc_issuer`
+    * `authorize_scopes`
+    * `authorize_url` if not available from discovery URL specified by `oidc_issuer` key
+    * `token_url` if not available from discovery URL specified by `oidc_issuer` key
+    * `attributes_url` if not available from discovery URL specified by `oidc_issuer` key
+    * `jwks_uri` if not available from discovery URL specified by `oidc_issuer` key
+  * For SAML providers:
+    * `MetadataFile` OR `MetadataURL`
+    * `IDPSignout` (boolean) optional
+    * `IDPInit` (boolean) optional
+    * `RequestSigningAlgorithm` (string) optional - Only accepts rsa-sha256
+    * `EncryptedResponses` (boolean) optional
+* `identity_provider_name` - (Required) Identity provider name.
+* `identity_provider_type` - (Required) Identity provider type. Valid values: `SAML`, `Facebook`, `Google`, `LoginWithAmazon`, `SignInWithApple`, `OIDC`.
+* `portal_arn` - (Required) ARN of the web portal. Forces replacement if changed.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Identity Provider. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `identity_provider_arn` - ARN of the identity provider.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Web Identity Provider using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Web Identity Provider using the `identity_provider_arn`. For example:
 
 ```terraform
 import {
   to = aws_workspacesweb_identity_provider.example
-  id = "identity_provider-id-12345678"
+  id = "arn:aws:workspaces-web:us-west-2:123456789012:identityprovider/abcdef12345678/12345678-1234-1234-1234-123456789012"
 }
 ```
 
-Using `terraform import`, import WorkSpaces Web Identity Provider using the `example_id_arg`. For example:
+Using `terraform import`, import WorkSpaces Web Identity Provider using the `identity_provider_arn`. For example:
 
 ```console
-% terraform import aws_workspacesweb_identity_provider.example identity_provider-id-12345678
+% terraform import aws_workspacesweb_identity_provider.example arn:aws:workspaces-web:us-west-2:123456789012:identityprovider/abcdef12345678/12345678-1234-1234-1234-123456789012
 ```

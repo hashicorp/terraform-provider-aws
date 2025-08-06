@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,7 +41,7 @@ func TestAccWorkSpacesWebIdentityProvider_basic(t *testing.T) {
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata"),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_provider_details.MetadataFile"),
 					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "identity_provider_arn", "workspaces-web", regexache.MustCompile(`identityProvider/.+$`)),
 				),
@@ -84,6 +84,45 @@ func TestAccWorkSpacesWebIdentityProvider_disappears(t *testing.T) {
 	})
 }
 
+func TestAccWorkSpacesWebIdentityProvider_oidc_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProvider
+	resourceName := "aws_workspacesweb_identity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_updated(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test-updated"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeOidc)),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_id", "test-client-id"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_secret", "test-client-secret"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.oidc_issuer", "https://accounts.google.com"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.authorize_scopes", "openid, email"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.attributes_request_method", "POST"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "identity_provider_arn"),
+				ImportStateVerifyIdentifierAttribute: "identity_provider_arn",
+			},
+		},
+	})
+}
+
 func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider awstypes.IdentityProvider
@@ -105,7 +144,7 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeSaml)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata"),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_provider_details.MetadataFile"),
 				),
 			},
 			{
@@ -114,10 +153,11 @@ func TestAccWorkSpacesWebIdentityProvider_update(t *testing.T) {
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_name", "test-updated"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", string(awstypes.IdentityProviderTypeOidc)),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.MetadataURL", "https://example.com/metadata-updated"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_id", "test-client-id"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.client_secret", "test-client-secret"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.oidc_issuer", "https://example.com/issuer"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.oidc_issuer", "https://accounts.google.com"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.authorize_scopes", "openid, email"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_details.attributes_request_method", "POST"),
 				),
 			},
 			{
@@ -140,9 +180,9 @@ func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
+			_, _, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -166,7 +206,7 @@ func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *awstyp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
 
-		output, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
+		output, _, err := tfworkspacesweb.FindIdentityProviderByARN(ctx, conn, rs.Primary.Attributes["identity_provider_arn"])
 
 		if err != nil {
 			return err
@@ -190,7 +230,7 @@ resource "aws_workspacesweb_identity_provider" "test" {
   portal_arn            = aws_workspacesweb_portal.test.portal_arn
 
   identity_provider_details = {
-    MetadataURL = "https://example.com/metadata"
+    MetadataFile = file("./testfixtures/saml-metadata.xml")
   }
 }
 `
@@ -208,10 +248,11 @@ resource "aws_workspacesweb_identity_provider" "test" {
   portal_arn            = aws_workspacesweb_portal.test.portal_arn
 
   identity_provider_details = {
-    MetadataURL = "https://example.com/metadata-updated"
     client_id = "test-client-id"
     client_secret = "test-client-secret"
-    oidc_issuer = "https://example.com/issuer"
+    oidc_issuer = "https://accounts.google.com"
+	attributes_request_method = "POST"
+	authorize_scopes = "openid, email"
   }
 }
 `
