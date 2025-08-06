@@ -26,7 +26,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.PlaybackKeyPair")
-// @Testing(preIdentityVersion="v6.5.0")
+// @Testing(preIdentityVersion="v6.7.0")
 // @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(tlsEcdsaPublicKeyPem=true)

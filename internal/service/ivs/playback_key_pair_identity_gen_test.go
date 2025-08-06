@@ -258,7 +258,7 @@ func testAccIVSPlaybackKeyPair_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.5.0
+// Resource Identity was added after v6.7.0
 func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -277,7 +277,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/PlaybackKeyPair/basic_v6.5.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/PlaybackKeyPair/basic_v6.7.0/"),
 				ConfigVariables: config.Variables{
 					"rTlsEcdsaPublicKeyPem": config.StringVariable(rTlsEcdsaPublicKeyPem),
 				},

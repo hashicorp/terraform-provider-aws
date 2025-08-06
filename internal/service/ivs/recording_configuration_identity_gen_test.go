@@ -226,7 +226,7 @@ func TestAccIVSRecordingConfiguration_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.5.0
+// Resource Identity was added after v6.7.0
 func TestAccIVSRecordingConfiguration_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -244,7 +244,7 @@ func TestAccIVSRecordingConfiguration_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/RecordingConfiguration/basic_v6.5.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/RecordingConfiguration/basic_v6.7.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
