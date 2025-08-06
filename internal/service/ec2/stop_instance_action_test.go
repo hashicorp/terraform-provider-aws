@@ -48,7 +48,7 @@ func TestAccEC2StopInstanceAction_force(t *testing.T) {
 					}
 
 					// Invoke the action programmatically with force=true
-					if err := invokeStopInstanceAction(t, ctx, *v.InstanceId, true); err != nil {
+					if err := invokeStopInstanceAction(ctx, t, *v.InstanceId, true); err != nil {
 						t.Fatalf("Failed to invoke stop instance action: %v", err)
 					}
 				},
@@ -138,7 +138,7 @@ action "aws_ec2_stop_instance" "test" {
 }
 
 // Step 1: Get the AWS provider as a ProviderServerWithActions
-func providerWithActions(t *testing.T, ctx context.Context) tfprotov5.ProviderServerWithActions {
+func providerWithActions(ctx context.Context, t *testing.T) tfprotov5.ProviderServerWithActions {
 	t.Helper()
 
 	// Use the existing configured provider factories that handle muxing
@@ -157,7 +157,7 @@ func providerWithActions(t *testing.T, ctx context.Context) tfprotov5.ProviderSe
 	}
 
 	// Cast to ProviderServerWithActions
-	providerWithActions, ok := providerServer.(tfprotov5.ProviderServerWithActions)
+	providerWithActions, ok := providerServer.(tfprotov5.ProviderServerWithActions) //nolint:staticcheck // SA1019: Working in alpha situation
 	if !ok {
 		t.Fatal("Provider does not implement ProviderServerWithActions")
 	}
@@ -256,11 +256,11 @@ func buildStopInstanceActionConfig(instanceID string, force bool) (tftypes.Type,
 }
 
 // Step 3: Programmatic action invocation
-func invokeStopInstanceAction(t *testing.T, ctx context.Context, instanceID string, force bool) error {
+func invokeStopInstanceAction(ctx context.Context, t *testing.T, instanceID string, force bool) error {
 	t.Helper()
 
 	// Get the provider
-	awsProvider := providerWithActions(t, ctx)
+	p := providerWithActions(ctx, t)
 
 	// Build configuration
 	configType, configMap := buildStopInstanceActionConfig(instanceID, force)
@@ -277,7 +277,7 @@ func invokeStopInstanceAction(t *testing.T, ctx context.Context, instanceID stri
 	}
 
 	// Step 3: Invoke the action directly (provider should already be configured)
-	invokeResp, err := awsProvider.InvokeAction(ctx, &tfprotov5.InvokeActionRequest{
+	invokeResp, err := p.InvokeAction(ctx, &tfprotov5.InvokeActionRequest{
 		ActionType: actionTypeName,
 		Config:     &testConfig,
 	})
