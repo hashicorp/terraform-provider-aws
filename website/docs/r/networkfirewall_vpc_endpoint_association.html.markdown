@@ -3,12 +3,12 @@ subcategory: "Network Firewall"
 layout: "aws"
 page_title: "AWS: aws_networkfirewall_vpc_endpoint_association"
 description: |-
-  Manages an AWS Network Firewall VPC Endpoint Association.
+  Manages a firewall endpoint for an AWS Network Firewall firewall.
 ---
 
 # Resource: aws_networkfirewall_vpc_endpoint_association
 
-Manages an AWS Network Firewall VPC Endpoint Association.
+Manages a firewall endpoint for an AWS Network Firewall firewall.
 
 Use `aws_networkfirewall_vpc_endpoint_association` to establish new firewall endpoints in any Availability Zone where the firewall is already being used. The first use of a firewall in an Availability Zone must be defined by `aws_networkfirewall_firewall` resource and `subnet_mapping` argument.
 
@@ -39,12 +39,12 @@ resource "aws_networkfirewall_vpc_endpoint_association" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` (Optional) - A description of the VPC endpoint association.
 * `firewall_arn` (Required) - The Amazon Resource Name (ARN) that identifies the firewall.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_mapping` (Required) - The ID for a subnet that's used in an association with a firewall. See [Subnet Mapping](#subnet-mapping) below for details.
-* `vpc_id` (Required) - The unique identifier of the VPC for the endpoint association.
 * `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_id` (Required) - The unique identifier of the VPC for the endpoint association.
 
 ### Subnet Mapping
 
@@ -57,36 +57,36 @@ The `subnet_mapping` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the VPC Endpoint Association.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpc_endpoint_association_arn` - ARN of the VPC Endpoint Association.
 * `vpc_endpoint_association_id` - The unique identifier of the VPC endpoint association.
 * `vpc_endpoint_association_status` - Nested list of information about the current status of the VPC Endpoint Association.
-    * `association_sync_state` - Set of subnets configured for use by the VPC Endpoint Association.
+    * `association_sync_states` - Set of subnets configured for use by the VPC Endpoint Association.
         * `attachment` - Nested list describing the attachment status of the firewall's VPC Endpoint Association with a single VPC subnet.
             * `endpoint_id` - The identifier of the VPC endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a VPC Endpoint Association endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `delete` - (Default `60m`)
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall VPC Endpoint Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall VPC Endpoint Association using the `vpc_endpoint_association_arn`. For example:
 
 ```terraform
 import {
   to = aws_networkfirewall_vpc_endpoint_association.example
-  id = "vpc_endpoint_association-id-12345678"
+  id = "arn:aws:network-firewall:us-west-1:123456789012:vpc-endpoint-association/example"
 }
 ```
 
-Using `terraform import`, import Network Firewall VPC Endpoint Association using the `example_id_arg`. For example:
+Using `terraform import`, import Network Firewall VPC Endpoint Association using the `vpc_endpoint_association_arn`. For example:
 
 ```console
-% terraform import aws_networkfirewall_vpc_endpoint_association.example vpc_endpoint_association-id-12345678
+% terraform import aws_networkfirewall_vpc_endpoint_association.example arn:aws:network-firewall:us-west-1:123456789012:vpc-endpoint-association/example
 ```

@@ -5,20 +5,22 @@ package networkfirewall_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,12 +32,9 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var vpcendpointassociation networkfirewall.DescribeVpcEndpointAssociationOutput
+	var v networkfirewall.DescribeVpcEndpointAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_vpc_endpoint_association.test"
-	firewallResourceName := "aws_networkfirewall_firewall.test"
-	vpcResourceName := "aws_vpc.target"
-	subnetResourceName := "aws_subnet.target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -49,19 +48,32 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &vpcendpointassociation),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_mapping.0.subnet_id", subnetResourceName, names.AttrID),
-					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "vpc_endpoint_association_status.0.association_sync_state.*", map[string]*regexp.Regexp{
-						"attachment.0.endpoint_id": regexache.MustCompile(`vpce-`),
-					}),
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"ip_address_type": tfknownvalue.StringExact(awstypes.IPAddressTypeIpv4),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_arn"), tfknownvalue.RegionalARNRegexp("networkfirewall", regexache.MustCompile(`vpc-endpoint-association/.+`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_id"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("vpc_endpoint_association_status"), knownvalue.ListSizeExact(1)),
+				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vpc_endpoint_association_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpc_endpoint_association_arn"),
 			},
 		},
 	})
@@ -73,14 +85,14 @@ func TestAccNetworkFirewallVPCEndpointAssociation_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var vpcendpointassociation networkfirewall.DescribeVpcEndpointAssociationOutput
+	var v networkfirewall.DescribeVpcEndpointAssociationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_vpc_endpoint_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccVPCEndpointAssociationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,8 +101,7 @@ func TestAccNetworkFirewallVPCEndpointAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccVPCEndpointAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &vpcendpointassociation),
-
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceVPCEndpointAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,6 +109,129 @@ func TestAccNetworkFirewallVPCEndpointAssociation_disappears(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallVPCEndpointAssociation_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v networkfirewall.DescribeVpcEndpointAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_vpc_endpoint_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccVPCEndpointAssociationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointAssociationConfig_full(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("testing")),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vpc_endpoint_association_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpc_endpoint_association_arn"),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallVPCEndpointAssociation_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v networkfirewall.DescribeVpcEndpointAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_vpc_endpoint_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccVPCEndpointAssociationPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "vpc_endpoint_association_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "vpc_endpoint_association_arn"),
+			},
+			{
+				Config: testAccVPCEndpointAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccVPCEndpointAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointAssociationExists(ctx, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 		},
@@ -113,40 +247,39 @@ func testAccCheckVPCEndpointAssociationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfnetworkfirewall.FindVPCEndpointAssociationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfnetworkfirewall.FindVPCEndpointAssociationByARN(ctx, conn, rs.Primary.Attributes["vpc_endpoint_association_arn"])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameVPCEndpointAssociation, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingDestroyed, tfnetworkfirewall.ResNameVPCEndpointAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("NetworkFirewall VPC Endpoint Association %s still exists", rs.Primary.Attributes["vpc_endpoint_association_arn"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCEndpointAssociationExists(ctx context.Context, name string, vpcendpointassociation *networkfirewall.DescribeVpcEndpointAssociationOutput) resource.TestCheckFunc {
+func testAccCheckVPCEndpointAssociationExists(ctx context.Context, n string, v *networkfirewall.DescribeVpcEndpointAssociationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameVPCEndpointAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameVPCEndpointAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-		resp, err := tfnetworkfirewall.FindVPCEndpointAssociationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfnetworkfirewall.FindVPCEndpointAssociationByARN(ctx, conn, rs.Primary.Attributes["vpc_endpoint_association_arn"])
+
 		if err != nil {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingExistence, tfnetworkfirewall.ResNameVPCEndpointAssociation, rs.Primary.ID, err)
+			return err
 		}
 
-		*vpcendpointassociation = *resp
+		*v = *output
 
 		return nil
 	}
@@ -167,18 +300,8 @@ func testAccVPCEndpointAssociationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccVPCEndpointAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
-resource "aws_networkfirewall_firewall" "test" {
-  name                = %[1]q
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
-  vpc_id              = aws_vpc.test.id
-
-  subnet_mapping {
-    subnet_id = aws_subnet.test[0].id
-  }
-}
-
+func testAccVPCEndpointAssociationConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_basic(rName), fmt.Sprintf(`
 resource "aws_vpc" "target" {
   cidr_block = "10.0.0.0/16"
 
@@ -196,7 +319,39 @@ resource "aws_subnet" "target" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccVPCEndpointAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointAssociationConfig_base(rName), `
+resource "aws_networkfirewall_vpc_endpoint_association" "test" {
+  firewall_arn = aws_networkfirewall_firewall.test.arn
+  vpc_id       = aws_vpc.target.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.target.id
+  }
+}
+`)
+}
+
+func testAccVPCEndpointAssociationConfig_full(rName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointAssociationConfig_base(rName), `
+resource "aws_networkfirewall_vpc_endpoint_association" "test" {
+  description  = "testing"
+  firewall_arn = aws_networkfirewall_firewall.test.arn
+  vpc_id       = aws_vpc.target.id
+
+  subnet_mapping {
+    ip_address_type = "IPV4"
+    subnet_id       = aws_subnet.target.id
+  }
+}
+`)
+}
+
+func testAccVPCEndpointAssociationConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_vpc_endpoint_association" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
   vpc_id       = aws_vpc.target.id
@@ -206,8 +361,26 @@ resource "aws_networkfirewall_vpc_endpoint_association" "test" {
   }
 
   tags = {
-    Name = %[1]q
+    %[1]q = %[2]q
   }
 }
-`, rName))
+`, tag1Key, tag1Value))
+}
+
+func testAccVPCEndpointAssociationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointAssociationConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_vpc_endpoint_association" "test" {
+  firewall_arn = aws_networkfirewall_firewall.test.arn
+  vpc_id       = aws_vpc.target.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.target.id
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tag1Key, tag1Value, tag2Key, tag2Value))
 }
