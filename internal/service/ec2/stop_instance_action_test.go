@@ -138,7 +138,7 @@ action "aws_ec2_stop_instance" "test" {
 }
 
 // Step 1: Get the AWS provider as a ProviderServerWithActions
-func providerWithActions(ctx context.Context, t *testing.T) tfprotov5.ProviderServerWithActions {
+func providerWithActions(ctx context.Context, t *testing.T) tfprotov5.ProviderServerWithActions { //nolint:staticcheck // SA1019: Working in alpha situation
 	t.Helper()
 
 	// Use the existing configured provider factories that handle muxing
