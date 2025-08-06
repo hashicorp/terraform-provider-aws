@@ -22,7 +22,7 @@ resource "aws_workspacesweb_portal" "example" {
 resource "aws_workspacesweb_identity_provider" "example" {
   identity_provider_name = "example-saml"
   identity_provider_type = "SAML"
-  portal_arn            = aws_workspacesweb_portal.example.portal_arn
+  portal_arn             = aws_workspacesweb_portal.example.portal_arn
 
   identity_provider_details = {
     MetadataURL = "https://example.com/metadata"
@@ -33,23 +33,21 @@ resource "aws_workspacesweb_identity_provider" "example" {
 ### OIDC Identity Provider
 
 ```terraform
-resource "aws_workspacesweb_portal" "example" {
-  display_name = "example"
+resource "aws_workspacesweb_portal" "test" {
+  display_name = "test"
 }
 
-resource "aws_workspacesweb_identity_provider" "example" {
-  identity_provider_name = "example-oidc"
+resource "aws_workspacesweb_identity_provider" "test" {
+  identity_provider_name = "test-updated"
   identity_provider_type = "OIDC"
-  portal_arn            = aws_workspacesweb_portal.example.portal_arn
+  portal_arn             = aws_workspacesweb_portal.test.portal_arn
 
   identity_provider_details = {
-    client_id     = "example-client-id"
-    client_secret = "example-client-secret"
-    oidc_issuer   = "https://example.com/issuer"
-  }
-
-  tags = {
-    Name = "example-identity-provider"
+    client_id                 = "test-client-id"
+    client_secret             = "test-client-secret"
+    oidc_issuer               = "https://accounts.google.com"
+    attributes_request_method = "POST"
+    authorize_scopes          = "openid, email"
   }
 }
 ```
@@ -59,37 +57,37 @@ resource "aws_workspacesweb_identity_provider" "example" {
 The following arguments are required:
 
 * `identity_provider_details` - (Required) Identity provider details. The following list describes the provider detail keys for each identity provider type:
-  * For Google and Login with Amazon:
-    * `client_id`
-    * `client_secret`
-    * `authorize_scopes`
-  * For Facebook:
-    * `client_id`
-    * `client_secret`
-    * `authorize_scopes`
-    * `api_version`
-  * For Sign in with Apple:
-    * `client_id`
-    * `team_id`
-    * `key_id`
-    * `private_key`
-    * `authorize_scopes`
-  * For OIDC providers:
-    * `client_id`
-    * `client_secret`
-    * `attributes_request_method`
-    * `oidc_issuer`
-    * `authorize_scopes`
-    * `authorize_url` if not available from discovery URL specified by `oidc_issuer` key
-    * `token_url` if not available from discovery URL specified by `oidc_issuer` key
-    * `attributes_url` if not available from discovery URL specified by `oidc_issuer` key
-    * `jwks_uri` if not available from discovery URL specified by `oidc_issuer` key
-  * For SAML providers:
-    * `MetadataFile` OR `MetadataURL`
-    * `IDPSignout` (boolean) optional
-    * `IDPInit` (boolean) optional
-    * `RequestSigningAlgorithm` (string) optional - Only accepts rsa-sha256
-    * `EncryptedResponses` (boolean) optional
+    * For Google and Login with Amazon:
+        * `client_id`
+        * `client_secret`
+        * `authorize_scopes`
+    * For Facebook:
+        * `client_id`
+        * `client_secret`
+        * `authorize_scopes`
+        * `api_version`
+    * For Sign in with Apple:
+        * `client_id`
+        * `team_id`
+        * `key_id`
+        * `private_key`
+        * `authorize_scopes`
+    * For OIDC providers:
+        * `client_id`
+        * `client_secret`
+        * `attributes_request_method`
+        * `oidc_issuer`
+        * `authorize_scopes`
+        * `authorize_url` if not available from discovery URL specified by `oidc_issuer` key
+        * `token_url` if not available from discovery URL specified by `oidc_issuer` key
+        * `attributes_url` if not available from discovery URL specified by `oidc_issuer` key
+        * `jwks_uri` if not available from discovery URL specified by `oidc_issuer` key
+    * For SAML providers:
+        * `MetadataFile` OR `MetadataURL`
+        * `IDPSignout` (boolean) optional
+        * `IDPInit` (boolean) optional
+        * `RequestSigningAlgorithm` (string) optional - Only accepts rsa-sha256
+        * `EncryptedResponses` (boolean) optional
 * `identity_provider_name` - (Required) Identity provider name.
 * `identity_provider_type` - (Required) Identity provider type. Valid values: `SAML`, `Facebook`, `Google`, `LoginWithAmazon`, `SignInWithApple`, `OIDC`.
 * `portal_arn` - (Required) ARN of the web portal. Forces replacement if changed.

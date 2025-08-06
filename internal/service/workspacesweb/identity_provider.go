@@ -207,7 +207,7 @@ func (r *identityProviderResource) Delete(ctx context.Context, request resource.
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	input := workspacesweb.DeleteIdentityProviderInput{
-		IdentityProviderArn: aws.String(data.IdentityProviderARN.ValueString()),
+		IdentityProviderArn: data.IdentityProviderARN.ValueStringPointer(),
 	}
 	_, err := conn.DeleteIdentityProvider(ctx, &input)
 
