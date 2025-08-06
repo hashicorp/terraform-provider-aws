@@ -81,7 +81,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 	// Set a default Delay using the StateChangeConf values
 	delay := backoff.SDKv2HelperRetryCompatibleDelay(conf.Delay, conf.PollInterval, conf.MinTimeout)
 
-	// When VCR testing in replay mode, override the default DelayFunc
+	// When VCR testing in replay mode, override the default Delay
 	if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 		if mode, _ := vcr.Mode(); mode == recorder.ModeReplayOnly {
 			delay = backoff.ZeroDelay
