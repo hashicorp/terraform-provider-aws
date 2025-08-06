@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newBrowserSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_browser_settings_association",
+			Name:     "Browser Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataProtectionSettingsResource,
 			TypeName: "aws_workspacesweb_data_protection_settings",
 			Name:     "Data Protection Settings",
