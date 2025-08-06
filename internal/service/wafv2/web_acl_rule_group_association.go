@@ -495,7 +495,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 	var ruleGroupVersion string
 	var ruleActionOverrides []awstypes.RuleActionOverride
 	var ruleStatement *awstypes.Statement
-	var ruleGroupIdentifier string // For resource ID generation
 
 	// Check for custom rule group reference
 	if !plan.RuleGroupReference.IsNull() && !plan.RuleGroupReference.IsUnknown() {
@@ -507,7 +506,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 				return
 			}
 			ruleGroupARN = ruleGroupRefModel.ARN.ValueString()
-			ruleGroupIdentifier = ruleGroupARN
 
 			// Create rule group reference statement
 			ruleGroupRefStatement := &awstypes.RuleGroupReferenceStatement{
@@ -542,10 +540,6 @@ func (r *resourceWebACLRuleGroupAssociation) Create(ctx context.Context, req res
 			ruleGroupVendorName = managedRuleGroupRef.VendorName.ValueString()
 			if !managedRuleGroupRef.Version.IsNull() && !managedRuleGroupRef.Version.IsUnknown() {
 				ruleGroupVersion = managedRuleGroupRef.Version.ValueString()
-			}
-			ruleGroupIdentifier = fmt.Sprintf("%s:%s", ruleGroupVendorName, ruleGroupName)
-			if ruleGroupVersion != "" {
-				ruleGroupIdentifier += ":" + ruleGroupVersion
 			}
 
 			// Create managed rule group statement
@@ -749,7 +743,6 @@ func (r *resourceWebACLRuleGroupAssociation) Read(ctx context.Context, req resou
 					// Check if this matches our managed rule group from state
 					if aws.ToString(managedStmt.Name) == managedRuleGroupRef.Name.ValueString() &&
 						aws.ToString(managedStmt.VendorName) == managedRuleGroupRef.VendorName.ValueString() {
-
 						// Check version match (both can be empty/null)
 						stateVersion := managedRuleGroupRef.Version.ValueString()
 						ruleVersion := aws.ToString(managedStmt.Version)
@@ -1093,7 +1086,8 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_name"), ruleName)...)
 
 	// Set the appropriate rule group nested structure based on type
-	if ruleGroupType == "custom" {
+	switch ruleGroupType {
+	case "custom":
 		// Custom rule group (ARN format)
 		if !arn.IsARN(ruleGroupIdentifier) {
 			resp.Diagnostics.AddError(
@@ -1115,7 +1109,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		}
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), listValue)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_rule_group"), fwtypes.NewListNestedObjectValueOfNull[managedRuleGroupModel](ctx))...)
-	} else if ruleGroupType == "managed" {
+	case "managed":
 		// Managed rule group (vendorName:ruleName[:version] format)
 		identifierParts := strings.Split(ruleGroupIdentifier, ":")
 		if len(identifierParts) < 2 {
@@ -1151,7 +1145,7 @@ func (r *resourceWebACLRuleGroupAssociation) ImportState(ctx context.Context, re
 		}
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("managed_rule_group"), listValue)...)
 		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("rule_group_reference"), fwtypes.NewListNestedObjectValueOfNull[ruleGroupReferenceModel](ctx))...)
-	} else {
+	default:
 		resp.Diagnostics.AddError(
 			"Invalid Rule Group Type",
 			fmt.Sprintf("Rule group type must be 'custom' or 'managed', got: %s", ruleGroupType),
