@@ -119,7 +119,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 
 func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data jobDefinitionDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -186,7 +186,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		}
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jd, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, jd, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -196,7 +196,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	setTagsOut(ctx, jd.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.ConfigValidator {

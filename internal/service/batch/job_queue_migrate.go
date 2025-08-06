@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -175,7 +176,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 	}
 
 	var jobQueueDataV0 resourceJobQueueDataV0
-	response.Diagnostics.Append(request.State.Get(ctx, &jobQueueDataV0)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &jobQueueDataV0))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -198,12 +199,12 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		jobQueueDataV1.SchedulingPolicyARN = fwtypes.ARNNull()
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, jobQueueDataV1)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, jobQueueDataV1))
 }
 
 func upgradeJobQueueResourceStateV1toV2(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
 	var jobQueueDataV1 resourceJobQueueDataV1
-	response.Diagnostics.Append(request.State.Get(ctx, &jobQueueDataV1)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &jobQueueDataV1))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -225,7 +226,7 @@ func upgradeJobQueueResourceStateV1toV2(ctx context.Context, request resource.Up
 	if !jobQueueDataV1.ComputeEnvironments.IsNull() {
 		var computeEnvironments []string
 		diags := jobQueueDataV1.ComputeEnvironments.ElementsAs(ctx, &computeEnvironments, false)
-		response.Diagnostics.Append(diags...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, diags)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -239,5 +240,5 @@ func upgradeJobQueueResourceStateV1toV2(ctx context.Context, request resource.Up
 		jobQueueDataV2.ComputeEnvironmentOrder = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, computeEnvironmentOrder)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, jobQueueDataV2)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, jobQueueDataV2))
 }

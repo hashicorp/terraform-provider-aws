@@ -139,7 +139,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 
 func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -155,12 +155,12 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(fwflex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder))
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -184,12 +184,12 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -211,23 +211,23 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue"))...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new jobQueueResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -240,7 +240,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !new.ComputeEnvironmentOrder.IsNull() && !new.ComputeEnvironmentOrder.Equal(old.ComputeEnvironmentOrder) {
-		response.Diagnostics.Append(fwflex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -248,7 +248,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !new.JobStateTimeLimitActions.Equal(old.JobStateTimeLimitActions) {
-		response.Diagnostics.Append(fwflex.Expand(ctx, new.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.JobStateTimeLimitActions, &input.JobStateTimeLimitActions))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -293,12 +293,12 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
