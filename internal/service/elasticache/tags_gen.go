@@ -26,8 +26,8 @@ func listTags(ctx context.Context, conn *elasticache.Client, identifier string, 
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := tfresource.RetryGWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
-		func() (*elasticache.ListTagsForResourceOutput, error) {
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*elasticache.ListTagsForResourceOutput, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+		func(ctx context.Context) (*elasticache.ListTagsForResourceOutput, error) {
 			return conn.ListTagsForResource(ctx, &input, optFns...)
 		},
 		"not in available state",
@@ -130,8 +130,8 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+			func(ctx context.Context) (any, error) {
 				return conn.RemoveTagsFromResource(ctx, &input, optFns...)
 			},
 			"not in available state",
@@ -150,8 +150,8 @@ func updateTags(ctx context.Context, conn *elasticache.Client, identifier string
 			Tags:         svcTags(updatedTags),
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
-			func() (any, error) {
+		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidReplicationGroupStateFault](ctx, 15*time.Minute,
+			func(ctx context.Context) (any, error) {
 				return conn.AddTagsToResource(ctx, &input, optFns...)
 			},
 			"not in available state",

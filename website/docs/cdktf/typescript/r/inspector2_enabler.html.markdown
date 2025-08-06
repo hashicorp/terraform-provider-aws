@@ -72,7 +72,7 @@ This resource supports the following arguments:
 * `accountIds` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resourceTypes` - (Required) Type of resources to scan.
-  Valid values are `EC2`, `ECR`, `LAMBDA` and `LAMBDA_CODE`.
+  Valid values are `EC2`, `ECR`, `LAMBDA`, `LAMBDA_CODE` and `CODE_REPOSITORY`.
   At least one item is required.
 
 ## Attribute Reference
@@ -87,4 +87,4 @@ This resource exports no additional attributes.
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-32e542f832e63d6801de5c6b25b48365c254edf97049b40f81fd16807d847bb6 -->
+<!-- cache-key: cdktf-0.20.8 input-198c4f618e3b0268d8538f0e657a2827e55c8bd5c92f02553d341795eb623d02 -->

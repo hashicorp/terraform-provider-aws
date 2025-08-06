@@ -1,4 +1,4 @@
-.changelog/43356.txt```release-note:new-resource
+```release-note:new-resource
 aws_cognito_log_delivery_configuration
 ```
 

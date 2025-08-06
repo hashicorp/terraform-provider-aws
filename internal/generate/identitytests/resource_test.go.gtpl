@@ -15,48 +15,15 @@
 	{{ template "commonInit" . }}
 {{ end }}
 
-{{ define "commonInit" -}}
-{{ range .RequiredEnvVars -}}
-	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
-{{ end -}}
-	resourceName := "{{ .TypeName}}.test"{{ if .Generator }}
-	rName := {{ .Generator }}
-{{- end }}
-{{- range .InitCodeBlocks }}
-{{ .Code }}
-{{- end -}}
-{{ if .UseAlternateAccount }}
-	providers := make(map[string]*schema.Provider)
-{{ end }}
-{{ end }}
-
 {{ define "Test" -}}
 resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}ParallelTest{{ end }}
-{{- end }}
-
-{{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . }}
-{{- if not .UseAlternateAccount }}
-	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
 	TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 		tfversion.SkipBelow(tfversion.Version1_12_0),
 	},
-	PreCheck:     func() { acctest.PreCheck(ctx, t)
-		{{- if gt (len .PreCheckRegions) 0 }}
-			acctest.PreCheckRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
-		{{- end -}}
-		{{- range .PreChecks }}
-			{{ .Code }}
-		{{- end -}}
-		{{- range .PreChecksWithRegion }}
-			{{ .Code }}(ctx, t, acctest.Region())
-		{{- end -}}
-	},
-	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+	{{ template "CommonTestCaseChecks" . }}
 	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
@@ -64,8 +31,8 @@ resource.{{ if and .Serialize (not .SerializeParallelTests) }}Test{{ else }}Para
 TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 	tfversion.SkipBelow(tfversion.Version1_12_0),
 },
-PreCheck:     func() { acctest.PreCheck(ctx, t)
-	{{- if gt (len .PreCheckRegions) 0 }}
+PreCheck: func() { acctest.PreCheck(ctx, t)
+	{{- if .PreCheckRegions }}
 		acctest.PreCheckAlternateRegion(t, {{ range .PreCheckRegions}}{{ . }}, {{ end }})
 	{{- end -}}
 	{{- range .PreChecks }}
@@ -189,7 +156,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ else if ne .IdentityAttribute "" -}}
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .IdentityAttribute }}), knownvalue.NotNull()),
@@ -232,7 +199,7 @@ ImportPlanChecks: resource.ImportPlanChecks{
 			plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), tfknownvalue.AccountID()),
 		{{ else if gt (len .IdentityAttributes) 0 -}}
 			{{ range .IdentityAttributes -}}
-				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ . }}), knownvalue.NotNull()),
+				plancheck.ExpectKnownValue(resourceName, tfjsonpath.New({{ .Name }}), knownvalue.NotNull()),
 			{{ end -}}
 		{{ end -}}
 		{{ if not .IsGlobal -}}
@@ -242,31 +209,11 @@ ImportPlanChecks: resource.ImportPlanChecks{
 },
 {{- end }}
 
-{{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
-{{- end }}
-
-{{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
-{{ end }}
-
-{{ define "AdditionalTfVars" -}}
-	{{ range $name, $value := .AdditionalTfVars -}}
-	{{ $name }}: config.StringVariable({{ $value }}),
-	{{ end -}}
-{{ end }}
-
 package {{ .ProviderPackage }}_test
 
 import (
-	{{ if .OverrideIdentifier }}
-	"context"
-	{{- end }}
 	"testing"
 
-	{{ if .UseAlternateAccount }}
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	{{- end }}
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -279,10 +226,6 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	{{- if .OverrideIdentifier }}
-	tf{{ .ProviderPackage }} "github.com/hashicorp/terraform-provider-aws/internal/service/{{ .ProviderPackage }}"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
-	{{- end }}
 	{{ range .GoImports -}}
 	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
 	{{ end }}
@@ -352,36 +295,34 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 					{{ if not .IsGlobal -}}
 						statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					{{ end -}}
-					{{ if .MutableIdentity -}}
-						// Resource Identity not supported for Mutable Identity
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion: knownvalue.StringExact(acctest.Region()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						}),
 					{{ else -}}
-						{{ if .ArnIdentity -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-									names.AttrRegion: knownvalue.StringExact(acctest.Region()),
-								{{ end -}}
-								{{ .ARNAttribute }}: knownvalue.NotNull(),
-							}),
-							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-						{{ else if .IsRegionalSingleton -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							{{ if not .IsGlobal -}}
 								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-							}),
-						{{ else -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								{{ if not .IsGlobal -}}
-									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-								{{ end -}}
-								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
-								{{ end }}
-							}),
+							{{ end -}}
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 							{{ end }}
-						{{ end -}}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
 					{{ end -}}
 				},
 			},
@@ -417,25 +358,21 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 				},
 
 				// Step {{ ($step = inc $step) | print  }}: Import block with Resource Identity
-				{{ if .MutableIdentity -}}
-					// Resource Identity not supported for Mutable Identity
-				{{- else -}}
-					{
-						{{ if .UseAlternateAccount -}}
-							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-						{{ end -}}
-						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
-						ConfigVariables: config.Variables{ {{ if .Generator }}
-							acctest.CtRName: config.StringVariable(rName),{{ end }}
-							{{ template "AdditionalTfVars" . }}
-						},
-						{{- template "ImportBlockWithResourceIdentityBody" . -}}
-						{{ template "PlannableImportPlanChecks" . }}
-						{{ if ne .PlannableResourceAction "NoOp" -}}
-							ExpectNonEmptyPlan: true,
-						{{ end -}}
+				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/basic/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . }}
 					},
-				{{- end }}
+					{{- template "ImportBlockWithResourceIdentityBody" . -}}
+					{{ template "PlannableImportPlanChecks" . }}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
+						ExpectNonEmptyPlan: true,
+					{{ end -}}
+				},
 			{{- end }}
 		},
 	})
@@ -479,34 +416,32 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 						statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New({{ .IDAttrDuplicates }}), compare.ValuesSame()),
 					{{ end -}}
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
-					{{ if .MutableIdentity -}}
-						// Resource Identity not supported for Mutable Identity
+					{{ if .ArnIdentity -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
+								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+							{{ end -}}
+							{{ .ARNAttribute }}: knownvalue.NotNull(),
+						}),
+						statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
+					{{ else if .IsRegionalSingleton -}}
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
+						}),
 					{{ else -}}
-						{{ if .ArnIdentity -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								{{ if and (not .IsGlobal) .IsARNFormatGlobal -}}
-									names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-								{{ end -}}
-								{{ .ARNAttribute }}: knownvalue.NotNull(),
-							}),
-							statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .ARNAttribute }})),
-						{{ else if .IsRegionalSingleton -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-							}),
-						{{ else -}}
-							statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-								names.AttrAccountID: tfknownvalue.AccountID(),
-								names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
-								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
-								{{ end }}
-							}),
+						statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
+							names.AttrAccountID: tfknownvalue.AccountID(),
+							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 							{{ end }}
-						{{ end -}}
+						}),
+						{{ range .IdentityAttributes -}}
+							{{ if not .Optional -}}
+								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+							{{ end -}}
+						{{ end }}
 					{{ end -}}
 				},
 			},
@@ -530,22 +465,18 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import command without appended "@<region>"
-					{{ if .MutableIdentity -}}
-						// Importing without appended "@<region>" for Mutable Identity
-					{{- else -}}
-						{
-							{{ if .UseAlternateAccount -}}
-								ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-							{{ end -}}
-							ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-							ConfigVariables: config.Variables{ {{ if .Generator }}
-								acctest.CtRName: config.StringVariable(rName),{{ end }}
-								{{ template "AdditionalTfVars" . -}}
-								"region": config.StringVariable(acctest.AlternateRegion()),
-							},
-							{{- template "ImportCommandWithIDBody" . -}}
+					{
+						{{ if .UseAlternateAccount -}}
+							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+						{{ end -}}
+						ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+						ConfigVariables: config.Variables{ {{ if .Generator }}
+							acctest.CtRName: config.StringVariable(rName),{{ end }}
+							{{ template "AdditionalTfVars" . -}}
+							"region": config.StringVariable(acctest.AlternateRegion()),
 						},
-					{{- end }}
+						{{- template "ImportCommandWithIDBody" . -}}
+					},
 				{{ end }}
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and appended "@<region>"
@@ -570,31 +501,6 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 				},
 				{{ if .HasInherentRegion }}
 					// Step {{ ($step = inc $step) | print }}: Import block with Import ID and no appended "@<region>"
-					{{ if .MutableIdentity -}}
-						// Importing without appended "@<region>" for Mutable Identity
-					{{- else -}}
-						{
-							{{ if .UseAlternateAccount -}}
-								ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
-							{{ end -}}
-							ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
-							ConfigVariables: config.Variables{ {{ if .Generator }}
-								acctest.CtRName: config.StringVariable(rName),{{ end }}
-								{{ template "AdditionalTfVars" . -}}
-								"region": config.StringVariable(acctest.AlternateRegion()),
-							},
-							{{- template "ImportBlockWithIDBody" . -}}
-							{{ template "PlannableImportCrossRegionPlanChecks" . }}
-							{{ if ne .PlannableResourceAction "NoOp" -}}
-								ExpectNonEmptyPlan: true,
-							{{ end -}}
-						},
-					{{- end }}
-				{{ end }}
-				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
-				{{ if .MutableIdentity -}}
-					// Resource Identity not supported for Mutable Identity
-				{{- else -}}
 					{
 						{{ if .UseAlternateAccount -}}
 							ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
@@ -605,13 +511,30 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							{{ template "AdditionalTfVars" . -}}
 							"region": config.StringVariable(acctest.AlternateRegion()),
 						},
-						{{- template "ImportBlockWithResourceIdentityBody" . -}}
+						{{- template "ImportBlockWithIDBody" . -}}
 						{{ template "PlannableImportCrossRegionPlanChecks" . }}
 						{{ if ne .PlannableResourceAction "NoOp" -}}
 							ExpectNonEmptyPlan: true,
 						{{ end -}}
 					},
-				{{- end }}
+				{{ end }}
+				// Step {{ ($step = inc $step) | print }}: Import block with Resource Identity
+				{
+					{{ if .UseAlternateAccount -}}
+						ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+					{{ end -}}
+					ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/region_override/"),
+					ConfigVariables: config.Variables{ {{ if .Generator }}
+						acctest.CtRName: config.StringVariable(rName),{{ end }}
+						{{ template "AdditionalTfVars" . -}}
+						"region": config.StringVariable(acctest.AlternateRegion()),
+					},
+					{{- template "ImportBlockWithResourceIdentityBody" . -}}
+					{{ template "PlannableImportCrossRegionPlanChecks" . }}
+					{{ if ne .PlannableResourceAction "NoOp" -}}
+						ExpectNonEmptyPlan: true,
+					{{ end -}}
+				},
 			{{- end }}
 		},
 	})
@@ -689,11 +612,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -746,11 +671,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -802,11 +729,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -883,7 +812,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.Null(),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.Null(),
+									{{ .Name }}: knownvalue.Null(),
 								{{ end }}
 							}),
 						{{ end -}}
@@ -931,11 +860,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ . }}: knownvalue.NotNull(),
+									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
-								statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+								{{ if not .Optional -}}
+									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+								{{ end -}}
 							{{ end }}
 						{{ end -}}
 					},
@@ -944,9 +875,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 		})
 	}
 {{ else }}
-	{{ if .MutableIdentity }}
-		// Resource Identity not supported for Mutable Identity
-	{{ else if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
+	{{ if .PreIdentityVersion.GreaterThanOrEqual (NewVersion "6.0.0") }}
 		// Resource Identity was added after v{{ .PreIdentityVersion }}
 		func {{ template "testname" . }}_Identity_ExistingResource(t *testing.T) {
 			{{- template "Init" . }}
@@ -1020,11 +949,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},
@@ -1108,11 +1039,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},
@@ -1163,11 +1096,13 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ . }}: knownvalue.NotNull(),
+										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
-									statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ . }})),
+									{{ if not .Optional -}}
+										statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New({{ .Name }})),
+									{{ end -}}
 								{{ end }}
 							{{ end -}}
 						},
