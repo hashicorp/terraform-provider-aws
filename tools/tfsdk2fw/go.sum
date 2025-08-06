@@ -95,8 +95,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.56.0 h1:XTIHEJ95YH5IehTJx5p6Y8XtjZ
 github.com/aws/aws-sdk-go-v2/service/batch v1.56.0/go.mod h1:uAslawt50dv4iZfpjAh9YVEbAU3jyPIt3ycDSs5VrEg=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.10.0 h1:Wq3UeoqqQFm+HwQbmpB5vN3v3t8X5YsDLn/0yRG3ALY=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.10.0/go.mod h1:yWUWnhYtaiRSARc/Y3vU6dZAV9/thOTFMLST2Oxvj78=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.41.0 h1:SUw2DmmMnAJB+wlXUvhdDHkbKfHmV8CpgFdiYSxuF8I=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.41.0/go.mod h1:yGZu+RiNnteeM+ZdeuOHlI4whLyGjENoGn1MLqd1o2s=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.42.0 h1:6habQhaDSesSG3kx50Unp2ssMonECgdFnrMMgrcUCec=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.42.0/go.mod h1:yGZu+RiNnteeM+ZdeuOHlI4whLyGjENoGn1MLqd1o2s=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.47.0 h1:lhY8kqSq+ph2avN5EgZfWx1Gc6HWYyjbuy73LPGLadU=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.47.0/go.mod h1:VE33Y1A7q8XkY0I0DWF04eQlg1z5dsKw1EEQzfhkCoc=
 github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.2.0 h1:GJdyUvYs/81imU2h6wqSa4T9guevI7eBr9YhXUmOwIA=
@@ -227,8 +227,8 @@ github.com/aws/aws-sdk-go-v2/service/ecs v1.62.0 h1:E5/BzpoN6fc/xWtKiFPUJBW6nW3K
 github.com/aws/aws-sdk-go-v2/service/ecs v1.62.0/go.mod h1:UrdK8ip8HSwnESeuXhte4vlRVv0GIOpC92LR1+2m+zA=
 github.com/aws/aws-sdk-go-v2/service/efs v1.38.0 h1:W8v+PwOUTeh3JE53yBW8nAaRkDvMq7mMO+/bvmYHAlI=
 github.com/aws/aws-sdk-go-v2/service/efs v1.38.0/go.mod h1:ijPHatoNwxKTySdgDNoGUZw3toYwvRJKWwS/1dr3M/c=
-github.com/aws/aws-sdk-go-v2/service/eks v1.68.0 h1:3hgPfytQLttZmM2fFejtC1i/5OM1p3o9BHzCwGjcMpc=
-github.com/aws/aws-sdk-go-v2/service/eks v1.68.0/go.mod h1:u3CDoNUAkSIGKNiA6LfQtApPmHPGRuAjikx3ObM5XBs=
+github.com/aws/aws-sdk-go-v2/service/eks v1.69.0 h1:eiZOCsKGl0D7M3FSeSJwJbsikxowCMVz513WDFCe6HY=
+github.com/aws/aws-sdk-go-v2/service/eks v1.69.0/go.mod h1:u3CDoNUAkSIGKNiA6LfQtApPmHPGRuAjikx3ObM5XBs=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.48.0 h1:88Xh6SCyuge4BwPrbeJEDjDIUr/bMBZ6G7NrB785xCk=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.48.0/go.mod h1:X6aJWShG65SH3DVd4LEyPzMmtJyCSIZvKfcGnYhOF7U=
 github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.31.0 h1:31GWaDmLEVzUW7UEnF7vbuESL8pAbeVsX3nOQbXxZQg=
@@ -339,8 +339,8 @@ github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.31.0 h1:DryMhIIU
 github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.31.0/go.mod h1:/rstK38nPVP5Nl1QHVVZukDHfHGhU312byZZhRrpbO8=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.54.0 h1:KuBBxr7w0WOh6/hhYcqnKQx7A/J7a/tuvH11VGkVTv0=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.54.0/go.mod h1:vAb5Jggb9ASoapJtOJU9CHd+11OBZWa7OHQPfgTwTFE=
-github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.0 h1:4yI6oqURdPfSoP1MUGNhXe8W/krJWnOCaHejJAPCRFs=
-github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.0/go.mod h1:5rXpi6YHnL1oERjl0cFvH0ijwGfZqbKQBdpHc9Kdq6g=
+github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.1 h1:lsYEh1q//eTBv9VUWbLlhEZrQ79+TYWRI+8Eyl04imE=
+github.com/aws/aws-sdk-go-v2/service/licensemanager v1.34.1/go.mod h1:5rXpi6YHnL1oERjl0cFvH0ijwGfZqbKQBdpHc9Kdq6g=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.46.0 h1:nQX2q3dUdqwyxNPEjAw5WgH0F0HuHlVS8iq7TW3xHi8=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.46.0/go.mod h1:c0o7fqQS36cwXMizMSqpG4job2HsU1b8Wb2QoYSWyu0=
 github.com/aws/aws-sdk-go-v2/service/location v1.47.0 h1:oo7GB7Mtr+OkyA9E2CvdwLW98QEMbM0CVAay0NceOUc=
@@ -427,8 +427,8 @@ github.com/aws/aws-sdk-go-v2/service/ram v1.32.0 h1:G+68C4zK76iUFgJhkipUKRWh2HLL
 github.com/aws/aws-sdk-go-v2/service/ram v1.32.0/go.mod h1:nw5Xtgpjw7qpk2pLnnUFfM1OJR4mbgGyM/mW5Tq3uvM=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.24.0 h1:lCSjmiJBPQ+YQpVv7HDuSQxzdMaOF6VHIpEAo6JuCgE=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.24.0/go.mod h1:qvr0xsDkBeaCaYZb0sWWItYyapmRxaJkOJ3H9c0nRu4=
-github.com/aws/aws-sdk-go-v2/service/rds v1.101.0 h1:CWTHGWkLi+lBSt3tlFNKA8YrNG7hr1xOG6IO5XW3cpE=
-github.com/aws/aws-sdk-go-v2/service/rds v1.101.0/go.mod h1:BSg3GYV7zYSk/vUsT77SlTZcYz7JmBprKslzqSuC9Nw=
+github.com/aws/aws-sdk-go-v2/service/rds v1.102.0 h1:+gr+tHHyjEcDh6ow7FO8wSnyHIX6HjoMUS0FYmk1U3g=
+github.com/aws/aws-sdk-go-v2/service/rds v1.102.0/go.mod h1:BSg3GYV7zYSk/vUsT77SlTZcYz7JmBprKslzqSuC9Nw=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.56.0 h1:UzGm4pOaR1MQE8kQ0HzuzrIKZvjxfYWmHAhjmkFWrKY=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.56.0/go.mod h1:gPTBFJ7XZEk2thUl1+MS6/kEd0jLuJBIzLz5xuveRvY=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.35.0 h1:2uGuWyvd7uCOEcEMN+SWkJsXlXOPrzfBtElITMnVAp4=
@@ -471,8 +471,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.8.0 h1:lLiy94CE3tRVKCFM6nsa0ERM
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.8.0/go.mod h1:4W2CAy/TSu6SJ8DlBv5LSz7x58DPN8aiRdlhjvg8WEA=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.2.0 h1:7xf0bQV6aVtFUV1Z59hT9AmWHY+LBww82jN2gywAgkM=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.2.0/go.mod h1:ionbPTnYOWe9G7OQi/yGz0fDefoTUiAWs2tFAxCQiss=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.204.0 h1:swdZcCAgomEWueWnxgLoez5w6SZIwTN6+kCwmOY7Slg=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.204.0/go.mod h1:QAk+j4WZ3VtD9yJDKqF/sVq0fQCcjjQ5gZLVvoVGmWA=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.205.0 h1:1aWqLosrIuGX8pOdtwBrpMORYRFMpRnv+qnutCCxQbg=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.205.0/go.mod h1:QAk+j4WZ3VtD9yJDKqF/sVq0fQCcjjQ5gZLVvoVGmWA=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.15.0 h1:peHVUtoH7i9QzmkCMyky/a+b2ysCMJ/M+KOtCVmkg7M=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.15.0/go.mod h1:cQvpps9Xy75b4TIzRYRMnSYaUneTlECRD6p0Vn9hLew=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.31.0 h1:gpBCY2ekUMIFVyczrg5RZlhfCSfPvq33oo+vAKuz5TI=
