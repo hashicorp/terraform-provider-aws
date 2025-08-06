@@ -59,7 +59,7 @@ func TestAccNetworkFirewallVPCEndpointAssociation_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("subnet_mapping"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"ip_address_type": tfknownvalue.StringExact(awstypes.IPAddressTypeIpv4),
+							names.AttrIPAddressType: tfknownvalue.StringExact(awstypes.IPAddressTypeIpv4),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
