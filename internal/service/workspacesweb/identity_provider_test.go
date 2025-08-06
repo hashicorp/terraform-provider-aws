@@ -227,7 +227,7 @@ resource "aws_workspacesweb_portal" "test" {
 resource "aws_workspacesweb_identity_provider" "test" {
   identity_provider_name = "test"
   identity_provider_type = "SAML"
-  portal_arn            = aws_workspacesweb_portal.test.portal_arn
+  portal_arn             = aws_workspacesweb_portal.test.portal_arn
 
   identity_provider_details = {
     MetadataFile = file("./testfixtures/saml-metadata.xml")
@@ -245,14 +245,14 @@ resource "aws_workspacesweb_portal" "test" {
 resource "aws_workspacesweb_identity_provider" "test" {
   identity_provider_name = "test-updated"
   identity_provider_type = "OIDC"
-  portal_arn            = aws_workspacesweb_portal.test.portal_arn
+  portal_arn             = aws_workspacesweb_portal.test.portal_arn
 
   identity_provider_details = {
-    client_id = "test-client-id"
-    client_secret = "test-client-secret"
-    oidc_issuer = "https://accounts.google.com"
-	attributes_request_method = "POST"
-	authorize_scopes = "openid, email"
+    client_id                 = "test-client-id"
+    client_secret             = "test-client-secret"
+    oidc_issuer               = "https://accounts.google.com"
+    attributes_request_method = "POST"
+    authorize_scopes          = "openid, email"
   }
 }
 `
