@@ -6,4 +6,3 @@ The following points should be taken into consideration when developing new guid
 - Use generalized instructions and remain tool agnostic.
 - Limit scope to a single task per document.
 - Structure documents so they are useful to both AI agents and human readers.
-
