@@ -93,7 +93,7 @@ var (
 			Type:         schema.TypeInt,
 			Optional:     true,
 			Default:      defaultQueueMaximumMessageSize,
-			ValidateFunc: validation.IntBetween(1024, 262_144),
+			ValidateFunc: validation.IntBetween(1024, 1_048_576),
 		},
 		"message_retention_seconds": {
 			Type:         schema.TypeInt,
