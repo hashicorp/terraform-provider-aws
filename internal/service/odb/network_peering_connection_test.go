@@ -255,8 +255,6 @@ func (odbNwkPeeringResourceTest) basicConfig(vpcName, odbNetName, odbPeeringName
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block       = "10.0.0.0/16"
-  instance_tenancy = "default"
-
   tags = {
     Name = %[1]q
   }
@@ -286,7 +284,6 @@ func (odbNwkPeeringResourceTest) basicConfigNoTag(vpcName, odbNetName, odbPeerin
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block       = "10.0.0.0/16"
-  instance_tenancy = "default"
 
   tags = {
     Name = %[1]q

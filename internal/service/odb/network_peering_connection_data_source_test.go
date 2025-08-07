@@ -34,14 +34,6 @@ var odbPeeringDSTest = odbPeeringDataSourceTest{
 	vpcNamePrefix:                      "tf",
 }
 
-func TestPrintOdbPeeringResourceUnitTest(t *testing.T) {
-	odbNetDispName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetDisplayNamePrefix)
-	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetworkPeeringDisplayNamePrefix)
-	//vpcNamePrefix := sdkacctest.RandomWithPrefix(odbPeeringDSTest.vpcNamePrefix)
-
-	fmt.Println(odbPeeringDSTest.basicVpcHardCoded("vpc-084bc7dd335e156cc", odbNetDispName, odbNetPeeringDisplayName))
-}
-
 // Acceptance test access AWS and cost money to run.
 func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 
@@ -52,8 +44,8 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	networkPeeringResource := "aws_odb_network_peering_connection.test"
 	networkPerringDataSource := "data.aws_odb_network_peering_connection.test"
 	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetworkPeeringDisplayNamePrefix)
-	//odbNetDispName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetDisplayNamePrefix)
-	//vpcName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.vpcNamePrefix)
+	odbNetDispName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetDisplayNamePrefix)
+	vpcName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.vpcNamePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -64,9 +56,7 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 		CheckDestroy:             odbPeeringDSTest.testAccCheckCloudOdbNetworkPeeringDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: odbPeeringDSTest.basicHardCoded("vpc-084bc7dd335e156cc", "odbnet_c91byo6y6m", odbNetPeeringDisplayName),
-
-				//odbPeeringDSTest.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
+				Config: odbPeeringDSTest.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(networkPeeringResource, "id", networkPerringDataSource, "id"),
 				),
@@ -125,8 +115,6 @@ func (odbPeeringDataSourceTest) basicPeeringConfig(vpcName, odbNetDisplayName, o
 
 resource "aws_vpc" "test" {
   cidr_block       = "10.0.0.0/16"
-  instance_tenancy = "default"
-
   tags = {
     Name = %[1]q
   }
@@ -153,60 +141,5 @@ data "aws_odb_network_peering_connection" "test" {
 }
 
 `, vpcName, odbNetDisplayName, odbPeeringDisplayName)
-	//fmt.Println(testData)
-	return testData
-}
-
-func (odbPeeringDataSourceTest) basicVpcHardCoded(vpcName, odbNetDisplayName, odbPeeringDisplayName string) string {
-
-	testData := fmt.Sprintf(`
-
-
-resource "aws_odb_network" "test" {
-  display_name          = %[2]q
-  availability_zone_id = "use1-az6"
-  client_subnet_cidr   = "10.2.0.0/24"
-  backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access = "DISABLED"
-  zero_etl_access = "DISABLED"
-}
-
-
-resource "aws_odb_network_peering_connection" "test" {
-  peer_network_id =  %[1]q
-  odb_network_id = aws_odb_network.test.id
-  display_name = %[3]q
-  
-}
-
-data "aws_odb_network_peering_connection" "test" {
-  id=aws_odb_network_peering_connection.test.id
-}
-
-`, vpcName, odbNetDisplayName, odbPeeringDisplayName)
-	//fmt.Println(testData)
-	return testData
-}
-
-func (odbPeeringDataSourceTest) basicHardCoded(vpcName, odbNetDisplayName, odbPeeringDisplayName string) string {
-
-	testData := fmt.Sprintf(`
-
-
-
-
-resource "aws_odb_network_peering_connection" "test" {
-  peer_network_id =  %[1]q
-  odb_network_id = %[2]q
-  display_name = %[3]q
-  
-}
-
-data "aws_odb_network_peering_connection" "test" {
-  id=aws_odb_network_peering_connection.test.id
-}
-
-`, vpcName, odbNetDisplayName, odbPeeringDisplayName)
-	//fmt.Println(testData)
 	return testData
 }
