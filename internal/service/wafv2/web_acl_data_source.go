@@ -108,12 +108,17 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 			return !lastPage
 		})
 
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "list WAFv2 WebACLs: %s", err)
+		}
+
 		if foundWebACL.Id == nil {
 			return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
 		}
 
 		// Get full WebACL details using GetWebACL
 		getResp, err := findWebACLByThreePartKey(ctx, conn, aws.ToString(foundWebACL.Id), aws.ToString(foundWebACL.Name), string(scope))
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", aws.ToString(foundWebACL.Id), err)
 		}
