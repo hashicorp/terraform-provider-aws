@@ -536,13 +536,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
-	input := &wafv2.GetWebACLInput{
-		Id:    aws.String(id),
-		Name:  aws.String(name),
-		Scope: awstypes.Scope(scope),
-	}
-
+func findWebACL(ctx context.Context, conn *wafv2.Client, input *wafv2.GetWebACLInput) (*wafv2.GetWebACLOutput, error) {
 	output, err := conn.GetWebACL(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
@@ -561,6 +555,16 @@ func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name,
 	}
 
 	return output, nil
+}
+
+func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
+	input := wafv2.GetWebACLInput{
+		Id:    aws.String(id),
+		Name:  aws.String(name),
+		Scope: awstypes.Scope(scope),
+	}
+
+	return findWebACL(ctx, conn, &input)
 }
 
 // filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rule here

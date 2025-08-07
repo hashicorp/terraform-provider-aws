@@ -91,46 +91,32 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		// Use existing ListWebACLs + filter by name logic
 		var foundWebACL awstypes.WebACLSummary
-		input := &wafv2.ListWebACLsInput{
+		input := wafv2.ListWebACLsInput{
 			Scope: scope,
 			Limit: aws.Int32(100),
 		}
 
-		for {
-			resp, err := conn.ListWebACLs(ctx, input)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs: %s", err)
+		err := listWebACLsPages(ctx, conn, &input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
-			if resp == nil || resp.WebACLs == nil {
-				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs")
-			}
-
-			for _, acl := range resp.WebACLs {
+			for _, acl := range page.WebACLs {
 				if aws.ToString(acl.Name) == name {
 					foundWebACL = acl
-					break
+					return false
 				}
 			}
 
-			if resp.NextMarker == nil {
-				break
-			}
-			input.NextMarker = resp.NextMarker
-		}
+			return !lastPage
+		})
 
 		if foundWebACL.Id == nil {
 			return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
 		}
 
 		// Get full WebACL details using GetWebACL
-		getInput := &wafv2.GetWebACLInput{
-			Id:    foundWebACL.Id,
-			Name:  foundWebACL.Name,
-			Scope: scope,
-		}
-
-		getResp, err := conn.GetWebACL(ctx, getInput)
+		getResp, err := findWebACLByThreePartKey(ctx, conn, aws.ToString(foundWebACL.Id), aws.ToString(foundWebACL.Name), string(scope))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", aws.ToString(foundWebACL.Id), err)
 		}
