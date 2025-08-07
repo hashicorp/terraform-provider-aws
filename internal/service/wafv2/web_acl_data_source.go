@@ -10,19 +10,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	cftypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	pretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -83,7 +80,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any)
 			webACL, err = findWebACLByResourceARN(ctx, conn, resourceArn)
 		}
 		if err != nil {
-			if pretry.NotFound(err) {
+			if retry.NotFound(err) {
 				return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for resource_arn: %s", resourceArn)
 			}
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL for resource_arn (%s): %s", resourceArn, err)
@@ -159,32 +156,15 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 		return nil, err
 	}
 
-	// Get CloudFront client
-	cfConn := client.CloudFrontClient(ctx)
+	output, err := tfcloudfront.FindDistributionByID(ctx, client.CloudFrontClient(ctx), distributionID)
 
-	// Get distribution configuration
-	input := &cloudfront.GetDistributionInput{
-		Id: aws.String(distributionID),
-	}
-
-	output, err := cfConn.GetDistribution(ctx, input)
 	if err != nil {
-		if errs.IsA[*cftypes.NoSuchDistribution](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
 		return nil, fmt.Errorf("getting CloudFront distribution (%s): %w", distributionID, err)
-	}
-
-	if output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	webACLARN := aws.ToString(output.Distribution.DistributionConfig.WebACLId)
 	if webACLARN == "" {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("no WebACL associated with CloudFront distribution: %s", distributionID),
 		}
 	}
@@ -212,7 +192,7 @@ func findWebACLByCloudFrontDistributionARN(ctx context.Context, client *conns.AW
 		return nil, fmt.Errorf("finding WAFv2 WebACL (%s): %w", webACLARN, err)
 	}
 	if webACLOut == nil {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: fmt.Sprintf("no WAFv2 WebACL found: %s", webACLARN),
 		}
 	}
