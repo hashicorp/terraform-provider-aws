@@ -6993,7 +6993,7 @@ func testAccCheckStopInstance(ctx context.Context, t *testing.T, v *awstypes.Ins
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
-		return tfec2.StopInstance(ctx, conn, aws.ToString(v.InstanceId), false, 10*time.Minute)
+		return tfec2.StopInstance(ctx, conn, aws.ToString(v.InstanceId), false, false, 10*time.Minute)
 	}
 }
 

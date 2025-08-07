@@ -46,6 +46,12 @@ func resourceInstanceState() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"skip_os_shutdown": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Skip graceful OS shutdown. Ignored for 'start' states.",
+			},
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -71,7 +77,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) ready: %s", instanceID, err)
 	}
 
-	if err := updateInstanceState(ctx, conn, instanceID, string(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool)); err != nil {
+	if err := updateInstanceState(ctx, conn, instanceID, string(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool), d.Get("skip_os_shutdown").(bool)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -97,6 +103,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("force", d.Get("force").(bool))
+	d.Set("skip_os_shutdown", d.Get("skip_os_shutdown").(bool))
 	d.Set(names.AttrInstanceID, d.Id())
 	d.Set(names.AttrState, state.Name)
 
@@ -114,7 +121,7 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange(names.AttrState) {
 		o, n := d.GetChange(names.AttrState)
 
-		if err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool)); err != nil {
+		if err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool), d.Get("skip_os_shutdown").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -122,13 +129,13 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
-func updateInstanceState(ctx context.Context, conn *ec2.Client, id string, currentState string, configuredState string, force bool) error {
+func updateInstanceState(ctx context.Context, conn *ec2.Client, id string, currentState string, configuredState string, force bool, skipOsShutdown bool) error {
 	if currentState == configuredState {
 		return nil
 	}
 
 	if configuredState == "stopped" {
-		if err := stopInstance(ctx, conn, id, force, instanceStopTimeout); err != nil {
+		if err := stopInstance(ctx, conn, id, force, skipOsShutdown, instanceStopTimeout); err != nil {
 			return err
 		}
 	}

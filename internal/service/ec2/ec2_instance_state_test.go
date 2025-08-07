@@ -28,7 +28,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, false),
+				Config: testAccInstanceStateConfig_basic(state, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -52,7 +52,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(stateStopped, false),
+				Config: testAccInstanceStateConfig_basic(stateStopped, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -65,7 +65,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceStateConfig_basic(stateRunning, false),
+				Config: testAccInstanceStateConfig_basic(stateRunning, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -89,7 +89,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, false),
+				Config: testAccInstanceStateConfig_basic(state, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInstance(), parentResourceName),
@@ -127,7 +127,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, t *testing.T, n string
 	}
 }
 
-func testAccInstanceStateConfig_basic(state string, force bool) string {
+func testAccInstanceStateConfig_basic(state string, force bool, skipOsShutdown bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
@@ -138,9 +138,10 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_ec2_instance_state" "test" {
-  instance_id = aws_instance.test.id
-  state       = %[1]q
-  force       = %[2]t
+  instance_id      = aws_instance.test.id
+  state            = %[1]q
+  force            = %[2]t
+  skip_os_shutdown = %[3]t
 }
-`, state, force))
+`, state, force, skipOsShutdown))
 }
