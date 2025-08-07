@@ -19,7 +19,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -359,6 +358,11 @@ func resourceInstance() *schema.Resource {
 					return create.StringHashcode(buf.String())
 				},
 			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -477,7 +481,6 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
@@ -980,6 +983,23 @@ func resourceInstance() *schema.Resource {
 
 				return true
 			}),
+			customdiff.ComputedIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("ipv6_address_count")
+			}),
+			customdiff.ForceNewIf("ipv6_addresses", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if !diff.HasChange("ipv6_addresses") {
+					return false
+				}
+
+				// Don't force new if ipv6_address_count is also changing
+				// This indicates the ipv6_addresses change is computed, not user-driven
+				if diff.HasChange("ipv6_address_count") {
+					return false
+				}
+
+				// Force new only for explicit user changes to ipv6_addresses
+				return true
+			}),
 		),
 	}
 }
@@ -1155,7 +1175,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
@@ -1396,14 +1417,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// ARN
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	// Instance attributes
 	{
@@ -2223,12 +2237,12 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
-	}
+	if d.Get(names.AttrForceDestroy).(bool) {
+		if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
+		}
 
-	if v, ok := d.GetOk("disable_api_stop"); ok {
-		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.(bool)); err != nil {
+		if err := disableInstanceAPIStop(ctx, conn, d.Id(), false); err != nil {
 			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
 		}
 	}
@@ -4120,4 +4134,7 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 		}
 	}
 	return false
+}
+func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {
+	return c.RegionalARN(ctx, names.EC2, "instance/"+instanceID)
 }

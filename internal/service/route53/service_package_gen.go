@@ -123,6 +123,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53_record",
 			Name:     "Record",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+				inttypes.StringIdentityAttribute(names.AttrType, true),
+				inttypes.StringIdentityAttribute("set_identifier", false),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      recordImportID{},
+			},
 		},
 		{
 			Factory:  resourceTrafficPolicy,

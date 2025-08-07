@@ -142,6 +142,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) AWS account ID for the owner of the bucket for which you want to create an access point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `bucketAccountId` - (Optional) AWS account ID associated with the S3 bucket associated with this access point.
 * `policy` - (Optional) Valid JSON document that specifies the policy that you want to apply to this access point. Removing `policy` from your configuration or setting `policy` to null or an empty string (i.e., `policy = ""`) _will not_ delete the policy since it could have been set by `aws_s3control_access_point_policy`. To remove the `policy`, set it to `"{}"` (an empty JSON document).
@@ -248,4 +249,4 @@ Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 % terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-34503282bd63f782909a22e205055b17764c1fa734f555d2b50ab713dd5d6dad -->
+<!-- cache-key: cdktf-0.20.8 input-be5e18fe9b8679258c17878035b416e56f7c0c46d82dd456f13808234c7d2d87 -->

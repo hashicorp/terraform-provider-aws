@@ -7265,7 +7265,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "data/somedoc.json"
   content = "{\"Item\":{\"%[1]s\":{\"S\":\"test\"},\"field\":{\"S\":\"test\"}}}"
@@ -7286,7 +7286,7 @@ resource "aws_dynamodb_table" "test" {
     input_compression_type = "NONE"
     input_format           = "DYNAMODB_JSON"
     s3_bucket_source {
-      bucket     = aws_s3_bucket.test.bucket
+      bucket     = aws_s3_object.test.bucket
       key_prefix = "data"
     }
   }

@@ -45,6 +45,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_ipv4` - (Optional) The destination IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) The destination IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
@@ -91,4 +92,4 @@ Using `terraform import`, import security group egress rules using the `security
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4b4a1318b6de07e089d7485e1cb3e7e9799679c955035893abd2fb3c34fb4432 -->
+<!-- cache-key: cdktf-0.20.8 input-18eb6ec0cef7a67bfd23373c53fd4cb28b1e99517beaff6ca443c85986f81adf -->

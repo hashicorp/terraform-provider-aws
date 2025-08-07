@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryption_configuration` - (Optional) Defines what encryption configuration is used to encrypt data in the Activity. For more information see the section [Data at rest encyption](https://docs.aws.amazon.com/step-functions/latest/dg/encryption-at-rest.html) in the AWS Step Functions User Guide.
 * `name` - (Required) The name of the activity to create.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -107,4 +108,4 @@ Using `terraform import`, import activities using the `arn`. For example:
 % terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-178930cc8fa2534f7dbabebf9c06db77152b49c283d6e2ce1c68afba89f3dd65 -->
+<!-- cache-key: cdktf-0.20.8 input-2496db6955c83de6e87fb10b61e69a5c6b503a2da27e1f4b07b01d3120bea1ce -->

@@ -78,6 +78,11 @@ func setRegionInState() crudInterceptor {
 			// Set region in state after R.
 			switch why {
 			case Read:
+				// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
+				if d.Id() == "" {
+					return diags
+				}
+
 				if err := d.Set(names.AttrRegion, c.Region(ctx)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrRegion, err)
 				}

@@ -54,6 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
 or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
@@ -122,4 +123,4 @@ Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53
 % terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0df8717d613484edc463bd3fdaf3205301916851c05379d2d41201dcb9437aaa -->
+<!-- cache-key: cdktf-0.20.8 input-133de3d37b6f0a62bd3a3618f5b7cefbc8e7198d2acb99092cb26ea380b350da -->

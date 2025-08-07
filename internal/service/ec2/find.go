@@ -1704,6 +1704,22 @@ func findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, con
 	}))
 }
 
+func findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if v := output.Status; v != awstypes.NatGatewayAddressStatusSucceeded {
+		return nil, &retry.NotFoundError{
+			Message: string(v),
+		}
+	}
+
+	return output, nil
+}
+
 func findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) (*awstypes.NatGatewayAddress, error) {
 	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
 
@@ -4561,6 +4577,9 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 		return nil, err
 	}
 
+	// Explicitly don't check for awstypes.TransitGatewayAttachmentStateDeleted.
+	// Caller must handle all states.
+
 	// Eventual consistency check.
 	if aws.ToString(output.TransitGatewayAttachmentId) != id {
 		return nil, &retry.NotFoundError{
@@ -4569,6 +4588,27 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 	}
 
 	return output, nil
+}
+
+func findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx context.Context, conn *ec2.Client, tgwID, dxGatewayID string) (*awstypes.TransitGatewayAttachment, error) {
+	input := ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-type"),
+				Values: enum.Slice(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+			},
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{dxGatewayID},
+			},
+			{
+				Name:   aws.String("transit-gateway-id"),
+				Values: []string{tgwID},
+			},
+		},
+	}
+
+	return findTransitGatewayAttachment(ctx, conn, &input)
 }
 
 func findTransitGatewayConnect(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) (*awstypes.TransitGatewayConnect, error) {

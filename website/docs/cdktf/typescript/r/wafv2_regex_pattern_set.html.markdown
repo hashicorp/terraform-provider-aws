@@ -52,6 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) A friendly name of the regular expression pattern set. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
@@ -103,4 +104,4 @@ Using `terraform import`, import WAFv2 Regex Pattern Sets using `ID/name/scope`.
 % terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2a2830ee887b593e970a00686cf79dc9c1efa842405a5133dcf6e09ead7e8b2b -->
+<!-- cache-key: cdktf-0.20.8 input-9c8f87f235605ca054706328dc004fa3baa71ba6fede48b315dcf6a5d625218d -->

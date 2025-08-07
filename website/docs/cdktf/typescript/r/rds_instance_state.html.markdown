@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `identifier` - (Required) DB Instance Identifier
 * `state` - (Required) Configured state of the DB Instance. Valid values are `available` and `stopped`.
 
@@ -91,4 +92,4 @@ Using `terraform import`, import RDS (Relational Database) RDS Instance State us
 % terraform import aws_rds_instance_state.example rds_instance_state-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-51f17dff08ff711e89c312f223fef82370a9f40f0eac7221405b62ef88410bdc -->
+<!-- cache-key: cdktf-0.20.8 input-9657583985a5c0ad58ec1ce4f1751f49f423d6a3c00d87fa37b7781d7fc6189e -->

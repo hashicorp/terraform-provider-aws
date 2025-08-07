@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_vault_name` - (Required) Name of the backup vault to add policy for.
 * `policy` - (Required) The backup vault access policy document in JSON format.
 
@@ -96,4 +97,4 @@ Using `terraform import`, import Backup vault policy using the `name`. For examp
 % terraform import aws_backup_vault_policy.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e6e2a9ecb59fce2e79c5991a441f8cb419a72c12b4391f7cf9f887f36613afd4 -->
+<!-- cache-key: cdktf-0.20.8 input-0b065288a85561fd455d72eea69bce60772359b09166c1b9e8fb34e54083757b -->

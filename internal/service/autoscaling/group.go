@@ -1562,7 +1562,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateAutoScalingGroup(ctx, &input)
 			},
 			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
@@ -1895,7 +1895,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		ForceDelete:          aws.Bool(forceDeleteGroup),
 	}
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteAutoScalingGroup(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
@@ -1909,7 +1909,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return findGroupByName(ctx, conn, d.Id())
 		})
 
@@ -1989,7 +1989,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 		ForceDelete:          aws.Bool(force),
 	}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteWarmPool(ctx, &input)
 		},
 		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)

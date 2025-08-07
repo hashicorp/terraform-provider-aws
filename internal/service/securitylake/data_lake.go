@@ -71,7 +71,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"s3_bucket_arn":   framework.ARNAttributeComputedOnly(),
@@ -294,7 +294,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	if !new.Configurations.Equal(old.Configurations) {
+	if !new.Configurations.Equal(old.Configurations) || !new.MetaStoreManagerRoleARN.Equal(old.MetaStoreManagerRoleARN) {
 		input := &securitylake.UpdateDataLakeInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {

@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_platform` - (Optional) Compute platform of the profiling group.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -86,4 +87,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `id
 % terraform import aws_codeguruprofiler_profiling_group.example profiling_group-name-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a9742fcae6d4a515ab1704a2739cd7edbbd740224abfd489a9d7f359c7f498d6 -->
+<!-- cache-key: cdktf-0.20.8 input-52ebe093e45d478f72beed478958b9875d941b71304383ce57ba89350891a519 -->

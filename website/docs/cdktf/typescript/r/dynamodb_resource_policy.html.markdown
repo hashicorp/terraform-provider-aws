@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `confirmRemoveSelfResourceAccess` - (Optional) Set this parameter to true to confirm that you want to remove your permissions to change the policy of this resource in the future.
 
 ## Attribute Reference
@@ -87,4 +88,4 @@ Using `terraform import`, import DynamoDB Resource Policy using the `example_id_
 % terraform import aws_dynamodb_resource_policy.example arn:aws:dynamodb:us-east-1:1234567890:table/my-table
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-89f104ce68215639032ec286cf1738e1000df8b4b941baf9449d7434bd1e4afe -->
+<!-- cache-key: cdktf-0.20.8 input-74f29441a77d9fef827faca95aeb5a77812e317a8fd9517a7515361bbe7bf5e4 -->

@@ -65,6 +65,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `saml_options` - (Optional) SAML authentication options for an AWS OpenSearch Domain.
 
 ### saml_options
@@ -120,4 +121,4 @@ Using `terraform import`, import OpenSearch domains using the `domain_name`. For
 % terraform import aws_opensearch_domain_saml_options.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-522ab8a3e642cd68e52068b5493dbf1fe749aa3105041d3745357f60bcae42f1 -->
+<!-- cache-key: cdktf-0.20.8 input-29a7d2f9dea1af889292f6d93f02352214d3023e35caabf7a50d8fa060f28664 -->

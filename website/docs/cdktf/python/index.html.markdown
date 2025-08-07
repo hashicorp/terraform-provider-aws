@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1514 resources and 608 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1509 resources and 608 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -450,17 +450,19 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the Region can also be retrieved from the metadata.
+  Most Regional resources, data sources and ephemeral resources support an optional top-level `region` argument which can be used to override the provider configuration value. See the individual resource's documentation for details.
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
   By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
   Specific to the Amazon S3 service.
-* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
+* `s3_us_east_1_regional_endpoint` - (Optional, **Deprecated**) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
   Valid values are `legacy` or `regional`.
   If omitted, the default behavior in the `us-east-1` Region is to use the global endpoint for general purpose buckets and the regional endpoint for directory buckets.
   Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
   Specific to the Amazon S3 service.
+  This argument and the ability to use the global S3 endpoint are deprecated and will be removed in `v7.0.0`.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
@@ -900,4 +902,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.20.8 input-b57c20c8df2b1dc3da80b170247bddfc99b264e1a1f65eddfc2841495a155591 -->
+<!-- cache-key: cdktf-0.20.8 input-903dba3822d9f15c231d2a9d3ce5c0aa20bf1099334a955c17b25663904d8b5f -->

@@ -53,14 +53,14 @@ class MyConvertedCode(TerraformStack):
                     "ConfigurationOptionsScanValue": "cron(0 1 * * ? *)",
                     "IsPolicyAttachAllowed": "false",
                     "OutputLogEnableS3": "false",
-                    "PatchBaselineRegion": Token.as_string(data_aws_region_current.name),
+                    "PatchBaselineRegion": Token.as_string(data_aws_region_current.region),
                     "PatchBaselineUseDefault": "default",
                     "PatchPolicyName": "example",
                     "RateControlConcurrency": "10%",
                     "RateControlErrorThreshold": "2%",
                     "SelectedPatchBaselines": selected_patch_baselines,
                     "TargetAccounts": Token.as_string(current.account_id),
-                    "TargetRegions": Token.as_string(data_aws_region_current.name),
+                    "TargetRegions": Token.as_string(data_aws_region_current.region),
                     "TargetType": "*"
                 },
                 type="AWSQuickSetupType-PatchPolicy"
@@ -81,6 +81,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the configuration manager.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -139,4 +140,4 @@ Using `terraform import`, import SSM Quick Setup Configuration Manager using the
 % terraform import aws_ssmquicksetup_configuration_manager.example arn:aws:ssm-quicksetup:us-east-1:012345678901:configuration-manager/abcd-1234
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-406027c15e99aa70cd4454256b4b0d1488e2194f4e1184b4d5d4888b6946622b -->
+<!-- cache-key: cdktf-0.20.8 input-06ba31da65bcdc895f35bf2905c1eeb90f3d6a55e9bc02b6d38887502b986200 -->

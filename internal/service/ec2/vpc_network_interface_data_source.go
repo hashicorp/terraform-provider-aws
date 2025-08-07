@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -168,7 +167,8 @@ func dataSourceNetworkInterface() *schema.Resource {
 
 func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
@@ -188,14 +188,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(eni.NetworkInterfaceId))
 	ownerID := aws.ToString(eni.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: ownerID,
-		Resource:  "network-interface/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
 	if eni.Association != nil {
 		if err := d.Set("association", []any{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting association: %s", err)
@@ -230,7 +223,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]any {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkInterfaceAttachment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}

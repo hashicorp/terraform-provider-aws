@@ -81,7 +81,7 @@ func resourceBusPolicyPut(ctx context.Context, d *schema.ResourceData, meta any)
 		d.SetId(eventBusName)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findEventBusPolicyByName(ctx, conn, d.Id())
 	})
 

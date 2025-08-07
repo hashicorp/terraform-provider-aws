@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availabilityZone` - (Required) Availability zone where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `finalSnapshot` - (Optional) If true, snapshot will be created before volume deletion. Any tags on the volume will be migrated to the snapshot. By default set to false
@@ -104,4 +105,4 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6a6acab6bfbed230c9aa5591dba57456d9ae1f6a08b14790969d7e5352ed72fa -->
+<!-- cache-key: cdktf-0.20.8 input-ece75d32fca67138bdb27016f5e9b8f8284702cf9e5a563f2d4132e992229f52 -->

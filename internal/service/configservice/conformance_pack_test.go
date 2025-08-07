@@ -687,7 +687,7 @@ EOT
 resource "aws_config_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test]
   name            = %q
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
 }
 `, bucketName, rName))
 }
@@ -728,7 +728,7 @@ Resources:
         SourceIdentifier: IAM_PASSWORD_POLICY
     Type: AWS::Config::ConfigRule
 EOT
-  template_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
 }
 `, rName))
 }

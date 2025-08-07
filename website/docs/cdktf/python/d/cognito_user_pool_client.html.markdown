@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_id` - (Required) Client Id of the user pool.
 * `user_pool_id` - (Required) User pool the client belongs to.
 
@@ -87,4 +88,4 @@ Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `
 * `id_token` - (Optional) Time unit in for the value in `id_token_validity`, defaults to `hours`.
 * `refresh_token` - (Optional) Time unit in for the value in `refresh_token_validity`, defaults to `days`.
 
-<!-- cache-key: cdktf-0.20.8 input-4cc9a50c1557e790c354c7f0117267a83414e84bff936502e14d6c46ae9225f5 -->
+<!-- cache-key: cdktf-0.20.8 input-a77c3f0618b50a7a9868f6e814abe3c30876a0e8581bc9a4883523863cdc1dda -->

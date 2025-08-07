@@ -137,6 +137,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 
 ### schedule
@@ -196,4 +197,4 @@ Using `terraform import`, import a QuickSight Refresh Schedule using the AWS acc
 % terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-883bce749fc26eb189d4bb33cee6fff44b81f594e4f17aefe99500bd5e24ebe3 -->
+<!-- cache-key: cdktf-0.20.8 input-df51f205a14415df4f456a34719514085a31ad470b6e47d269510c41210a7783 -->

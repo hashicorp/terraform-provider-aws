@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional, Forces new resource) AWS account ID.
 * `permissions` - (Optional) A set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -195,4 +196,4 @@ Using `terraform import`, import a QuickSight Theme using the AWS account ID and
 % terraform import aws_quicksight_theme.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->
+<!-- cache-key: cdktf-0.20.8 input-3303894ad9c36e327801a0edd34492c7258e1c795b86a478c58c20f9b3f04e35 -->

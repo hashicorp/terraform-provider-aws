@@ -74,6 +74,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detailType` - (Required) The level of detail to include in the notifications for this resource. Possible values are `BASIC` and `FULL`.
 * `eventTypeIds` - (Required) A list of event types associated with this notification rule.
   For list of allowed events see [here](https://docs.aws.amazon.com/codestar-notifications/latest/userguide/concepts.html#concepts-api).
@@ -128,4 +129,4 @@ Using `terraform import`, import CodeStar notification rule using the ARN. For e
 % terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4e53883c7fac8ce18f0f284d8670fbec11d282232b37f3e8c5d77110845632ed -->
+<!-- cache-key: cdktf-0.20.8 input-6443997cec5613029e2c7cd51d91c8131cd4f1409f68d8ba31cf0da45548076d -->

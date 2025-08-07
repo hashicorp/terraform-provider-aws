@@ -38,6 +38,7 @@ import (
 // @ImportIDHandler("userProfileImportID")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeUserProfileOutput")
+// @Testing(preIdentityVersion="6.2.0")
 func resourceUserProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserProfileCreate,

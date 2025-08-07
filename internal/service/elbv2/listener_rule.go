@@ -49,16 +49,15 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
+// @Testing(plannableImportAction="NoOp")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
 		ReadWithoutTimeout:   resourceListenerRuleRead,
 		UpdateWithoutTimeout: resourceListenerRuleUpdate,
 		DeleteWithoutTimeout: resourceListenerRuleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -544,7 +543,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
+	rule, err := tfresource.RetryWhenNewResourceNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (*awstypes.Rule, error) {
 		return findListenerRuleByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -557,8 +556,6 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener Rule (%s): %s", d.Id(), err)
 	}
-
-	rule := outputRaw.(*awstypes.Rule)
 
 	d.Set(names.AttrARN, rule.RuleArn)
 

@@ -31,6 +31,7 @@ import (
 // @ArnIdentity("resource_arn", identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb;dynamodb.GetResourcePolicyOutput")
 // @Testing(importIgnore="policy")
+// @Testing(preIdentityVersion="v5.100.0")
 func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -96,7 +97,7 @@ func (r *resourcePolicyResource) Create(ctx context.Context, request resource.Cr
 	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 	})
 

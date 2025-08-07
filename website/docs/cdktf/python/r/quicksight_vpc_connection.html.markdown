@@ -79,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional) AWS account ID.
 * `dns_resolvers` - (Optional) A list of IP addresses of DNS resolver endpoints for the VPC connection.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -125,4 +126,4 @@ Using `terraform import`, import QuickSight VPC connection using the AWS account
 % terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1a701376d2bcc1e947dddba8bc678a08ec6fbb9c8fee2196563da6dc0a40c77f -->
+<!-- cache-key: cdktf-0.20.8 input-cfc45e8dd6e4b46dbe662279ff59b4941da91d878b04659cbd8d9938b2a64099 -->

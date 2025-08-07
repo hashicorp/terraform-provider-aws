@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the event bus.
 
 ## Attribute Reference
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the event bus.
 * `kmsKeyIdentifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
 
-<!-- cache-key: cdktf-0.20.8 input-477fea65d1e101c47f11ca48fecf0b7385dc4c6b80fe4a2f389fa93fcc8c07ce -->
+<!-- cache-key: cdktf-0.20.8 input-ca4d4cbc96fd0272e4ef07f6831e5a627a99a3c5ffd6bab949891b7ff31a6eba -->

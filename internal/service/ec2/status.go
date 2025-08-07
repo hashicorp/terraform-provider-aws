@@ -1228,6 +1228,22 @@ func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
+func statusTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTransitGatewayAttachmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)

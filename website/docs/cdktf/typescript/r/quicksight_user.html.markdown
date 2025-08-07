@@ -101,6 +101,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Optional) ID for the AWS account that the user is in. Use the ID for the AWS account that contains your Amazon QuickSight account.
 * `iamArn` - (Optional) ARN of the IAM user or role that you are registering with Amazon QuickSight. Required only for users with an identity type of `IAM`.
 * `namespace`  - (Optional) The Amazon Quicksight namespace to create the user in. Defaults to `default`.
@@ -119,4 +120,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.8 input-6a391eed799fba4d600e4895065c5b4dd1a9717ac0ca1e4f82a252c2a8ba476b -->
+<!-- cache-key: cdktf-0.20.8 input-ad4a37231c8baa21a5ef04e066dfe6e1d798d37d418b81975b6bb0e86382fd40 -->

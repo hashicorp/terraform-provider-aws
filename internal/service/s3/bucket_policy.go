@@ -63,7 +63,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -74,7 +74,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findBucketPolicy(ctx, conn, bucket)
 		})
 
@@ -140,7 +140,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketPolicy(ctx, conn, bucket)
 	})
 

@@ -257,6 +257,101 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
+### Function with logging to S3 or Data Firehose
+
+#### Required Resources
+
+* An S3 bucket or Data Firehose delivery stream to store the logs.
+* A CloudWatch Log Group with:
+
+    * `log_group_class = "DELIVERY"`
+    * A subscription filter whose `destination_arn` points to the S3 bucket or the Data Firehose delivery stream.
+
+* IAM roles:
+
+    * Assumed by the `logs.amazonaws.com` service to deliver logs to the S3 bucket or Data Firehose delivery stream.
+    * Assumed by the `lambda.amazonaws.com` service to send logs to CloudWatch Logs
+
+* A Lambda function:
+
+    * In the `logging_configuration`, specify the name of the Log Group created above using the `log_group` field
+    * No special configuration is required to use S3 or Firehose as the log destination
+
+For more details, see [Sending Lambda function logs to Amazon S3](https://docs.aws.amazon.com/lambda/latest/dg/logging-with-s3.html).
+
+#### Example: Exporting Lambda Logs to S3 Bucket
+
+```terraform
+locals {
+  lambda_function_name = "lambda-log-export-example"
+}
+
+resource "aws_s3_bucket" "lambda_log_export" {
+  bucket = "${local.lambda_function_name}-bucket"
+}
+
+resource "aws_cloudwatch_log_group" "export" {
+  name            = "/aws/lambda/${local.lambda_function_name}"
+  log_group_class = "DELIVERY"
+}
+
+data "aws_iam_policy_document" "logs_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["logs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "logs_log_export" {
+  name               = "${local.lambda_function_name}-lambda-log-export-role"
+  assume_role_policy = data.aws_iam_policy_document.logs_assume_role.json
+}
+
+data "aws_iam_policy_document" "lambda_log_export" {
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.lambda_log_export.arn}/*"
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_log_export" {
+  policy = data.aws_iam_policy_document.lambda_log_export.json
+  role   = aws_iam_role.logs_log_export.name
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "lambda_log_export" {
+  name            = "${local.lambda_function_name}-filter"
+  log_group_name  = aws_cloudwatch_log_group.export.name
+  filter_pattern  = ""
+  destination_arn = aws_s3_bucket.lambda_log_export.arn
+  role_arn        = aws_iam_role.logs_log_export.arn
+}
+
+resource "aws_lambda_function" "log_export" {
+  function_name = local.lambda_function_name
+  handler       = "index.lambda_handler"
+  runtime       = "python3.13"
+  role          = aws_iam_role.example.arn
+  filename      = "function.zip"
+  logging_config {
+    log_format = "Text"
+    log_group  = aws_cloudwatch_log_group.export.name
+  }
+  depends_on = [
+    aws_cloudwatch_log_group.export
+  ]
+}
+```
+
 ### Function with Error Handling
 
 ```terraform

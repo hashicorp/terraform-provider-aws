@@ -25,6 +25,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newFirewallTransitGatewayAttachmentAccepterResource,
+			TypeName: "aws_networkfirewall_firewall_transit_gateway_attachment_accepter",
+			Name:     "Firewall Transit Gateway Attachment Accepter",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTLSInspectionConfigurationResource,
 			TypeName: "aws_networkfirewall_tls_inspection_configuration",
 			Name:     "TLS Inspection Configuration",
@@ -36,6 +42,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
+		},
+		{
+			Factory:  newVPCEndpointAssociationResource,
+			TypeName: "aws_networkfirewall_vpc_endpoint_association",
+			Name:     "VPC Endpoint Association",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "vpc_endpoint_association_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }

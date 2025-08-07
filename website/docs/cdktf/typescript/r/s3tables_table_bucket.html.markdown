@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `encryptionConfiguration` - (Optional) A single table bucket encryption configuration object.
   [See `encryptionConfiguration` below](#encryption_configuration).
 * `maintenanceConfiguration` - (Optional) A single table bucket maintenance configuration object.
@@ -124,4 +125,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8d0657839c87ebec22da7f06db455d16615964442b20d77c5effdf431e3d4a03 -->
+<!-- cache-key: cdktf-0.20.8 input-0d912a47569a48a79eab390ea4f794eff612e2c0c957303abdd7d34e0b3730cd -->

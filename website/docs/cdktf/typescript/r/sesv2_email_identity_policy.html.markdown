@@ -52,8 +52,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `emailIdentity` - (Required) The email identity.
 * `policyName` - (Required) - The name of the policy.
 * `policy` - (Required) - The text of the policy in JSON format.
@@ -94,4 +95,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Email Identity Policy u
 % terraform import aws_sesv2_email_identity_policy.example example_email_identity|example_policy_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c279466f359015723db6f077adee35e46786825240b157b0c1fce614fa61229a -->
+<!-- cache-key: cdktf-0.20.8 input-ce24a2cee08dd43e3384c0ee51e3f6935e0859695d697797d1393bfd4fff7e2f -->

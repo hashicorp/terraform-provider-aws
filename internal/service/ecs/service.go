@@ -5,6 +5,7 @@ package ecs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -117,7 +119,6 @@ func resourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
 							Default:  awstypes.DeploymentControllerTypeEcs,
 						},
@@ -610,6 +611,52 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"deployment_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          string(awstypes.DeploymentStrategyRolling),
+							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
+						},
+						"bake_time_in_minutes": {
+							Type:         nullable.TypeNullableInt,
+							Optional:     true,
+							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 1440),
+						},
+						"lifecycle_hook": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hook_target_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									names.AttrRoleARN: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lifecycle_stages": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookStage](),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"deployment_controller": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -619,7 +666,6 @@ func resourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
 							Type:             schema.TypeString,
-							ForceNew:         true,
 							Optional:         true,
 							Default:          awstypes.DeploymentControllerTypeEcs,
 							ValidateDiagFunc: enum.Validate[awstypes.DeploymentControllerType](),
@@ -714,6 +760,35 @@ func resourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"advanced_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"alternate_target_group_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"production_listener_rule": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"test_listener_rule": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									names.AttrRoleARN: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -885,6 +960,40 @@ func resourceService() *schema.Resource {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(0, 65535),
+												},
+												"test_traffic_rules": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															names.AttrHeader: {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		names.AttrName: {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		names.AttrValue: {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"exact": {
+																						Type:     schema.TypeString,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -1214,6 +1323,30 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		config := v.([]any)[0].(map[string]any)
+
+		if strategy, ok := config["strategy"].(string); ok && strategy != "" {
+			input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
+
+			if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyBlueGreen {
+				if v, ok := config["bake_time_in_minutes"].(string); ok {
+					bakeTime := nullable.Int(v)
+					if !bakeTime.IsNull() {
+						value, _, err := bakeTime.ValueInt32()
+						if err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
+						}
+						input.DeploymentConfiguration.BakeTimeInMinutes = aws.Int32(value)
+					}
+				}
+			}
+			if hooks := config["lifecycle_hook"].(*schema.Set).List(); len(hooks) > 0 {
+				input.DeploymentConfiguration.LifecycleHooks = expandLifecycleHooks(hooks)
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
 		input.HealthCheckGracePeriodSeconds = aws.Int32(int32(v.(int)))
 	}
@@ -1233,7 +1366,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if v := expandLoadBalancers(d.Get("load_balancer").(*schema.Set).List()); len(v) > 0 {
+	if v := expandServiceLoadBalancers(d.Get("load_balancer").(*schema.Set).List()); len(v) > 0 {
 		input.LoadBalancers = v
 	}
 
@@ -1279,6 +1412,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, v.([]any))
 	}
 
+	operationTime := time.Now().UTC()
 	output, err := retryServiceCreate(ctx, conn, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
@@ -1295,11 +1429,11 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(aws.ToString(output.Service.ServiceArn))
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
-	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
-		fn = waitServiceStable
-	}
-	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
+		}
+	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -1384,7 +1518,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set("launch_type", service.LaunchType)
 	if service.LoadBalancers != nil {
-		if err := d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers)); err != nil {
+		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 		}
 	}
@@ -1467,6 +1601,46 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
+		if d.HasChange("deployment_controller") {
+			if input.DeploymentController == nil {
+				input.DeploymentController = &awstypes.DeploymentController{}
+			}
+
+			if v, ok := d.GetOk("deployment_controller"); ok {
+				input.DeploymentController = expandDeploymentController(v.([]any))
+			}
+		}
+
+		if d.HasChange("deployment_configuration") {
+			if input.DeploymentConfiguration == nil {
+				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
+			}
+
+			if v, ok := d.GetOk("deployment_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				config := v.([]any)[0].(map[string]any)
+
+				if strategy, ok := config["strategy"].(string); ok && strategy != "" {
+					input.DeploymentConfiguration.Strategy = awstypes.DeploymentStrategy(strategy)
+
+					if awstypes.DeploymentStrategy(strategy) == awstypes.DeploymentStrategyBlueGreen {
+						if v, ok := config["bake_time_in_minutes"].(string); ok {
+							bakeTime := nullable.Int(v)
+							if !bakeTime.IsNull() {
+								value, _, err := bakeTime.ValueInt32()
+								if err != nil {
+									return sdkdiag.AppendFromErr(diags, err)
+								}
+								input.DeploymentConfiguration.BakeTimeInMinutes = aws.Int32(value)
+							}
+						}
+					}
+				}
+				if hooks := config["lifecycle_hook"].(*schema.Set).List(); len(hooks) > 0 {
+					input.DeploymentConfiguration.LifecycleHooks = expandLifecycleHooks(hooks)
+				}
+			}
+		}
+
 		if d.HasChange(names.AttrCapacityProviderStrategy) {
 			input.CapacityProviderStrategy = expandCapacityProviderStrategyItems(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set))
 		}
@@ -1522,7 +1696,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("load_balancer") {
 			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
-				input.LoadBalancers = expandLoadBalancers(v.List())
+				input.LoadBalancers = expandServiceLoadBalancers(v.List())
 			}
 		}
 
@@ -1593,6 +1767,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			serviceUpdateTimeout = 2 * time.Minute
 			timeout              = propagationTimeout + serviceUpdateTimeout
 		)
+		operationTime := time.Now().UTC()
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func() (any, error) {
 				return conn.UpdateService(ctx, &input)
@@ -1614,11 +1789,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
 
-		fn := waitServiceActive
 		if d.Get("wait_for_steady_state").(bool) {
-			fn = waitServiceStable
-		}
-		if _, err := fn(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
+			}
+		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1921,37 +2096,149 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		outputRaw, status, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time) retry.StateRefreshFunc {
+	var primaryTaskSet *awstypes.Deployment
+	var primaryDeploymentArn *string
+	var isNewPrimaryDeployment bool
 
+	return func() (any, string, error) {
+		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
 		if err != nil {
 			return nil, "", err
 		}
 
-		if status != serviceStatusActive {
-			return outputRaw, status, nil
+		if serviceStatus != serviceStatusActive {
+			return outputRaw, serviceStatus, nil
 		}
 
 		output := outputRaw.(*awstypes.Service)
 
-		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
-			status = serviceStatusStable
-		} else {
-			status = serviceStatusPending
+		if primaryTaskSet == nil {
+			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+
+			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
+				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
+				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
+			}
 		}
 
-		return output, status, nil
+		isNewECSDeployment := output.DeploymentController != nil &&
+			output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs &&
+			isNewPrimaryDeployment
+
+		// For new deployments with ECS deployment controller, check the deployment status
+		if isNewECSDeployment {
+			if primaryDeploymentArn == nil {
+				serviceArn := aws.ToString(output.ServiceArn)
+
+				var err error
+				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
+
+				if err != nil {
+					return nil, "", err
+				}
+				if primaryDeploymentArn == nil {
+					return output, serviceStatusPending, nil
+				}
+			}
+			deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
+			if err != nil {
+				return nil, "", err
+			}
+			return output, deploymentStatus, nil
+		}
+
+		// For other deployment controllers or in-place updates, check based on desired count
+		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
+			serviceStatus = serviceStatusStable
+		} else {
+			serviceStatus = serviceStatusPending
+		}
+
+		return output, serviceStatus, nil
+	}
+}
+
+func findPrimaryTaskSet(deployments []awstypes.Deployment) *awstypes.Deployment {
+	for _, deployment := range deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			return &deployment
+		}
+	}
+	return nil
+}
+
+func findPrimaryDeploymentARN(ctx context.Context, conn *ecs.Client, primaryTaskSet *awstypes.Deployment, serviceArn, clusterNameOrARN string, operationTime time.Time) (*string, error) {
+	parts := strings.Split(aws.ToString(primaryTaskSet.Id), "/")
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("invalid primary task set ID format: %s", aws.ToString(primaryTaskSet.Id))
+	}
+	taskSetID := parts[1]
+
+	input := &ecs.ListServiceDeploymentsInput{
+		Cluster: aws.String(clusterNameOrARN),
+		Service: aws.String(serviceNameFromARN(serviceArn)),
+		CreatedAt: &awstypes.CreatedAt{
+			After: &operationTime,
+		},
+	}
+
+	output, err := conn.ListServiceDeployments(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find deployment matching task set
+	for _, deployment := range output.ServiceDeployments {
+		if strings.Contains(aws.ToString(deployment.TargetServiceRevisionArn), taskSetID) {
+			return deployment.ServiceDeploymentArn, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn string) (string, error) {
+	input := ecs.DescribeServiceDeploymentsInput{
+		ServiceDeploymentArns: []string{deploymentArn},
+	}
+
+	output, err := conn.DescribeServiceDeployments(ctx, &input)
+	if err != nil {
+		return "", err
+	}
+
+	if len(output.ServiceDeployments) == 0 {
+		return serviceStatusPending, nil
+	}
+
+	deployment := output.ServiceDeployments[0]
+
+	switch deployment.Status {
+	case awstypes.ServiceDeploymentStatusSuccessful:
+		return serviceStatusStable, nil
+	case awstypes.ServiceDeploymentStatusInProgress:
+		return serviceStatusPending, nil
+	case awstypes.ServiceDeploymentStatusStopped,
+		awstypes.ServiceDeploymentStatusRollbackFailed,
+		awstypes.ServiceDeploymentStatusRollbackSuccessful:
+		message := "Deployment failed"
+		if deployment.StatusReason != nil {
+			message = aws.ToString(deployment.StatusReason)
+		}
+		return "", errors.New(message)
+	default:
+		return serviceStatusPending, nil
 	}
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN),
+		Refresh: statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, operationTime),
 		Timeout: timeout,
 	}
 
@@ -1965,7 +2252,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 }
 
 // Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceActive(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
@@ -2147,6 +2434,42 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
+}
+
+func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
+	apiObject := make([]awstypes.DeploymentLifecycleHook, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]any)
+
+		hook := awstypes.DeploymentLifecycleHook{}
+
+		if v, ok := tfMap["hook_target_arn"].(string); ok && v != "" {
+			hook.HookTargetArn = aws.String(v)
+		}
+
+		if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+			hook.RoleArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["lifecycle_stages"].([]any); ok && len(v) > 0 {
+			stages := make([]awstypes.DeploymentLifecycleHookStage, 0, len(v))
+			for _, stage := range v {
+				if stageStr, ok := stage.(string); ok && stageStr != "" {
+					stages = append(stages, awstypes.DeploymentLifecycleHookStage(stageStr))
+				}
+			}
+			hook.LifecycleStages = stages
+		}
+
+		apiObject = append(apiObject, hook)
+	}
+
+	return apiObject
 }
 
 func flattenNetworkConfiguration(nc *awstypes.NetworkConfiguration) []any {
@@ -2471,6 +2794,79 @@ func flattenSecrets(apiObjects []awstypes.Secret) []any {
 	return tfList
 }
 
+func expandServiceLoadBalancers(tfList []any) []awstypes.LoadBalancer {
+	apiObjects := make([]awstypes.LoadBalancer, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+
+		apiObject := awstypes.LoadBalancer{
+			ContainerName: aws.String(tfMap["container_name"].(string)),
+			ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
+		}
+
+		if v, ok := tfMap["elb_name"]; ok && v.(string) != "" {
+			apiObject.LoadBalancerName = aws.String(v.(string))
+		}
+
+		if v, ok := tfMap["target_group_arn"]; ok && v.(string) != "" {
+			apiObject.TargetGroupArn = aws.String(v.(string))
+		}
+
+		if advConfig, ok := tfMap["advanced_configuration"].([]any); ok && len(advConfig) > 0 && advConfig[0] != nil {
+			config := advConfig[0].(map[string]any)
+			apiObject.AdvancedConfiguration = &awstypes.AdvancedConfiguration{
+				AlternateTargetGroupArn: aws.String(config["alternate_target_group_arn"].(string)),
+				ProductionListenerRule:  aws.String(config["production_listener_rule"].(string)),
+				RoleArn:                 aws.String(config[names.AttrRoleARN].(string)),
+			}
+			if v, ok := config["test_listener_rule"].(string); ok && v != "" {
+				apiObject.AdvancedConfiguration.TestListenerRule = aws.String(v)
+			}
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenServiceLoadBalancers(apiObjects []awstypes.LoadBalancer) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"container_name": aws.ToString(apiObject.ContainerName),
+			"container_port": aws.ToInt32(apiObject.ContainerPort),
+		}
+
+		if apiObject.LoadBalancerName != nil {
+			tfMap["elb_name"] = aws.ToString(apiObject.LoadBalancerName)
+		}
+
+		if apiObject.TargetGroupArn != nil {
+			tfMap["target_group_arn"] = aws.ToString(apiObject.TargetGroupArn)
+		}
+
+		if apiObject.AdvancedConfiguration != nil {
+			tfMap["advanced_configuration"] = []any{
+				map[string]any{
+					"alternate_target_group_arn": aws.ToString(apiObject.AdvancedConfiguration.AlternateTargetGroupArn),
+					"production_listener_rule":   aws.ToString(apiObject.AdvancedConfiguration.ProductionListenerRule),
+					names.AttrRoleARN:            aws.ToString(apiObject.AdvancedConfiguration.RoleArn),
+				},
+			}
+			if apiObject.AdvancedConfiguration.TestListenerRule != nil {
+				tfMap["advanced_configuration"].([]any)[0].(map[string]any)["test_listener_rule"] = aws.ToString(apiObject.AdvancedConfiguration.TestListenerRule)
+			}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func expandServiceVolumeConfigurations(ctx context.Context, tfList []any) []awstypes.ServiceVolumeConfiguration {
 	if len(tfList) == 0 {
 		return nil
@@ -2729,6 +3125,35 @@ func flattenServiceConnectServices(apiObjects []awstypes.ServiceConnectService) 
 	return tfList
 }
 
+func expandServiceConnectTestTrafficRules(tfList []any) *awstypes.ServiceConnectTestTrafficRules {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ServiceConnectTestTrafficRules{}
+
+	if v, ok := tfMap[names.AttrHeader].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Header = expandServiceConnectHeader(v)
+	}
+
+	return apiObject
+}
+
+func flattenServiceConnectTestTrafficRules(apiObject *awstypes.ServiceConnectTestTrafficRules) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.Header != nil {
+		tfMap[names.AttrHeader] = flattenServiceConnectHeader(apiObject.Header)
+	}
+
+	return []any{tfMap}
+}
+
 func expandTimeout(timeout []any) *awstypes.TimeoutConfiguration {
 	if len(timeout) == 0 {
 		return nil
@@ -2845,6 +3270,9 @@ func expandClientAliases(srv []any) []awstypes.ServiceConnectClientAlias {
 		if v, ok := raw[names.AttrDNSName].(string); ok && v != "" {
 			config.DnsName = aws.String(v)
 		}
+		if v, ok := raw["test_traffic_rules"].([]any); ok && len(v) > 0 && v[0] != nil {
+			config.TestTrafficRules = expandServiceConnectTestTrafficRules(v)
+		}
 
 		out = append(out, config)
 	}
@@ -2864,11 +3292,78 @@ func flattenServiceConnectClientAliases(apiObjects []awstypes.ServiceConnectClie
 		if v := apiObject.Port; v != nil {
 			tfMap[names.AttrPort] = aws.ToInt32(v)
 		}
+		if v := apiObject.TestTrafficRules; v != nil {
+			tfMap["test_traffic_rules"] = flattenServiceConnectTestTrafficRules(v)
+		}
 
 		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
+}
+
+func expandServiceConnectHeader(tfList []any) *awstypes.ServiceConnectTestTrafficHeaderRules {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ServiceConnectTestTrafficHeaderRules{}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrValue].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandServiceConnectHeaderValue(v)
+	}
+
+	return apiObject
+}
+
+func flattenServiceConnectHeader(apiObject *awstypes.ServiceConnectTestTrafficHeaderRules) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap[names.AttrName] = aws.ToString(v)
+	}
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = flattenServiceConnectHeaderValue(v)
+	}
+
+	return []any{tfMap}
+}
+
+func expandServiceConnectHeaderValue(tfList []any) *awstypes.ServiceConnectTestTrafficHeaderMatchRules {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ServiceConnectTestTrafficHeaderMatchRules{}
+
+	if v, ok := tfMap["exact"].(string); ok && v != "" {
+		apiObject.Exact = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenServiceConnectHeaderValue(apiObject *awstypes.ServiceConnectTestTrafficHeaderMatchRules) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.Exact != nil {
+		tfMap["exact"] = aws.ToString(apiObject.Exact)
+	}
+
+	return []any{tfMap}
 }
 
 func flattenServiceRegistries(apiObjects []awstypes.ServiceRegistry) []any {
@@ -2932,4 +3427,23 @@ func clusterNameFromARN(arn string) string {
 		return parts[1]
 	}
 	return ""
+}
+
+func serviceNameFromARN(s string) string {
+	a, err := arn.Parse(s)
+	if err != nil {
+		return ""
+	}
+
+	resParts := strings.Split(a.Resource, "/")
+	switch len(resParts) {
+	case 3:
+		// long arn format arn:aws:ecs:us-west-2:123456789:service/cluster_name/service_name
+		return resParts[2]
+	case 2:
+		// short arn format arn:aws:ecs:us-west-2:123456789:service/service_name
+		return resParts[1]
+	default:
+		return ""
+	}
 }

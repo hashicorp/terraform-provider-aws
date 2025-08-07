@@ -247,6 +247,8 @@ var (
 
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
@@ -254,10 +256,6 @@ func resourceTopic() *schema.Resource {
 		ReadWithoutTimeout:   resourceTopicRead,
 		UpdateWithoutTimeout: resourceTopicUpdate,
 		DeleteWithoutTimeout: resourceTopicDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: resourceTopicCustomizeDiff,
 
@@ -311,7 +309,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	// Retry for eventual consistency; if ABAC is in use, this takes some time
 	// usually about 10s, presumably for tags really to be there, and we get a
 	// permissions error.
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.AuthorizationErrorException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.AuthorizationErrorException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
 	}, "no identity-based policy allows")
 

@@ -38,6 +38,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(v60RefreshError=true)
 func newExportResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &exportResource{}
 
@@ -117,8 +118,7 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
-					// map[string]map[string]string
-					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
+					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
@@ -496,8 +496,8 @@ type exportData struct {
 }
 
 type dataQueryData struct {
-	QueryStatement      types.String                                         `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
+	QueryStatement      types.String             `tfsdk:"query_statement"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {

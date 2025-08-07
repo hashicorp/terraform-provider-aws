@@ -75,6 +75,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) The name of the user hierarchy group. Must not be more than 100 characters.
 * `parent_group_id` - (Optional) The identifier for the parent hierarchy group. The user hierarchy is created at level one if the parent group ID is null.
@@ -132,4 +133,4 @@ Using `terraform import`, import Amazon Connect User Hierarchy Groups using the 
 % terraform import aws_connect_user_hierarchy_group.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-88263c0c4b64231cf0ae6b158e3728e1a26added6f1a3b85f4dc8db7b158609a -->
+<!-- cache-key: cdktf-0.20.8 input-df2aba41737a9d97812d59857ca10d329bf95353fda6464a30b14f952c7ca4fc -->

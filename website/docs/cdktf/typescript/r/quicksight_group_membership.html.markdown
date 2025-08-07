@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `groupName` - (Required) The name of the group in which the member will be added.
 * `memberName` - (Required) The name of the member to add to the group.
 * `awsAccountId` - (Optional) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
@@ -80,4 +81,4 @@ Using `terraform import`, import QuickSight Group membership using the AWS accou
 % terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-725ded78aa4f9a51cf1cc232f77bcbabe71212866930b64d5720ec0459e6dc9a -->
+<!-- cache-key: cdktf-0.20.8 input-a650dc7bdc278adb5f9bc2243685571b0dcb59b014e77ccfa668410220af52d1 -->

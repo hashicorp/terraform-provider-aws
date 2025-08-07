@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the lifecycle hook.
 * `autoscalingGroupName` - (Required) Name of the Auto Scaling group to which you want to assign the lifecycle hook
 * `defaultResult` - (Optional) Defines the action the Auto Scaling group should take when the lifecycle hook timeout elapses or if an unexpected failure occurs. The value for this parameter can be either CONTINUE or ABANDON. The default value for this parameter is ABANDON.
@@ -132,4 +133,4 @@ Using `terraform import`, import AutoScaling Lifecycle Hooks using the role auto
 % terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->
+<!-- cache-key: cdktf-0.20.8 input-40775c4a767da232cbe705af20b3056b3ebf2be2bbaefe07ebcba6a2fc43f90f -->

@@ -112,8 +112,8 @@ func (r *agentKnowledgeBaseAssociationResource) Create(ctx context.Context, requ
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
 
-	_, err := retryOpIfPreparing[*bedrockagent.AssociateAgentKnowledgeBaseOutput](ctx, timeout,
-		func() (*bedrockagent.AssociateAgentKnowledgeBaseOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentKnowledgeBaseOutput, error) {
 			return conn.AssociateAgentKnowledgeBase(ctx, input)
 		})
 
@@ -199,8 +199,8 @@ func (r *agentKnowledgeBaseAssociationResource) Update(ctx context.Context, requ
 
 	timeout := r.UpdateTimeout(ctx, new.Timeouts)
 
-	_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentKnowledgeBaseOutput](ctx, timeout,
-		func() (*bedrockagent.UpdateAgentKnowledgeBaseOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentKnowledgeBaseOutput, error) {
 			return conn.UpdateAgentKnowledgeBase(ctx, input)
 		})
 
@@ -235,8 +235,8 @@ func (r *agentKnowledgeBaseAssociationResource) Delete(ctx context.Context, requ
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
 
-	_, err := retryOpIfPreparing[*bedrockagent.DisassociateAgentKnowledgeBaseOutput](ctx, timeout,
-		func() (*bedrockagent.DisassociateAgentKnowledgeBaseOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentKnowledgeBaseOutput, error) {
 			return conn.DisassociateAgentKnowledgeBase(ctx, &input)
 		})
 

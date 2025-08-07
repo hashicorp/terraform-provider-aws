@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serviceCode` - (Required) Service code for the quota. Available values can be found with the [`aws_servicequotas_service` data source](/docs/providers/aws/d/servicequotas_service.html) or [AWS CLI service-quotas list-services command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-services.html).
 * `quotaCode` - (Optional) Quota code within the service. When configured, the data source directly looks up the service quota. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quotaCode` or `quotaName` must be specified.
 * `quotaName` - (Optional) Quota name within the service. When configured, the data source searches through all service quotas to find the matching quota name. Available values can be found with the [AWS CLI service-quotas list-service-quotas command](https://docs.aws.amazon.com/cli/latest/reference/service-quotas/list-service-quotas.html). One of `quotaName` or `quotaCode` must be specified.
@@ -72,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
     * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 * `value` - Current value of the service quota.
 
-<!-- cache-key: cdktf-0.20.8 input-2280d9854bf591ecb9fb76a63d7317129538c97fe3334a11025f25c6787efd78 -->
+<!-- cache-key: cdktf-0.20.8 input-4aa5f286e62a838e2084ec87063967482ebab7c250661b7e650f4a2c15dc6eae -->

@@ -71,8 +71,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Fleet name.
 
 ## Attribute Reference
@@ -111,4 +112,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
     * `vpc_id` - The ID of the Amazon VPC.
 
-<!-- cache-key: cdktf-0.20.8 input-491769edc9be1c75876e7a5a84dad33645eb6230108b9cd1455d98c4aa15d046 -->
+<!-- cache-key: cdktf-0.20.8 input-f1a67ce4dda02793880b9f6c4c12296079337825ba088c2d1283573cdbc646e6 -->

@@ -59,6 +59,10 @@ The following arguments are required:
 * `instance_name` - (Required) Name of the Lightsail instance to attach the IP to.
 * `static_ip_name` - (Required) Name of the allocated static IP.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -90,4 +94,4 @@ Using `terraform import`, import `aws_lightsail_static_ip_attachment` using the 
 % terraform import aws_lightsail_static_ip_attachment.example example-static-ip
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-268579791422ee2193c73519cbb4097ebdfc4c21ba272a2cf66beda3c6b3cd8c -->
+<!-- cache-key: cdktf-0.20.8 input-decc8f130cd36f9db4b869c011365f1d44073869a5e3292dc9eae0a8ced61dc4 -->

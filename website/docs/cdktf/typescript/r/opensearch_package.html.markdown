@@ -62,6 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `packageName` - (Required, Forces new resource) Unique name for the package.
 * `packageType` - (Required, Forces new resource) The type of package.
 * `packageSource` - (Required, Forces new resource) Configuration block for the package source options.
@@ -107,4 +108,4 @@ Using `terraform import`, import AWS Opensearch Packages using the Package ID. F
 % terraform import aws_opensearch_package.example package-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2ab49a0830ef6a746b9a1be0c59b35031692a911e2d8fee6ae0c1e34af4efbe8 -->
+<!-- cache-key: cdktf-0.20.8 input-82909e8ee5d2aedb6f5bf6d3183168d87f0515afdd09e6a766ba941f0fb8ac56 -->
