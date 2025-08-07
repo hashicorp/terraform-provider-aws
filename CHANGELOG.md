@@ -1,3 +1,5 @@
+## 6.9.0 (Unreleased)
+
 ## 6.8.0 (August 7, 2025)
 
 FEATURES:
