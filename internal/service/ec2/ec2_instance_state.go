@@ -45,10 +45,9 @@ func resourceInstanceState() *schema.Resource {
 				Default:  false,
 			},
 			"skip_os_shutdown": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-				Description: "Skip graceful OS shutdown. Ignored for 'start' states.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			names.AttrInstanceID: {
 				Type:     schema.TypeString,
