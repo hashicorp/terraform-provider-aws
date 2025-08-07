@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.47.0
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.43.0
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/chime v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.24.0
@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.46.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.240.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.241.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.62.0
@@ -179,14 +179,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.53.0
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/odb v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.50.0
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.22.0
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.54.0
@@ -198,7 +198,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.37.0
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.30.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.91.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.32.0
