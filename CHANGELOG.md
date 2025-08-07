@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_networkfirewall_vpc_endpoint_association` ([#43675](https://github.com/hashicorp/terraform-provider-aws/issues/43675))
 * **New Resource:** `aws_quicksight_custom_permissions` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * **New Resource:** `aws_quicksight_role_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * **New Resource:** `aws_quicksight_user_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
@@ -18,6 +19,9 @@ ENHANCEMENTS:
 * resource/aws_ecr_repository: Support `IMMUTABLE_WITH_EXCLUSION` and `MUTABLE_WITH_EXCLUSION` as valid values for `image_tag_mutability` ([#43642](https://github.com/hashicorp/terraform-provider-aws/issues/43642))
 * resource/aws_inspector2_enabler: Support resource import ([#43673](https://github.com/hashicorp/terraform-provider-aws/issues/43673))
 * resource/aws_instance: Adds `force_destroy` argument that allows destruction even when `disable_api_termination` and `disable_api_stop` are `true` ([#43722](https://github.com/hashicorp/terraform-provider-aws/issues/43722))
+* resource/aws_ivs_channel: Add resource identity support ([#43704](https://github.com/hashicorp/terraform-provider-aws/issues/43704))
+* resource/aws_ivs_playback_key_pair: Add resource identity support ([#43704](https://github.com/hashicorp/terraform-provider-aws/issues/43704))
+* resource/aws_ivs_recording_configuration: Add resource identity support ([#43704](https://github.com/hashicorp/terraform-provider-aws/issues/43704))
 * resource/aws_ivschat_logging_configuration: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
 * resource/aws_ivschat_room: Add resource identity support ([#43697](https://github.com/hashicorp/terraform-provider-aws/issues/43697))
 * resource/aws_kinesis_firehose_delivery_stream: Add `iceberg_configuration.append_only` argument ([#43647](https://github.com/hashicorp/terraform-provider-aws/issues/43647))
@@ -27,7 +31,9 @@ ENHANCEMENTS:
 * resource/aws_quicksight_user: Change `user_name` to Optional and Computed ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * resource/aws_quicksight_user: Support `IAM_IDENTITY_CENTER` as a valid value for `identity_type` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * resource/aws_quicksight_user: Support `RESTRICTED_AUTHOR` and `RESTRICTED_READER` as valid values for `user_role` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* resource/aws_security_group: Add parameterized resource identity support ([#43744](https://github.com/hashicorp/terraform-provider-aws/issues/43744))
 * resource/aws_sqs_queue: Increase upper limit of `max_message_size` from 256 KiB to 1024 KiB ([#43710](https://github.com/hashicorp/terraform-provider-aws/issues/43710))
+* resource/aws_ssm_parameter: Add resource identity support ([#43736](https://github.com/hashicorp/terraform-provider-aws/issues/43736))
 
 BUG FIXES:
 
