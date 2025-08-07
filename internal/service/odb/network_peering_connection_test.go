@@ -36,15 +36,6 @@ var odbNwkPeeringTestResource = odbNwkPeeringResourceTest{
 	odbNwkDisplayNamePrefix:     "odb-net",
 }
 
-func TestPrint(t *testing.T) {
-	odbPeeringDisplayName := sdkacctest.RandomWithPrefix(odbNwkPeeringTestResource.odbPeeringDisplayNamePrefix)
-	vpcName := sdkacctest.RandomWithPrefix(odbNwkPeeringTestResource.vpcNamePrefix)
-	odbNetName := sdkacctest.RandomWithPrefix(odbNwkPeeringTestResource.odbNwkDisplayNamePrefix)
-	s := odbNwkPeeringTestResource.basicConfig(vpcName, odbPeeringDisplayName, odbNetName)
-	fmt.Println(s)
-
-}
-
 func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
