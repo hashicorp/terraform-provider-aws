@@ -5,6 +5,7 @@ FEATURES:
 * **New Resource:** `aws_quicksight_custom_permissions` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * **New Resource:** `aws_quicksight_role_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
 * **New Resource:** `aws_quicksight_user_custom_permission` ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* **New Resource:** `aws_wafv2_web_acl_rule_group_association` ([#43561](https://github.com/hashicorp/terraform-provider-aws/issues/43561))
 
 ENHANCEMENTS:
 
