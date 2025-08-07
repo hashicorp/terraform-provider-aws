@@ -1,12 +1,14 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lambda_function" "test" {
-{{- template "region" }}
+  region = var.region
+
   filename      = "test-fixtures/lambdatest.zip"
   function_name = var.rName
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs20.x"
-
-{{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}
@@ -82,4 +84,16 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 EOF
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
