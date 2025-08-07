@@ -12,6 +12,8 @@ var (
 	ResourceWebACLAssociation          = resourceWebACLAssociation
 	ResourceWebACLLoggingConfiguration = resourceWebACLLoggingConfiguration
 	ResourceAPIKey                     = newAPIKeyResource
+	ResourceWebACLRuleGroupAssociation = newResourceWebACLRuleGroupAssociation
+	ResourceWebACLRule                 = newResourceWebACLRule
 
 	FindAPIKeyByTwoPartKey            = findAPIKeyByTwoPartKey
 	FindIPSetByThreePartKey           = findIPSetByThreePartKey
@@ -22,4 +24,6 @@ var (
 	FindWebACLByThreePartKey          = findWebACLByThreePartKey
 	ListRuleGroupsPages               = listRuleGroupsPages
 	ListWebACLsPages                  = listWebACLsPages
+	ParseWebACLARN                    = parseWebACLARN
+	ParseWebACLRuleID                 = parseWebACLRuleID
 )
