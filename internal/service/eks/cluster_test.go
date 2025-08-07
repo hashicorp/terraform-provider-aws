@@ -1572,7 +1572,7 @@ resource "aws_iam_role" "cluster" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": data.aws_service_principal.eks.name
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -1684,7 +1684,7 @@ resource "aws_iam_role" "cluster" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": data.aws_service_principal.eks.name
+        "Service": "${data.aws_service_principal.eks.name}"
       },
       "Action": [
         "sts:AssumeRole",
@@ -1735,7 +1735,7 @@ resource "aws_iam_role" "node" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": data.aws_service_principal.ec2.name
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Action": ["sts:AssumeRole"]
     }
@@ -1764,7 +1764,7 @@ resource "aws_iam_role" "node2" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": data.aws_service_principal.ec2.name
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Action": ["sts:AssumeRole"]
     }
