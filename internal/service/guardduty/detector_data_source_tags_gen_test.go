@@ -36,6 +36,7 @@ func testAccGuardDutyDetectorDataSource_tagsSerial(t *testing.T) {
 
 func testAccGuardDutyDetectorDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -62,6 +63,7 @@ func testAccGuardDutyDetectorDataSource_tags(t *testing.T) {
 
 func testAccGuardDutyDetectorDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -84,6 +86,7 @@ func testAccGuardDutyDetectorDataSource_tags_NullMap(t *testing.T) {
 
 func testAccGuardDutyDetectorDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -106,6 +109,7 @@ func testAccGuardDutyDetectorDataSource_tags_EmptyMap(t *testing.T) {
 
 func testAccGuardDutyDetectorDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -136,6 +140,7 @@ func testAccGuardDutyDetectorDataSource_tags_DefaultTags_nonOverlapping(t *testi
 
 func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
@@ -172,6 +177,7 @@ func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *te
 
 func testAccGuardDutyDetectorDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_guardduty_detector.test"
 
 	acctest.Test(ctx, t, resource.TestCase{
