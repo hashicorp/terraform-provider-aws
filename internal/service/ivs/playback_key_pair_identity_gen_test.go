@@ -39,7 +39,7 @@ func testAccIVSPlaybackKeyPair_Identity_Basic(t *testing.T) {
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
 	rTlsEcdsaPublicKeyPem, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -132,7 +132,7 @@ func testAccIVSPlaybackKeyPair_Identity_RegionOverride(t *testing.T) {
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
 	rTlsEcdsaPublicKeyPem, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -267,7 +267,7 @@ func testAccIVSPlaybackKeyPair_Identity_ExistingResource(t *testing.T) {
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
 	rTlsEcdsaPublicKeyPem, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
