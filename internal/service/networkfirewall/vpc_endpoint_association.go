@@ -35,7 +35,7 @@ import (
 )
 
 // @FrameworkResource("aws_networkfirewall_vpc_endpoint_association", name="VPC Endpoint Association")
-// @Tags(identifierAttribute="firewall_arn")
+// @Tags(identifierAttribute="vpc_endpoint_association_arn")
 func newVPCEndpointAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcEndpointAssociationResource{}
 

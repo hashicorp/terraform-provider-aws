@@ -48,7 +48,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_networkfirewall_vpc_endpoint_association",
 			Name:     "VPC Endpoint Association",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "firewall_arn",
+				IdentifierAttribute: "vpc_endpoint_association_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
