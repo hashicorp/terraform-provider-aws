@@ -11,6 +11,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_quicksight_user: Add `custom_permissions_name` attribute ([#43613](https://github.com/hashicorp/terraform-provider-aws/issues/43613))
+* data-source/aws_wafv2_web_acl: Add `resource_arn` argument to enable finding web ACLs by resource ARN ([#43597](https://github.com/hashicorp/terraform-provider-aws/issues/43597))
+* data-source/aws_wafv2_web_acl: Add support for `CLOUDFRONT` `scope` web ACLs using `resource_arn` ([#43597](https://github.com/hashicorp/terraform-provider-aws/issues/43597))
 * resource/aws_bedrock_guardrail: Add `input_action`, `output_action`, `input_enabled`, and `output_enabled` attributes to `sensitive_information_policy_config.pii_entities_config` and `sensitive_information_policy_config.regexes_config` configuration blocks ([#43702](https://github.com/hashicorp/terraform-provider-aws/issues/43702))
 * resource/aws_cloudwatch_log_group: Add resource identity support ([#43719](https://github.com/hashicorp/terraform-provider-aws/issues/43719))
 * resource/aws_computeoptimizer_recommendation_preferences: Add `AuroraDBClusterStorage` as a valid `resource_type` ([#43677](https://github.com/hashicorp/terraform-provider-aws/issues/43677))
