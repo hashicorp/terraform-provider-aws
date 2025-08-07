@@ -135,35 +135,6 @@ func resourceServiceQuota() *schema.Resource {
 				Required: true,
 			},
 		},
-		//CustomizeDiff: func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-		//	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
-		//
-		//	serviceCode, quotaCode := diff.Get("service_code").(string), diff.Get("quota_code").(string)
-		//
-		//	// A Service Quota will always have a default value, but will only have a current value if it has been set.
-		//	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
-		//	if err != nil {
-		//		return err
-		//	}
-		//
-		//	quotaValue := aws.ToFloat64(defaultQuota.Value)
-		//
-		//	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
-		//	switch {
-		//	case tfresource.NotFound(err):
-		//	case err != nil:
-		//		return err
-		//	default:
-		//		quotaValue = aws.ToFloat64(serviceQuota.Value)
-		//	}
-		//
-		//	value := diff.Get(names.AttrValue).(float64)
-		//	if value <= quotaValue {
-		//		return fmt.Errorf(`"value" (%f) should be greater than the default or current value (%f) for Service Quota (%s/%s)`, value, quotaValue, serviceCode, quotaCode)
-		//	}
-		//
-		//	return nil
-		//},
 	}
 }
 
@@ -173,7 +144,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	serviceCode, quotaCode := d.Get("service_code").(string), d.Get("quota_code").(string)
 
-	//// A Service Quota will always have a default value, but will only have a current value if it has been set.
+	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas default Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
