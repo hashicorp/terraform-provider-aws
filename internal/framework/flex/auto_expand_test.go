@@ -546,7 +546,7 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"JSONValue Source to json interface Target": {
-			Source: &tfJSONStringer{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Source: &tfJSONStringer{Field1: fwtypes.NewSmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
 			Target: &awsJSONStringer{},
 			WantTarget: &awsJSONStringer{
 				Field1: &testJSONDocument{

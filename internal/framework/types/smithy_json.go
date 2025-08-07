@@ -5,7 +5,6 @@ package types
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -22,7 +21,7 @@ var (
 )
 
 type SmithyJSONType[T tfjson.JSONStringer] struct {
-	basetypes.StringType
+	jsontypes.NormalizedType
 	f func(any) T
 }
 
@@ -45,29 +44,25 @@ func (t SmithyJSONType[T]) ValueType(context.Context) attr.Value {
 // Equal returns true if the given type is equivalent.
 func (t SmithyJSONType[T]) Equal(o attr.Type) bool {
 	other, ok := o.(SmithyJSONType[T])
-
 	if !ok {
 		return false
 	}
 
-	return t.StringType.Equal(other.StringType)
+	return t.NormalizedType.Equal(other.NormalizedType)
 }
 
 func (t SmithyJSONType[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
-
 	if err != nil {
 		return nil, err
 	}
 
 	stringValue, ok := attrValue.(basetypes.StringValue)
-
 	if !ok {
 		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
 	stringValuable, diags := t.ValueFromString(ctx, stringValue)
-
 	if diags.HasError() {
 		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
 	}
@@ -79,19 +74,14 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 	var diags diag.Diagnostics
 
 	if in.IsNull() {
-		return SmithyJSONNull[T](), diags
+		return NewSmithyJSONNull[T](), diags
 	}
 
 	if in.IsUnknown() {
-		return SmithyJSONUnknown[T](), diags
+		return NewSmithyJSONUnknown[T](), diags
 	}
 
-	var data any
-	if err := json.Unmarshal([]byte(in.ValueString()), &data); err != nil {
-		return SmithyJSONUnknown[T](), diags
-	}
-
-	return SmithyJSONValue(in.ValueString(), t.f), diags
+	return NewSmithyJSONValue(in.ValueString(), t.f), diags
 }
 
 var (
@@ -101,31 +91,28 @@ var (
 )
 
 type SmithyJSON[T tfjson.JSONStringer] struct {
-	basetypes.StringValue
+	jsontypes.Normalized
 	f func(any) T
 }
 
 func (v SmithyJSON[T]) Equal(o attr.Value) bool {
 	other, ok := o.(SmithyJSON[T])
-
 	if !ok {
 		return false
 	}
 
-	return v.StringValue.Equal(other.StringValue)
+	return v.Normalized.Equal(other.Normalized)
 }
 
 func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var zero T
-	if v.IsNull() || v.IsUnknown() {
+	if v.IsNull() || v.IsUnknown() || v.f == nil {
 		return zero, diags
 	}
 
-	var data any
-	err := json.Unmarshal([]byte(v.ValueString()), &data)
-
+	t, err := tfjson.SmithyDocumentFromString(v.ValueString(), v.f)
 	if err != nil {
 		diags.AddError(
 			"JSON Unmarshal Error",
@@ -136,64 +123,28 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 		return zero, diags
 	}
 
-	return v.f(data), diags
+	return t, diags
 }
 
 func (v SmithyJSON[T]) Type(context.Context) attr.Type {
 	return SmithyJSONType[T]{}
 }
 
-func (v SmithyJSON[T]) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
-	if v.IsNull() || v.IsUnknown() {
-		return
-	}
-
-	jsontypes.NewNormalizedValue(v.ValueString()).ValidateAttribute(ctx, req, resp)
-}
-
-func (v SmithyJSON[T]) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	oldString := jsontypes.NewNormalizedValue(v.ValueString())
-
-	newValue, ok := newValuable.(SmithyJSON[T])
-	if !ok {
-		diags.AddError(
-			"Semantic Equality Check Error",
-			"An unexpected value type was received while performing semantic equality checks. "+
-				"Please report this to the provider developers.\n\n"+
-				"Expected Value Type: "+fmt.Sprintf("%T", v)+"\n"+
-				"Got Value Type: "+fmt.Sprintf("%T", newValuable),
-		)
-
-		return false, diags
-	}
-	newString := jsontypes.NewNormalizedValue(newValue.ValueString())
-
-	result, err := oldString.StringSemanticEquals(ctx, newString)
-	diags.Append(err...)
-
-	if diags.HasError() {
-		return false, diags
-	}
-
-	return result, diags
-}
-
-func SmithyJSONValue[T tfjson.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
+func NewSmithyJSONValue[T tfjson.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
 	return SmithyJSON[T]{
-		StringValue: basetypes.NewStringValue(value),
-		f:           f,
-	}
-}
-func SmithyJSONNull[T tfjson.JSONStringer]() SmithyJSON[T] {
-	return SmithyJSON[T]{
-		StringValue: basetypes.NewStringNull(),
+		Normalized: jsontypes.NewNormalizedValue(value),
+		f:          f,
 	}
 }
 
-func SmithyJSONUnknown[T tfjson.JSONStringer]() SmithyJSON[T] {
+func NewSmithyJSONNull[T tfjson.JSONStringer]() SmithyJSON[T] {
 	return SmithyJSON[T]{
-		StringValue: basetypes.NewStringUnknown(),
+		Normalized: jsontypes.NewNormalizedNull(),
+	}
+}
+
+func NewSmithyJSONUnknown[T tfjson.JSONStringer]() SmithyJSON[T] {
+	return SmithyJSON[T]{
+		Normalized: jsontypes.NewNormalizedUnknown(),
 	}
 }

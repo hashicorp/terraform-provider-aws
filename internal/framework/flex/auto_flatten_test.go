@@ -4393,7 +4393,7 @@ func TestFlattenInterfaceToStringTypable(t *testing.T) {
 			},
 			Target: &tfJSONStringer{},
 			WantTarget: &tfJSONStringer{
-				Field1: fwtypes.SmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
+				Field1: fwtypes.NewSmithyJSONValue(`{"test":"a"}`, newTestJSONDocument),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
@@ -4410,7 +4410,7 @@ func TestFlattenInterfaceToStringTypable(t *testing.T) {
 			},
 			Target: &tfJSONStringer{},
 			WantTarget: &tfJSONStringer{
-				Field1: fwtypes.SmithyJSONNull[smithyjson.JSONStringer](),
+				Field1: fwtypes.NewSmithyJSONNull[smithyjson.JSONStringer](),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfJSONStringer]()),
