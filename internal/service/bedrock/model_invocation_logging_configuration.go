@@ -27,6 +27,7 @@ import (
 
 // @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 // @SingletonIdentity(identityDuplicateAttributes="id")
+// @Testing(preIdentityVersion="v5.100.0")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &modelInvocationLoggingConfigurationResource{}, nil
 }
