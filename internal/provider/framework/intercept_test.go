@@ -258,8 +258,6 @@ func (m *mockInterceptor) Intercept(ctx context.Context, opts interceptorOptions
 	return m.diags[opts.when]
 }
 
-type innerFunc[Request, Response any] func(ctx context.Context, request *Request, response *Response) diag.Diagnostics
-
 type mockInnerFunc struct {
 	diags diag.Diagnostics
 	count int

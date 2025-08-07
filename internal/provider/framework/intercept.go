@@ -321,8 +321,10 @@ type interceptedResponse interface {
 		resource.ImportStateResponse
 }
 
+type innerFunc[Request, Response any] func(ctx context.Context, request *Request, response *Response) diag.Diagnostics
+
 // interceptedHandler returns a handler that runs any interceptors.
-func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f func(context.Context, *Request, *Response) diag.Diagnostics, c awsClient) func(context.Context, *Request, *Response) diag.Diagnostics {
+func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], c awsClient) func(context.Context, *Request, *Response) diag.Diagnostics {
 	return func(ctx context.Context, request *Request, response *Response) diag.Diagnostics {
 		var diags diag.Diagnostics
 		// Before interceptors are run first to last.
