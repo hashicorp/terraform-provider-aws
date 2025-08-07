@@ -1104,6 +1104,21 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		input := lambda.GetFunctionConcurrencyInput{
+			FunctionName: aws.String(aws.ToString(input.FunctionName)),
+		}
+		concurrencyOutput, err := conn.GetFunctionConcurrency(ctx, &input)
+		if err != nil {
+			return nil, err
+		}
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: concurrencyOutput.ReservedConcurrentExecutions,
+		}
+	}
+
 	return output, nil
 }
 
