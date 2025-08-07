@@ -348,9 +348,10 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 
 		// All other interceptors are run last to first.
 		reverse := tfslices.Reverse(forward)
-		diags = f(ctx, request, response)
+		d := f(ctx, request, response)
+		diags.Append(d...)
 
-		if diags.HasError() {
+		if d.HasError() {
 			when = OnError
 		} else {
 			when = After
