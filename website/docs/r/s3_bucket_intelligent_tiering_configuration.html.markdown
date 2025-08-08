@@ -10,6 +10,8 @@ description: |-
 
 Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intelligent-tiering.html) configuration resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add intelligent tiering configuration for entire S3 bucket
@@ -67,6 +69,7 @@ resource "aws_s3_bucket" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.
 * `status` - (Optional) Specifies the status of the configuration. Valid values: `Enabled`, `Disabled`.

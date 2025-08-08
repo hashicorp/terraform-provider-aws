@@ -7,23 +7,25 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue_redrive_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,6 +36,11 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 					testAccCheckQueueExists(ctx, fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -41,11 +48,15 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccQueueRedrivePolicyConfig_basic(rName),
-				PlanOnly: true,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "redrive_policy", queueResourceName, "redrive_policy"),
-				),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -53,14 +64,14 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 
 func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue_redrive_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,13 +90,13 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 
 func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,14 +114,14 @@ func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
 
 func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queueAttributes map[string]string
+	var queueAttributes map[types.QueueAttributeName]string
 	resourceName := "aws_sqs_queue_redrive_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{

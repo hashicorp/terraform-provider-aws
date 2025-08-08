@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_dynamodb_resource_policy
+```

@@ -66,12 +66,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountIds` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resourceTypes` - (Required) Type of resources to scan.
-  Valid values are `ec2`, `ecr`, and `lambda`.
+  Valid values are `EC2`, `ECR`, `LAMBDA`, `LAMBDA_CODE` and `CODE_REPOSITORY`.
   At least one item is required.
 
 ## Attribute Reference
@@ -82,8 +83,8 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.18.0 input-3675458edca8c17dee4a81d61894b4598760712440e779a579e9faf9bbe7135c -->
+<!-- cache-key: cdktf-0.20.8 input-198c4f618e3b0268d8538f0e657a2827e55c8bd5c92f02553d341795eb623d02 -->

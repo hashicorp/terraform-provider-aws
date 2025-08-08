@@ -7,28 +7,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
+var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
 var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
-var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
-func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
+func StringIsInt32(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	_, err := strconv.ParseInt(value, 10, 32)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 32-bit integer", k, v))
+		return
+	}
+
+	return
+}
+
+func Valid4ByteASN(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	asn, err := strconv.ParseInt(value, 10, 64)
@@ -43,7 +60,7 @@ func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func ValidAmazonSideASN(v interface{}, k string) (ws []string, errors []error) {
+func ValidAmazonSideASN(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
@@ -102,8 +119,8 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid partition value (expecting to match regular expression: %s)", k, value, partitionRegexp))
 		}
 
-		if parsedARN.Region != "" && !regionRegexp.MatchString(parsedARN.Region) {
-			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value (expecting to match regular expression: %s)", k, value, regionRegexp))
+		if parsedARN.Region != "" && !inttypes.IsAWSRegion(parsedARN.Region) {
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value", k, value))
 		}
 
 		if parsedARN.AccountID != "" && !accountIDRegexp.MatchString(parsedARN.AccountID) {
@@ -124,12 +141,10 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 	}
 }
 
-func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
+func ValidAccountID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^\d{12}$`
-	if !regexache.MustCompile(pattern).MatchString(value) {
+	if !inttypes.IsAWSAccountID(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
 			k, value))
@@ -138,10 +153,22 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+func ValidBase64String(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !inttypes.IsBase64Encoded(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q (%q) must be base64-encoded",
+			k, value))
+	}
+
+	return
+}
+
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
-func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
+func ValidCIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
+	if err := inttypes.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -149,13 +176,17 @@ func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
+func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
+	value = strings.TrimSpace(value)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-	} else if first := value[:1]; first != "{" {
-		switch value[:1] {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if first := value[:1]; first != "{" {
+		switch first {
 		case " ", "\t", "\r", "\n":
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
 		case `"`:
@@ -180,12 +211,21 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			// Generic error for if we didn't find something more specific to say.
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
-	} else if _, err := structure.NormalizeJsonString(v); err != nil {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errStr := err.Error()
 		if err, ok := errs.As[*json.SyntaxError](err); ok {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	return //nolint:nakedret // Just a long function.
@@ -206,7 +246,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -228,7 +268,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -237,7 +277,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 
 // ValidIPv4CIDRNetworkAddress ensures that the string value is a valid IPv4 CIDR that
 // represents a network address - it adds an error otherwise
-func ValidIPv4CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+func ValidIPv4CIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
 	if err := ValidateIPv4CIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
@@ -248,7 +288,7 @@ func ValidIPv4CIDRNetworkAddress(v interface{}, k string) (ws []string, errors [
 
 // ValidIPv6CIDRNetworkAddress ensures that the string value is a valid IPv6 CIDR that
 // represents a network address - it adds an error otherwise
-func ValidIPv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+func ValidIPv6CIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
 	if err := ValidateIPv6CIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
@@ -272,7 +312,7 @@ func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaVa
 // (per KMS API documentation and internal AWS conversations).
 // ref: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id
 // ref: https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html#KMS-Encrypt-request-KeyId
-func ValidKMSKeyID(v interface{}, k string) (ws []string, errors []error) {
+func ValidKMSKeyID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
@@ -282,7 +322,7 @@ func ValidKMSKeyID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error) {
+func ValidLaunchTemplateID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
@@ -295,7 +335,7 @@ func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []error) {
+func ValidLaunchTemplateName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 3 {
 		errors = append(errors, fmt.Errorf("%q cannot be less than 3 characters", k))
@@ -323,7 +363,7 @@ func validateMulticastIPAddress(s string) error {
 	return nil
 }
 
-func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []error) {
+func ValidMulticastIPAddress(v any, k string) (ws []string, errors []error) {
 	if err := validateMulticastIPAddress(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
@@ -332,7 +372,7 @@ func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []error) {
+func ValidOnceADayWindowFormat(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	t := timestamp.New(value)
@@ -344,7 +384,7 @@ func ValidOnceADayWindowFormat(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []error) {
+func ValidOnceAWeekWindowFormat(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	t := timestamp.New(value)
@@ -356,22 +396,19 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
+func ValidRegionName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if value == "" {
-		return ws, errors
-	}
-	if !regionRegexp.MatchString(value) {
+	if !inttypes.IsAWSRegion(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q region name is malformed(%q): %q",
-			k, regionRegexp, value))
+			"%q doesn't look like AWS Region: %q",
+			k, value))
 	}
 
 	return
 }
 
-func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
+func ValidStringIsJSONOrYAML(v any, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
@@ -386,7 +423,7 @@ func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []err
 
 // ValidTypeStringNullableFloat provides custom error messaging for TypeString floats
 // Some arguments require a floating point value or an unspecified, empty field.
-func ValidTypeStringNullableFloat(v interface{}, k string) (ws []string, es []error) {
+func ValidTypeStringNullableFloat(v any, k string) (ws []string, es []error) {
 	value, ok := v.(string)
 	if !ok {
 		es = append(es, fmt.Errorf("expected type of %s to be string", k))
@@ -407,7 +444,7 @@ func ValidTypeStringNullableFloat(v interface{}, k string) (ws []string, es []er
 // ValidUTCTimestamp validates a string in UTC Format required by APIs including:
 // https://docs.aws.amazon.com/iot/latest/apireference/API_CloudwatchMetricAction.html
 // https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceToPointInTime.html
-func ValidUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
+func ValidUTCTimestamp(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	t := timestamp.New(value)
@@ -424,7 +461,7 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.StringMatch(regexache.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
 
-func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
+func ValidDuration(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	duration, err := time.ParseDuration(value)
 	if err != nil {
@@ -439,7 +476,7 @@ func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
 // FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
 // is of type float and is greater than threshold.
 func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
+	return func(i any, k string) (s []string, es []error) {
 		v, ok := i.(float64)
 		if !ok {
 			es = append(es, fmt.Errorf("expected type of %s to be float", k))
@@ -455,7 +492,24 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
-func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+func StringHasPrefix(prefix string) schema.SchemaValidateFunc {
+	return func(v any, k string) (warnings []string, errors []error) {
+		s, ok := v.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return
+		}
+
+		if !strings.HasPrefix(s, prefix) {
+			errors = append(errors, fmt.Errorf("expected %s to have prefix %s, got %s", k, prefix, s))
+			return
+		}
+
+		return warnings, errors
+	}
+}
+
+func ValidServicePrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if value == "" {
@@ -471,4 +525,111 @@ func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error
 
 func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
+}
+
+func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]any)
+		keys := tfmaps.Keys(m)
+
+		slices.Sort(keys)
+		for _, k := range keys {
+			if ok := r.MatchString(k); ok {
+				var detail string
+				if message != "" {
+					detail = fmt.Sprintf("Map key '%s' %s", k, message)
+				} else {
+					detail = fmt.Sprintf("Map key '%s' must not match regular expression '%s'", k, r)
+				}
+				diags = append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Bad map key",
+					Detail:        detail,
+					AttributePath: path,
+				})
+			}
+		}
+
+		return diags
+	}
+}
+
+func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		for k := range v.(map[string]any) {
+			for _, keyValidator := range keyValidators {
+				diags = append(diags, keyValidator(k, path.IndexString(k))...)
+			}
+		}
+
+		return diags
+	}
+}
+
+func MapSizeAtMost(max int) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]any)
+
+		if l := len(m); l > max {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Bad map size",
+				Detail:        fmt.Sprintf("Map must contain at most %d elements: length=%d", max, l),
+				AttributePath: path,
+			})
+		}
+
+		return diags
+	}
+}
+
+func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]any)
+
+		if l := len(m); l < min || l > max {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Bad map size",
+				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
+				AttributePath: path,
+			})
+		}
+
+		return diags
+	}
+}
+
+// CaseInsensitiveMatchDeprecation returns a warning diagnostic if the argument value
+// matches a valid value using unicode case-folding, but is not an exact match
+//
+// This validator can be used to deprecate case insensitive value matching in favor
+// of exact matching. A value which is an exact match or does not match any valid
+// value will return with empty diagnostics.
+func CaseInsensitiveMatchDeprecation(valid []string) schema.SchemaValidateDiagFunc {
+	return func(v any, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		s := v.(string)
+
+		for _, item := range valid {
+			if s != item && strings.EqualFold(s, item) {
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Case Insensitive Matching Deprecated",
+					Detail: fmt.Sprintf("Expected an exact match to %q, got %q. ", item, v) +
+						"Case insensitive matching is deprecated for this argument. Update the value " +
+						"to an exact match to suppress this warning and avoid breaking changes " +
+						"in a future major version.",
+					AttributePath: path,
+				})
+			}
+		}
+
+		return diags
+	}
 }

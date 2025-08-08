@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDirectoryDataSource_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDirectoryDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAlias, resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_name", resourceName, "directory_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_type", resourceName, "directory_type"),
@@ -43,6 +44,14 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_role_id", resourceName, "iam_role_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_group_ids", resourceName, "ip_group_ids"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "registration_code", resourceName, "registration_code"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_config.#", resourceName, "active_directory_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.#", resourceName, "certificate_based_auth_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.0.status", resourceName, "certificate_based_auth_properties.0.status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_based_auth_properties.0.certificate_authority_arn", resourceName, "certificate_based_auth_properties.0.certificate_authority_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.#", resourceName, "saml_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.relay_state_parameter_name", resourceName, "saml_properties.0.relay_state_parameter_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.status", resourceName, "saml_properties.0.status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.user_access_url", resourceName, "saml_properties.0.user_access_url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.#", resourceName, "self_service_permissions.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.change_compute_type", resourceName, "self_service_permissions.0.change_compute_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.increase_volume_size", resourceName, "self_service_permissions.0.increase_volume_size"),
@@ -59,14 +68,18 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_windows", resourceName, "workspace_access_properties.0.device_type_windows"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_access_properties.0.device_type_zeroclient", resourceName, "workspace_access_properties.0.device_type_zeroclient"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_identity_type", resourceName, "user_identity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.#", resourceName, "workspace_creation_properties.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.custom_security_group_id", resourceName, "workspace_creation_properties.0.custom_security_group_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.default_ou", resourceName, "workspace_creation_properties.0.default_ou"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.enable_internet_access", resourceName, "workspace_creation_properties.0.enable_internet_access"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.enable_maintenance_mode", resourceName, "workspace_creation_properties.0.enable_maintenance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator", resourceName, "workspace_creation_properties.0.user_enabled_as_local_administrator"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_directory_description", resourceName, "workspace_directory_description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_directory_name", resourceName, "workspace_directory_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_security_group_id", resourceName, "workspace_security_group_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_type", resourceName, "workspace_type"),
 				),
 			},
 		},
@@ -75,7 +88,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 
 func testAccDirectoryDataSourceConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccDirectoryConfig_Prerequisites(rName, domain),
+		testAccDirectoryConfig_base(rName, domain),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = "tf-testacc-workspaces-directory-%[1]s"
@@ -88,6 +101,17 @@ resource "aws_security_group" "test" {
 
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
+
+  certificate_based_auth_properties {
+    status                    = "ENABLED"
+    certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:certificate-authority/12345678-1234-1234-1234-123456789012"
+  }
+
+  saml_properties {
+    relay_state_parameter_name = "LinkMode"
+    status                     = "ENABLED"
+    user_access_url            = "https://sso.%[2]s/"
+  }
 
   self_service_permissions {
     change_compute_type  = false
@@ -128,5 +152,5 @@ data "aws_workspaces_directory" "test" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`, rName))
+`, rName, domain))
 }

@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
                     type="Service"
                 )
                 ],
-                resources=["arn:aws:s3:::example_destination", "arn:aws:s3:::example_destination/*"
+                resources=["arn:aws:s3:::example-destination", "arn:aws:s3:::example-destination/*"
                 ],
                 sid="AllowAppFlowDestinationActions"
             )
@@ -69,7 +69,7 @@ class MyConvertedCode(TerraformStack):
                     type="Service"
                 )
                 ],
-                resources=["arn:aws:s3:::example_source", "arn:aws:s3:::example_source/*"
+                resources=["arn:aws:s3:::example-source", "arn:aws:s3:::example-source/*"
                 ],
                 sid="AllowAppFlowSourceActions"
             )
@@ -136,6 +136,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the flow.
 * `destination_flow_config` - (Required) A [Destination Flow Config](#destination-flow-config) that controls how Amazon AppFlow places data in the destination connector.
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
@@ -144,7 +145,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `metadata_catalog_config` - (Optional) A [Catalog](#metadata-catalog-config) that determines the configuration that Amazon AppFlow uses when it catalogs the data that’s transferred by the associated flow. When Amazon AppFlow catalogs the data from a flow, it stores metadata in a data catalog.
 
 ### Destination Flow Config
 
@@ -214,6 +215,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `error_handling_config` - (Optional) Settings that determine how Amazon AppFlow handles an error when placing data in the destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) Name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update or delete.
 * `write_operation_type` - (Optional) This specifies the type of write operation to be performed in Salesforce. When the value is `UPSERT`, then `id_field_names` is required. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Destination Properties
 
@@ -250,11 +252,13 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 
 * `prefix_format` - (Optional) Determines the level of granularity that's included in the prefix. Valid values are `YEAR`, `MONTH`, `DAY`, `HOUR`, and `MINUTE`.
 * `prefix_type` - (Optional) Determines the format of the prefix, and whether it applies to the file name, file path, or both. Valid values are `FILENAME`, `PATH`, and `PATH_AND_FILENAME`.
+* `prefix_hierarchy` - (Optional) Determines whether the destination file path includes either or both of the selected elements. Valid values are `EXECUTION_ID` and `SCHEMA_VERSION`
 
 ##### Zendesk Destination Properties
 
@@ -321,10 +325,15 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 * `object` - (Required) Object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) Flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
 * `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
+* `data_transfer_api` - (Optional) Specifies which Salesforce API is used by Amazon AppFlow when your flow transfers data to Salesforce.
 
 ##### SAPOData Source Properties
 
 * `object_path` - (Required) Object path specified in the SAPOData flow source.
+* `pagination_config` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `max_page_size` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelism_config` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 
@@ -409,29 +418,45 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
+### Metadata Catalog Config
+
+The `metadata_catalog_config` block only supports one attribute: `glue_data_catalog`, a block which in turn supports the following:
+
+* `database_name` - (Required) The name of an existing Glue database to store the metadata tables that Amazon AppFlow creates.
+* `role_arn` - (Required) The ARN of an IAM role that grants AppFlow the permissions it needs to create Data Catalog tables, databases, and partitions.
+* `table_prefix` - (Required) A naming prefix for each Data Catalog table that Amazon AppFlow creates
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
+* `flow_status` - The current status of the flow.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow flows using the `name`. For example:
 
 ```python
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.appflow_flow import AppflowFlow
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        AppflowFlow.generate_config_for_import(self, "example", "example-flow")
 ```
 
-Using `terraform import`, import AppFlow flows using the `arn`. For example:
+Using `terraform import`, import AppFlow flows using the `name`. For example:
 
 ```console
-% terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
+% terraform import aws_appflow_flow.example example-flow
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17e1cfe9c9c0df000acad27d00f90bbaa486384b6d2aa3d057f258c6051b900d -->
+<!-- cache-key: cdktf-0.20.8 input-7017a77d27953775f1b8ccb87ec79640089cb9073264163b987668fee1ed425c -->

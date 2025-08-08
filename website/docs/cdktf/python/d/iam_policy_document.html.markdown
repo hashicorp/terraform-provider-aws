@@ -514,7 +514,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are optional:
+This data source supports the following arguments:
 
 ~> **NOTE:** Statements without a `sid` cannot be overridden. In other words, a statement without a `sid` from `source_policy_documents` cannot be overridden by statements from `override_policy_documents`.
 
@@ -566,5 +566,6 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
+* `minified_json` - Minified JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.18.0 input-c602f06a4415d21639bfb95fc6d2eb21bd336984864688c93e5e0c70aab27794 -->
+<!-- cache-key: cdktf-0.20.8 input-9feebe1c23f03093faa13e4f053387022bc10d55853c552e00b14ef697be3770 -->

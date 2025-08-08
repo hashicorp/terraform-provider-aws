@@ -84,7 +84,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -96,6 +96,7 @@ This data source exports the following attributes in addition to the arguments a
 * `master_account_arn` - ARN of the account that is designated as the master account for the organization.
 * `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
 * `master_account_id` - Unique identifier (ID) of the master account of an organization.
+* `master_account_name` - Name of the master account of an organization.
 
 ### Master Account or Delegated Administrator Attribute Reference
 
@@ -123,4 +124,4 @@ If the account is the master account or a delegated administrator for the organi
         * `name` - The name of the policy type
         * `status` - The status of the policy type as it relates to the associated root
 
-<!-- cache-key: cdktf-0.18.0 input-4e6e30bcec5e05a330427cb7ef2a21c714b5908caa1af760eadc9537632c8f92 -->
+<!-- cache-key: cdktf-0.20.8 input-dc97097a2b75109df7dc118299f41db93148ad09f52c2b8edb841c0e2bda1e0d -->

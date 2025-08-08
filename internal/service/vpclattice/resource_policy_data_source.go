@@ -9,22 +9,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_resource_policy", name="Resource Policy")
-func DataSourceResourcePolicy() *schema.Resource {
+func dataSourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -33,26 +33,19 @@ func DataSourceResourcePolicy() *schema.Resource {
 	}
 }
 
-const (
-	DSNameResourcePolicy = "Resource Policy Data Source"
-)
-
-func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	resourceArn := d.Get("resource_arn").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
+	output, err := findResourcePolicyByID(ctx, conn, resourceARN)
 
-	out, err := findResourcePolicyByID(ctx, conn, resourceArn)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPCLattice Resource Policy (%s): %s", resourceARN, err)
 	}
 
-	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameResourcePolicy, d.Id(), err)
-	}
+	d.SetId(resourceARN)
+	d.Set(names.AttrPolicy, output.Policy)
 
-	d.SetId(resourceArn)
-	d.Set("policy", out.Policy)
-
-	return nil
+	return diags
 }

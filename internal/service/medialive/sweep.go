@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package medialive
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_medialive_channel", &resource.Sweeper{
 		Name: "aws_medialive_channel",
 		F:    sweepChannels,
@@ -59,7 +56,7 @@ func sweepChannels(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Channels sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -71,7 +68,7 @@ func sweepChannels(region string) error {
 			id := aws.ToString(channel.Id)
 			log.Printf("[INFO] Deleting MediaLive Channels: %s", id)
 
-			r := ResourceChannel()
+			r := resourceChannel()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -103,7 +100,7 @@ func sweepInputs(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -115,7 +112,7 @@ func sweepInputs(region string) error {
 			id := aws.ToString(input.Id)
 			log.Printf("[INFO] Deleting MediaLive Input: %s", id)
 
-			r := ResourceInput()
+			r := resourceInput()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -147,7 +144,7 @@ func sweepInputSecurityGroups(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -159,7 +156,7 @@ func sweepInputSecurityGroups(region string) error {
 			id := aws.ToString(group.Id)
 			log.Printf("[INFO] Deleting MediaLive Input Security Group: %s", id)
 
-			r := ResourceInputSecurityGroup()
+			r := resourceInputSecurityGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -191,7 +188,7 @@ func sweepMultiplexes(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaLive Multiplexes sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -203,7 +200,7 @@ func sweepMultiplexes(region string) error {
 			id := aws.ToString(multiplex.Id)
 			log.Printf("[INFO] Deleting MediaLive Multiplex: %s", id)
 
-			r := ResourceMultiplex()
+			r := resourceMultiplex()
 			d := r.Data(nil)
 			d.SetId(id)
 

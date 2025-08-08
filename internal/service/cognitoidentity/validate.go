@@ -7,10 +7,11 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
+func validIdentityPoolName(v any, k string) (ws []string, errors []error) {
 	val := v.(string)
 	if !regexache.MustCompile(`^[\w\s+=,.@-]+$`).MatchString(val) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
@@ -19,7 +20,7 @@ func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validIdentityProvidersClientID(v interface{}, k string) (ws []string, errors []error) {
+func validIdentityProvidersClientID(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
@@ -36,7 +37,7 @@ func validIdentityProvidersClientID(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validIdentityProvidersProviderName(v interface{}, k string) (ws []string, errors []error) {
+func validIdentityProvidersProviderName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
@@ -53,7 +54,7 @@ func validIdentityProvidersProviderName(v interface{}, k string) (ws []string, e
 	return
 }
 
-func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []error) {
+func validProviderDeveloperName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 100 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 characters", k))
@@ -66,9 +67,9 @@ func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
-	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
+func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]any) (errors []error) {
+	t := v[names.AttrType].(string)
+	isRequired := t == string(awstypes.RoleMappingTypeToken) || t == string(awstypes.RoleMappingTypeRules)
 
 	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
 		errors = append(errors, fmt.Errorf(`Ambiguous Role Resolution must be defined when "type" equals "Token" or "Rules"`))
@@ -77,7 +78,7 @@ func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{
 	return
 }
 
-func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
+func validRoleMappingsRulesClaim(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if !regexache.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`).MatchString(value) {
@@ -87,18 +88,18 @@ func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func validRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
+func validRoleMappingsRulesConfiguration(v map[string]any) (errors []error) {
+	t := v[names.AttrType].(string)
 	valLength := 0
 	if value, ok := v["mapping_rule"]; ok {
-		valLength = len(value.([]interface{}))
+		valLength = len(value.([]any))
 	}
 
-	if (valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+	if (valLength == 0) && t == string(awstypes.RoleMappingTypeRules) {
 		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
 	}
 
-	if (valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+	if (valLength > 0) && t == string(awstypes.RoleMappingTypeToken) {
 		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
 	}
 
@@ -106,7 +107,7 @@ func validRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []err
 }
 
 // Validates that either authenticated or unauthenticated is defined
-func validRoles(v map[string]interface{}) (errors []error) {
+func validRoles(v map[string]any) (errors []error) {
 	k := "roles"
 	_, hasAuthenticated := v["authenticated"].(string)
 	_, hasUnauthenticated := v["unauthenticated"].(string)
@@ -118,7 +119,7 @@ func validRoles(v map[string]interface{}) (errors []error) {
 	return
 }
 
-func validSupportedLoginProviders(v interface{}, k string) (ws []string, errors []error) {
+func validSupportedLoginProviders(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))

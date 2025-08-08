@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
@@ -20,13 +20,13 @@ func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCertificate),
 				),
 			},
 		},
@@ -52,6 +52,12 @@ resource "aws_cognito_identity_provider" "test" {
 
   attribute_mapping = {
     email = "email"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      provider_details["ActiveEncryptionCertificate"],
+    ]
   }
 }
 

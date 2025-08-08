@@ -23,7 +23,7 @@ resource "aws_dms_replication_config" "name" {
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = <<EOF
   {
-    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","object-locator":{"schema-name":"%%","table-name":"%%", "rule-action":"include"}]
+    "rules":[{"rule-type":"selection","rule-id":"1","rule-name":"1","rule-action":"include","object-locator":{"schema-name":"%%","table-name":"%%"}}]
   }
 EOF
 
@@ -42,6 +42,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_config` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.
@@ -59,8 +60,8 @@ This resource supports the following arguments:
 * `availability_zone` - (Optional) The Availability Zone where the DMS Serverless replication using this configuration will run. The default value is a random.
 * `dns_name_servers` - (Optional) A list of custom DNS name servers supported for the DMS Serverless replication to access your source or target database.
 * `kms_key_id` - (Optional) An Key Management Service (KMS) key Amazon Resource Name (ARN) that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
-* `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 2 DCUs as the minimum value allowed. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
-* `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS scans the current activity of available source tables to identify an optimum setting for this parameter.
+* `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 1 DCUs as the minimum value allowed. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
+* `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 1, 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS sets the lowest allowed value, 1.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 

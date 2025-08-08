@@ -64,6 +64,26 @@ func Parse(s string) (Duration, error) {
 	return duration, nil
 }
 
+// NewFromTimeDuration converts a time.Duration to a duration.Duration.
+// Only the years and days fields are populated.
+func NewFromTimeDuration(t time.Duration) (result Duration) {
+	u := uint64(t)
+
+	const (
+		day  = uint64(24 * time.Hour)
+		year = 365 * day
+	)
+
+	if u >= year {
+		result.years = int(u / year)
+		u = u % year
+	}
+
+	result.days = int(u / day)
+
+	return result
+}
+
 func (d Duration) String() string {
 	var b strings.Builder
 	b.WriteString("P")

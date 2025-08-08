@@ -55,41 +55,43 @@ See the AWS [Docs](https://docs.aws.amazon.com/neptune/latest/userguide/limits.h
 
 This resource supports the following arguments:
 
-* `allowMajorVersionUpgrade` - (Optional) Specifies whether upgrades between different major versions are allowed. You must set it to `true` when providing an `engineVersion` parameter that uses a different major version than the DB cluster's current version. Default is `false`.
-* `applyImmediately` - (Optional) Specifies whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `availabilityZones` - (Optional) A list of EC2 Availability Zones that instances in the Neptune cluster can be created in.
-* `backupRetentionPeriod` - (Optional) The days to retain backups for. Default `1`
-* `clusterIdentifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
+* `allowMajorVersionUpgrade` - (Optional) Whether upgrades between different major versions are allowed. You must set it to `true` when providing an `engineVersion` parameter that uses a different major version than the DB cluster's current version. Default is `false`.
+* `applyImmediately` - (Optional) Whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
+* `availabilityZones` - (Optional) List of EC2 Availability Zones that instances in the Neptune cluster can be created in.
+* `backupRetentionPeriod` - (Optional) Days to retain backups for. Default `1`
+* `clusterIdentifier` - (Optional, Forces new resources) Cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `clusterIdentifierPrefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `clusterIdentifier`.
 * `copyTagsToSnapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
-* `enableCloudwatchLogsExports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit`.
-* `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
-* `engineVersion` - (Optional) The database engine version.
-* `finalSnapshotIdentifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
-* `globalClusterIdentifier` - (Optional) The global cluster identifier specified on [`awsNeptuneGlobalCluster`](/docs/providers/aws/r/neptune_global_cluster.html).
-* `iamRoles` - (Optional) A List of ARNs for the IAM roles to associate to the Neptune Cluster.
-* `iamDatabaseAuthenticationEnabled` - (Optional) Specifies whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
-* `kmsKeyArn` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyArn`, `storageEncrypted` needs to be set to true.
-* `neptuneSubnetGroupName` - (Optional) A Neptune subnet group to associate with this Neptune instance.
-* `neptuneClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
-* `neptuneInstanceParameterGroupName` - (Optional) The name of the DB parameter group to apply to all instances of the DB cluster.
-* `preferredBackupWindow` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
-* `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
-* `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.
+* `deletionProtection` - (Optional) Value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
+* `enableCloudwatchLogsExports` - (Optional) List of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
+* `engine` - (Optional) Name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
+* `engineVersion` - (Optional) Database engine version.
+* `finalSnapshotIdentifier` - (Optional) Name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
+* `globalClusterIdentifier` - (Optional) Global cluster identifier specified on [`aws_neptune_global_cluster`](/docs/providers/aws/r/neptune_global_cluster.html).
+* `iamRoles` - (Optional) List of ARNs for the IAM roles to associate to the Neptune Cluster.
+* `iamDatabaseAuthenticationEnabled` - (Optional) Whether or not mappings of AWS Identity and Access Management (IAM) accounts to database accounts is enabled.
+* `kmsKeyArn` - (Optional) ARN for the KMS encryption key. When specifying `kmsKeyArn`, `storageEncrypted` needs to be set to true.
+* `neptuneClusterParameterGroupName` - (Optional) Cluster parameter group to associate with the cluster.
+* `neptuneInstanceParameterGroupName` – (Optional) Name of DB parameter group to apply to all instances in the cluster. When upgrading, AWS does not return this value, so do not reference it in other arguments—either leave it unset, configure each instance directly, or ensure it matches the `engineVersion`.
+* `neptuneSubnetGroupName` - (Optional) Neptune subnet group to associate with this Neptune instance.
+* `port` - (Optional) Port on which the Neptune accepts connections. Default is `8182`.
+* `preferredBackupWindow` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
+* `preferredMaintenanceWindow` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicationSourceIdentifier` - (Optional) ARN of a source Neptune cluster or Neptune instance if this Neptune cluster is to be created as a Read Replica.
-* `skipFinalSnapshot` - (Optional) Determines whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `finalSnapshotIdentifier`. Default is `false`.
-* `snapshotIdentifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
-* `storageEncrypted` - (Optional) Specifies whether the Neptune cluster is encrypted. The default is `false` if not specified.
-* `tags` - (Optional) A map of tags to assign to the Neptune cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Cluster
-* `deletionProtection` - (Optional) A value that indicates whether the DB cluster has deletion protection enabled.The database can't be deleted when deletion protection is enabled. By default, deletion protection is disabled.
 * `serverlessV2ScalingConfiguration` - (Optional) If set, create the Neptune cluster as a serverless one. See [Serverless](#serverless) for example block attributes.
+* `skipFinalSnapshot` - (Optional) Whether a final Neptune snapshot is created before the Neptune cluster is deleted. If true is specified, no Neptune snapshot is created. If false is specified, a Neptune snapshot is created before the Neptune cluster is deleted, using the value from `finalSnapshotIdentifier`. Default is `false`.
+* `snapshotIdentifier` - (Optional) Whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a Neptune cluster snapshot, or the ARN when specifying a Neptune snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+* `storageEncrypted` - (Optional) Whether the Neptune cluster is encrypted. The default is `false` if not specified.
+* `storageType` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`.
+* `tags` - (Optional) Map of tags to assign to the Neptune cluster. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpcSecurityGroupIds` - (Optional) List of VPC security groups to associate with the Cluster
 
 ### Serverless
 
 **Neptune serverless has some limitations. Please see the [limitations on the AWS documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless.html#neptune-serverless-limitations) before jumping into Neptune Serverless.**
 
-Neptune serverless requires that the `engineVersion` attribute must be `1201` or above. Also, you need to provide a cluster parameter group compatible with the family `neptune12`. In the example below, the default cluster parameter group is used.
+Neptune serverless requires that the `engineVersion` attribute must be `1.2.0.1` or above. Also, you need to provide a cluster parameter group compatible with the family `neptune1.2`. In the example below, the default cluster parameter group is used.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -129,51 +131,57 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-* `minCapacity`: (default: **2.5**) The minimum Neptune Capacity Units (NCUs) for this cluster. Must be greater or equal than **1**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
-* `maxCapacity`: (default: **128**) The maximum Neptune Capacity Units (NCUs) for this cluster. Must be lower or equal than **128**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
+* `minCapacity`: (default: **2.5**) Minimum Neptune Capacity Units (NCUs) for this cluster. Must be greater or equal than **1**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
+* `maxCapacity`: (default: **128**) Maximum Neptune Capacity Units (NCUs) for this cluster. Must be lower or equal than **128**. See [AWS Documentation](https://docs.aws.amazon.com/neptune/latest/userguide/neptune-serverless-capacity-scaling.html) for more details.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Neptune Cluster Amazon Resource Name (ARN)
-* `clusterResourceId` - The Neptune Cluster Resource ID
+* `arn` - Neptune Cluster ARN
+* `clusterResourceId` - Neptune Cluster Resource ID
 * `clusterMembers` – List of Neptune Instances that are a part of this cluster
-* `endpoint` - The DNS address of the Neptune instance
-* `hostedZoneId` - The Route53 Hosted Zone ID of the endpoint
-* `id` - The Neptune Cluster Identifier
-* `readerEndpoint` - A read-only endpoint for the Neptune cluster, automatically load-balanced across replicas
-* `status` - The Neptune instance status
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `endpoint` - DNS address of the Neptune instance
+* `hostedZoneId` - Route53 Hosted Zone ID of the endpoint
+* `id` - Neptune Cluster Identifier
+* `readerEndpoint` - Read-only endpoint for the Neptune cluster, automatically load-balanced across replicas
+* `status` - Neptune instance status
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120M`)
-- `update` - (Default `120M`)
-- `delete` - (Default `120M`)
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsNeptuneCluster` using the cluster identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_cluster` using the cluster identifier. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NeptuneCluster } from "./.gen/providers/aws/neptune-cluster";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NeptuneCluster.generateConfigForImport(this, "example", "my-cluster");
   }
 }
 
 ```
 
-Using `terraform import`, import `awsNeptuneCluster` using the cluster identifier. For example:
+Using `terraform import`, import `aws_neptune_cluster` using the cluster identifier. For example:
 
 ```console
 % terraform import aws_neptune_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-05504d9b26c94ad96d9b0bc68ce4a6a28a6672986ff157a96f9afb46fccd9318 -->
+<!-- cache-key: cdktf-0.20.8 input-0a4db12330dc4853e81c9bb41b63924ab3177d4952421c1e2fc8984c91980166 -->

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightThemeDataSource_basic(t *testing.T) {
@@ -25,13 +25,13 @@ func TestAccQuickSightThemeDataSource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThemeDataSourceConfig_basic(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.colors.0", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.min_max_gradient.0", "#FFFFFF"),
@@ -56,19 +56,19 @@ func TestAccQuickSightThemeDataSource_fullConfig(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThemeDataSourceConfig_fullConfig(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.colors.0", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.data_color_palette.0.min_max_gradient.0", "#FFFFFF"),
-					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile.0.border.0.show", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile_layout.0.gutter.0.show", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile_layout.0.margin.0.show", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile.0.border.0.show", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile_layout.0.gutter.0.show", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.sheet.0.tile_layout.0.margin.0.show", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.typography.0.font_families.0.font_family", "monospace"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.typography.0.font_families.1.font_family", "Roboto"),
 					resource.TestCheckResourceAttr(dataSourceName, "configuration.0.ui_color_palette.0.accent", "#202020"),

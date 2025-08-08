@@ -14,7 +14,7 @@ Terraform resource for managing an Amazon Inspector Organization Configuration.
 
 ~> **NOTE:** In order for this resource to work, the account you use must be an Inspector Delegated Admin Account.
 
-~> **NOTE:** When this resource is deleted, EC2, ECR and Lambda scans will no longer be automatically enabled for new members of your Amazon Inspector organization.
+~> **NOTE:** When this resource is deleted, EC2, ECR, Lambda, and Lambda code scans will no longer be automatically enabled for new members of your Amazon Inspector organization.
 
 ## Example Usage
 
@@ -34,24 +34,29 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         Inspector2OrganizationConfiguration(self, "example",
             auto_enable=Inspector2OrganizationConfigurationAutoEnable(
+                code_repository=False,
                 ec2=True,
                 ecr=False,
-                lambda_=True
+                lambda_=True,
+                lambda_code=True
             )
         )
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_enable` - (Required) Configuration block for auto enabling. See below.
 
 ### `auto_enable`
 
 * `ec2` - (Required) Whether Amazon EC2 scans are automatically enabled for new members of your Amazon Inspector organization.
 * `ecr` - (Required) Whether Amazon ECR scans are automatically enabled for new members of your Amazon Inspector organization.
+* `code_repository` - (Optional) Whether code repository scans are automatically enabled for new members of your Amazon Inspector organization.
 * `lambda` - (Optional) Whether Lambda Function scans are automatically enabled for new members of your Amazon Inspector organization.
+* `lambda_code` - (Optional) Whether AWS Lambda code scans are automatically enabled for new members of your Amazon Inspector organization. **Note:** Lambda code scanning requires Lambda standard scanning to be activated. Consequently, if you are setting this argument to `true`, you must also set the `lambda` argument to `true`. See [Scanning AWS Lambda functions with Amazon Inspector](https://docs.aws.amazon.com/inspector/latest/user/scanning-lambda.html#lambda-code-scans) for more information.
 
 ## Attribute Reference
 
@@ -67,4 +72,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.18.0 input-1df42ad521b947a3a7bc404e14d2e821f7165ae91c2768891bab4bde0121e345 -->
+<!-- cache-key: cdktf-0.20.8 input-36a60d1b38d11a4d97252ae5b567b1c781494367c5102a6f09820ab3479cb37b -->

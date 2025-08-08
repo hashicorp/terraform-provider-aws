@@ -7,24 +7,27 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const keyRequestPageSize = 1000
 
-// @SDKDataSource("aws_s3_objects")
-func DataSourceObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_objects", name="Objects")
+func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -61,7 +64,7 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -82,11 +85,21 @@ func DataSourceObjects() *schema.Resource {
 	}
 }
 
-func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	var optFns []func(*s3.Options)
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
@@ -100,7 +113,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("fetch_owner"); ok {
-		input.FetchOwner = v.(bool)
+		input.FetchOwner = aws.Bool(v.(bool))
 	}
 
 	// "input.MaxKeys" refers to max keys returned in a single request
@@ -108,10 +121,10 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	// through the results. "max_keys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		input.MaxKeys = int32(maxKeys)
+		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 
@@ -130,7 +143,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	pages := s3.NewListObjectsV2Paginator(conn, input)
 pageLoop:
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)

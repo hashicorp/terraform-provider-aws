@@ -56,19 +56,26 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resolver_endpoint_id` - (Optional) ID of the Route53 Resolver Endpoint.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [Route53resolver Filter value in the AWS API reference][1].
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Computed ARN of the Route53 Resolver Endpoint.
 * `direction` - Direction of the queries to or from the Resolver Endpoint .
 * `ip_addresses` - List of IPaddresses that have been associated with the Resolver Endpoint.
+* `protocols` - The protocols used by the Resolver endpoint.
+* `resolver_endpoint_type` - The Resolver endpoint IP address type.
 * `status` - Current status of the Resolver Endpoint.
 * `vpc_id` - ID of the Host VPC that the Resolver Endpoint resides in.
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html
 
-<!-- cache-key: cdktf-0.18.0 input-c09fe4f13b65e731e041218940aaae0128be2c19aef275c15d677ea4e550c621 -->
+<!-- cache-key: cdktf-0.20.8 input-24a314d2a96be3408d96ad3ceb80bcd44ce41d7d59384382a7b8b1d89c4d68e6 -->

@@ -48,6 +48,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientData` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.
 * `diskContainer` - (Required) Information about the disk container. Detailed below.
@@ -69,7 +70,7 @@ This resource supports the following arguments:
 ### disk_container Configuration Block
 
 * `description` - (Optional) The description of the disk image being imported.
-* `format` - (Required) The format of the disk image being imported. One of `vhd` or `vmdk`.
+* `format` - (Required) The format of the disk image being imported. One of `VHD` or `VMDK`.
 * `url` - (Optional) The URL to the Amazon S3-based disk image being imported. It can either be a https URL (https://..) or an Amazon S3 URL (s3://..). One of `url` or `userBucket` must be set.
 * `userBucket` - (Optional) The Amazon S3 bucket for the disk image. One of `url` or `userBucket` must be set. Detailed below.
 
@@ -82,8 +83,8 @@ This resource supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `60M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `60m`)
+- `delete` - (Default `10m`)
 
 ## Attribute Reference
 
@@ -92,9 +93,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `ownerId` - The AWS account ID of the EBS snapshot owner.
-* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `awsMarketplace`, `microsoft`) of snapshot owners.
+* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volumeSize` - The size of the drive in GiBs.
 * `dataEncryptionKeyId` - The data encryption key identifier for the snapshot.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.18.0 input-a913e99cf61c1c6954df7657480fc954e915e7e612a83eefbf5010e1f4fc479d -->
+<!-- cache-key: cdktf-0.20.8 input-8588d5cb0eb1ddf4505217fbed0895b55a36ed3d47561f0f1774990e93803d8c -->

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package codestarconnections
 
 import (
@@ -12,13 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codestarconnections_connection", &resource.Sweeper{
 		Name: "aws_codestarconnections_connection",
 		F:    sweepConnections,
@@ -35,7 +32,7 @@ func init() {
 
 func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping CodeStar Connections Connection sweep for region: %s", region)
 		return nil
 	}
@@ -80,7 +77,7 @@ func sweepConnections(region string) error {
 
 func sweepHosts(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping CodeStar Connections Host sweep for region: %s", region)
 		return nil
 	}

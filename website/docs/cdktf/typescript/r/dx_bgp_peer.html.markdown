@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addressFamily` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgpAsn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 * `virtualInterfaceId` - (Required) The ID of the Direct Connect virtual interface on which to create the BGP peer.
@@ -62,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.18.0 input-fce27b12427c127b90f63ebcc9725bb7d4127413367ba03f518a0e5c6f7ac443 -->
+<!-- cache-key: cdktf-0.20.8 input-f6db2d6f7b72373cb61adc2ed77c8b225974fb80ac0814395a34fd69e63ad008 -->

@@ -12,7 +12,7 @@ description: |-
 
 Provides an ECS cluster capacity provider. More information can be found on the [ECS Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-capacity-providers.html).
 
-~> **NOTE:** Associating an ECS Capacity Provider to an Auto Scaling Group will automatically add the `amazonEcsManaged` tag to the Auto Scaling Group. This tag should be included in the `awsAutoscalingGroup` resource configuration to prevent Terraform from removing it in subsequent executions as well as ensuring the `amazonEcsManaged` tag is propagated to all EC2 Instances in the Auto Scaling Group if `minSize` is above 0 on creation. Any EC2 Instances in the Auto Scaling Group without this tag must be manually be updated, otherwise they may cause unexpected scaling behavior and metrics.
+~> **NOTE:** Associating an ECS Capacity Provider to an Auto Scaling Group will automatically add the `AmazonECSManaged` tag to the Auto Scaling Group. This tag should be included in the `aws_autoscaling_group` resource configuration to prevent Terraform from removing it in subsequent executions as well as ensuring the `AmazonECSManaged` tag is propagated to all EC2 Instances in the Auto Scaling Group if `minSize` is above 0 on creation. Any EC2 Instances in the Auto Scaling Group without this tag must be manually be updated, otherwise they may cause unexpected scaling behavior and metrics.
 
 ## Example Usage
 
@@ -33,7 +33,7 @@ interface MyConfig {
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string, config: MyConfig) {
     super(scope, name);
-    const test = new AutoscalingGroup(this, "test", {
+    const example = new AutoscalingGroup(this, "example", {
       tag: [
         {
           key: "AmazonECSManaged",
@@ -44,21 +44,25 @@ class MyConvertedCode extends TerraformStack {
       maxSize: config.maxSize,
       minSize: config.minSize,
     });
-    const awsEcsCapacityProviderTest = new EcsCapacityProvider(this, "test_1", {
-      autoScalingGroupProvider: {
-        autoScalingGroupArn: test.arn,
-        managedScaling: {
-          maximumScalingStepSize: 1000,
-          minimumScalingStepSize: 1,
-          status: "ENABLED",
-          targetCapacity: 10,
+    const awsEcsCapacityProviderExample = new EcsCapacityProvider(
+      this,
+      "example_1",
+      {
+        autoScalingGroupProvider: {
+          autoScalingGroupArn: example.arn,
+          managedScaling: {
+            maximumScalingStepSize: 1000,
+            minimumScalingStepSize: 1,
+            status: "ENABLED",
+            targetCapacity: 10,
+          },
+          managedTerminationProtection: "ENABLED",
         },
-        managedTerminationProtection: "ENABLED",
-      },
-      name: "test",
-    });
+        name: "example",
+      }
+    );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    awsEcsCapacityProviderTest.overrideLogicalId("test");
+    awsEcsCapacityProviderExample.overrideLogicalId("example");
   }
 }
 
@@ -68,6 +72,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoScalingGroupProvider` - (Required) Configuration block for the provider for the ECS auto scaling group. Detailed below.
 * `name` - (Required) Name of the capacity provider.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -75,15 +80,18 @@ This resource supports the following arguments:
 ### `autoScalingGroupProvider`
 
 * `autoScalingGroupArn` - (Required) - ARN of the associated auto scaling group.
+* `managedDraining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managedScaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
-* `managedTerminationProtection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `enabled` and `disabled`.
+* `managedTerminationProtection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
 ### `managedScaling`
 
 * `instanceWarmupPeriod` - (Optional) Period of time, in seconds, after a newly launched Amazon EC2 instance can contribute to CloudWatch metrics for Auto Scaling group. If this parameter is omitted, the default value of 300 seconds is used.
+
+  For more information on how the instance warmup period contributes to managed scale-out behavior, see [Control the instances Amazon ECS terminates](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/managed-termination-protection.html) in the _Amazon Elastic Container Service Developer Guide_.
 * `maximumScalingStepSize` - (Optional) Maximum step adjustment size. A number between 1 and 10,000.
 * `minimumScalingStepSize` - (Optional) Minimum step adjustment size. A number between 1 and 10,000.
-* `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `enabled` and `disabled`.
+* `status` - (Optional) Whether auto scaling is managed by ECS. Valid values are `ENABLED` and `DISABLED`.
 * `targetCapacity` - (Optional) Target utilization for the capacity provider. A number between 1 and 100.
 
 ## Attribute Reference
@@ -91,29 +99,38 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the capacity provider.
-* `id` - ARN that identifies the capacity provider.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Capacity Providers using the `arn`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { EcsCapacityProvider } from "./.gen/providers/aws/ecs-capacity-provider";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    EcsCapacityProvider.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:ecs:us-west-2:123456789012:capacity-provider/example"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import ECS Capacity Providers using the `name`. For example:
+Using `terraform import`, import ECS Capacity Providers using the `arn`. For example:
 
 ```console
-% terraform import aws_ecs_capacity_provider.example example
+% terraform import aws_ecs_capacity_provider.example arn:aws:ecs:us-west-2:123456789012:capacity-provider/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-085876568cc2c4593afd22394b677657c0db3a438e0613974a494910237cb352 -->
+<!-- cache-key: cdktf-0.20.8 input-2516056f1c4e1179e2b7386c133e4f8ad12dbac1c07ceb86ae644b74e4e339f1 -->

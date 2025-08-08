@@ -163,18 +163,20 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
+* `preshared_key_storage` - (Optional) Storage mode for the pre-shared key (PSK). Valid values are `Standard` (stored in the Site-to-Site VPN service) or `SecretsManager` (stored in AWS Secrets Manager).
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `local_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `local_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `outside_ip_address_type` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
 * `remote_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
-* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the AWS side of the VPN connection.
 * `transport_transit_gateway_attachment_id` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
@@ -243,19 +245,20 @@ This resource exports the following attributes in addition to the arguments abov
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
 * `routes` - The static routes associated with the VPN connection. Detailed below.
+* `preshared_key_arn` - ARN of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection. Note that even if it returns a valid Secrets Manager ARN, the pre-shared key(s) will not be stored in Secrets Manager unless the `preshared_key_storage` argument is set to `SecretsManager`.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1_address` - The public IP address of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_vgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
-* `tunnel1_preshared_key` - The preshared key of the first VPN tunnel.
+* `tunnel1_preshared_key` - The preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1_bgp_asn` - The bgp asn number of the first VPN tunnel.
 * `tunnel1_bgp_holdtime` - The bgp holdtime of the first VPN tunnel.
 * `tunnel2_address` - The public IP address of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
 * `tunnel2_vgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
-* `tunnel2_preshared_key` - The preshared key of the second VPN tunnel.
+* `tunnel2_preshared_key` - The preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2_bgp_asn` - The bgp asn number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - The bgp holdtime of the second VPN tunnel.
 * `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
@@ -284,9 +287,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.vpn_connection import VpnConnection
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        VpnConnection.generate_config_for_import(self, "testvpnconnection", "vpn-40f41529")
 ```
 
 Using `terraform import`, import VPN Connections using the VPN connection `id`. For example:
@@ -295,4 +304,4 @@ Using `terraform import`, import VPN Connections using the VPN connection `id`. 
 % terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3d90dfa10b9036a076f1ef132a7b8d5011c2699fea5ecbd9ed76a20dc1755eae -->
+<!-- cache-key: cdktf-0.20.8 input-3f310cd24da6839167e2b532778eaddae9f1007f9fcf3a806a2fa5b210019f7c -->

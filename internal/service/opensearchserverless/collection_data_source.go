@@ -22,77 +22,95 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Collection")
-func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCollection{}, nil
+// @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
+// @Tags(identifierAttribute="arn")
+func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &collectionDataSource{}, nil
 }
 
 const (
 	DSNameCollection = "Collection Data Source"
 )
 
-type dataSourceCollection struct {
-	framework.DataSourceWithConfigure
+type collectionDataSource struct {
+	framework.DataSourceWithModel[collectionDataSourceModel]
 }
 
-func (d *dataSourceCollection) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_opensearchserverless_collection"
-}
-
-func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *collectionDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 			},
-			"created_date": schema.StringAttribute{
-				Computed: true,
+			names.AttrCreatedDate: schema.StringAttribute{
+				Description: "Date the Collection was created.",
+				Computed:    true,
 			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 			},
-			"description": schema.StringAttribute{
-				Computed: true,
+			names.AttrDescription: schema.StringAttribute{
+				Description: "Description of the collection.",
+				Computed:    true,
 			},
-			"id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+			"failure_message": schema.StringAttribute{
+				Description: "A failure reason associated with the collection.",
+				Computed:    true,
+			},
+			"failure_code": schema.StringAttribute{
+				Description: "A failure code associated with the collection.",
+				Computed:    true,
+			},
+			names.AttrID: schema.StringAttribute{
+				Description: "ID of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("name"),
+						path.MatchRelative().AtParent().AtName(names.AttrName),
 					),
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("name"),
+						path.MatchRelative().AtParent().AtName(names.AttrName),
 					),
 				},
 			},
-			"kms_key_arn": schema.StringAttribute{
-				Computed: true,
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was last modified.",
+				Computed:    true,
 			},
-			"name": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+			names.AttrName: schema.StringAttribute{
+				Description: "Name of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("id"),
+						path.MatchRelative().AtParent().AtName(names.AttrID),
 					),
 				},
 			},
+			"standby_replicas": schema.StringAttribute{
+				Description: "Indicates whether standby replicas should be used for a collection.",
+				Computed:    true,
+			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"type": schema.StringAttribute{
-				Computed: true,
+			names.AttrType: schema.StringAttribute{
+				Description: "Type of collection.",
+				Computed:    true,
 			},
 		},
 	}
 }
-func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceCollectionData
+	var data collectionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,48 +144,32 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 		out = output
 	}
 
-	data.ARN = flex.StringToFramework(ctx, out.Arn)
-	data.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
-	data.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
-	data.Description = flex.StringToFramework(ctx, out.Description)
-	data.ID = flex.StringToFramework(ctx, out.Id)
-	data.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
-	data.Name = flex.StringToFramework(ctx, out.Name)
-	data.Type = flex.StringValueToFramework(ctx, out.Type)
-
-	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
-	data.CreatedDate = flex.StringValueToFramework(ctx, createdDate.Format(time.RFC3339))
-
-	lastModifiedDate := time.UnixMilli(aws.ToInt64(out.LastModifiedDate))
-	data.LastModifiedDate = flex.StringValueToFramework(ctx, lastModifiedDate.Format(time.RFC3339))
-
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
-	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithIgnoredFieldNames([]string{"CreatedDate", "LastModifiedDate"}))...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tags = tags.IgnoreConfig(ignoreTagsConfig)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	// Special handling for Unix time conversion
+	data.CreatedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.CreatedDate)).Format(time.RFC3339))
+	data.LastModifiedDate = flex.StringValueToFramework(ctx, time.UnixMilli(aws.ToInt64(out.LastModifiedDate)).Format(time.RFC3339))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceCollectionData struct {
+type collectionDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
 	CreatedDate        types.String `tfsdk:"created_date"`
+	FailureMessage     types.String `tfsdk:"failure_message"`
+	FailureCode        types.String `tfsdk:"failure_code"`
 	DashboardEndpoint  types.String `tfsdk:"dashboard_endpoint"`
 	Description        types.String `tfsdk:"description"`
 	ID                 types.String `tfsdk:"id"`
 	KmsKeyARN          types.String `tfsdk:"kms_key_arn"`
 	LastModifiedDate   types.String `tfsdk:"last_modified_date"`
 	Name               types.String `tfsdk:"name"`
-	Tags               types.Map    `tfsdk:"tags"`
+	StandbyReplicas    types.String `tfsdk:"standby_replicas"`
+	Tags               tftags.Map   `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
 }

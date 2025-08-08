@@ -1,0 +1,6 @@
+```release-note:breaking-change
+resource/aws_rekognition_stream_processor: `regions_of_interest.bounding_box` is now a list nested block instead of a single nested block
+```
+```release-note:bug
+resource/aws_rekognition_stream_processor: Fix `regions_of_interest.bounding_box` and `regions_of_interest.polygon` argument validation
+```

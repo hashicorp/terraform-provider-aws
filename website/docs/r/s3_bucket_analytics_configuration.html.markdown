@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket [analytics configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add analytics configuration for entire S3 bucket and export results to a second S3 bucket
@@ -35,7 +37,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket" "analytics" {
-  bucket = "analytics destination"
+  bucket = "analytics-destination"
 }
 ```
 
@@ -65,6 +67,7 @@ resource "aws_s3_bucket" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket this analytics configuration is associated with.
 * `name` - (Required) Unique identifier of the analytics configuration for the bucket.
 * `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).

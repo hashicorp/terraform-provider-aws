@@ -85,6 +85,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the SSL negotiation policy.
 * `loadBalancer` - (Required) The load balancer to which the policy
   should be attached.
@@ -98,7 +99,7 @@ balancer.
 
 To set your attributes, please see the [AWS Elastic Load Balancing Developer Guide](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/elb-security-policy-table.html) for a listing of the supported SSL protocols, SSL options, and SSL ciphers.
 
-~> **NOTE:** The AWS documentation references Server Order Preference, which the AWS Elastic Load Balancing API refers to as `serverDefinedCipherOrder`. If you wish to set Server Order Preference, use this value instead.
+~> **NOTE:** The AWS documentation references Server Order Preference, which the AWS Elastic Load Balancing API refers to as `Server-Defined-Cipher-Order`. If you wish to set Server Order Preference, use this value instead.
 
 ## Attribute Reference
 
@@ -110,4 +111,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `lbPort` - The load balancer port to which the policy is applied.
 * `attribute` - The SSL Negotiation policy attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-594ecbf0ae1086664299c0bd8eab81534e805963be3a73733449f7041f731403 -->
+<!-- cache-key: cdktf-0.20.8 input-389d257f0eafd8bceabe0a33dedde819a3eae8736f6ec258644d9acf0d8dd8d6 -->

@@ -20,7 +20,7 @@ const (
 )
 
 func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findLoggingConfigurationByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -35,7 +35,7 @@ func statusLoggingConfiguration(ctx context.Context, conn *ivschat.Client, id st
 }
 
 func statusRoom(ctx context.Context, conn *ivschat.Client, id string, updateDetails *ivschat.UpdateRoomInput) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := findRoomByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -48,8 +48,8 @@ func statusRoom(ctx context.Context, conn *ivschat.Client, id string, updateDeta
 		if updateDetails == nil {
 			return out, statusNormal, nil
 		} else {
-			if (updateDetails.MaximumMessageLength != 0 && updateDetails.MaximumMessageLength == out.MaximumMessageLength) ||
-				(updateDetails.MaximumMessageRatePerSecond != 0 && updateDetails.MaximumMessageRatePerSecond == out.MaximumMessageRatePerSecond) ||
+			if (aws.ToInt32(updateDetails.MaximumMessageLength) != 0 && updateDetails.MaximumMessageLength == out.MaximumMessageLength) ||
+				(aws.ToInt32(updateDetails.MaximumMessageRatePerSecond) != 0 && updateDetails.MaximumMessageRatePerSecond == out.MaximumMessageRatePerSecond) ||
 				(updateDetails.MessageReviewHandler != nil && out.MessageReviewHandler != nil &&
 					(updateDetails.MessageReviewHandler.FallbackResult == out.MessageReviewHandler.FallbackResult || aws.ToString(updateDetails.MessageReviewHandler.Uri) == aws.ToString(out.MessageReviewHandler.Uri))) ||
 				(updateDetails.Name != nil && aws.ToString(updateDetails.Name) == aws.ToString(out.Name)) ||

@@ -267,34 +267,33 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of `eniId`, `subnetId`, `transitGatewayId`, `transitGatewayAttachmentId`, or `vpcId` must be specified.
+This resource supports the following arguments:
 
-This argument supports the following arguments:
-
-* `trafficType` - (Required) The type of traffic to capture. Valid values: `accept`,`reject`, `all`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `trafficType` - (Required) The type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`.
 * `deliverCrossAccountRole` - (Optional) ARN of the IAM role that allows Amazon EC2 to publish flow logs across accounts.
-* `eniId` - (Optional) Elastic Network Interface ID to attach to
-* `iamRoleArn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
-* `logDestinationType` - (Optional) The type of the logging destination. Valid values: `cloudWatchLogs`, `s3`, `kinesisDataFirehose`. Default: `cloudWatchLogs`.
-* `logDestination` - (Optional) The ARN of the logging destination. Either `logDestination` or `logGroupName` must be set.
-* `logGroupName` - (Optional) **Deprecated:** Use `logDestination` instead. The name of the CloudWatch log group. Either `logGroupName` or `logDestination` must be set.
-* `subnetId` - (Optional) Subnet ID to attach to
-* `transitGatewayId` - (Optional) Transit Gateway ID to attach to
-* `transitGatewayAttachmentId` - (Optional) Transit Gateway Attachment ID to attach to
-* `vpcId` - (Optional) VPC ID to attach to
-* `logFormat` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
-* `maxAggregationInterval` - (Optional) The maximum interval of time
-  during which a flow of packets is captured and aggregated into a flow
-  log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
-  minutes). Default: `600`. When `transitGatewayId` or `transitGatewayAttachmentId` is specified, `maxAggregationInterval` *must* be 60 seconds (1 minute).
+* `eniId` - (Optional) Elastic Network Interface ID to attach to.
+* `iamRoleArn` - (Optional) ARN of the IAM role that's used to post flow logs to a CloudWatch Logs log group.
+* `logDestinationType` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
+* `logDestination` - (Optional) ARN of the logging destination.
+* `subnetId` - (Optional) Subnet ID to attach to.
+* `transitGatewayId` - (Optional) Transit Gateway ID to attach to.
+* `transitGatewayAttachmentId` - (Optional) Transit Gateway Attachment ID to attach to.
+* `vpcId` - (Optional) VPC ID to attach to.
+* `logFormat` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
+* `maxAggregationInterval` - (Optional) The maximum interval of time during which a flow of packets is captured and aggregated into a flow log record.
+  Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`.
+  When `transitGatewayId` or `transitGatewayAttachmentId` is specified, `maxAggregationInterval` *must* be 60 seconds (1 minute).
 * `destinationOptions` - (Optional) Describes the destination options for a flow log. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** One of `eniId`, `subnetId`, `transitGatewayId`, `transitGatewayAttachmentId`, or `vpcId` must be specified.
 
 ### destination_options
 
 Describes the destination options for a flow log.
 
-* `fileFormat` - (Optional) The format for the flow log. Default value: `plainText`. Valid values: `plainText`, `parquet`.
+* `fileFormat` - (Optional) File format for the flow log. Default value: `plain-text`. Valid values: `plain-text`, `parquet`.
 * `hiveCompatiblePartitions` - (Optional) Indicates whether to use Hive-compatible prefixes for flow logs stored in Amazon S3. Default value: `false`.
 * `perHourPartition` - (Optional) Indicates whether to partition the flow log per hour. This reduces the cost and response time for queries. Default value: `false`.
 
@@ -302,8 +301,8 @@ Describes the destination options for a flow log.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Flow Log ID
-* `arn` - The ARN of the Flow Log.
+* `id` - Flow Log ID.
+* `arn` - ARN of the Flow Log.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -314,9 +313,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { FlowLog } from "./.gen/providers/aws/flow-log";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    FlowLog.generateConfigForImport(this, "testFlowLog", "fl-1a2b3c4d");
   }
 }
 
@@ -328,4 +333,4 @@ Using `terraform import`, import Flow Logs using the `id`. For example:
 % terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-379eebee0faf6ddc6b72192ea7791d99a401f706aaa6660a39aa2f4709546656 -->
+<!-- cache-key: cdktf-0.20.8 input-69842878bfce2bc01432b51ac652189974dadcb1b5afccb463822c533db3217d -->

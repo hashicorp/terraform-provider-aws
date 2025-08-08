@@ -1,0 +1,3 @@
+``release-note:enhancement
+resource/aws_iam_openid_connect_provider: Make `thumbprint_list` optional
+```

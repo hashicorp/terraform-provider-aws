@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `groupName` - (Required) Friendly IAM group name to match.
 
 ## Attribute Reference
@@ -46,6 +48,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Group ARN.
 * `groupId` - Stable and unique string identifying the group.
+* `id` - Stable and unique string identifying the group.
 * `path` - Path to the group.
 * `users` - List of objects containing group member information. See below.
 
@@ -56,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `userId` - Stable and unique string identifying the IAM user.
 * `userName` - Name of the IAM user.
 
-<!-- cache-key: cdktf-0.18.0 input-b5b8d72dc7fc469d3b2d85b15798edaab2e9d2691ebb4b01603e4de702a19c97 -->
+<!-- cache-key: cdktf-0.20.8 input-70fb233ee89d5de66dcc229048d4289e092b4ecc45e159d41c3ce5628d6b8f9a -->

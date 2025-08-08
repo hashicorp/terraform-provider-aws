@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_transfer_server: Change `pre_authentication_login_banner` and `post_authentication_login_banner` length limits to 4096
+```
+

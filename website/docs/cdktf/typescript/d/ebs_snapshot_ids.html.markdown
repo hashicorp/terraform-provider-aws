@@ -49,13 +49,10 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
-
 * `restorableByUserIds` - (Optional) One or more AWS accounts IDs that can create volumes from the snapshot.
-
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are
-several valid keys, for a full reference, check out
-[describe-volumes in the AWS CLI reference][1].
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-volumes in the AWS CLI reference][1].
 
 ## Attribute Reference
 
@@ -68,8 +65,8 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.18.0 input-39c8fd3ed01de7a4c5bbc663b2dbb6a16897ac65078b21e1f01a11f41abab5e1 -->
+<!-- cache-key: cdktf-0.20.8 input-e03209275b97d56e9f1c8c7addcb6e0ccac6fabe892775a712f9b797c43a7854 -->

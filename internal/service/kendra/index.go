@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -54,9 +55,9 @@ func ResourceIndex() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,11 +83,11 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -99,7 +100,7 @@ func ResourceIndex() *schema.Resource {
 				MaxItems: 500,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 30),
@@ -111,7 +112,7 @@ func ResourceIndex() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
@@ -179,7 +180,7 @@ func ResourceIndex() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.DocumentAttributeValueType](),
@@ -234,7 +235,7 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -245,7 +246,7 @@ func ResourceIndex() *schema.Resource {
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -257,7 +258,7 @@ func ResourceIndex() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -266,7 +267,7 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -335,7 +336,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 100),
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 65),
@@ -350,7 +351,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -378,18 +379,20 @@ func ResourceIndex() *schema.Resource {
 	}
 }
 
-func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateIndexInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -398,7 +401,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("server_side_encryption_configuration"); ok {
-		input.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(v.([]interface{}))
+		input.ServerSideEncryptionConfiguration = expandServerSideEncryptionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("user_context_policy"); ok {
@@ -406,15 +409,15 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("user_group_resolution_configuration"); ok {
-		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(v.([]interface{}))
+		input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("user_token_configurations"); ok {
-		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]interface{}))
+		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]any))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateIndex(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -429,11 +432,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Kendra Index (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Index (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Kendra Index (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Index (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateIndexOutput)
@@ -442,13 +445,13 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Index (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	callUpdateIndex := false
 
 	// CreateIndex API does not support capacity_units but UpdateIndex does
-	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("capacity_units"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		callUpdateIndex = true
 	}
 
@@ -458,13 +461,15 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if callUpdateIndex {
-		return resourceIndexUpdate(ctx, d, meta)
+		return append(diags, resourceIndexUpdate(ctx, d, meta)...)
 	}
 
-	return resourceIndexRead(ctx, d, meta)
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
-func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
@@ -472,95 +477,97 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Index (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("edition", resp.Edition)
 	d.Set("error_message", resp.ErrorMessage)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
 	if err := d.Set("capacity_units", flattenCapacityUnits(resp.CapacityUnits)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("document_metadata_configuration_updates", flattenDocumentMetadataConfigurations(resp.DocumentMetadataConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("index_statistics", flattenIndexStatistics(resp.IndexStatistics)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(resp.ServerSideEncryptionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_group_resolution_configuration", flattenUserGroupResolutionConfiguration(resp.UserGroupResolutionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_token_configurations", flattenUserTokenConfigurations(resp.UserTokenConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", names.AttrDescription, "document_metadata_configuration_updates", names.AttrName, names.AttrRoleARN, "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
 		if d.HasChange("capacity_units") {
-			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
+			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]any))
 		}
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 		if d.HasChange("document_metadata_configuration_updates") {
 			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
 		}
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 		if d.HasChange("user_context_policy") {
 			input.UserContextPolicy = types.UserContextPolicy(d.Get("user_context_policy").(string))
 		}
 		if d.HasChange("user_group_resolution_configuration") {
-			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]interface{}))
+			input.UserGroupResolutionConfiguration = expandUserGroupResolutionConfiguration(d.Get("user_group_resolution_configuration").([]any))
 		}
 		if d.HasChange("user_token_configurations") {
-			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
+			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]any))
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (interface{}, error) {
+			func() (any, error) {
 				return conn.UpdateIndex(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -575,19 +582,21 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Index (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Index (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceIndexRead(ctx, d, meta)
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
-func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
@@ -597,14 +606,14 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Index (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Index (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Index (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra.DescribeIndexOutput, error) {
@@ -635,7 +644,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 }
 
 func statusIndex(ctx context.Context, conn *kendra.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -709,12 +718,12 @@ func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeo
 	return nil, err
 }
 
-func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfiguration {
+func expandCapacityUnits(capacityUnits []any) *types.CapacityUnitsConfiguration {
 	if len(capacityUnits) == 0 || capacityUnits[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := capacityUnits[0].(map[string]interface{})
+	tfMap, ok := capacityUnits[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -727,7 +736,7 @@ func expandCapacityUnits(capacityUnits []interface{}) *types.CapacityUnitsConfig
 	return result
 }
 
-func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []interface{}) []types.DocumentMetadataConfiguration {
+func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpdates []any) []types.DocumentMetadataConfiguration {
 	if len(documentMetadataConfigurationUpdates) == 0 {
 		return nil
 	}
@@ -735,14 +744,14 @@ func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpd
 	documentMetadataConfigurationUpdateConfigs := []types.DocumentMetadataConfiguration{}
 
 	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
-		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
+		tfMap := documentMetadataConfigurationUpdate.(map[string]any)
 		documentMetadataConfigurationUpdateConfig := types.DocumentMetadataConfiguration{
-			Name: aws.String(tfMap["name"].(string)),
-			Type: types.DocumentAttributeValueType(tfMap["type"].(string)),
+			Name: aws.String(tfMap[names.AttrName].(string)),
+			Type: types.DocumentAttributeValueType(tfMap[names.AttrType].(string)),
 		}
 
-		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}), tfMap["type"].(string))
-		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]any), tfMap[names.AttrType].(string))
+		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]any))
 
 		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
 	}
@@ -750,19 +759,19 @@ func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpd
 	return documentMetadataConfigurationUpdateConfigs
 }
 
-func expandRelevance(relevance []interface{}, documentAttributeValueType string) *types.Relevance {
+func expandRelevance(relevance []any, documentAttributeValueType string) *types.Relevance {
 	if len(relevance) == 0 || relevance[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := relevance[0].(map[string]interface{})
+	tfMap, ok := relevance[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.Relevance{}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		result.Duration = aws.String(v)
 	}
 
@@ -779,19 +788,19 @@ func expandRelevance(relevance []interface{}, documentAttributeValueType string)
 		result.RankOrder = types.Order(v)
 	}
 
-	if v, ok := tfMap["values_importance_map"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["values_importance_map"].(map[string]any); ok && len(v) > 0 {
 		result.ValueImportanceMap = flex.ExpandInt32Map(v)
 	}
 
 	return result
 }
 
-func expandSearch(search []interface{}) *types.Search {
+func expandSearch(search []any) *types.Search {
 	if len(search) == 0 || search[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := search[0].(map[string]interface{})
+	tfMap, ok := search[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -817,31 +826,31 @@ func expandSearch(search []interface{}) *types.Search {
 	return result
 }
 
-func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []interface{}) *types.ServerSideEncryptionConfiguration {
+func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration []any) *types.ServerSideEncryptionConfiguration {
 	if len(serverSideEncryptionConfiguration) == 0 || serverSideEncryptionConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := serverSideEncryptionConfiguration[0].(map[string]interface{})
+	tfMap, ok := serverSideEncryptionConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.ServerSideEncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		result.KmsKeyId = aws.String(v)
 	}
 
 	return result
 }
 
-func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []interface{}) *types.UserGroupResolutionConfiguration {
+func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []any) *types.UserGroupResolutionConfiguration {
 	if len(userGroupResolutionConfiguration) == 0 || userGroupResolutionConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := userGroupResolutionConfiguration[0].(map[string]interface{})
+	tfMap, ok := userGroupResolutionConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -853,7 +862,7 @@ func expandUserGroupResolutionConfiguration(userGroupResolutionConfiguration []i
 	return result
 }
 
-func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []types.UserTokenConfiguration {
+func expandUserTokenConfigurations(userTokenConfigurations []any) []types.UserTokenConfiguration {
 	if len(userTokenConfigurations) == 0 {
 		return nil
 	}
@@ -861,14 +870,14 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 	userTokenConfigurationsConfigs := []types.UserTokenConfiguration{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
-		tfMap := userTokenConfiguration.(map[string]interface{})
+		tfMap := userTokenConfiguration.(map[string]any)
 		userTokenConfigurationConfig := types.UserTokenConfiguration{}
 
-		if v, ok := tfMap["json_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["json_token_type_configuration"].([]any); ok && len(v) > 0 {
 			userTokenConfigurationConfig.JsonTokenTypeConfiguration = expandJSONTokenTypeConfiguration(v)
 		}
 
-		if v, ok := tfMap["jwt_token_type_configuration"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["jwt_token_type_configuration"].([]any); ok && len(v) > 0 {
 			userTokenConfigurationConfig.JwtTokenTypeConfiguration = expandJwtTokenTypeConfiguration(v)
 		}
 
@@ -878,12 +887,12 @@ func expandUserTokenConfigurations(userTokenConfigurations []interface{}) []type
 	return userTokenConfigurationsConfigs
 }
 
-func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) *types.JsonTokenTypeConfiguration {
+func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []any) *types.JsonTokenTypeConfiguration {
 	if len(jsonTokenTypeConfiguration) == 0 || jsonTokenTypeConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := jsonTokenTypeConfiguration[0].(map[string]interface{})
+	tfMap, ok := jsonTokenTypeConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -896,12 +905,12 @@ func expandJSONTokenTypeConfiguration(jsonTokenTypeConfiguration []interface{}) 
 	return result
 }
 
-func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *types.JwtTokenTypeConfiguration {
+func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []any) *types.JwtTokenTypeConfiguration {
 	if len(jwtTokenTypeConfiguration) == 0 || jwtTokenTypeConfiguration[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := jwtTokenTypeConfiguration[0].(map[string]interface{})
+	tfMap, ok := jwtTokenTypeConfiguration[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -918,7 +927,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.GroupAttributeField = aws.String(v)
 	}
 
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		result.Issuer = aws.String(v)
 	}
 
@@ -926,7 +935,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.SecretManagerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		result.URL = aws.String(v)
 	}
 
@@ -937,28 +946,28 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 	return result
 }
 
-func flattenCapacityUnits(capacityUnits *types.CapacityUnitsConfiguration) []interface{} {
+func flattenCapacityUnits(capacityUnits *types.CapacityUnitsConfiguration) []any {
 	if capacityUnits == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"query_capacity_units":   aws.ToInt32(capacityUnits.QueryCapacityUnits),
 		"storage_capacity_units": aws.ToInt32(capacityUnits.StorageCapacityUnits),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []types.DocumentMetadataConfiguration) []interface{} {
-	documentMetadataConfigurationsList := []interface{}{}
+func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []types.DocumentMetadataConfiguration) []any {
+	documentMetadataConfigurationsList := []any{}
 
 	for _, documentMetadataConfiguration := range documentMetadataConfigurations {
-		values := map[string]interface{}{
-			"name":      documentMetadataConfiguration.Name,
-			"relevance": flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
-			"search":    flattenSearch(documentMetadataConfiguration.Search),
-			"type":      documentMetadataConfiguration.Type,
+		values := map[string]any{
+			names.AttrName: documentMetadataConfiguration.Name,
+			"relevance":    flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
+			"search":       flattenSearch(documentMetadataConfiguration.Search),
+			names.AttrType: documentMetadataConfiguration.Type,
 		}
 
 		documentMetadataConfigurationsList = append(documentMetadataConfigurationsList, values)
@@ -967,17 +976,17 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []type
 	return documentMetadataConfigurationsList
 }
 
-func flattenRelevance(relevance *types.Relevance, documentAttributeValueType string) []interface{} {
+func flattenRelevance(relevance *types.Relevance, documentAttributeValueType string) []any {
 	if relevance == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"rank_order": relevance.RankOrder,
 	}
 
 	if v := relevance.Duration; v != nil {
-		values["duration"] = aws.ToString(v)
+		values[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := relevance.Freshness; v != nil && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
@@ -992,93 +1001,93 @@ func flattenRelevance(relevance *types.Relevance, documentAttributeValueType str
 		values["values_importance_map"] = v
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenSearch(search *types.Search) []interface{} {
+func flattenSearch(search *types.Search) []any {
 	if search == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"displayable": search.Displayable,
 		"facetable":   search.Facetable,
 		"searchable":  search.Searchable,
 		"sortable":    search.Sortable,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenIndexStatistics(indexStatistics *types.IndexStatistics) []interface{} {
+func flattenIndexStatistics(indexStatistics *types.IndexStatistics) []any {
 	if indexStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"faq_statistics":           flattenFaqStatistics(indexStatistics.FaqStatistics),
 		"text_document_statistics": flattenTextDocumentStatistics(indexStatistics.TextDocumentStatistics),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenFaqStatistics(faqStatistics *types.FaqStatistics) []interface{} {
+func flattenFaqStatistics(faqStatistics *types.FaqStatistics) []any {
 	if faqStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"indexed_question_answers_count": aws.ToInt32(&faqStatistics.IndexedQuestionAnswersCount),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenTextDocumentStatistics(textDocumentStatistics *types.TextDocumentStatistics) []interface{} {
+func flattenTextDocumentStatistics(textDocumentStatistics *types.TextDocumentStatistics) []any {
 	if textDocumentStatistics == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"indexed_text_bytes":           aws.ToInt64(&textDocumentStatistics.IndexedTextBytes),
 		"indexed_text_documents_count": aws.ToInt32(&textDocumentStatistics.IndexedTextDocumentsCount),
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *types.ServerSideEncryptionConfiguration) []interface{} {
+func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration *types.ServerSideEncryptionConfiguration) []any {
 	if serverSideEncryptionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if v := serverSideEncryptionConfiguration.KmsKeyId; v != nil {
-		values["kms_key_id"] = aws.ToString(v)
+		values[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *types.UserGroupResolutionConfiguration) []interface{} {
+func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *types.UserGroupResolutionConfiguration) []any {
 	if userGroupResolutionConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"user_group_resolution_mode": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenConfiguration) []interface{} {
-	userTokenConfigurationsList := []interface{}{}
+func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenConfiguration) []any {
+	userTokenConfigurationsList := []any{}
 
 	for _, userTokenConfiguration := range userTokenConfigurations {
-		values := map[string]interface{}{}
+		values := map[string]any{}
 
 		if v := userTokenConfiguration.JsonTokenTypeConfiguration; v != nil {
 			values["json_token_type_configuration"] = flattenJSONTokenTypeConfiguration(v)
@@ -1094,25 +1103,25 @@ func flattenUserTokenConfigurations(userTokenConfigurations []types.UserTokenCon
 	return userTokenConfigurationsList
 }
 
-func flattenJSONTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []interface{} {
+func flattenJSONTokenTypeConfiguration(jsonTokenTypeConfiguration *types.JsonTokenTypeConfiguration) []any {
 	if jsonTokenTypeConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"group_attribute_field":     jsonTokenTypeConfiguration.GroupAttributeField,
 		"user_name_attribute_field": jsonTokenTypeConfiguration.UserNameAttributeField,
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenTypeConfiguration) []interface{} {
+func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenTypeConfiguration) []any {
 	if jwtTokenTypeConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"key_location": jwtTokenTypeConfiguration.KeyLocation,
 	}
 
@@ -1125,7 +1134,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.Issuer; v != nil {
-		values["issuer"] = aws.ToString(v)
+		values[names.AttrIssuer] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.SecretManagerArn; v != nil {
@@ -1133,12 +1142,12 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.URL; v != nil {
-		values["url"] = aws.ToString(v)
+		values[names.AttrURL] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.UserNameAttributeField; v != nil {
 		values["user_name_attribute_field"] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }

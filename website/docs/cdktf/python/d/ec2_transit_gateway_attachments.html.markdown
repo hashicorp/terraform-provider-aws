@@ -46,7 +46,8 @@ class MyConvertedCode(TerraformStack):
         unit_count = TerraformCount.of(
             Token.as_number(Fn.length_of(filtered.ids)))
         DataAwsEc2TransitGatewayAttachment(self, "unit",
-            id=Token.as_string(Fn.lookup_nested(filtered.ids, [unit_count.index])),
+            transit_gateway_attachment_id=Token.as_string(
+                Fn.lookup_nested(filtered.ids, [unit_count.index])),
             count=unit_count
         )
 ```
@@ -55,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 
 ### filter Argument Reference
@@ -77,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-d711b87a1b40869313a118f25c07038992c92b0b5b1accc3b33147f75288e032 -->
+<!-- cache-key: cdktf-0.20.8 input-6323852922447a177031e0f6b35475a9edc63da3ce082fd6a0fb0e64659c4a58 -->

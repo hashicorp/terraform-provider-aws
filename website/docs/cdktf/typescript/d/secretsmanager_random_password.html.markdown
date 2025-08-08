@@ -37,10 +37,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `excludeCharacters` - (Optional) String of the characters that you don't want in the password.
 * `excludeLowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `excludeNumbers` - (Optional) Specifies whether to exclude numbers from the password.
-* `excludePunctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: `! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .`
+* `excludePunctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
 * `excludeUppercase` - (Optional) Specifies whether to exclude uppercase letters from the password.
 * `includeSpace` - (Optional) Specifies whether to include the space character.
 * `passwordLength` - (Optional) Length of the password.
@@ -52,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `randomPassword` - Random password.
 
-<!-- cache-key: cdktf-0.18.0 input-253220cea464918e719cdeb6fc246c1972e3652b5d753f22810bdf68eb8eaeef -->
+<!-- cache-key: cdktf-0.20.8 input-144d32189f2e7dca903caa5ec4bbead3708456e50740c5806c351ba55ea140b2 -->

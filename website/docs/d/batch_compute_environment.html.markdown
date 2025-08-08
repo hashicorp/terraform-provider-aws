@@ -15,7 +15,7 @@ compute environment within AWS Batch.
 
 ```terraform
 data "aws_batch_compute_environment" "batch-mongo" {
-  compute_environment_name = "batch-mongo-production"
+  name = "batch-mongo-production"
 }
 ```
 
@@ -23,7 +23,8 @@ data "aws_batch_compute_environment" "batch-mongo" {
 
 This data source supports the following arguments:
 
-* `compute_environment_name` - (Required) Name of the Batch Compute Environment
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name of the Batch Compute Environment
 
 ## Attribute Reference
 
@@ -36,4 +37,5 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Current status of the compute environment (for example, `CREATING` or `VALID`).
 * `status_reason` - Short, human-readable string to provide additional details about the current status of the compute environment.
 * `state` - State of the compute environment (for example, `ENABLED` or `DISABLED`). If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues.
+* `update_policy` - Specifies the infrastructure update policy for the compute environment.
 * `tags` - Key-value map of resource tags

@@ -87,8 +87,9 @@ The following arguments are required:
 * `name` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 
-The follow arguments are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
@@ -135,6 +136,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucket_columns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
@@ -190,6 +192,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `catalog_id` - (Required) ID of the Data Catalog in which the table resides.
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
+* `region` - (Optional) Region of the target table.
 
 ## Attribute Reference
 

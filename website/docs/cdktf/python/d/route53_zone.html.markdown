@@ -46,33 +46,33 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
-Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`
+This data source supports the following arguments:
 
 * `zone_id` - (Optional) Hosted Zone id of the desired Hosted Zone.
-
 * `name` - (Optional) Hosted Zone name of the desired Hosted Zone.
 * `private_zone` - (Optional) Used with `name` field to get a private Hosted Zone.
 * `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
 * `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
+The arguments of this data source act as filters for querying the available
+Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
+Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`.
+
 ## Attribute Reference
 
-All of the argument attributes are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected Hosted Zone.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - Comment field of the Hosted Zone.
-* `name_servers` - List of DNS name servers for the Hosted Zone.
-* `primary_name_server` - The Route 53 name server that created the SOA record.
-* `resource_record_set_count` - The number of Record Set in the Hosted Zone.
 * `linked_service_principal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
 * `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
+* `name` - The Hosted Zone name.
+* `name_servers` - List of DNS name servers for the Hosted Zone.
+* `primary_name_server` - The Route 53 name server that created the SOA record.
+* `private_zone` - Indicates whether this is a private hosted zone.
+* `resource_record_set_count` - The number of Record Set in the Hosted Zone.
+* `tags` - A map of tags assigned to the Hosted Zone.
+* `zone_id` - The Hosted Zone identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-1a22cb50fe32eb087fe481e2a504db0755c6d63fe989e4c8e5bb2e37f803debb -->
+<!-- cache-key: cdktf-0.20.8 input-745be1dc3d611e24a2f9b698d0b5a33a1957ec75cd98813aa4777dfc944655cc -->

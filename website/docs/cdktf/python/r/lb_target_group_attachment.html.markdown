@@ -121,7 +121,7 @@ class MyConvertedCode(TerraformStack):
         #     you should consider using a for loop. If you are looping over something only known to Terraform, e.g. a result of a data source
         #     you need to keep this like it is.
         example_for_each_iterator = TerraformIterator.from_list(
-            Token.as_any("${{ for k, v in ${" + example.fqn + "} : v.id => v}}"))
+            Token.as_any("${{ for k, v in ${" + example.fqn + "} : k => v}}"))
         aws_lb_target_group_attachment_example = LbTargetGroupAttachment(self, "example_2",
             port=80,
             target_group_arn=Token.as_string(aws_lb_target_group_example.arn),
@@ -142,6 +142,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private IP address is outside of the VPC scope, this value must be set to `all`.
 * `port` - (Optional) The port on which targets receive traffic.
 
@@ -155,4 +156,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import Target Group Attachments.
 
-<!-- cache-key: cdktf-0.18.0 input-6a9d27eafb93acb313975b710f7a1fcae6eb952e788b12cf102506b713f35b5d -->
+<!-- cache-key: cdktf-0.20.8 input-b386664b61540ab5fe182a2c7692fb7aa154ae3edf0723292900737b4adc411a -->

@@ -5,31 +5,28 @@ package rbin
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rbin_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
-func ResourceRule() *schema.Resource {
+func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
 		ReadWithoutTimeout:   resourceRuleRead,
@@ -47,25 +44,20 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"resource_tags": {
+			"exclude_resource_tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
-				MaxItems: 50,
+				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_tag_key": {
@@ -80,31 +72,11 @@ func ResourceRule() *schema.Resource {
 						},
 					},
 				},
+				ConflictsWith: []string{names.AttrResourceTags},
 			},
-			"resource_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ResourceType](),
-			},
-			"retention_period": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"retention_period_value": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 365),
-						},
-						"retention_period_unit": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
-						},
-					},
-				},
+			names.AttrID: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"lock_configuration": {
 				Type:     schema.TypeList,
@@ -134,168 +106,252 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			"lock_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"lock_end_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			"lock_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrResourceTags: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_tag_key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(0, 127),
+						},
+						"resource_tag_value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 256),
+						},
+					},
+				},
+				ConflictsWith: []string{"exclude_resource_tags"},
+			},
+			names.AttrResourceType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ResourceType](),
+			},
+			names.AttrRetentionPeriod: {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"retention_period_value": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 365),
+						},
+						"retention_period_unit": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RetentionPeriodUnit](),
+						},
+					},
+				},
+			},
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-const (
-	ResNameRule = "Rule"
-)
-
-func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
-	in := &rbin.CreateRuleInput{
-		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
-		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+	input := rbin.CreateRuleInput{
+		ResourceType:    types.ResourceType(d.Get(names.AttrResourceType).(string)),
+		RetentionPeriod: expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]any)),
 		Tags:            getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(d.Get("description").(string))
+	if _, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
-		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+	if v, ok := d.GetOk("exclude_resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+		input.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
-	out, err := conn.CreateRule(ctx, in)
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
+		input.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+	}
+
+	output, err := conn.CreateRule(ctx, &input)
+
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating RBin Rule: %s", err)
 	}
 
-	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), errors.New("empty output"))
-	}
-
-	d.SetId(aws.ToString(out.Identifier))
+	d.SetId(aws.ToString(output.Identifier))
 
 	if _, err := waitRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForCreation, ResNameRule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RBin Rule (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceRuleRead(ctx, d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RBinClient(ctx)
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.RBinClient(ctx)
 
-	out, err := findRuleByID(ctx, conn, d.Id())
+	output, err := findRuleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RBin Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionReading, ResNameRule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RBin Rule (%s): %s", d.Id(), err)
 	}
 
-	ruleArn := awsarn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   rbin.ServiceID,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("rule/%s", aws.ToString(out.Identifier)),
-	}.String()
-	d.Set("arn", ruleArn)
-
-	d.Set("description", out.Description)
-	d.Set("resource_type", string(out.ResourceType))
-	d.Set("status", string(out.Status))
-
-	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+	d.Set(names.AttrARN, c.RegionalARN(ctx, "rbin", "rule/"+d.Id()))
+	d.Set(names.AttrDescription, output.Description)
+	if err := d.Set("exclude_resource_tags", flattenResourceTags(output.ExcludeResourceTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting exclude_resource_tags: %s", err)
 	}
-
-	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
+	if err := d.Set(names.AttrResourceTags, flattenResourceTags(output.ResourceTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
+	d.Set(names.AttrResourceType, output.ResourceType)
+	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(output.RetentionPeriod)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting retention_period: %s", err)
+	}
+	d.Set(names.AttrStatus, output.Status)
 
-	return nil
+	return diags
 }
 
-func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
-	update := false
-
-	in := &rbin.UpdateRuleInput{
-		Identifier: aws.String(d.Id()),
-	}
-
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
-		update = true
-	}
-
-	if d.HasChanges("resource_tags") {
-		in.ResourceTags = expandResourceTags(d.Get("resource_tags").(*schema.Set).List())
-		update = true
-	}
-
-	if d.HasChanges("retention_period") {
-		in.RetentionPeriod = expandRetentionPeriod(d.Get("retention_period").([]interface{}))
-		update = true
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating RBin Rule (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateRule(ctx, in)
-	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionUpdating, ResNameRule, d.Id(), err)
-	}
-
-	if _, err := waitRuleUpdated(ctx, conn, aws.ToString(out.Identifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForUpdate, ResNameRule, d.Id(), err)
-	}
-
-	return resourceRuleRead(ctx, d, meta)
-}
-
-func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[INFO] Deleting RBin Rule %s", d.Id())
-
-	conn := meta.(*conns.AWSClient).RBinClient(ctx)
-
-	_, err := conn.DeleteRule(ctx, &rbin.DeleteRuleInput{
-		Identifier: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := rbin.UpdateRuleInput{
+			Identifier: aws.String(d.Id()),
 		}
 
-		return create.DiagError(names.RBin, create.ErrActionDeleting, ResNameRule, d.Id(), err)
+		if d.HasChanges(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChanges("exclude_resource_tags") {
+			v := d.Get("exclude_resource_tags")
+			if v == nil || v.(*schema.Set).Len() == 0 {
+				input.ExcludeResourceTags = []types.ResourceTag{}
+			} else {
+				input.ExcludeResourceTags = expandResourceTags(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChanges(names.AttrResourceTags) {
+			v := d.Get(names.AttrResourceTags)
+			if v == nil || v.(*schema.Set).Len() == 0 {
+				input.ResourceTags = []types.ResourceTag{}
+			} else {
+				input.ResourceTags = expandResourceTags(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChanges(names.AttrRetentionPeriod) {
+			input.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]any))
+		}
+
+		_, err := conn.UpdateRule(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RBin Rule (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitRuleUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RBin Rule (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
+}
+
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RBinClient(ctx)
+
+	log.Printf("[INFO] Deleting RBin Rule: %s", d.Id())
+	input := rbin.DeleteRuleInput{
+		Identifier: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteRule(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RBin Rule (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.RBin, create.ErrActionWaitingForDeletion, ResNameRule, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RBin Rule (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetRuleOutput, error) {
+	input := rbin.GetRuleInput{
+		Identifier: aws.String(id),
+	}
+	output, err := conn.GetRule(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Identifier == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRuleByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout time.Duration) (*rbin.GetRuleOutput, error) {
@@ -304,13 +360,13 @@ func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout 
 		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*rbin.GetRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -322,13 +378,13 @@ func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout 
 		Target:                    enum.Slice(types.RuleStatusAvailable),
 		Refresh:                   statusRule(ctx, conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*rbin.GetRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -343,153 +399,112 @@ func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*rbin.GetRuleOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*rbin.GetRuleOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findRuleByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
+func flattenResourceTag(apiObject types.ResourceTag) map[string]any {
+	tfMap := map[string]any{}
 
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
+	if v := apiObject.ResourceTagKey; v != nil {
+		tfMap["resource_tag_key"] = aws.ToString(v)
 	}
+
+	if v := apiObject.ResourceTagValue; v != nil {
+		tfMap["resource_tag_value"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
 
-func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetRuleOutput, error) {
-	in := &rbin.GetRuleInput{
-		Identifier: aws.String(id),
-	}
-	out, err := conn.GetRule(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil || out.Identifier == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
-func flattenResourceTag(rTag types.ResourceTag) map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if v := rTag.ResourceTagKey; v != nil {
-		m["resource_tag_key"] = aws.ToString(v)
-	}
-
-	if v := rTag.ResourceTagValue; v != nil {
-		m["resource_tag_value"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func flattenResourceTags(rTags []types.ResourceTag) []interface{} {
-	if len(rTags) == 0 {
+func flattenResourceTags(apiObjects []types.ResourceTag) []any {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
-	for _, rTag := range rTags {
-		l = append(l, flattenResourceTag(rTag))
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenResourceTag(apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func flattenRetentionPeriod(retPeriod *types.RetentionPeriod) []interface{} {
-	m := map[string]interface{}{}
-
-	if v := retPeriod.RetentionPeriodUnit; v != "" {
-		m["retention_period_unit"] = string(v)
+func flattenRetentionPeriod(apiObject *types.RetentionPeriod) []any {
+	tfMap := map[string]any{
+		"retention_period_unit": apiObject.RetentionPeriodUnit,
 	}
 
-	if v := retPeriod.RetentionPeriodValue; v != aws.Int32(0) {
-		m["retention_period_value"] = v
+	if v := apiObject.RetentionPeriodValue; v != aws.Int32(0) {
+		tfMap["retention_period_value"] = v
 	}
 
-	return []interface{}{m}
+	return []any{tfMap}
 }
 
-func expandResourceTag(tfMap map[string]interface{}) *types.ResourceTag {
+func expandResourceTag(tfMap map[string]any) *types.ResourceTag {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.ResourceTag{}
+	apiObject := types.ResourceTag{}
 
 	if v, ok := tfMap["resource_tag_key"].(string); ok && v != "" {
-		a.ResourceTagKey = aws.String(v)
+		apiObject.ResourceTagKey = aws.String(v)
 	}
 
 	if v, ok := tfMap["resource_tag_value"].(string); ok && v != "" {
-		a.ResourceTagValue = aws.String(v)
+		apiObject.ResourceTagValue = aws.String(v)
 	}
 
-	return a
+	return &apiObject
 }
 
-func expandResourceTags(tfList []interface{}) []types.ResourceTag {
+func expandResourceTags(tfList []any) []types.ResourceTag {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []types.ResourceTag
+	var apiObjects []types.ResourceTag
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		a := expandResourceTag(m)
+		apiObject := expandResourceTag(tfMap)
 
-		if a == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		s = append(s, *a)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
-func expandRetentionPeriod(tfList []interface{}) *types.RetentionPeriod {
+func expandRetentionPeriod(tfList []any) *types.RetentionPeriod {
 	if tfList == nil {
 		return nil
 	}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
-	a := types.RetentionPeriod{}
+	apiObject := types.RetentionPeriod{}
 
 	if v, ok := tfMap["retention_period_value"].(int); ok {
-		a.RetentionPeriodValue = aws.Int32(int32(v))
+		apiObject.RetentionPeriodValue = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["retention_period_unit"].(string); ok && v != "" {
-		a.RetentionPeriodUnit = types.RetentionPeriodUnit(v)
+		apiObject.RetentionPeriodUnit = types.RetentionPeriodUnit(v)
 	}
 
-	return &a
+	return &apiObject
 }

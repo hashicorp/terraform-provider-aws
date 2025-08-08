@@ -14,22 +14,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// ListNestedObjectTypeOf is the attribute type of a ListNestedObjectValueOf.
-type ListNestedObjectTypeOf[T any] struct {
-	basetypes.ListType
-}
-
 var (
-	_ basetypes.ListTypable = ListNestedObjectTypeOf[struct{}]{}
-	_ NestedObjectType      = ListNestedObjectTypeOf[struct{}]{}
+	_ basetypes.ListTypable                    = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType               = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.ListValuable                   = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue              = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.ListValuableWithSemanticEquals = (*ListNestedObjectValueOf[struct{}])(nil)
 )
 
-func NewListNestedObjectTypeOf[T any](ctx context.Context) ListNestedObjectTypeOf[T] {
-	return ListNestedObjectTypeOf[T]{basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)}}
+type semanticEqualityFunc[T any] func(context.Context, NestedCollectionValue[T], NestedCollectionValue[T]) (bool, diag.Diagnostics)
+
+// listNestedObjectTypeOf is the attribute type of a ListNestedObjectValueOf.
+type listNestedObjectTypeOf[T any] struct {
+	basetypes.ListType
+	semanticEqualityFunc semanticEqualityFunc[T]
 }
 
-func (t ListNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
-	other, ok := o.(ListNestedObjectTypeOf[T])
+func NewListNestedObjectTypeOf[T any](ctx context.Context, f ...NestedObjectOfOption[T]) listNestedObjectTypeOf[T] {
+	opts := newNestedObjectOfOptions(f...)
+
+	return listNestedObjectTypeOf[T]{
+		ListType:             basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)},
+		semanticEqualityFunc: opts.SemanticEqualityFunc,
+	}
+}
+
+func (t listNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
+	other, ok := o.(listNestedObjectTypeOf[T])
 
 	if !ok {
 		return false
@@ -38,12 +49,12 @@ func (t ListNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
 	return t.ListType.Equal(other.ListType)
 }
 
-func (t ListNestedObjectTypeOf[T]) String() string {
+func (t listNestedObjectTypeOf[T]) String() string {
 	var zero T
 	return fmt.Sprintf("ListNestedObjectTypeOf[%T]", zero)
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
+func (t listNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if in.IsNull() {
@@ -53,20 +64,25 @@ func (t ListNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetyp
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	listValue, d := basetypes.NewListValue(NewObjectTypeOf[T](ctx), in.Elements())
+	typ, d := newObjectTypeOf[T](ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	value := ListNestedObjectValueOf[T]{
-		ListValue: listValue,
+	v, d := basetypes.NewListValue(typ, in.Elements())
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	return value, diags
+	return ListNestedObjectValueOf[T]{
+		ListValue:            v,
+		semanticEqualityFunc: t.semanticEqualityFunc,
+	}, diags
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t listNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.ListType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
@@ -88,50 +104,48 @@ func (t ListNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tf
 	return listValuable, nil
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
-	return ListNestedObjectValueOf[T]{}
+func (t listNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
+	return ListNestedObjectValueOf[T]{semanticEqualityFunc: t.semanticEqualityFunc}
 }
 
-func (t ListNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectPtr[T](ctx)
+func (t listNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
+	return objectTypeNewObjectPtr[T](ctx)
 }
 
-func (t ListNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
+func (t listNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
 	return nestedObjectTypeNewObjectSlice[T](ctx, len, cap)
 }
 
-func (t ListNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
+func (t listNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	return NewListNestedObjectValueOfNull[T](ctx), diags
+	return NewListNestedObjectValueOfNull(ctx, WithSemanticEqualityFunc(t.semanticEqualityFunc)), diags
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
+func (t listNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewListNestedObjectValueOfPtr(ctx, v), diags
+		v, d := newListNestedObjectValueOfPtr(ctx, v, t.semanticEqualityFunc)
+		diags.Append(d...)
+		return v, d
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
 	return nil, diags
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
+func (t listNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v, ok := slice.([]*T); ok {
-		return NewListNestedObjectValueOfSlice(ctx, v), diags
+		v, d := NewListNestedObjectValueOfSlice(ctx, v, t.semanticEqualityFunc)
+		diags.Append(d...)
+		return v, d
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
 	return nil, diags
-}
-
-func nestedObjectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	return new(T), diags
 }
 
 func nestedObjectTypeNewObjectSlice[T any](_ context.Context, len, cap int) ([]*T, diag.Diagnostics) { //nolint:unparam
@@ -140,15 +154,11 @@ func nestedObjectTypeNewObjectSlice[T any](_ context.Context, len, cap int) ([]*
 	return make([]*T, len, cap), diags
 }
 
-// ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type ObjectTypeOf.
+// ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type `ObjectTypeOf[T]`.
 type ListNestedObjectValueOf[T any] struct {
 	basetypes.ListValue
+	semanticEqualityFunc semanticEqualityFunc[T]
 }
-
-var (
-	_ basetypes.ListValuable = ListNestedObjectValueOf[struct{}]{}
-	_ NestedObjectValue      = ListNestedObjectValueOf[struct{}]{}
-)
 
 func (v ListNestedObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ListNestedObjectValueOf[T])
@@ -160,15 +170,45 @@ func (v ListNestedObjectValueOf[T]) Equal(o attr.Value) bool {
 	return v.ListValue.Equal(other.ListValue)
 }
 
+func (v ListNestedObjectValueOf[T]) ListSemanticEquals(ctx context.Context, newValuable basetypes.ListValuable) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// returning false will fall back to framework defined semantic equality checks
+	if v.semanticEqualityFunc == nil {
+		return false, diags
+	}
+
+	newValue, ok := newValuable.(ListNestedObjectValueOf[T])
+	if !ok {
+		diags.AddError(
+			"ListSemanticEquals",
+			fmt.Sprintf("unexpected value type of %T", newValuable),
+		)
+		return false, diags
+	}
+
+	return v.semanticEqualityFunc(ctx, v, newValue)
+}
+
 func (v ListNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewListNestedObjectTypeOf[T](ctx)
 }
 
 func (v ListNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectValueObjectPtr[T](ctx, v.ListValue)
+	return v.ToPtr(ctx)
 }
 
 func (v ListNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
+	return v.ToSlice(ctx)
+}
+
+// ToPtr returns a pointer to the single element of a ListNestedObject.
+func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
+	return nestedObjectValueObjectPtr[T](ctx, v.ListValue)
+}
+
+// ToSlice returns a slice of pointers to the elements of a ListNestedObject.
+func (v ListNestedObjectValueOf[T]) ToSlice(ctx context.Context) ([]*T, diag.Diagnostics) {
 	return nestedObjectValueObjectSlice[T](ctx, v.ListValue)
 }
 
@@ -180,7 +220,7 @@ func nestedObjectValueObjectPtr[T any](ctx context.Context, val valueWithElement
 	case 0:
 		return nil, diags
 	case 1:
-		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[0])
+		ptr, d := objectValueObjectPtr[T](ctx, elements[0])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -198,8 +238,8 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	elements := val.Elements()
 	n := len(elements)
 	slice := make([]*T, n)
-	for i := 0; i < n; i++ {
-		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[i])
+	for i := range n {
+		ptr, d := objectValueObjectPtr[T](ctx, elements[i])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -211,38 +251,61 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	return slice, diags
 }
 
-func nestedObjectValueObjectPtrFromElement[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	ptr := new(T)
-	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return ptr, diags
-}
-
-func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
-	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListNull(NewObjectTypeOf[T](ctx))}
+func NewListNestedObjectValueOfNull[T any](ctx context.Context, f ...NestedObjectOfOption[T]) ListNestedObjectValueOf[T] {
+	opts := newNestedObjectOfOptions(f...)
+	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListNull(NewObjectTypeOf[T](ctx)), semanticEqualityFunc: opts.SemanticEqualityFunc}
 }
 
 func NewListNestedObjectValueOfUnknown[T any](ctx context.Context) ListNestedObjectValueOf[T] {
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
-	return NewListNestedObjectValueOfSlice(ctx, []*T{t})
+func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T, f ...NestedObjectOfOption[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	opts := newNestedObjectOfOptions(f...)
+	return newListNestedObjectValueOfPtr(ctx, t, opts.SemanticEqualityFunc)
 }
 
-func NewListNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T) ListNestedObjectValueOf[T] {
-	return newListNestedObjectValueOf[T](ctx, ts)
+func newListNestedObjectValueOfPtr[T any](ctx context.Context, t *T, f semanticEqualityFunc[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	return NewListNestedObjectValueOfSlice(ctx, []*T{t}, f)
 }
 
-func NewListNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T) ListNestedObjectValueOf[T] {
-	return newListNestedObjectValueOf[T](ctx, ts)
+func NewListNestedObjectValueOfPtrMust[T any](ctx context.Context, t *T, f ...NestedObjectOfOption[T]) ListNestedObjectValueOf[T] {
+	opts := newNestedObjectOfOptions(f...)
+	return fwdiag.Must(newListNestedObjectValueOfPtr(ctx, t, opts.SemanticEqualityFunc))
 }
 
-func newListNestedObjectValueOf[T any](ctx context.Context, elements any) ListNestedObjectValueOf[T] {
-	return ListNestedObjectValueOf[T]{ListValue: fwdiag.Must(basetypes.NewListValueFrom(ctx, NewObjectTypeOf[T](ctx), elements))}
+func NewListNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T, f semanticEqualityFunc[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	return newListNestedObjectValueOf(ctx, ts, f)
+}
+
+func NewListNestedObjectValueOfSliceMust[T any](ctx context.Context, ts []*T, f ...NestedObjectOfOption[T]) ListNestedObjectValueOf[T] {
+	opts := newNestedObjectOfOptions(f...)
+	return fwdiag.Must(NewListNestedObjectValueOfSlice(ctx, ts, opts.SemanticEqualityFunc))
+}
+
+func NewListNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T, f ...NestedObjectOfOption[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	opts := newNestedObjectOfOptions(f...)
+	return newListNestedObjectValueOf(ctx, ts, opts.SemanticEqualityFunc)
+}
+
+func NewListNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T, f ...NestedObjectOfOption[T]) ListNestedObjectValueOf[T] {
+	return fwdiag.Must(NewListNestedObjectValueOfValueSlice(ctx, ts, f...))
+}
+
+func newListNestedObjectValueOf[T any](ctx context.Context, elements any, f semanticEqualityFunc[T]) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	typ, d := newObjectTypeOf[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewListValueFrom(ctx, typ, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	return ListNestedObjectValueOf[T]{ListValue: v, semanticEqualityFunc: f}, diags
 }

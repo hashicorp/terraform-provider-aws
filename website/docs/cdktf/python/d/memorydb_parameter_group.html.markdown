@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_parameter_group"
 description: |-
@@ -33,8 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the parameter group.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
     * `value` - Value of the parameter.
 * `tags` - Map of tags assigned to the parameter group.
 
-<!-- cache-key: cdktf-0.18.0 input-6ec5269ca86a0a1f8a702b357b9c477514195db733966e31d166353ba6ee15e5 -->
+<!-- cache-key: cdktf-0.20.8 input-74097601d6aac5fab8a8014aefac165f70f534ca1731830303f3466e8242bb9a -->

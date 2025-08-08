@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_vpc: Increase IPAM pool allocation deletion timeout from 20 minutes to 35 minutes
+```

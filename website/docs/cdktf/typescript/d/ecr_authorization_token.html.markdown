@@ -36,17 +36,18 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registryId` - (Optional) AWS account ID of the ECR Repository. If not specified the default account is assumed.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `userName:password`.
+* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expiresAt` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
 * `proxyEndpoint` - Registry URL to use in the docker login command.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.18.0 input-d34a382e4ced5a92cb958e15e5c5a33471a37b0250050f1b1a0f69eb8326fece -->
+<!-- cache-key: cdktf-0.20.8 input-428ea462ea1aa068d61da6676b5421245994a7db5fc507fa86411952d346563e -->

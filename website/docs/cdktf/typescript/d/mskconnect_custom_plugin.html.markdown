@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the custom plugin.
 
 ## Attribute Reference
@@ -48,5 +49,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - a summary description of the custom plugin.
 * `latestRevision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
+* `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-69d528a4e92608d40820215e21637edad56d0cf8bd42eb304519e5181a028a94 -->
+<!-- cache-key: cdktf-0.20.8 input-f4a7920d338322f955a426dbc7340f511b1bd6cd4d7881ce6305d86fab17ec1f -->

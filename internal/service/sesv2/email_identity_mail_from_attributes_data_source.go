@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes")
-func DataSourceEmailIdentityMailFromAttributes() *schema.Resource {
+// @SDKDataSource("aws_sesv2_email_identity_mail_from_attributes", name="Email Identity Mail From Attributes")
+func dataSourceEmailIdentityMailFromAttributes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityMailFromAttributesRead,
 
@@ -36,19 +36,19 @@ func DataSourceEmailIdentityMailFromAttributes() *schema.Resource {
 }
 
 const (
-	DSNameEmailIdentityMailFromAttributes = "Email Identity Mail From Attributes Data Source"
+	dsNameEmailIdentityMailFromAttributes = "Email Identity Mail From Attributes Data Source"
 )
 
-func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEmailIdentityMailFromAttributesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("email_identity").(string)
 
-	out, err := FindEmailIdentityByID(ctx, conn, name)
+	out, err := findEmailIdentityByID(ctx, conn, name)
 
 	if err != nil {
-		return append(diags, create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityMailFromAttributes, name, err)...)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameEmailIdentityMailFromAttributes, name, err)
 	}
 
 	d.SetId(name)

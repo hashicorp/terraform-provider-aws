@@ -128,10 +128,9 @@ resource "aws_glue_crawler" "events_crawler" {
 
 ## Argument Reference
 
-~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
+This resource supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_name` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
 * `role` (Required) The IAM role friendly name (including path without leading slash), or ARN of an IAM role, used by the crawler to access other resources.
@@ -140,11 +139,12 @@ This argument supports the following arguments:
 * `description` (Optional) Description of the crawler.
 * `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
-* `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
-* `s3_target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
-* `mongodb_target` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
-* `hudi_target` (Optional) List nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
-* `iceberg_target` (Optional) List nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
+* `jdbc_target` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
+* `s3_target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
+* `catalog_target` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
+* `mongodb_target` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `hudi_target` (Optional) List of nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
+* `iceberg_target` (Optional) List of nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
 * `lake_formation_configuration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
@@ -153,6 +153,8 @@ This argument supports the following arguments:
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
 ### Dynamodb Target
 

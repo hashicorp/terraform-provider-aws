@@ -15,16 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_signer_signing_job.test"
-	profileResourceName := "aws_signer_signing_profile.test"
-
 	var job signer.DescribeSigningJobOutput
-	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -33,16 +31,15 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
 					testAccCheckSigningJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "status", "Succeeded"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
 				),
 			},
 		},
@@ -103,25 +100,22 @@ resource "aws_signer_signing_job" "test" {
 `, rName)
 }
 
-func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
+func testAccCheckSigningJobExists(ctx context.Context, n string, v *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[res]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Signing job not found: %s", res)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Signing job with that ID does not exist")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		getJob, err := tfsigner.FindSigningJobByID(ctx, conn, rs.Primary.ID)
+		output, err := tfsigner.FindSigningJobByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*job = *getJob
+		*v = *output
 
 		return nil
 	}

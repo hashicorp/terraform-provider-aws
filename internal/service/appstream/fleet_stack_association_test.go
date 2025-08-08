@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appstream"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
@@ -30,7 +30,7 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
@@ -61,7 +61,7 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetStackAssociationDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetStackAssociationConfig_basic(rName),
@@ -75,45 +75,16 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
-
-		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
-
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
-		}
-
-		return err
-	}
-}
-
 func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet_stack_association" {
 				continue
 			}
 
-			fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-			}
-
-			err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
+			err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -123,10 +94,25 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("AppStream Fleet Stack Association %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream Fleet Stack Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckFleetStackAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+
+		err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
+
+		return err
 	}
 }
 

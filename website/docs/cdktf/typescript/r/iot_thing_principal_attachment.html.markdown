@@ -46,6 +46,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `principal` - (Required) The AWS IoT Certificate ARN or Amazon Cognito Identity ID.
 * `thing` - (Required) The name of the thing.
 
@@ -53,4 +56,4 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-c6b7343797508d980834fbffd7cd03e2ab8c65b3b6b1f437fd026a32bf4c5c8e -->
+<!-- cache-key: cdktf-0.20.8 input-a366ef677589b84a1367df4c5a1d0fdc33e3820caf0b7fe08d98a3d77e30f0e6 -->

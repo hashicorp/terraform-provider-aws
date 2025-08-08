@@ -3,22 +3,28 @@
 
 package enum
 
-type valueser[T ~string] interface {
+import (
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+)
+
+type Valueser[T ~string] interface {
 	~string
 	Values() []T
 }
 
-func Values[T valueser[T]]() []string {
-	l := T("").Values()
-
-	return Slice(l...)
+func EnumValues[T Valueser[T]]() []T {
+	var zero T
+	return zero.Values()
 }
 
-func Slice[T valueser[T]](l ...T) []string {
-	result := make([]string, len(l))
-	for i, v := range l {
-		result[i] = string(v)
-	}
+func Values[T Valueser[T]]() []string {
+	return tfslices.Strings(EnumValues[T]())
+}
 
-	return result
+func EnumSlice[T ~string](l ...T) []T {
+	return l
+}
+
+func Slice[T ~string](l ...T) []string {
+	return tfslices.Strings(l)
 }

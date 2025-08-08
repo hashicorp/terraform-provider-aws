@@ -11,16 +11,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,7 +38,8 @@ const (
 
 // @SDKResource("aws_ami", name="AMI")
 // @Tags(identifierAttribute="id")
-func ResourceAMI() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,
 		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,
@@ -58,30 +61,30 @@ func ResourceAMI() *schema.Resource {
 		// Keep in sync with aws_ami_copy's and aws_ami_from_instance's schemas.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ec2.ArchitectureValuesX8664,
-				ValidateFunc: validation.StringInSlice(ec2.ArchitectureValues_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.ArchitectureValuesX8664,
+				ValidateDiagFunc: enum.Validate[awstypes.ArchitectureValues](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"boot_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.BootModeValues_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.BootModeValues](),
 			},
 			"deprecation_time": {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          validation.IsRFC3339Time,
-				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
+				DiffSuppressFunc:      sdkv2.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -97,23 +100,23 @@ func ResourceAMI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -124,37 +127,37 @@ func ResourceAMI() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      ec2.VolumeTypeStandard,
-							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
+						names.AttrVolumeType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          awstypes.VolumeTypeStandard,
+							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrSnapshotID].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -170,21 +173,21 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
-				Set: func(v interface{}) int {
+				Set: func(v any) int {
 					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					m := v.(map[string]any)
+					fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+					fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -217,6 +220,10 @@ func ResourceAMI() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"last_launched_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			// Not a public attribute; used to let the aws_ami_copy and aws_ami_from_instance
 			// resources record that they implicitly created new EBS snapshots that we should
 			// now manage. Not set by aws_ami, since the snapshots used there are presumed to
@@ -225,12 +232,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -264,41 +271,44 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  SriovNetSupportSimple,
+				Default:  sriovNetSupportSimple,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tpm_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.TpmSupportValues_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TpmSupportValues](),
+			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"virtualization_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ec2.VirtualizationTypeParavirtual,
-				ValidateFunc: validation.StringInSlice(ec2.VirtualizationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.VirtualizationTypeParavirtual,
+				ValidateDiagFunc: enum.Validate[awstypes.VirtualizationType](),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := d.Get("name").(string)
-	input := &ec2.RegisterImageInput{
-		Architecture:       aws.String(d.Get("architecture").(string)),
-		Description:        aws.String(d.Get("description").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := ec2.RegisterImageInput{
+		Architecture:       awstypes.ArchitectureValues(d.Get("architecture").(string)),
+		Description:        aws.String(d.Get(names.AttrDescription).(string)),
 		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
 		ImageLocation:      aws.String(d.Get("image_location").(string)),
 		Name:               aws.String(name),
@@ -308,11 +318,11 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v := d.Get("boot_mode").(string); v != "" {
-		input.BootMode = aws.String(v)
+		input.BootMode = awstypes.BootModeValues(v)
 	}
 
 	if v := d.Get("imds_support").(string); v != "" {
-		input.ImdsSupport = aws.String(v)
+		input.ImdsSupport = awstypes.ImdsSupportValues(v)
 	}
 
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
@@ -324,12 +334,12 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v := d.Get("tpm_support").(string); v != "" {
-		input.TpmSupport = aws.String(v)
+		input.TpmSupport = awstypes.TpmSupportValues(v)
 	}
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		for _, tfMapRaw := range v.(*schema.Set).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -337,13 +347,13 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var encrypted bool
 
-			if v, ok := tfMap["encrypted"].(bool); ok {
+			if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 				encrypted = v
 			}
 
 			var snapshot string
 
-			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 				snapshot = v
 			}
 
@@ -359,19 +369,23 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
 	}
 
-	output, err := conn.RegisterImageWithContext(ctx, input)
+	if uefiData := d.Get("uefi_data").(string); uefiData != "" {
+		input.UefiData = aws.String(uefiData)
+	}
+
+	output, err := conn.RegisterImage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ImageId))
+	d.SetId(aws.ToString(output.ImageId))
 
 	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): waiting for completion: %s", name, err)
 	}
 
@@ -384,12 +398,13 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceAMIRead(ctx, d, meta)...)
 }
 
-func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindImageByID(ctx, conn, d.Id())
+	image, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Image, error) {
+		return findImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -402,15 +417,13 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMI (%s): %s", d.Id(), err)
 	}
 
-	image := outputRaw.(*ec2.Image)
-
-	if aws.StringValue(image.State) == ec2.ImageStatePending {
+	if image.State == awstypes.ImageStatePending {
 		// This could happen if a user manually adds an image we didn't create
 		// to the state. We'll wait for the image to become available
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		image, err = waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) create: %s", d.Id(), err)
@@ -418,15 +431,9 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	d.Set("architecture", image.Architecture)
-	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   ec2.ServiceName,
-	}.String()
-	d.Set("arn", imageArn)
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	d.Set("boot_mode", image.BootMode)
-	d.Set("description", image.Description)
+	d.Set(names.AttrDescription, image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
@@ -435,14 +442,15 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
-	d.Set("name", image.Name)
-	d.Set("owner_id", image.OwnerId)
+	d.Set("last_launched_time", image.LastLaunchedTime)
+	d.Set(names.AttrName, image.Name)
+	d.Set(names.AttrOwnerID, image.OwnerId)
 	d.Set("platform_details", image.PlatformDetails)
 	d.Set("platform", image.Platform)
 	d.Set("public", image.Public)
 	d.Set("ramdisk_id", image.RamdiskId)
 	d.Set("root_device_name", image.RootDeviceName)
-	d.Set("root_snapshot_id", amiRootSnapshotId(image))
+	d.Set("root_snapshot_id", amiRootSnapshotId(*image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
 	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
@@ -456,45 +464,54 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
+	input := ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	}
+	instanceData, err := conn.GetInstanceUefiData(ctx, &input)
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
+
 	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
 
-func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.Get("description").(string) != "" {
-		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{
-			Description: &ec2.AttributeValue{
-				Value: aws.String(d.Get("description").(string)),
-			},
-			ImageId: aws.String(d.Id()),
-		})
-
+	if d.HasChange(names.AttrDescription) {
+		err := updateDescription(ctx, conn, d.Id(), d.Get(names.AttrDescription).(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s) description: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("deprecation_time") {
-		if err := enableImageDeprecation(ctx, conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
+		if v := d.Get("deprecation_time").(string); v != "" {
+			if err := enableImageDeprecation(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
+			}
+		} else {
+			if err := disableImageDeprecation(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s):  %s", d.Id(), err)
+			}
 		}
 	}
 
 	return append(diags, resourceAMIRead(ctx, d, meta)...)
 }
 
-func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
-	_, err := conn.DeregisterImageWithContext(ctx, &ec2.DeregisterImageInput{
+	input := ec2.DeregisterImageInput{
 		ImageId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterImage(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return diags
@@ -508,13 +525,13 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.Get("manage_ebs_snapshots").(bool) {
 		errs := map[string]error{}
 		ebsBlockDevsSet := d.Get("ebs_block_device").(*schema.Set)
-		req := &ec2.DeleteSnapshotInput{}
+		req := ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
-			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-			snapshotId := ebsBlockDev["snapshot_id"].(string)
+			ebsBlockDev := ebsBlockDevI.(map[string]any)
+			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
-				_, err := conn.DeleteSnapshotWithContext(ctx, req)
+				_, err := conn.DeleteSnapshot(ctx, &req)
 				if err != nil {
 					errs[snapshotId] = err
 				}
@@ -527,71 +544,114 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 				errParts = append(errParts, fmt.Sprintf("%s: %s", snapshotId, err))
 			}
 			errParts = append(errParts, "These are no longer managed by Terraform and must be deleted manually.")
-			return sdkdiag.AppendErrorf(diags, strings.Join(errParts, "\n"))
+			return sdkdiag.AppendErrorf(diags, "%s", strings.Join(errParts, "\n"))
 		}
 	}
 
-	if _, err := WaitImageDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitImageDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, deprecateAt string) error {
-	v, _ := time.Parse(time.RFC3339, deprecateAt)
-	input := &ec2.EnableImageDeprecationInput{
-		DeprecateAt: aws.Time(v),
-		ImageId:     aws.String(id),
+func updateDescription(ctx context.Context, conn *ec2.Client, id string, description string) error {
+	input := ec2.ModifyImageAttributeInput{
+		Description: &awstypes.AttributeValue{
+			Value: aws.String(description),
+		},
+		ImageId: aws.String(id),
 	}
 
-	_, err := conn.EnableImageDeprecationWithContext(ctx, input)
-
+	_, err := conn.ModifyImageAttribute(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("enabling deprecation: %w", err)
+		return fmt.Errorf("updating description: %s", err)
+	}
+
+	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+	if err != nil {
+		return fmt.Errorf("updating description: waiting for completion: %s", err)
 	}
 
 	return nil
 }
 
-func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
-	if tfMap == nil {
-		return nil
+func enableImageDeprecation(ctx context.Context, conn *ec2.Client, id string, deprecateAt string) error {
+	v, _ := time.Parse(time.RFC3339, deprecateAt)
+	input := ec2.EnableImageDeprecationInput{
+		DeprecateAt: aws.Time(v),
+		ImageId:     aws.String(id),
 	}
 
-	apiObject := &ec2.BlockDeviceMapping{
-		Ebs: &ec2.EbsBlockDevice{},
+	_, err := conn.EnableImageDeprecation(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("enabling deprecation: %w", err)
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	err = waitImageDeprecationTimeUpdated(ctx, conn, id, deprecateAt)
+
+	if err != nil {
+		return fmt.Errorf("enabling deprecation: waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
+func disableImageDeprecation(ctx context.Context, conn *ec2.Client, id string) error {
+	input := ec2.DisableImageDeprecationInput{
+		ImageId: aws.String(id),
+	}
+
+	_, err := conn.DisableImageDeprecation(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("disabling deprecation: %w", err)
+	}
+
+	err = waitImageDeprecationTimeDisabled(ctx, conn, id)
+
+	if err != nil {
+		return fmt.Errorf("disabling deprecation: waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
+func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]any) awstypes.BlockDeviceMapping {
+	apiObject := awstypes.BlockDeviceMapping{
+		Ebs: &awstypes.EbsBlockDevice{},
+	}
+
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
-		apiObject.Ebs.Iops = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
+		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
-	} else if v, ok := tfMap["encrypted"].(bool); ok {
+	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
-		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
+		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
-		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
+		apiObject.Ebs.VolumeSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
-		apiObject.Ebs.VolumeType = aws.String(v)
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
+		apiObject.Ebs.VolumeType = awstypes.VolumeType(v)
 	}
 
 	if v, ok := tfMap["outpost_arn"].(string); ok && v != "" {
@@ -601,94 +661,78 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 	return apiObject
 }
 
-func expandBlockDeviceMappingsForAMIEBSBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEBSBlockDevice(tfList []any) []awstypes.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2.BlockDeviceMapping
+	var apiObjects []awstypes.BlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject awstypes.BlockDeviceMapping) map[string]any {
 	if apiObject.Ebs == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{
+		names.AttrVolumeType: apiObject.Ebs.VolumeType,
+	}
 
 	if v := apiObject.Ebs.DeleteOnTermination; v != nil {
-		tfMap["delete_on_termination"] = aws.BoolValue(v)
+		tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
 	}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Ebs.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {
-		tfMap["throughput"] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
-	}
-
-	if v := apiObject.Ebs.VolumeType; v != nil {
-		tfMap["volume_type"] = aws.StringValue(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
-		tfMap["outpost_arn"] = aws.StringValue(v)
+		tfMap["outpost_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []awstypes.BlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		if apiObject.Ebs == nil {
 			continue
 		}
@@ -699,80 +743,62 @@ func flattenBlockDeviceMappingsForAMIEBSBlockDevice(apiObjects []*ec2.BlockDevic
 	return tfList
 }
 
-func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interface{}) *ec2.BlockDeviceMapping {
-	if tfMap == nil {
-		return nil
-	}
+func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]any) awstypes.BlockDeviceMapping {
+	apiObject := awstypes.BlockDeviceMapping{}
 
-	apiObject := &ec2.BlockDeviceMapping{}
-
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []interface{}) []*ec2.BlockDeviceMapping {
+func expandBlockDeviceMappingsForAMIEphemeralBlockDevice(tfList []any) []awstypes.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2.BlockDeviceMapping
+	var apiObjects []awstypes.BlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap))
 	}
 
 	return apiObjects
 }
 
-func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDeviceMapping) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject awstypes.BlockDeviceMapping) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.StringValue(v)
+		tfMap[names.AttrVirtualName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.BlockDeviceMapping) []interface{} {
+func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []awstypes.BlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		if apiObject.Ebs != nil {
 			continue
 		}
@@ -781,4 +807,88 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.Bloc
 	}
 
 	return tfList
+}
+
+const imageDeprecationPropagationTimeout = 2 * time.Minute
+
+func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.Client, imageID, expectedValue string) error {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
+		output, err := findImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.ToString(output.Description) == expectedValue, nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
+
+func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imageID, expectedValue string) error {
+	expected, err := time.Parse(time.RFC3339, expectedValue)
+	if err != nil {
+		return err
+	}
+	expected = expected.Round(time.Minute)
+
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
+		output, err := findImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if output.DeprecationTime == nil {
+			return false, nil
+		}
+
+		dt, err := time.Parse(time.RFC3339, *output.DeprecationTime)
+		if err != nil {
+			return false, err
+		}
+		dt = dt.Round(time.Minute)
+
+		return expected.Equal(dt), nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
+
+func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, imageID string) error {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
+		output, err := findImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return output.DeprecationTime == nil, nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
+func amiARN(ctx context.Context, c *conns.AWSClient, imageID string) string {
+	return c.RegionalARNNoAccount(ctx, names.EC2, "image/"+imageID)
 }

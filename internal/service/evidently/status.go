@@ -6,14 +6,13 @@ package evidently
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusFeature(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFeature(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		featureName, projectNameOrARN, err := FeatureParseID(id)
 
 		if err != nil {
@@ -30,12 +29,12 @@ func statusFeature(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvid
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusLaunch(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLaunch(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		launchName, projectNameOrARN, err := LaunchParseID(id)
 
 		if err != nil {
@@ -52,12 +51,12 @@ func statusLaunch(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvide
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusProject(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusProject(ctx context.Context, conn *evidently.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := FindProjectByNameOrARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -68,6 +67,6 @@ func statusProject(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvid
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }

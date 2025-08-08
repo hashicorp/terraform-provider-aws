@@ -47,10 +47,9 @@ resource "aws_db_instance" "dev" {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance
@@ -63,8 +62,10 @@ AWS accounts that this AWS account has been given permission to copy or restore,
 The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
-`tags` - (Optional) Mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired DB snapshot.
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 ## Attribute Reference
 
@@ -86,4 +87,5 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with DB snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
-* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.

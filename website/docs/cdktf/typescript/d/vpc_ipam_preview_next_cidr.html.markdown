@@ -12,7 +12,7 @@ description: |-
 
 Previews a CIDR from an IPAM address pool. Only works for private IPv4.
 
-~> **NOTE:** This functionality is also encapsulated in a resource sharing the same name. The data source can be used when you need to use the cidr in a calculation of the same Root module, `count` for example. However, once a cidr range has been allocated that was previewed, the next refresh will find a **new** cidr and may force new resources downstream. Make sure to use Terraform's lifecycle `ignoreChanges` policy if this is undesirable.
+~> **NOTE:** This functionality is also encapsulated in a resource sharing the same name. The data source can be used when you need to use the cidr in a calculation of the same Root module, `count` for example. However, once a cidr range has been allocated that was previewed, the next refresh will find a **new** cidr and may force new resources downstream. Make sure to use Terraform's lifecycle `ignore_changes` policy if this is undesirable.
 
 ## Example Usage
 
@@ -58,6 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disallowedCidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipamPoolId` - (Required) ID of the pool to which you want to assign a CIDR.
 * `netmaskLength` - (Optional) Netmask length of the CIDR you would like to preview from the IPAM pool.
@@ -73,6 +74,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-dd816317496f53d47089ea622a6d2495e074267b1372edce322e33a4007d026b -->
+<!-- cache-key: cdktf-0.20.8 input-a21f5bdc0dae23094d88cd61d5e451619fedb5920495992369db1017bb933a58 -->

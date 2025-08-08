@@ -8,23 +8,25 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_studio_lifecycle_config", name="Studio Lifecycle Config")
 // @Tags(identifierAttribute="arn")
-func ResourceStudioLifecycleConfig() *schema.Resource {
+func resourceStudioLifecycleConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStudioLifecycleConfigCreate,
 		ReadWithoutTimeout:   resourceStudioLifecycleConfigRead,
@@ -35,15 +37,15 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"studio_lifecycle_config_app_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(sagemaker.StudioLifecycleConfigAppType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.StudioLifecycleConfigAppType](),
 			},
 			"studio_lifecycle_config_content": {
 				Type:         schema.TypeString,
@@ -63,28 +65,26 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("studio_lifecycle_config_name").(string)
 	input := &sagemaker.CreateStudioLifecycleConfigInput{
 		StudioLifecycleConfigName:    aws.String(name),
-		StudioLifecycleConfigAppType: aws.String(d.Get("studio_lifecycle_config_app_type").(string)),
+		StudioLifecycleConfigAppType: awstypes.StudioLifecycleConfigAppType(d.Get("studio_lifecycle_config_app_type").(string)),
 		StudioLifecycleConfigContent: aws.String(d.Get("studio_lifecycle_config_content").(string)),
 		Tags:                         getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Studio Lifecycle Config : %s", input)
-	_, err := conn.CreateStudioLifecycleConfigWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating SageMaker AI Studio Lifecycle Config : %#v", input)
+	_, err := conn.CreateStudioLifecycleConfig(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Studio Lifecycle Config (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Studio Lifecycle Config (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -92,32 +92,31 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStudioLifecycleConfigRead(ctx, d, meta)...)
 }
 
-func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	image, err := FindStudioLifecycleConfigByName(ctx, conn, d.Id())
+	image, err := findStudioLifecycleConfigByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Studio Lifecycle Config (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Studio Lifecycle Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Studio Lifecycle Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Studio Lifecycle Config (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(image.StudioLifecycleConfigArn)
 	d.Set("studio_lifecycle_config_name", image.StudioLifecycleConfigName)
 	d.Set("studio_lifecycle_config_app_type", image.StudioLifecycleConfigAppType)
 	d.Set("studio_lifecycle_config_content", image.StudioLifecycleConfigContent)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, image.StudioLifecycleConfigArn)
 
 	return diags
 }
 
-func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -125,22 +124,47 @@ func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceStudioLifecycleConfigRead(ctx, d, meta)...)
 }
 
-func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting SageMaker Studio Lifecycle Config: (%s)", d.Id())
-	if _, err := conn.DeleteStudioLifecycleConfigWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
+	log.Printf("[DEBUG] Deleting SageMaker AI Studio Lifecycle Config: (%s)", d.Id())
+	if _, err := conn.DeleteStudioLifecycleConfig(ctx, input); err != nil {
+		if errs.IsAErrorMessageContains[*awstypes.ResourceNotFound](err, "does not exist") {
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Studio Lifecycle Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Studio Lifecycle Config (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findStudioLifecycleConfigByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeStudioLifecycleConfigOutput, error) {
+	input := &sagemaker.DescribeStudioLifecycleConfigInput{
+		StudioLifecycleConfigName: aws.String(name),
+	}
+
+	output, err := conn.DescribeStudioLifecycleConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

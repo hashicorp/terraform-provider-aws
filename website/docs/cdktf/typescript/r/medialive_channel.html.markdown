@@ -123,6 +123,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cdiInputSpecification` - (Optional) Specification of CDI inputs for this channel. See [CDI Input Specification](#cdi-input-specification) for more details.
 * `inputAttachments` - (Optional) Input attachments for the channel. See [Input Attachments](#input-attachments) for more details.
 * `logLevel` - (Optional) The log level to write to Cloudwatch logs.
@@ -130,7 +131,7 @@ The following arguments are optional:
 * `roleArn` - (Optional) Concise argument description.
 * `startChannel` - (Optional) Whether to start/stop channel. Default: `false`
 * `tags` - (Optional) A map of tags to assign to the channel. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional) Settings for the VPC outputs.
+* `vpc` - (Optional) Settings for the VPC outputs. See [VPC](#vpc) for more details.
 
 ### CDI Input Specification
 
@@ -145,15 +146,15 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audioDescriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `outputGroups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecodeConfig` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `videoDescriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `audioDescriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 * `captionDescriptions` - (Optional) Caption Descriptions. See [Caption Descriptions](#caption-descriptions) for more details.
 * `globalConfiguration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motionGraphicsConfiguration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsenConfiguration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
-* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -164,8 +165,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audioSelectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `captionSelectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audioSelector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `captionSelector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblockFilter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoiseFilter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filterStrength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).
@@ -223,7 +224,7 @@ The following arguments are optional:
 ### Caption Selector Settings
 
 * `ancillarySourceSettings` - (Optional) Ancillary Source Settings. See [Ancillary Source Settings](#ancillary-source-settings) for more details.
-* `aribSourceSettings` - (Optional) Arib Source Settings.
+* `aribSourceSettings` - (Optional) ARIB Source Settings.
 * `dvbSubSourceSettings` - (Optional) DVB Sub Source Settings. See [DVB Sub Source Settings](#dvb-sub-source-settings) for more details.
 * `embeddedSourceSettings` - (Optional) Embedded Source Settings. See [Embedded Source Settings](#embedded-source-settings) for more details.
 * `scte20SourceSettings` - (Optional) SCTE20 Source Settings. See [SCTE 20 Source Settings](#scte-20-source-settings) for more details.
@@ -247,13 +248,8 @@ The following arguments are optional:
 
 ### SCTE 20 Source Settings
 
-* `convert608To708` – (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
+* `convert608To708` - (Optional) If upconvert, 608 data is both passed through via the “608 compatibility bytes” fields of the 708 wrapper as well as translated into 708. 708 data present in the source content will be discarded.
 * `source608ChannelNumber` - (Optional) Specifies the 608/708 channel number within the video track from which to extract captions. Unused for passthrough.
-
-### SCTE 20 Source Settings
-
-* `ocrLanguage` - (Optional) If you will configure a WebVTT caption description that references this caption selector, use this field to provide the language to consider when translating the image-based source to text.
-* `pid` - (Optional) The pid field is used in conjunction with the caption selector languageCode field as follows: - Specify PID and Language: Extracts captions from that PID; the language is “informational”. - Specify PID and omit Language: Extracts the specified PID. - Omit PID and specify Language: Extracts the specified language, whichever PID that happens to be. - Omit PID and omit Language: Valid only if source is DVB-Sub that is being passed through; all languages will be passed through.
 
 ### SCTE 27 Source Settings
 
@@ -283,16 +279,16 @@ The following arguments are optional:
 * `bufferSegments` - (Optional) Buffer segments.
 * `retries` - (Optional) The number of consecutive times that attempts to read a manifest or segment must fail before the input is considered unavailable.
 * `retryInterval` - (Optional) The number of seconds between retries when an attempt to read a manifest or segment fails.
-* `scte35SourceType` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
+* `scte35_source_type` - (Optional) Identifies the source for the SCTE-35 messages that MediaLive will ingest.
 
 ### Automatic Input Failover Settings
 
 * `secondaryInputId` - (Required) The input ID of the secondary input in the automatic input failover pair.
 * `errorClearTimeMsec` - (Optional) This clear time defines the requirement a recovered input must meet to be considered healthy. The input must have no failover conditions for this length of time. Enter a time in milliseconds. This value is particularly important if the input\_preference for the failover pair is set to PRIMARY\_INPUT\_PREFERRED, because after this time, MediaLive will switch back to the primary input.
-* `failoverConditions` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Conditions](#failover-conditions) for more details.
+* `failoverCondition` - (Optional) A list of failover conditions. If any of these conditions occur, MediaLive will perform a failover to the other input. See [Failover Condition Block](#failover-condition-block) for more details.
 * `inputPreference` - (Optional) Input preference when deciding which input to make active when a previously failed input has recovered.
 
-### Failover Conditions
+### Failover Condition Block
 
 * `failoverConditionSettings` - (Optional) Failover condition type-specific settings. See [Failover Condition Settings](#failover-condition-settings) for more details.
 
@@ -355,7 +351,7 @@ The following arguments are optional:
 
 ### Audio Watermark Settings
 
-* `nielsenWatermarkSettings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
+* `nielsen_watermark_settings` - (Optional) Settings to configure Nielsen Watermarks in the audio encode. See [Nielsen Watermark Settings](#nielsen-watermark-settings) for more details.
 
 ### Audio Codec Settings
 
@@ -389,7 +385,7 @@ The following arguments are optional:
 ### EAC3 Atmos Settings
 
 * `bitrate` - (Optional) Average bitrate in bits/second.
-* `codingMode` - (Optional) Dolby Digital Plus with dolby Atmos coding mode.
+* `codingMode` - (Optional) Dolby Digital Plus with Dolby Atmos coding mode.
 * `dialnorm` - (Optional) Sets the dialnorm for the output.
 * `drcLine` - (Optional) Sets the Dolby dynamic range compression profile.
 * `drcRf` - (Optional) Sets the profile for heavy Dolby dynamic range compression.
@@ -406,18 +402,18 @@ The following arguments are optional:
 ### Nielsen Watermark Settings
 
 * `nielsenCbetSettings` - (Optional) Used to insert watermarks of type Nielsen CBET. See [Nielsen CBET Settings](#nielsen-cbet-settings) for more details.
-* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `programContent` and `finalDistributor`.
+* `nielsenDistributionType` - (Optional) Distribution types to assign to the watermarks. Options are `PROGRAM_CONTENT` and `FINAL_DISTRIBUTOR`.
 * `nielsenNaesIiNwSettings` - (Optional) Used to insert watermarks of type Nielsen NAES, II (N2) and Nielsen NAES VI (NW). See [Nielsen NAES II NW Settings](#nielsen-naes-ii-nw-settings) for more details.
 
 ### Nielsen CBET Settings
 
-* `cbetCheckDigit` - (Required) CBET check digits to use for the watermark.
+* `cbet_check_digit` - (Required) CBET check digits to use for the watermark.
 * `cbetStepaside` - (Required) Determines the method of CBET insertion mode when prior encoding is detected on the same layer.
 * `csid` - (Required) CBET source ID to use in the watermark.
 
 ### Nielsen NAES II NW Settings
 
-* `checkDigit` - (Required) Check digit string for the watermark.
+* `check_digit` - (Required) Check digit string for the watermark.
 * `sid` - (Required) The Nielsen Source ID to include in the watermark.
 
 ### Output Groups
@@ -430,9 +426,9 @@ The following arguments are optional:
 
 * `archiveGroupSettings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
 * `mediaPackageGroupSettings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
-* `multiplexGroupSttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
+* `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
 * `rtmpGroupSettings` - (Optional) RTMP group settings. See [RTMP Group Settings](#rtmp-group-settings) for more details.
-* `udpGroupSttings` - (Optional) UDP group settings. See [UDP Group Settings](#udp-group-settings) for more details.
+* `udp_group_sttings` - (Optional) UDP group settings. See [UDP Group Settings](#udp-group-settings) for more details.
 
 ### Outputs
 
@@ -472,13 +468,13 @@ The following arguments are optional:
 * `adaptiveQuantization` - (Optional) Enables or disables adaptive quantization.
 * `afdSignaling` - (Optional) Indicates that AFD values will be written into the output stream.
 * `bitrate` - (Optional) Average bitrate in bits/second.
-* `bufFilPct` - (Optional) Percentage of the buffer that should initially be filled.
+* `buf_fil_pct` - (Optional) Percentage of the buffer that should initially be filled.
 * `bufSize` - (Optional) Size of buffer in bits.
 * `colorMetadata` - (Optional) Includes color space metadata in the output.
 * `entropyEncoding` - (Optional) Entropy encoding mode.
 * `filterSettings` - (Optional) Filters to apply to an encode. See [H264 Filter Settings](#h264-filter-settings) for more details.
 * `fixedAfd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
-* `flicerAq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
 * `forceFieldPictures` - (Optional) Controls whether coding is performed on a field basis or on a frame basis.
 * `framerateControl` - (Optional) Indicates how the output video frame rate is specified.
 * `framerateDenominator` - (Optional) Framerate denominator.
@@ -491,7 +487,7 @@ The following arguments are optional:
 * `level` - (Optional) H264 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `minInterval` - (Optional) Min interval.
+* `min_interval` - (Optional) Min interval.
 * `numRefFrames` - (Optional) Number of reference frames to use.
 * `parControl` - (Optional) Indicates how the output pixel aspect ratio is specified.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
@@ -525,7 +521,7 @@ The following arguments are optional:
 * `colorSpaceSettings` (Optional) Define the color metadata for the output. [H265 Color Space Settings](#h265-color-space-settings) for more details.
 * `filterSettings` - (Optional) Filters to apply to an encode. See [H265 Filter Settings](#h265-filter-settings) for more details.
 * `fixedAfd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
-* `flicerAq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
+* `flicer_aq` - (Optional) Makes adjustments within each frame to reduce flicker on the I-frames.
 * `framerateDenominator` - (Required) Framerate denominator.
 * `framerateNumerator` - (Required) Framerate numerator.
 * `gopClosedCadence` - (Optional) Frequency of closed GOPs.
@@ -534,7 +530,10 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `minInterval` - (Optional) Min interval.
+* `minIInterval` - (Optional) Min interval.
+* `minQp` - (Optional) Set the minimum QP.
+* `mvOverPictureBoundaries` - (Optional) Enables or disables motion vector over picture boundaries.
+* `mvTemporalPredictor`- (Optional) Enables or disables the motion vector temporal predictor.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
 * `parNumerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
@@ -544,8 +543,12 @@ The following arguments are optional:
 * `sceneChangeDetect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
+* `tileHeight` - (Optional) Sets the height of tiles.
+* `tilePadding` - (Optional) Enables or disables padding of tiles.
+* `tileWidth` - (Optional) Sets the width of tiles.
 * `timecodeBurninSettings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
-* `timecodeInsertion` = (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `timecodeInsertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `treeblockSize` - (Optional) Sets the size of the treeblock.
 
 ### H265 Color Space Settings
 
@@ -586,7 +589,7 @@ The following arguments are optional:
 
 ### Destination Settings
 
-* `aribDestinationSettings` - (Optional) Arib Destination Settings.
+* `aribDestinationSettings` - (Optional) ARIB Destination Settings.
 * `burnInDestinationSettings` - (Optional) Burn In Destination Settings. See [Burn In Destination Settings](#burn-in-destination-settings) for more details.
 * `dvbSubDestinationSettings` - (Optional) DVB Sub Destination Settings. See [DVB Sub Destination Settings](#dvb-sub-destination-settings) for more details.
 * `ebuTtDDestinationSettings` - (Optional) EBU TT D Destination Settings. See [EBU TT D Destination Settings](#ebu-tt-d-destination-settings) for more details.
@@ -594,62 +597,62 @@ The following arguments are optional:
 * `embeddedPlusScte20DestinationSettings` - (Optional) Embedded Plus SCTE20 Destination Settings.
 * `rtmpCaptionInfoDestinationSettings` - (Optional) RTMP Caption Info Destination Settings.
 * `scte20PlusEmbeddedDestinationSettings` - (Optional) SCTE20 Plus Embedded Destination Settings.
-* `scte27DestinationSettings` – (Optional) SCTE27 Destination Settings.
-* `smpteTtDestinationSettings` – (Optional) SMPTE TT Destination Settings.
-* `teletextDestinationSettings` – (Optional) Teletext Destination Settings.
-* `ttmlDestinationSettings` – (Optional) TTML Destination Settings. See [TTML Destination Settings](#ttml-destination-settings) for more details.
+* `scte27DestinationSettings` - (Optional) SCTE27 Destination Settings.
+* `smpteTtDestinationSettings` - (Optional) SMPTE TT Destination Settings.
+* `teletextDestinationSettings` - (Optional) Teletext Destination Settings.
+* `ttmlDestinationSettings` - (Optional) TTML Destination Settings. See [TTML Destination Settings](#ttml-destination-settings) for more details.
 * `webvttDestinationSettings` - (Optional) WebVTT Destination Settings. See [WebVTT Destination Settings](#webvtt-destination-settings) for more details.
 
 ### Burn In Destination Settings
 
-* `alignment` – (Optional) If no explicit xPosition or yPosition is provided, setting alignment to centered will place the captions at the bottom center of the output. Similarly, setting a left alignment will align captions to the bottom left of the output. If x and y positions are given in conjunction with the alignment parameter, the font will be justified (either left or centered) relative to those coordinates. Selecting “smart” justification will left-justify live subtitles and center-justify pre-recorded subtitles. All burn-in and DVB-Sub font settings must match.
-* `backgroundColor` – (Optional) Specifies the color of the rectangle behind the captions. All burn-in and DVB-Sub font settings must match.
-* `backgroundOpacity` – (Optional) Specifies the opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
-* `font` – (Optional) External font file used for caption burn-in. File extension must be ‘ttf’ or ‘tte’. Although the user can select output fonts for many different types of input captions, embedded, STL and teletext sources use a strict grid system. Using external fonts with these caption sources could cause unexpected display of proportional fonts. All burn-in and DVB-Sub font settings must match. See [Font](#font) for more details.
-* `fontColor` – (Optional) Specifies the color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `fontOpacity` – (Optional) Specifies the opacity of the burned-in captions. 255 is opaque; 0 is transparent. All burn-in and DVB-Sub font settings must match.
-* `fontResolution` – (Optional) Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and DVB-Sub font settings must match.
-* `fontSize` – (Optional) When set to ‘auto’ fontSize will scale depending on the size of the output. Giving a positive integer will specify the exact font size in points. All burn-in and DVB-Sub font settings must match.
-* `outlineColor` – (Optional) Specifies font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `outlineSize` – (Optional) Specifies font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `shadowColor` – (Optional) Specifies the color of the shadow cast by the captions. All burn-in and DVB-Sub font settings must match.
-* `shadowOpacity` – (Optional) Specifies the opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
-* `shadowXOffset` – (Optional) Specifies the horizontal offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels to the left. All burn-in and DVB-Sub font settings must match.
-* `shadowYOffset` – (Optional) Specifies the vertical offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels above the text. All burn-in and DVB-Sub font settings must match.
-* `teletextGridControl` – (Optional) Controls whether a fixed grid size will be used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
-* `xPosition` – (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. All burn-in and DVB-Sub font settings must match.
-* `yPosition` – (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. All burn-in and DVB-Sub font settings must match.
+* `alignment` - (Optional) If no explicit xPosition or yPosition is provided, setting alignment to centered will place the captions at the bottom center of the output. Similarly, setting a left alignment will align captions to the bottom left of the output. If x and y positions are given in conjunction with the alignment parameter, the font will be justified (either left or centered) relative to those coordinates. Selecting “smart” justification will left-justify live subtitles and center-justify pre-recorded subtitles. All burn-in and DVB-Sub font settings must match.
+* `backgroundColor` - (Optional) Specifies the color of the rectangle behind the captions. All burn-in and DVB-Sub font settings must match.
+* `backgroundOpacity` - (Optional) Specifies the opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
+* `font` - (Optional) External font file used for caption burn-in. File extension must be ‘ttf’ or ‘tte’. Although the user can select output fonts for many different types of input captions, embedded, STL and teletext sources use a strict grid system. Using external fonts with these caption sources could cause unexpected display of proportional fonts. All burn-in and DVB-Sub font settings must match. See [Font](#font) for more details.
+* `fontColor` - (Optional) Specifies the color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `fontOpacity` - (Optional) Specifies the opacity of the burned-in captions. 255 is opaque; 0 is transparent. All burn-in and DVB-Sub font settings must match.
+* `fontResolution` - (Optional) Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and DVB-Sub font settings must match.
+* `fontSize` - (Optional) When set to ‘auto’ fontSize will scale depending on the size of the output. Giving a positive integer will specify the exact font size in points. All burn-in and DVB-Sub font settings must match.
+* `outlineColor` - (Optional) Specifies font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `outlineSize` - (Optional) Specifies font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `shadowColor` - (Optional) Specifies the color of the shadow cast by the captions. All burn-in and DVB-Sub font settings must match.
+* `shadowOpacity` - (Optional) Specifies the opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter out is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
+* `shadowXOffset` - (Optional) Specifies the horizontal offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels to the left. All burn-in and DVB-Sub font settings must match.
+* `shadowYOffset` - (Optional) Specifies the vertical offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels above the text. All burn-in and DVB-Sub font settings must match.
+* `teletextGridControl` - (Optional) Controls whether a fixed grid size will be used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
+* `xPosition` - (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. All burn-in and DVB-Sub font settings must match.
+* `yPosition` - (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. All burn-in and DVB-Sub font settings must match.
 
 ### DVB Sub Destination Settings
 
-* `alignment` – (Optional) If no explicit xPosition or yPosition is provided, setting alignment to centered will place the captions at the bottom center of the output. Similarly, setting a left alignment will align captions to the bottom left of the output. If x and y positions are given in conjunction with the alignment parameter, the font will be justified (either left or centered) relative to those coordinates. Selecting “smart” justification will left-justify live subtitles and center-justify pre-recorded subtitles. This option is not valid for source captions that are STL or 608/embedded. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `backgroundColor` – (Optional) Specifies the color of the rectangle behind the captions. All burn-in and DVB-Sub font settings must match.
-* `backgroundOpacity` – (Optional) Specifies the opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
-* `font` – (Optional) External font file used for caption burn-in. File extension must be ‘ttf’ or ‘tte’. Although the user can select output fonts for many different types of input captions, embedded, STL and teletext sources use a strict grid system. Using external fonts with these caption sources could cause unexpected display of proportional fonts. All burn-in and DVB-Sub font settings must match. See [Font](#font) for more details.
-* `fontColor` – (Optional) Specifies the color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `fontOpacity` – (Optional) Specifies the opacity of the burned-in captions. 255 is opaque; 0 is transparent. All burn-in and DVB-Sub font settings must match.
-* `fontResolution` – (Optional) Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and DVB-Sub font settings must match.
-* `fontSize` – (Optional) When set to auto fontSize will scale depending on the size of the output. Giving a positive integer will specify the exact font size in points. All burn-in and DVB-Sub font settings must match.
-* `outlineColor` – (Optional) Specifies font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `outlineSize` – (Optional) Specifies font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `shadowColor` – (Optional) Specifies the color of the shadow cast by the captions. All burn-in and DVB-Sub font settings must match.
-* `shadowOpacity` – (Optional) Specifies the opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
-* `shadowXOffset` – (Optional) Specifies the horizontal offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels to the left. All burn-in and DVB-Sub font settings must match.
-* `shadowYOffset` – (Optional) Specifies the vertical offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels above the text. All burn-in and DVB-Sub font settings must match.
-* `teletextGridControl` – (Optional) Controls whether a fixed grid size will be used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
-* `xPosition` – (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
-* `yPosition` – (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `alignment` - (Optional) If no explicit xPosition or yPosition is provided, setting alignment to centered will place the captions at the bottom center of the output. Similarly, setting a left alignment will align captions to the bottom left of the output. If x and y positions are given in conjunction with the alignment parameter, the font will be justified (either left or centered) relative to those coordinates. Selecting “smart” justification will left-justify live subtitles and center-justify pre-recorded subtitles. This option is not valid for source captions that are STL or 608/embedded. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `backgroundColor` - (Optional) Specifies the color of the rectangle behind the captions. All burn-in and DVB-Sub font settings must match.
+* `backgroundOpacity` - (Optional) Specifies the opacity of the background rectangle. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
+* `font` - (Optional) External font file used for caption burn-in. File extension must be ‘ttf’ or ‘tte’. Although the user can select output fonts for many different types of input captions, embedded, STL and teletext sources use a strict grid system. Using external fonts with these caption sources could cause unexpected display of proportional fonts. All burn-in and DVB-Sub font settings must match. See [Font](#font) for more details.
+* `fontColor` - (Optional) Specifies the color of the burned-in captions. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `fontOpacity` - (Optional) Specifies the opacity of the burned-in captions. 255 is opaque; 0 is transparent. All burn-in and DVB-Sub font settings must match.
+* `fontResolution` - (Optional) Font resolution in DPI (dots per inch); default is 96 dpi. All burn-in and DVB-Sub font settings must match.
+* `fontSize` - (Optional) When set to auto fontSize will scale depending on the size of the output. Giving a positive integer will specify the exact font size in points. All burn-in and DVB-Sub font settings must match.
+* `outlineColor` - (Optional) Specifies font outline color. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `outlineSize` - (Optional) Specifies font outline size in pixels. This option is not valid for source captions that are either 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `shadowColor` - (Optional) Specifies the color of the shadow cast by the captions. All burn-in and DVB-Sub font settings must match.
+* `shadowOpacity` - (Optional) Specifies the opacity of the shadow. 255 is opaque; 0 is transparent. Leaving this parameter blank is equivalent to setting it to 0 (transparent). All burn-in and DVB-Sub font settings must match.
+* `shadowXOffset` - (Optional) Specifies the horizontal offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels to the left. All burn-in and DVB-Sub font settings must match.
+* `shadowYOffset` - (Optional) Specifies the vertical offset of the shadow relative to the captions in pixels. A value of -2 would result in a shadow offset 2 pixels above the text. All burn-in and DVB-Sub font settings must match.
+* `teletextGridControl` - (Optional) Controls whether a fixed grid size will be used to generate the output subtitles bitmap. Only applicable for Teletext inputs and DVB-Sub/Burn-in outputs.
+* `xPosition` - (Optional) Specifies the horizontal position of the caption relative to the left side of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the left of the output. If no explicit xPosition is provided, the horizontal caption position will be determined by the alignment parameter. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
+* `yPosition` - (Optional) Specifies the vertical position of the caption relative to the top of the output in pixels. A value of 10 would result in the captions starting 10 pixels from the top of the output. If no explicit yPosition is provided, the caption will be positioned towards the bottom of the output. This option is not valid for source captions that are STL, 608/embedded or teletext. These source settings are already pre-defined by the caption stream. All burn-in and DVB-Sub font settings must match.
 
 ### EBU TT D Destination Settings
 
-* `copyrightHolder` – (Optional) Complete this field if you want to include the name of the copyright holder in the copyright tag in the captions metadata.
-* `fillLineGap` – (Optional) Specifies how to handle the gap between the lines (in multi-line captions). - enabled: Fill with the captions background color (as specified in the input captions). - disabled: Leave the gap unfilled.
-* `fontFamily` – (Optional) Specifies the font family to include in the font data attached to the EBU-TT captions. Valid only if styleControl is set to include. If you leave this field empty, the font family is set to “monospaced”. (If styleControl is set to exclude, the font family is always set to “monospaced”.) You specify only the font family. All other style information (color, bold, position and so on) is copied from the input captions. The size is always set to 100% to allow the downstream player to choose the size. - Enter a list of font families, as a comma-separated list of font names, in order of preference. The name can be a font family (such as “Arial”), or a generic font family (such as “serif”), or “default” (to let the downstream player choose the font). - Leave blank to set the family to “monospace”.
-* `styleControl` – (Optional) Specifies the style information (font color, font position, and so on) to include in the font data that is attached to the EBU-TT captions. - include: Take the style information (font color, font position, and so on) from the source captions and include that information in the font data attached to the EBU-TT captions. This option is valid only if the source captions are Embedded or Teletext. - exclude: In the font data attached to the EBU-TT captions, set the font family to “monospaced”. Do not include any other style information.
+* `copyrightHolder` - (Optional) Complete this field if you want to include the name of the copyright holder in the copyright tag in the captions metadata.
+* `fillLineGap` - (Optional) Specifies how to handle the gap between the lines (in multi-line captions). - enabled: Fill with the captions background color (as specified in the input captions). - disabled: Leave the gap unfilled.
+* `fontFamily` - (Optional) Specifies the font family to include in the font data attached to the EBU-TT captions. Valid only if styleControl is set to include. If you leave this field empty, the font family is set to “monospaced”. (If styleControl is set to exclude, the font family is always set to “monospaced”.) You specify only the font family. All other style information (color, bold, position and so on) is copied from the input captions. The size is always set to 100% to allow the downstream player to choose the size. - Enter a list of font families, as a comma-separated list of font names, in order of preference. The name can be a font family (such as “Arial”), or a generic font family (such as “serif”), or “default” (to let the downstream player choose the font). - Leave blank to set the family to “monospace”.
+* `styleControl` - (Optional) Specifies the style information (font color, font position, and so on) to include in the font data that is attached to the EBU-TT captions. - include: Take the style information (font color, font position, and so on) from the source captions and include that information in the font data attached to the EBU-TT captions. This option is valid only if the source captions are Embedded or Teletext. - exclude: In the font data attached to the EBU-TT captions, set the font family to “monospaced”. Do not include any other style information.
 
 ### TTML Destination Settings
 
-* `styleControl` – (Optional) This field is not currently supported and will not affect the output styling. Leave the default value.
+* `styleControl` - (Optional) This field is not currently supported and will not affect the output styling. Leave the default value.
 
 ### WebVTT Destination Settings
 
@@ -657,38 +660,38 @@ The following arguments are optional:
 
 ### Font
 
-* `passwordParam` – (Optional) Key used to extract the password from EC2 Parameter store.
-* `uri` – (Required) Path to a file accessible to the live stream.
-* `username` – (Optional) Username to be used.
+* `passwordParam` - (Optional) Key used to extract the password from EC2 Parameter store.
+* `uri` - (Required) Path to a file accessible to the live stream.
+* `username` - (Optional) Username to be used.
 
 ### Global Configuration
 
-* `initialAudioGain` – (Optional) Value to set the initial audio gain for the Live Event.
-* `inputEndAction` – (Optional) Indicates the action to take when the current input completes (e.g. end-of-file). When switchAndLoopInputs is configured the encoder will restart at the beginning of the first input. When “none” is configured the encoder will transcode either black, a solid color, or a user specified slate images per the “Input Loss Behavior” configuration until the next input switch occurs (which is controlled through the Channel Schedule API).
+* `initialAudioGain` - (Optional) Value to set the initial audio gain for the Live Event.
+* `inputEndAction` - (Optional) Indicates the action to take when the current input completes (e.g. end-of-file). When switchAndLoopInputs is configured the encoder will restart at the beginning of the first input. When “none” is configured the encoder will transcode either black, a solid color, or a user specified slate images per the “Input Loss Behavior” configuration until the next input switch occurs (which is controlled through the Channel Schedule API).
 * `inputLossBehavior` - (Optional) Settings for system actions when input is lost. See [Input Loss Behavior](#input-loss-behavior) for more details.
-* `outputLockingMode` – (Optional) Indicates how MediaLive pipelines are synchronized. PIPELINE\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the other. EPOCH\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the Unix epoch.
-* `outputTimingSource` – (Optional) Indicates whether the rate of frames emitted by the Live encoder should be paced by its system clock (which optionally may be locked to another source via NTP) or should be locked to the clock of the source that is providing the input stream.
-* `supportLowFramerateInputs` – (Optional) Adjusts video input buffer for streams with very low video framerates. This is commonly set to enabled for music channels with less than one video frame per second.
+* `outputLockingMode` - (Optional) Indicates how MediaLive pipelines are synchronized. PIPELINE\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the other. EPOCH\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the Unix epoch.
+* `outputTimingSource` - (Optional) Indicates whether the rate of frames emitted by the Live encoder should be paced by its system clock (which optionally may be locked to another source via NTP) or should be locked to the clock of the source that is providing the input stream.
+* `supportLowFramerateInputs` - (Optional) Adjusts video input buffer for streams with very low video framerates. This is commonly set to enabled for music channels with less than one video frame per second.
 
 ### Input Loss Behavior
 
-* `passwordParam` – (Optional) Key used to extract the password from EC2 Parameter store.
-* `uri` – (Required) Path to a file accessible to the live stream.
-* `username` – (Optional) Username to be used.
+* `passwordParam` - (Optional) Key used to extract the password from EC2 Parameter store.
+* `uri` - (Required) Path to a file accessible to the live stream.
+* `username` - (Optional) Username to be used.
 
 ### Motion Graphics Configuration
 
-* `motionGraphicsInsertion` – (Optional) Motion Graphics Insertion.
+* `motionGraphicsInsertion` - (Optional) Motion Graphics Insertion.
 * `motionGraphicsSettings`– (Required) Motion Graphics Settings. See [Motion Graphics Settings](#motion-graphics-settings) for more details.
 
 ### Motion Graphics Settings
 
-* `htmlMotionGraphicsSettings` – (Optional) Html Motion Graphics Settings.
+* `htmlMotionGraphicsSettings` - (Optional) Html Motion Graphics Settings.
 
 ### Nielsen Configuration
 
-* `distributorId` – (Optional) Enter the Distributor ID assigned to your organization by Nielsen.
-* `nielsenPcmToId3Tagging` – (Optional) Enables Nielsen PCM to ID3 tagging.
+* `distributorId` - (Optional) Enter the Distributor ID assigned to your organization by Nielsen.
+* `nielsenPcmToId3Tagging` - (Optional) Enables Nielsen PCM to ID3 tagging.
 
 ### Avail Blanking
 
@@ -725,7 +728,7 @@ The following arguments are optional:
 
 * `inputLossAction` - (Optional) Specifies behavior of last resort when input video os lost.
 * `timedMetadataId3Frame` - (Optional) Indicates ID3 frame that has the timecode.
-* `timedMetadtaId3Period`- (Optional) Timed metadata interval in seconds.
+* `timed_metadta_id3_period`- (Optional) Timed metadata interval in seconds.
 
 ### Destination
 
@@ -766,7 +769,7 @@ The following arguments are optional:
 
 ### Container Settings
 
-* `m2TsSettings` - (Optional) M2ts Settings. See [M2ts Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
+* `m2TsSettings` - (Optional) M2TS Settings. See [M2TS Settings](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-medialive-channel-m2tssettings.html) for more details.
 * `rawSettings`- (Optional) Raw Settings. This can be set as an empty block.
 
 ### UDP Output Settings
@@ -774,13 +777,19 @@ The following arguments are optional:
 * `containerSettings` - (Required) UDP container settings. See [Container Settings](#container-settings) for more details.
 * `destination` - (Required) Destination address and port number for RTP or UDP packets. See [Destination](#destination) for more details.
 * `bufferMsec` - (Optional) UDP output buffering in milliseconds.
-* `fecOutputSetting` - (Optional) Settings for enabling and adjusting Forward Error Correction on UDP outputs. See [FEC Output Settings](#fec-output-settings) for more details.
+* `fec_output_setting` - (Optional) Settings for enabling and adjusting Forward Error Correction on UDP outputs. See [FEC Output Settings](#fec-output-settings) for more details.
 
 ### FEC Output Settings
 
 * `columnDepth` - (Optional) The height of the FEC protection matrix.
 * `includeFec` - (Optional) Enables column only or column and row based FEC.
 * `rowLength` - (Optional) The width of the FEC protection matrix.
+
+### VPC
+
+* `subnetIds` - (Required) A list of VPC subnet IDs from the same VPC. If STANDARD channel, subnet IDs must be mapped to two unique availability zones (AZ).
+* `publicAddressAllocationIds` - (Required) List of public address allocation ids to associate with ENIs that will be created in Output VPC. Must specify one for SINGLE_PIPELINE, two for STANDARD channels.
+* `securityGroupIds` - (Optional) A list of up to 5 EC2 VPC security group IDs to attach to the Output VPC network interfaces. If none are specified then the VPC default security group will be used.
 
 ## Attribute Reference
 
@@ -793,9 +802,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `15M`)
-* `update` - (Default `15M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -805,9 +814,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { MedialiveChannel } from "./.gen/providers/aws/medialive-channel";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    MedialiveChannel.generateConfigForImport(this, "example", "1234567");
   }
 }
 
@@ -819,4 +834,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-571a359c838df10c2be2ed2e92dddd2426f2b9fcd68054cf3c5dbeb6ceb93a31 -->
+<!-- cache-key: cdktf-0.20.8 input-cc34590f99c6c01b35d85592a6ae24d2b2f41c2b14fb214157b4e70fddd6cdf3 -->

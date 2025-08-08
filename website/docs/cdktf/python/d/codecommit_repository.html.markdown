@@ -35,15 +35,17 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Required) Name for the repository. This needs to be less than 100 characters.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `repository_id` - ID of the repository
-* `arn` - ARN of the repository
+* `repository_id` - ID of the repository.
+* `kms_key_id` - The ID of the encryption key.
+* `arn` - ARN of the repository.
 * `clone_url_http` - URL to use for cloning the repository over HTTPS.
 * `clone_url_ssh` - URL to use for cloning the repository over SSH.
 
-<!-- cache-key: cdktf-0.18.0 input-5f322aa9e58ade376d26a7bc7fcca823f5fc4c32d9a5916f862aea8c60b99b90 -->
+<!-- cache-key: cdktf-0.20.8 input-8600c41e0bd28ca1fcaeb927fc7113773ee932411706d3b44e775a7092b5d5e8 -->

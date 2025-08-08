@@ -27,7 +27,9 @@ import (
 
 // @SDKResource("aws_medialive_input_security_group", name="Input Security Group")
 // @Tags(identifierAttribute="arn")
-func ResourceInputSecurityGroup() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputSecurityGroupOutput")
+// @Testing(generator=false)
+func resourceInputSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputSecurityGroupCreate,
 		ReadWithoutTimeout:   resourceInputSecurityGroupRead,
@@ -45,7 +47,7 @@ func ResourceInputSecurityGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,8 +73,6 @@ func ResourceInputSecurityGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -80,7 +80,9 @@ const (
 	ResNameInputSecurityGroup = "Input Security Group"
 )
 
-func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputSecurityGroupInput{
@@ -90,48 +92,52 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	out, err := conn.CreateInputSecurityGroup(ctx, in)
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInputSecurityGroup, "", err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInputSecurityGroup, "", err)
 	}
 
 	if out == nil || out.SecurityGroup == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInputSecurityGroup, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInputSecurityGroup, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.SecurityGroup.Id))
 
 	if _, err := waitInputSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameInputSecurityGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameInputSecurityGroup, d.Id(), err)
 	}
 
-	return resourceInputSecurityGroupRead(ctx, d, meta)
+	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
+	out, err := findInputSecurityGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive InputSecurityGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInputSecurityGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInputSecurityGroup, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("inputs", out.Inputs)
 	d.Set("whitelist_rules", flattenInputWhitelistRules(out.WhitelistRules))
 
-	return nil
+	return diags
 }
 
-func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &medialive.UpdateInputSecurityGroupInput{
 			InputSecurityGroupId: aws.String(d.Id()),
 		}
@@ -143,18 +149,20 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[DEBUG] Updating MediaLive InputSecurityGroup (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateInputSecurityGroup(ctx, in)
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInputSecurityGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameInputSecurityGroup, d.Id(), err)
 		}
 
 		if _, err := waitInputSecurityGroupUpdated(ctx, conn, aws.ToString(out.SecurityGroup.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInputSecurityGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInputSecurityGroup, d.Id(), err)
 		}
 	}
 
-	return resourceInputSecurityGroupRead(ctx, d, meta)
+	return append(diags, resourceInputSecurityGroupRead(ctx, d, meta)...)
 }
 
-func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive InputSecurityGroup %s", d.Id())
@@ -166,17 +174,17 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameInputSecurityGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameInputSecurityGroup, d.Id(), err)
 	}
 
 	if _, err := waitInputSecurityGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInputSecurityGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInputSecurityGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
@@ -232,8 +240,8 @@ func waitInputSecurityGroupDeleted(ctx context.Context, conn *medialive.Client, 
 }
 
 func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindInputSecurityGroupByID(ctx, conn, id)
+	return func() (any, string, error) {
+		out, err := findInputSecurityGroupByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -246,7 +254,7 @@ func statusInputSecurityGroup(ctx context.Context, conn *medialive.Client, id st
 	}
 }
 
-func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
+func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id string) (*medialive.DescribeInputSecurityGroupOutput, error) {
 	in := &medialive.DescribeInputSecurityGroupInput{
 		InputSecurityGroupId: aws.String(id),
 	}
@@ -270,12 +278,12 @@ func FindInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	return out, nil
 }
 
-func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]interface{} {
+func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]any {
 	if apiObject == (types.InputWhitelistRule{}) {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.Cidr; v != nil {
 		m["cidr"] = aws.ToString(v)
@@ -284,12 +292,12 @@ func flattenInputWhitelistRule(apiObject types.InputWhitelistRule) map[string]in
 	return m
 }
 
-func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interface{} {
+func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var l []any
 
 	for _, apiObject := range apiObjects {
 		if apiObject == (types.InputWhitelistRule{}) {
@@ -302,7 +310,7 @@ func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interfa
 	return l
 }
 
-func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
+func expandWhitelistRules(tfList []any) []types.InputWhitelistRuleCidr {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -310,7 +318,7 @@ func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
 	var s []types.InputWhitelistRuleCidr
 
 	for _, v := range tfList {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 
 		if !ok {
 			continue

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Fix issue causing a `ValidationException` on updates when RStudio is disabled on the domain
+```

@@ -59,6 +59,7 @@ resource "aws_db_proxy_target" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_proxy_name` - (Required, Forces new resource) The name of the DB proxy.
 * `target_group_name` - (Required, Forces new resource) The name of the target group.
 * `db_instance_identifier` - (Optional, Forces new resource) DB instance identifier.

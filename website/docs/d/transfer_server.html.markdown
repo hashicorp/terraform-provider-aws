@@ -21,6 +21,9 @@ data "aws_transfer_server" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `server_id` - (Required) ID for an SFTP server.
 
 ## Attribute Reference
@@ -38,4 +41,5 @@ This data source exports the following attributes in addition to the arguments a
 * `protocols` - File transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint.
 * `security_policy_name` - The name of the security policy that is attached to the server.
 * `structured_log_destinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
+* `tags` - Map of tags assigned to the resource.
 * `url` - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.

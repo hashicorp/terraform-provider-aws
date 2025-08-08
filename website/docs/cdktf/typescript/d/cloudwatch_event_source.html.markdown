@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namePrefix` - (Optional) Specifying this limits the results to only those partner event sources with names that start with the specified prefix
 
 ## Attribute Reference
@@ -49,6 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the partner event source
 * `createdBy` - Name of the SaaS partner that created the event source
 * `name` - Name of the event source
-* `state` - State of the event source (`active` or `pending`)
+* `state` - State of the event source (`ACTIVE` or `PENDING`)
 
-<!-- cache-key: cdktf-0.18.0 input-7fea3094a9236a42f149275c2bbaa33e18c22a2111ac12ba23865c087753c6e6 -->
+<!-- cache-key: cdktf-0.20.8 input-458b4e0134c946fe775387eb439a6e7f5988a149e1414d862e174d46aa2b85e5 -->

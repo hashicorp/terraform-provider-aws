@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_securityhub_automation_rule: Increase `criteria.aws_account_id`, `criteria.generator_id`, `criteria.resource_id`, and `criteria.title` max length from `20` to `100`
+```

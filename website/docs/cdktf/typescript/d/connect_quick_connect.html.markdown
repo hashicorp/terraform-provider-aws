@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `quickConnectId` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `quickConnectId` - (Optional) Returns information on a specific Quick Connect by Quick Connect id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Quick Connect by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `quickConnectId` is required.
 
 ## Attribute Reference
 
@@ -83,10 +84,10 @@ This data source exports the following attributes in addition to the arguments a
 
 A `quickConnectConfig` block contains the following arguments:
 
-* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `phoneNumber`, `queue`, `user`.
-* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quickConnectType` is `phoneNumber`. The `phoneConfig` block is documented below.
-* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quickConnectType` is `queue`. The `queueConfig` block is documented below.
-* `userConfig` - User configuration of the Quick Connect. This is returned only if `quickConnectType` is `user`. The `userConfig` block is documented below.
+* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
+* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quickConnectType` is `PHONE_NUMBER`. The `phoneConfig` block is documented below.
+* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quickConnectType` is `QUEUE`. The `queueConfig` block is documented below.
+* `userConfig` - User configuration of the Quick Connect. This is returned only if `quickConnectType` is `USER`. The `userConfig` block is documented below.
 
 A `phoneConfig` block contains the following arguments:
 
@@ -102,4 +103,4 @@ A `userConfig` block contains the following arguments:
 * `contactFlowId` - Identifier of the contact flow.
 * `userId` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.18.0 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->
+<!-- cache-key: cdktf-0.20.8 input-5b091d6ff25d1c78a6bf782b1c48b38114b2e454e588af36efd75c9466b740e4 -->

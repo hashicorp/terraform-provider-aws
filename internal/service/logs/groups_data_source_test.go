@@ -7,33 +7,32 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_log_groups.test"
 	resource1Name := "aws_cloudwatch_log_group.test.0"
 	resource2Name := "aws_cloudwatch_log_group.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "log_group_names.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, names.AttrName),
 				),
 			},
 		},
@@ -42,25 +41,25 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 
 func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_log_groups.test"
 	resource1Name := "aws_cloudwatch_log_group.test.0"
 	resource2Name := "aws_cloudwatch_log_group.test.1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_noPrefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", 1),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, names.AttrARN),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", 1),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, names.AttrName),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, names.AttrName),
 				),
 			},
 		},

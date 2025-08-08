@@ -31,25 +31,27 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - The name of the project in the space.
 * `name` - The name of the project in the space.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Project using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Project using the `id`. For example:
 
 ```terraform
 import {
@@ -58,7 +60,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeCatalyst Project using the `example_id_arg`. For example:
+Using `terraform import`, import CodeCatalyst Project using the `id`. For example:
 
 ```console
 % terraform import aws_codecatalyst_project.example project-id-12345678

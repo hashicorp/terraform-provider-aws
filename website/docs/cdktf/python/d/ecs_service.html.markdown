@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `service_name` - (Required) Name of the ECS Service
 * `cluster_arn` - (Required) ARN of the ECS Cluster
 
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `task_definition` - Family for the latest ACTIVE revision or full ARN of the task definition.
 * `tags` - Resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-342c81cf26422fd2c4195d60a2096623c39f08ed2e906f31b634d44bbdc3ee9c -->
+<!-- cache-key: cdktf-0.20.8 input-5b8733268565a22b6ada6c1d07bd05eaf0a2dcf7c95ea724f2e08f688157367c -->

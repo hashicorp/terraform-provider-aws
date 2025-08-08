@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `contactFlowModuleId` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `contactFlowModuleId` - (Optional) Returns information on a specific Contact Flow Module by contact flow module id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Contact Flow Module by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `contactFlowModuleId` is required.
 
 ## Attribute Reference
 
@@ -78,7 +79,7 @@ This data source exports the following attributes in addition to the arguments a
 * `content` - Logic of the Contact Flow Module.
 * `description` - Description of the Contact Flow Module.
 * `tags` - Map of tags to assign to the Contact Flow Module.
-* `state` - Type of Contact Flow Module Module. Values are either `active` or `archived`.
-* `status` - Status of the Contact Flow Module Module. Values are either `published` or `saved`.
+* `state` - Type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
+* `status` - Status of the Contact Flow Module Module. Values are either `PUBLISHED` or `SAVED`.
 
-<!-- cache-key: cdktf-0.18.0 input-42ad4b40afc50837380755e739270bff09e741210205ca792850ed7cbdd2d210 -->
+<!-- cache-key: cdktf-0.20.8 input-a0d234c880a8e9c9c7992a266ae48b299ddc59343a4696158bc34c815e6049e7 -->

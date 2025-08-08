@@ -14,7 +14,7 @@ The Availability Zones data source allows access to the list of AWS
 Availability Zones which can be accessed by an AWS account within the region
 configured in the provider.
 
-This is different from the `awsAvailabilityZone` (singular) data source,
+This is different from the `aws_availability_zone` (singular) data source,
 which provides some details about a specific availability zone.
 
 -> When [Local Zones](https://aws.amazon.com/about-aws/global-infrastructure/localzones/) are enabled in a region, by default the API and this data source include both Local Zones and Availability Zones. To return only Availability Zones, see the example section below.
@@ -117,6 +117,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allAvailabilityZones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `excludeNames` - (Optional) List of Availability Zone names to exclude.
@@ -137,7 +138,7 @@ The `filter` configuration block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `groupNames` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `usWest2Lax1`.
+* `groupNames` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `id` - Region of the Availability Zones.
 * `names` - List of the Availability Zone names available to the account.
 * `zoneIds` - List of the Availability Zone IDs available to the account.
@@ -148,6 +149,6 @@ Note that the indexes of Availability Zone names and IDs correspond.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->
+<!-- cache-key: cdktf-0.20.8 input-628c142a814108607652a94543d706d2a1e83f8c6473253396fb421a52061874 -->

@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the subnet group.
 
 ## Attribute Reference
@@ -49,5 +50,6 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the subnet group.
 * `subnetIds` - Set of VPC Subnet ID-s of the subnet group.
 * `tags` - Map of tags assigned to the subnet group.
+* `vpcId` - The Amazon Virtual Private Cloud identifier (VPC ID) of the cache subnet group.
 
-<!-- cache-key: cdktf-0.18.0 input-a10cc3d3cb3b8626a11dcf295b29f911836bff7d00ed1bca0e896ee84c058643 -->
+<!-- cache-key: cdktf-0.20.8 input-f9a21b2fbc7c61b3346edad8192e39cc9ea2d3d16560884554ea139a2325e724 -->

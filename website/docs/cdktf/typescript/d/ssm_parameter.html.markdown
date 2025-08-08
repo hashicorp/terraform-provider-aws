@@ -37,22 +37,25 @@ class MyConvertedCode extends TerraformStack {
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `stringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
+~> **Note:** The data source is currently following the behavior of the [SSM API](https://docs.aws.amazon.com/sdk-for-go/api/service/ssm/#Parameter) to return a string value, regardless of parameter type. For type `StringList`, we can use the built-in [split()](https://www.terraform.io/docs/configuration/functions/split.html) function to get values in a list. Example: `split(",", data.aws_ssm_parameter.subnets.value)`
 
 ## Argument Reference
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the parameter.
-* `withDecryption` - (Optional) Whether to return decrypted `secureString` value. Defaults to `true`.
+* `withDecryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.
-* `type` - Type of the parameter. Valid types are `string`, `stringList` and `secureString`.
+* `type` - Type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
 * `insecureValue` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.
 
-<!-- cache-key: cdktf-0.18.0 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->
+<!-- cache-key: cdktf-0.20.8 input-7bab32aeb80d7eb85b1dc28d74a3eb1d88dc9d03be9b681bd95289e6d53bee26 -->

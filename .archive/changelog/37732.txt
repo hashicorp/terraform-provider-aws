@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_apigatewayv2_authorizer: Fix `ConflictException` errors on resource Delete
+```
+
+```release-note:enhancement
+resource/aws_apigatewayv2_authorizer: Add configurable `delete` timeout
+```

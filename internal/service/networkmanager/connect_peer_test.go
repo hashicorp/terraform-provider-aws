@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,41 +17,43 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
+	protocol := "GRE"
 	asn := "65501"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn),
+				Config: testAccConnectPeerConfig_basic(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -65,37 +67,38 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 
 func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	insideCidrBlocksv4 := "169.254.10.0/29"
 	peerAddress := "1.1.1.1"
+	protocol := "GRE"
 	asn := "65501"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectPeerConfig_noDependsOn(rName, insideCidrBlocksv4, peerAddress, asn),
+				Config: testAccConnectPeerConfig_noDependsOn(rName, insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.core_network_address"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "GRE"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.0", insideCidrBlocksv4),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -107,44 +110,38 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
+func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.ConnectPeer
+	var v awstypes.ConnectPeer
 	resourceName := "aws_networkmanager_connect_peer.test"
+	subnetResourceName := "aws_subnet.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	insideCidrBlocksv4 := "169.254.10.0/29"
-	peerAddress := "1.1.1.1"
+	peerAddress := "10.0.2.100" // Must be an address inside the subnet CIDR range.
+	protocol := "NO_ENCAP"
 	asn := "65501"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccConnectPeerConfig_subnetARN(rName, peerAddress, asn, protocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-				),
-			},
-			{
-				Config: testAccConnectPeerConfig_tags2(rName, "Name", "test", "env", "test", insideCidrBlocksv4, peerAddress, asn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-				),
-			},
-			{
-				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`connect-peer/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.peer_address", peerAddress),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.protocol", "NO_ENCAP"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bgp_configurations.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "peer_address", peerAddress),
+					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_arn", subnetResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -156,7 +153,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmanager.ConnectPeer) resource.TestCheckFunc {
+func testAccCheckConnectPeerExists(ctx context.Context, n string, v *awstypes.ConnectPeer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -166,7 +163,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network Manager Connect Peer ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -182,7 +179,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 
 func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_peer" {
@@ -206,30 +203,10 @@ func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccConnectPeerConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.0.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                           = 2
-  vpc_id                          = aws_vpc.test.id
-  availability_zone               = data.aws_availability_zones.available.names[count.index]
-  cidr_block                      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-  assign_ipv6_address_on_creation = true
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccConnectPeerConfig_base(rName string, protocol string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
 resource "aws_networkmanager_global_network" "test" {
   tags = {
     Name = %[1]q
@@ -249,13 +226,15 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
+data "aws_region" "current" {}
+
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support   = false
     asn_ranges         = ["64512-64555"]
     inside_cidr_blocks = ["172.16.0.0/16"]
     edge_locations {
-      location           = data.aws_region.current.name
+      location           = data.aws_region.current.region
       asn                = 64512
       inside_cidr_blocks = ["172.16.0.0/18"]
     }
@@ -306,7 +285,7 @@ resource "aws_networkmanager_connect_attachment" "test" {
   transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
   edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
   options {
-    protocol = "GRE"
+    protocol = %[2]q
   }
   tags = {
     segment = "shared"
@@ -320,11 +299,11 @@ resource "aws_networkmanager_attachment_accepter" "test2" {
   attachment_id   = aws_networkmanager_connect_attachment.test.id
   attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
 }
-`, rName))
+`, rName, protocol))
 }
 
-func testAccConnectPeerConfig_basic(rName string, insideCidrBlocks string, peerAddress string, asn string) string {
-	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName), fmt.Sprintf(`
+func testAccConnectPeerConfig_basic(rName string, insideCidrBlocks string, peerAddress string, asn string, protocol string) string {
+	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName, protocol), fmt.Sprintf(`
 resource "aws_networkmanager_connect_peer" "test" {
   connect_attachment_id = aws_networkmanager_connect_attachment.test.id
   peer_address          = %[3]q
@@ -344,8 +323,8 @@ resource "aws_networkmanager_connect_peer" "test" {
 `, rName, insideCidrBlocks, peerAddress, asn))
 }
 
-func testAccConnectPeerConfig_noDependsOn(rName string, insideCidrBlocks string, peerAddress string, asn string) string {
-	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName), fmt.Sprintf(`
+func testAccConnectPeerConfig_noDependsOn(rName string, insideCidrBlocks string, peerAddress string, asn string, protocol string) string {
+	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName, protocol), fmt.Sprintf(`
 resource "aws_networkmanager_connect_peer" "test" {
   connect_attachment_id = aws_networkmanager_connect_attachment.test.id
   peer_address          = %[3]q
@@ -362,39 +341,26 @@ resource "aws_networkmanager_connect_peer" "test" {
 `, rName, insideCidrBlocks, peerAddress, asn))
 }
 
-func testAccConnectPeerConfig_tags1(rName, tagKey1, tagValue1 string, insideCidrBlocks string, peerAddress string, asn string) string {
-	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName), fmt.Sprintf(`
+func testAccConnectPeerConfig_subnetARN(rName string, peerAddress string, asn string, protocol string) string {
+	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName, protocol), fmt.Sprintf(`
 resource "aws_networkmanager_connect_peer" "test" {
   connect_attachment_id = aws_networkmanager_connect_attachment.test.id
-  peer_address          = %[4]q
+  peer_address          = %[2]q
   bgp_options {
-    peer_asn = %[5]q
+    peer_asn = %[3]q
   }
-  inside_cidr_blocks = [
-    %[3]q
-  ]
+  subnet_arn = aws_subnet.test2.arn
   tags = {
-    %[1]q = %[2]q
+    Name = %[1]q
   }
-}
-`, tagKey1, tagValue1, insideCidrBlocks, peerAddress, asn))
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
 }
 
-func testAccConnectPeerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, insideCidrBlocks string, peerAddress string, asn string) string {
-	return acctest.ConfigCompose(testAccConnectPeerConfig_base(rName), fmt.Sprintf(`
-resource "aws_networkmanager_connect_peer" "test" {
-  connect_attachment_id = aws_networkmanager_connect_attachment.test.id
-  peer_address          = %[6]q
-  bgp_options {
-    peer_asn = %[7]q
-  }
-  inside_cidr_blocks = [
-    %[5]q
-  ]
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
+resource "aws_subnet" "test2" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 2)
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2, insideCidrBlocks, peerAddress, asn))
+`, rName, peerAddress, asn))
 }

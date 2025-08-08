@@ -14,10 +14,11 @@ func TestAccIVS_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"PlaybackKeyPair": {
-			"basic":      testAccPlaybackKeyPair_basic,
-			"update":     testAccPlaybackKeyPair_update,
-			"tags":       testAccPlaybackKeyPair_tags,
-			"disappears": testAccPlaybackKeyPair_disappears,
+			acctest.CtBasic:      testAccPlaybackKeyPair_basic,
+			"update":             testAccPlaybackKeyPair_update,
+			"tags":               testAccPlaybackKeyPair_tags,
+			acctest.CtDisappears: testAccPlaybackKeyPair_disappears,
+			"identity":           testAccIVSPlaybackKeyPair_IdentitySerial,
 		},
 	}
 

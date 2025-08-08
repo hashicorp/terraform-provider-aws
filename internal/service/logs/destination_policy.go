@@ -7,18 +7,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_cloudwatch_log_destination_policy")
+// @SDKResource("aws_cloudwatch_log_destination_policy", name="Destination Policy")
 func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
@@ -31,16 +34,7 @@ func resourceDestinationPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"access_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"access_policy": sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"destination_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -54,12 +48,18 @@ func resourceDestinationPolicy() *schema.Resource {
 	}
 }
 
-func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	policy, err := structure.NormalizeJsonString(d.Get("access_policy").(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	name := d.Get("destination_name").(string)
 	input := &cloudwatchlogs.PutDestinationPolicyInput{
-		AccessPolicy:    aws.String(d.Get("access_policy").(string)),
+		AccessPolicy:    aws.String(policy),
 		DestinationName: aws.String(name),
 	}
 
@@ -67,36 +67,61 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.PutDestinationPolicyWithContext(ctx, input)
+	_, err = conn.PutDestinationPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Destination Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Destination Policy (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceDestinationPolicyRead(ctx, d, meta)
+	return append(diags, resourceDestinationPolicyRead(ctx, d, meta)...)
 }
 
-func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	destination, err := FindDestinationByName(ctx, conn, d.Id())
+	destination, err := findDestinationPolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Destination Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Destination Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Destination Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("access_policy", destination.AccessPolicy)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("access_policy").(string), aws.ToString(destination.AccessPolicy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("access_policy", policyToSet)
 	d.Set("destination_name", destination.DestinationName)
 
-	return nil
+	return diags
+}
+
+func findDestinationPolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.Destination, error) {
+	output, err := findDestinationByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.AccessPolicy == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, err
 }

@@ -13,7 +13,7 @@ description: |-
 Provides a Virtual Private Gateway attachment resource, allowing for an existing
 hardware VPN gateway to be attached and/or detached from a VPC.
 
--> **Note:** The [`awsVpnGateway`](vpn_gateway.html)
+-> **Note:** The [`aws_vpn_gateway`](vpn_gateway.html)
 resource can also automatically attach the Virtual Private Gateway it creates
 to an existing VPC by setting the [`vpcId`](vpn_gateway.html#vpc_id) attribute accordingly.
 
@@ -58,6 +58,7 @@ guides for more information.
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcId` - (Required) The ID of the VPC.
 * `vpnGatewayId` - (Required) The ID of the Virtual Private Gateway.
 
@@ -72,4 +73,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.18.0 input-2348f137f23e9e2ad9c5fe33e3628594f5ea4a23246976fd2266c1cbe04f05d2 -->
+<!-- cache-key: cdktf-0.20.8 input-9e73d13079d84eae62d4ef8e683e8a8dd6d6fa45e4560ce64c7e4f0fba3e2149 -->

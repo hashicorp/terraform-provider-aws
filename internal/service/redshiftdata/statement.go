@@ -21,9 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshiftdata_statement")
+// @SDKResource("aws_redshiftdata_statement", name="Statement")
 func resourceStatement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStatementCreate,
@@ -39,12 +40,12 @@ func resourceStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,19 +55,19 @@ func resourceStatement() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -104,17 +105,17 @@ func resourceStatement() *schema.Resource {
 	}
 }
 
-func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
 	input := &redshiftdata.ExecuteStatementInput{
-		Database:  aws.String(d.Get("database").(string)),
+		Database:  aws.String(d.Get(names.AttrDatabase).(string)),
 		Sql:       aws.String(d.Get("sql").(string)),
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -122,8 +123,8 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DbUser = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 {
-		input.Parameters = expandParameters(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 {
+		input.Parameters = expandParameters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("secret_arn"); ok {
@@ -153,7 +154,7 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceStatementRead(ctx, d, meta)...)
 }
 
-func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
@@ -169,10 +170,10 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Data Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cluster_identifier", sub.ClusterIdentifier)
-	d.Set("database", d.Get("database").(string))
+	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
+	d.Set(names.AttrDatabase, d.Get(names.AttrDatabase).(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
+	if err := d.Set(names.AttrParameters, flattenParameters(sub.QueryParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	d.Set("secret_arn", sub.SecretArn)
@@ -217,7 +218,7 @@ func FindStatementByID(ctx context.Context, conn *redshiftdata.Client, id string
 }
 
 func statusStatement(ctx context.Context, conn *redshiftdata.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := FindStatementByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -259,25 +260,25 @@ func waitStatementFinished(ctx context.Context, conn *redshiftdata.Client, id st
 	return nil, err
 }
 
-func expandParameter(tfMap map[string]interface{}) *types.SqlParameter {
+func expandParameter(tfMap map[string]any) *types.SqlParameter {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.SqlParameter{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok {
+	if v, ok := tfMap[names.AttrValue].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandParameters(tfList []interface{}) []types.SqlParameter {
+func expandParameters(tfList []any) []types.SqlParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -285,7 +286,7 @@ func expandParameters(tfList []interface{}) []types.SqlParameter {
 	var apiObjects []types.SqlParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -303,25 +304,25 @@ func expandParameters(tfList []interface{}) []types.SqlParameter {
 	return apiObjects
 }
 
-func flattenParameter(apiObject types.SqlParameter) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenParameter(apiObject types.SqlParameter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 	return tfMap
 }
 
-func flattenParameters(apiObjects []types.SqlParameter) []interface{} {
+func flattenParameters(apiObjects []types.SqlParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenParameter(apiObject))

@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `poolId` - (Required) AWS resource IDs of a public IPv4 pool (as a string) for which this data source will fetch detailed information.
 
 ## Attribute Reference
@@ -49,12 +50,12 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the pool, if any.
 * `networkBorderGroup` - Name of the location from which the address pool is advertised.
 * pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
-    * `addressCount` - Number of addresses in the range.
-    * `availableAddressCount` - Number of available addresses in the range.
-    * `firstAddress` - First address in the range.
-    * `lastAddress` - Last address in the range.
+    * `address_count` - Number of addresses in the range.
+    * `available_address_count` - Number of available addresses in the range.
+    * `first_address` - First address in the range.
+    * `last_address` - Last address in the range.
 * `tags` - Any tags for the address pool.
 * `totalAddressCount` - Total number of addresses in the pool.
 * `totalAvailableAddressCount` - Total number of available addresses in the pool.
 
-<!-- cache-key: cdktf-0.18.0 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->
+<!-- cache-key: cdktf-0.20.8 input-51f01e43c2629031fbad9b1da96a382d0caf5b06c9b990cf36f6a04a90c55225 -->

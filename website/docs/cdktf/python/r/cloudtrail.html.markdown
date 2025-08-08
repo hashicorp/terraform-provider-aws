@@ -52,20 +52,12 @@ class MyConvertedCode(TerraformStack):
         data_aws_region_current = DataAwsRegion(self, "current_3")
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         data_aws_region_current.override_logical_id("current")
-        aws_cloudtrail_example = Cloudtrail(self, "example_4",
-            include_global_service_events=False,
-            name="example",
-            s3_bucket_name=example.id,
-            s3_key_prefix="prefix"
-        )
-        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
-        aws_cloudtrail_example.override_logical_id("example")
-        data_aws_iam_policy_document_example = DataAwsIamPolicyDocument(self, "example_5",
+        data_aws_iam_policy_document_example = DataAwsIamPolicyDocument(self, "example_4",
             statement=[DataAwsIamPolicyDocumentStatement(
                 actions=["s3:GetBucketAcl"],
                 condition=[DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -86,7 +78,7 @@ class MyConvertedCode(TerraformStack):
                     variable="s3:x-amz-acl"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -105,12 +97,21 @@ class MyConvertedCode(TerraformStack):
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         data_aws_iam_policy_document_example.override_logical_id("example")
-        aws_s3_bucket_policy_example = S3BucketPolicy(self, "example_6",
+        aws_s3_bucket_policy_example = S3BucketPolicy(self, "example_5",
             bucket=example.id,
             policy=Token.as_string(data_aws_iam_policy_document_example.json)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_s3_bucket_policy_example.override_logical_id("example")
+        aws_cloudtrail_example = Cloudtrail(self, "example_6",
+            depends_on=[aws_s3_bucket_policy_example],
+            include_global_service_events=False,
+            name="example",
+            s3_bucket_name=example.id,
+            s3_key_prefix="prefix"
+        )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_cloudtrail_example.override_logical_id("example")
 ```
 
 ### Data Event Logging
@@ -371,6 +372,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -383,7 +385,7 @@ The following arguments are optional:
 * `is_organization_trail` - (Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
-* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
+* `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery. Specify the SNS topic ARN if it resides in another region.
 * `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
@@ -423,26 +425,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
-* `id` - Name of the trail.
+* `id` - ARN of the trail.
+* `sns_topic_arn` - ARN of the Amazon SNS topic that CloudTrail uses to send notifications when log files are delivered.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrails using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 
 ```python
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.cloudtrail import Cloudtrail
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        Cloudtrail.generate_config_for_import(self, "sample", "arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail")
 ```
 
-Using `terraform import`, import Cloudtrails using the `name`. For example:
+Using `terraform import`, import Cloudtrails using the `arn`. For example:
 
 ```console
-% terraform import aws_cloudtrail.sample my-sample-trail
+% terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-98216d45a2a27863ff111f0d40da50548fbed7371974a66a6d0f1d447b675fea -->
+<!-- cache-key: cdktf-0.20.8 input-a1f175998792e4fbf1f09fac4172e6ca4d2fdde7fc2ceb0d008fa36c132b4212 -->

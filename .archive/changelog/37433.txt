@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lakeformation_data_cells_filter: Fix inconsistent `state` error when using `row_filter.all_rows_wildcard`
+```

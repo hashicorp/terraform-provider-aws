@@ -16,7 +16,7 @@ or to make it easier for an operator to connect through bastion host(s).
 
 -> **Note:** It's a best practice to expose instance details via [outputs](https://www.terraform.io/docs/configuration/outputs.html)
 and [remote state](https://www.terraform.io/docs/state/remote.html) and
-**use [`terraformRemoteState`](https://www.terraform.io/docs/providers/terraform/d/remote_state.html)
+**use [`terraform_remote_state`](https://www.terraform.io/docs/providers/terraform/d/remote_state.html)
 data source instead** if you manage referenced instances via Terraform.
 
 ~> **Note:** It's strongly discouraged to use this data source for querying ephemeral
@@ -68,11 +68,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on desired instances.
-
 * `instanceStateNames` - (Optional) List of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.
-
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
@@ -91,8 +92,8 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.18.0 input-b32a570916ee4ab91b69b22089fb9eae9d1e369af64f851ec6954b99768d43fd -->
+<!-- cache-key: cdktf-0.20.8 input-faed7265a026e743ced765540585ab67effbde51a217272bdd412810a9b9df7c -->

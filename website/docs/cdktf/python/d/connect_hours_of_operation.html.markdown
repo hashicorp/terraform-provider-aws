@@ -56,13 +56,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
+
+~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
 ## Attribute Reference
 
@@ -93,4 +94,4 @@ A `start_time` block supports the following arguments:
 * `hours` - Hour of opening.
 * `minutes` - Minute of opening.
 
-<!-- cache-key: cdktf-0.18.0 input-69f2eddaf1ae71ae8b2382f108eed67e1baf19a25a016f4a6cd6db210fa55e83 -->
+<!-- cache-key: cdktf-0.20.8 input-903781c484ef31ae66896d35ef03020a625b6c3ac57d96c246cf8533e9338257 -->

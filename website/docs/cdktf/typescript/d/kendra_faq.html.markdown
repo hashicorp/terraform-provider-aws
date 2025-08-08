@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `faqId` - (Required) Identifier of the FAQ.
 * `indexId` - (Required) Identifier of the index that contains the FAQ.
 
@@ -49,8 +50,8 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the FAQ.
 * `createdAt` - Unix datetime that the faq was created.
 * `description` - Description of the FAQ.
-* `errorMessage` - When the `status` field value is `failed`, this contains a message that explains why.
-* `fileFormat` - File format used by the input files for the FAQ. Valid Values are `csv`, `csvWithHeader`, `json`.
+* `errorMessage` - When the `status` field value is `FAILED`, this contains a message that explains why.
+* `fileFormat` - File format used by the input files for the FAQ. Valid Values are `CSV`, `CSV_WITH_HEADER`, `JSON`.
 * `id` - Unique identifiers of the FAQ and index separated by a slash (`/`).
 * `languageCode` - Code for a language. This shows a supported language for the FAQ document. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
 * `name` - Name of the FAQ.
@@ -65,4 +66,4 @@ The `s3Path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.18.0 input-e521c2de099004f9800122d251b7adbf8d33a85b59c414cf1d1afcea0967b75a -->
+<!-- cache-key: cdktf-0.20.8 input-f68c06151ee44c3a36864008de321c378dd48b1d9836acb9ea920e1b1033d036 -->

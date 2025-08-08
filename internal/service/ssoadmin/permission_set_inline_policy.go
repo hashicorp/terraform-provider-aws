@@ -9,21 +9,22 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ssoadmin_permission_set_inline_policy")
-func ResourcePermissionSetInlinePolicy() *schema.Resource {
+// @SDKResource("aws_ssoadmin_permission_set_inline_policy", name="Permission Set Inline Policy")
+func resourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionSetInlinePolicyPut,
 		ReadWithoutTimeout:   resourcePermissionSetInlinePolicyRead,
@@ -46,7 +47,7 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -67,9 +68,9 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	}
 }
 
-func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("inline_policy").(string))
 	if err != nil {
@@ -84,7 +85,7 @@ func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.Resourc
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	_, err = conn.PutInlinePolicyToPermissionSetWithContext(ctx, input)
+	_, err = conn.PutInlinePolicyToPermissionSet(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting SSO Permission Set (%s) Inline Policy: %s", permissionSetARN, err)
@@ -100,16 +101,16 @@ func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.Resourc
 	return append(diags, resourcePermissionSetInlinePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	permissionSetARN, instanceARN, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+	policy, err := findPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Permission Set Inline Policy (%s) not found, removing from state", d.Id())
@@ -133,9 +134,9 @@ func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	permissionSetARN, instanceARN, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -147,9 +148,9 @@ func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.Reso
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	_, err = conn.DeleteInlinePolicyFromPermissionSetWithContext(ctx, input)
+	_, err = conn.DeleteInlinePolicyFromPermissionSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -165,15 +166,15 @@ func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func FindPermissionSetInlinePolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetARN, instanceARN string) (string, error) {
+func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, permissionSetARN, instanceARN string) (string, error) {
 	input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	output, err := conn.GetInlinePolicyForPermissionSetWithContext(ctx, input)
+	output, err := conn.GetInlinePolicyForPermissionSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -184,9 +185,9 @@ func FindPermissionSetInlinePolicy(ctx context.Context, conn *ssoadmin.SSOAdmin,
 		return "", err
 	}
 
-	if output == nil || aws.StringValue(output.InlinePolicy) == "" {
+	if output == nil || aws.ToString(output.InlinePolicy) == "" {
 		return "", tfresource.NewEmptyResultError(input)
 	}
 
-	return aws.StringValue(output.InlinePolicy), nil
+	return aws.ToString(output.InlinePolicy), nil
 }

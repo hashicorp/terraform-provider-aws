@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Optional) AWS account ID.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
 
@@ -57,7 +58,7 @@ This data source exports the following attributes in addition to the arguments a
 * `principal_id` - The principal ID of the user.
 * `user_role` - The Amazon QuickSight role for the user. The user role can be one of the following:.
     - `READER`: A user who has read-only access to dashboards.
-    - `AUTHOR`: A user who can create data sources, datasets, analyses, and dashboards.
+    - `AUTHOR`: A user who can create data sources, datasets, analyzes, and dashboards.
     - `ADMIN`: A user who is an author, who can also manage Amazon QuickSight settings.
 
-<!-- cache-key: cdktf-0.18.0 input-8a09e3c69e880b414f66924d3def015ce6ed48913a9a062d5f17590c11a6327c -->
+<!-- cache-key: cdktf-0.20.8 input-f07f3ca790bc7d8ee388f3c076c4819d4b9f515bb2b9fa93c3af5233fe396678 -->

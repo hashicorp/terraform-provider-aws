@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Modify server-side encryption configuration error handling, enabling support for NetApp StorageGRID
+```

@@ -33,6 +33,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `monthly_spend_limit` - (Optional) The maximum amount in USD that you are willing to spend each month to send SMS messages.
 * `delivery_status_iam_role_arn` - (Optional) The ARN of the IAM role that allows Amazon SNS to write logs about SMS deliveries in CloudWatch Logs.
 * `delivery_status_success_sampling_rate` - (Optional) The percentage of successful SMS deliveries for which Amazon SNS will write logs in CloudWatch Logs. The value must be between 0 and 100.
@@ -44,4 +45,8 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-fb3841d6bcaa58c6f6663ac36ae2dd4fc2b84b493c3c7984f840593cb184fb68 -->
+## Import
+
+You cannot import the SMS preferences.
+
+<!-- cache-key: cdktf-0.20.8 input-1c4019e5c65c19d2784159c1b140683c94fec7805abb7bf8f9a7f91b06aaf557 -->

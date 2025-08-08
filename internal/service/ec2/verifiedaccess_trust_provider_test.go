@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,14 +22,9 @@ import (
 
 func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
-	policyReferenceName := "test"
+
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
@@ -46,11 +41,11 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
+				Config: testAccVerifiedAccessTrustProviderConfig_basic("test", trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
 					resource.TestCheckResourceAttr(resourceName, "user_trust_provider_type", userTrustProviderType),
 				),
@@ -67,9 +62,9 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
-	policyReferenceName := "test"
+
 	trustProviderType := "device"
 	deviceTrustProviderType := "jamf"
 	tenantId := sdkacctest.RandString(10)
@@ -84,13 +79,13 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions(policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId),
+				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions("test", trustProviderType, deviceTrustProviderType, tenantId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
 					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
-					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
 				),
 			},
@@ -106,13 +101,9 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
-	policyReferenceName := "test"
+
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
@@ -129,7 +120,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
+				Config: testAccVerifiedAccessTrustProviderConfig_basic("test", trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
@@ -142,9 +133,9 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
-	policyReferenceName := "test"
+
 	trustProviderType := "user"
 	userTrustProviderType := "oidc"
 	authorizationEndpoint := "https://authorization.example.com"
@@ -165,7 +156,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
+				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions("test", trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
@@ -176,7 +167,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.scope", scope),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.token_endpoint", tokenEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.user_info_endpoint", userInfoEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
 					resource.TestCheckResourceAttr(resourceName, "user_trust_provider_type", userTrustProviderType),
 				),
@@ -193,9 +184,9 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
-	policyReferenceName := "test"
+
 	trustProviderType := "user"
 	userTrustProviderType := "iam-identity-center"
 	description := sdkacctest.RandString(10)
@@ -211,28 +202,28 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags2("test", trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key2", "value2"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1("test", trustProviderType, userTrustProviderType, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -245,7 +236,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *types.VerifiedAccessTrustProvider) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *awstypes.VerifiedAccessTrustProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

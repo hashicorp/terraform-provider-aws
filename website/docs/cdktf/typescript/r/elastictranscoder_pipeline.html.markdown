@@ -12,6 +12,8 @@ description: |-
 
 Provides an Elastic Transcoder pipeline resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. AWS will [discontinue support for Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+
 ## Example Usage
 
 ```typescript
@@ -46,10 +48,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
+This resource supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsKmsKeyArn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `contentConfig` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
 * `contentConfigPermissions` - (Optional) The permissions for the `contentConfig` object. (documented below)
@@ -61,6 +62,8 @@ This argument supports the following arguments:
 * `thumbnailConfig` - (Optional) The ThumbnailConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save thumbnail files. (documented below)
 * `thumbnailConfigPermissions` - (Optional) The permissions for the `thumbnailConfig` object. (documented below)
 
+See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
+
 The `contentConfig` object specifies information about the Amazon S3 bucket in
 which you want Elastic Transcoder to save transcoded files and playlists: which
 bucket to use, and the storage class that you want to assign to the files. If
@@ -71,13 +74,13 @@ you specify values for `contentConfig`, you must also specify values for
 The `contentConfig` object supports the following:
 
 * `bucket` - The Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists.
-* `storageClass` - The Amazon S3 storage class, `standard` or `reducedRedundancy`, that you want Elastic Transcoder to assign to the files and playlists that it stores in your Amazon S3 bucket.
+* `storageClass` - The Amazon S3 storage class, `Standard` or `ReducedRedundancy`, that you want Elastic Transcoder to assign to the files and playlists that it stores in your Amazon S3 bucket.
 
 The `contentConfigPermissions` object supports the following:
 
-* `access` - The permission that you want to give to the AWS user that you specified in `contentConfigPermissionsGrantee`. Valid values are `read`, `readAcp`, `writeAcp` or `fullControl`.
+* `access` - The permission that you want to give to the AWS user that you specified in `content_config_permissions.grantee`. Valid values are `Read`, `ReadAcp`, `WriteAcp` or `FullControl`.
 * `grantee` - The AWS user or group that you want to have access to transcoded files and playlists.
-* `granteeType` - Specify the type of value that appears in the `contentConfigPermissionsGrantee` object. Valid values are `canonical`, `email` or `group`.
+* `granteeType` - Specify the type of value that appears in the `content_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
 The `notifications` object supports the following:
 
@@ -103,9 +106,9 @@ The `thumbnailConfig` object supports the following:
 
 The `thumbnailConfigPermissions` object supports the following:
 
-* `access` - The permission that you want to give to the AWS user that you specified in `thumbnailConfigPermissionsGrantee`. Valid values are `read`, `readAcp`, `writeAcp` or `fullControl`.
+* `access` - The permission that you want to give to the AWS user that you specified in `thumbnail_config_permissions.grantee`. Valid values are `Read`, `ReadAcp`, `WriteAcp` or `FullControl`.
 * `grantee` - The AWS user or group that you want to have access to thumbnail files.
-* `granteeType` - Specify the type of value that appears in the `thumbnailConfigPermissionsGrantee` object. Valid values are `canonical`, `email` or `group`.
+* `granteeType` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object. Valid values are `Canonical`, `Email` or `Group`.
 
 ## Attribute Reference
 
@@ -122,9 +125,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ElastictranscoderPipeline } from "./.gen/providers/aws/elastictranscoder-pipeline";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ElastictranscoderPipeline.generateConfigForImport(
+      this,
+      "basicPipeline",
+      "1407981661351-cttk8b"
+    );
   }
 }
 
@@ -136,4 +149,4 @@ Using `terraform import`, import Elastic Transcoder pipelines using the `id`. Fo
 % terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6b409c28f1ed17363c636a956212b4fffbbcf9da888917717aff32273f1430a2 -->
+<!-- cache-key: cdktf-0.20.8 input-f1a853a6ded849f809671734c847e3908a37c518f0ebeb0b67bf049c0c5828ce -->

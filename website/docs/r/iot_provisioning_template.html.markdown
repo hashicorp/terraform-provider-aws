@@ -82,6 +82,7 @@ resource "aws_iot_provisioning_template" "fleet" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the fleet provisioning template.
 * `description` - (Optional) The description of the fleet provisioning template.
 * `enabled` - (Optional) True to enable the fleet provisioning template, otherwise false.
@@ -89,6 +90,7 @@ This resource supports the following arguments:
 * `provisioning_role_arn` - (Required) The role ARN for the role associated with the fleet provisioning template. This IoT role grants permission to provision a device.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `template_body` - (Required) The JSON formatted contents of the fleet provisioning template.
+* `type` - (Optional) The type you define in a provisioning template.
 
 ### pre_provisioning_hook
 

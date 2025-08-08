@@ -30,7 +30,7 @@ func testAccAlternateContact_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,10 +38,10 @@ func testAccAlternateContact_basic(t *testing.T) {
 				Config: testAccAlternateContactConfig_basic(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
 					resource.TestCheckResourceAttr(resourceName, "title", rName1),
 				),
@@ -55,10 +55,10 @@ func testAccAlternateContact_basic(t *testing.T) {
 				Config: testAccAlternateContactConfig_basic(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
 					resource.TestCheckResourceAttr(resourceName, "title", rName2),
 				),
@@ -76,7 +76,7 @@ func testAccAlternateContact_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,10 +116,10 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 				Config: testAccAlternateContactConfig_organization(rName1, emailAddress1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
 					resource.TestCheckResourceAttr(resourceName, "title", rName1),
 				),
@@ -133,10 +133,10 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 				Config: testAccAlternateContactConfig_organization(rName2, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "alternate_contact_type", "OPERATIONS"),
 					resource.TestCheckResourceAttr(resourceName, "email_address", emailAddress2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "+17031235555"),
 					resource.TestCheckResourceAttr(resourceName, "title", rName2),
 				),

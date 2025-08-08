@@ -32,33 +32,36 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The name of the source repository.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Source Repository using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Source Repository using the `id`. For example:
 
 ```terraform
 import {
   to = aws_codecatalyst_source_repository.example
-  id = "source_repository-id-12345678"
+  id = "example-repo"
 }
 ```
 
-Using `terraform import`, import CodeCatalyst Source Repository using the `example_id_arg`. For example:
+Using `terraform import`, import CodeCatalyst Source Repository using the `id`. For example:
 
 ```console
-% terraform import aws_codecatalyst_source_repository.example source_repository-id-12345678
+% terraform import aws_codecatalyst_source_repository.example example-repo
 ```

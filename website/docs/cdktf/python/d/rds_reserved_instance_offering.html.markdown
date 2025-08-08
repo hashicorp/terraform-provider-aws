@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_class` - (Required) DB instance class for the reserved DB instance.
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
 * `multi_az` - (Required) Whether the reservation applies to Multi-AZ deployments.
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `fixed_price` - Fixed price charged for this reserved DB instance.
 * `offering_id` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.18.0 input-a71cd524be029d3d53583d22786d99a97f23ac7fc0880861778d7b20d3ece4a7 -->
+<!-- cache-key: cdktf-0.20.8 input-bfbcd2e614c5ffb58d170f4ad0a8508941c22f078a7e65ad59ff0728a7bb4dd0 -->

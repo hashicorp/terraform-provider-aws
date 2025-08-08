@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `routingProfileId` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Routing Profile by name
 * `routingProfileId` - (Optional) Returns information on a specific Routing Profile by Routing Profile id
+
+~> **NOTE:** `instanceId` and one of either `name` or `routingProfileId` is required.
 
 ## Attribute Reference
 
@@ -84,16 +85,16 @@ This data source exports the following attributes in addition to the arguments a
 
 A `mediaConcurrencies` block supports the following attributes:
 
-* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `voice`, `chat`, `task`.
-* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `voice`: Minimum value of 1. Maximum value of 1. Valid Range for `chat`: Minimum value of 1. Maximum value of 10. Valid Range for `task`: Minimum value of 1. Maximum value of 10.
+* `channel` - Channels that agents can handle in the Contact Control Panel (CCP). Valid values are `VOICE`, `CHAT`, `TASK`.
+* `concurrency` - Number of contacts an agent can have on a channel simultaneously. Valid Range for `VOICE`: Minimum value of 1. Maximum value of 1. Valid Range for `CHAT`: Minimum value of 1. Maximum value of 10. Valid Range for `TASK`: Minimum value of 1. Maximum value of 10.
 
 A `queueConfigs` block supports the following attributes:
 
-* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `voice`, `chat`, `task`.
+* `channel` - Channels agents can handle in the Contact Control Panel (CCP) for this routing profile. Valid values are `VOICE`, `CHAT`, `TASK`.
 * `delay` - Delay, in seconds, that a contact should be in the queue before they are routed to an available agent
 * `priority` - Order in which contacts are to be handled for the queue.
 * `queueArn` - ARN for the queue.
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.18.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.20.8 input-0c861b8d1618f3a091f9724b1c6534b1ce7f0ca51a4587c996adb555f1d1e98f -->

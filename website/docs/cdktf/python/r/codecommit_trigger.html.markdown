@@ -49,12 +49,14 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
-* `name` - (Required) The name of the trigger.
-* `destination_arn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
-* `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
-* `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches are specified, the trigger will apply to all branches.
-* `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+* `trigger` - (Required) The name of the trigger.
+    * `name` - (Required) The name of the trigger.
+    * `destination_arn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
+    * `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+    * `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
+    * `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches   are specified, the trigger will apply to all branches.
 
 ## Attribute Reference
 
@@ -62,4 +64,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `configuration_id` - System-generated unique identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-6fc445fde615a4a95723b535dcf09b6e0655d8096cedb2b5da2231587aee3f88 -->
+<!-- cache-key: cdktf-0.20.8 input-03b73247a90115655a8ba2b39b287bf34f98cf448ed2e8b9dcaf1e57d192cbc6 -->

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
@@ -18,13 +19,13 @@ func TestSubnetMigrateState(t *testing.T) {
 		ID           string
 		Attributes   map[string]string
 		Expected     string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1_without_value": {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes:   map[string]string{},
-			Expected:     "false",
+			Expected:     acctest.CtFalse,
 		},
 	}
 

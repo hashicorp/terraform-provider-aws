@@ -1,0 +1,39 @@
+```release-note:enhancement
+resource/aws_glacier_vault_lock: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_iam_group_policy: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_iam_policy: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_iam_role_policy: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_iam_role: Allow `assume_role_policy` and `inline_policy.*.policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_iam_user_policy: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_media_store_container_policy: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_ssoadmin_permission_set_inline_policy: Allow `inline_policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_transfer_access: Allow `policy` to have leading whitespace
+```
+
+```release-note:enhancement
+resource/aws_transfer_user: Allow `policy` to have leading whitespace
+```

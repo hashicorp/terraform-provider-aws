@@ -10,26 +10,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const EmptyBasePathMappingValue = "(none)"
+const emptyBasePathMappingValue = "(none)"
 
-// @SDKResource("aws_api_gateway_base_path_mapping")
-func ResourceBasePathMapping() *schema.Resource {
+// @SDKResource("aws_api_gateway_base_path_mapping", name="Base Path Mapping")
+func resourceBasePathMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBasePathMappingCreate,
 		ReadWithoutTimeout:   resourceBasePathMappingRead,
 		UpdateWithoutTimeout: resourceBasePathMappingUpdate,
 		DeleteWithoutTimeout: resourceBasePathMappingDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,90 +46,127 @@ func ResourceBasePathMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"stage_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"domain_name_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"stage_name": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
 }
 
-func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
-	input := &apigateway.CreateBasePathMappingInput{
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+
+	domainName, basePath := d.Get(names.AttrDomainName).(string), d.Get("base_path").(string)
+	input := apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
-		DomainName: aws.String(d.Get("domain_name").(string)),
-		BasePath:   aws.String(d.Get("base_path").(string)),
+		DomainName: aws.String(domainName),
+		BasePath:   aws.String(basePath),
 		Stage:      aws.String(d.Get("stage_name").(string)),
 	}
 
-	err := retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
-		_, err := conn.CreateBasePathMappingWithContext(ctx, input)
+	var id string
+	if v, ok := d.GetOk("domain_name_id"); ok {
+		domainNameID := v.(string)
+		input.DomainNameId = aws.String(domainNameID)
+		id = basePathMappingCreateResourceID(domainName, basePath, domainNameID)
+	} else {
+		id = basePathMappingCreateResourceID(domainName, basePath, "")
+	}
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeBadRequestException) {
-				return retry.NonRetryableError(err)
-			}
-
-			return retry.RetryableError(err)
-		}
-
-		return nil
+	const (
+		timeout = 30 * time.Second
+	)
+	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (any, error) {
+		return conn.CreateBasePathMapping(ctx, &input)
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateBasePathMappingWithContext(ctx, input)
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway Base Path Mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Base Path Mapping (%s): %s", err, id)
 	}
 
-	id := fmt.Sprintf("%s/%s", d.Get("domain_name").(string), d.Get("base_path").(string))
 	d.SetId(id)
 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]*apigateway.PatchOperation, 0)
-
-	if d.HasChange("stage_name") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
-			Path:  aws.String("/stage"),
-			Value: aws.String(d.Get("stage_name").(string)),
-		})
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	mapping, err := findBasePathMappingByThreePartKey(ctx, conn, domainName, basePath, domainNameID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Base Path Mapping (%s): %s", d.Id(), err)
+	}
+
+	d.Set("api_id", mapping.RestApiId)
+	mappingBasePath := aws.ToString(mapping.BasePath)
+	if mappingBasePath == emptyBasePathMappingValue {
+		mappingBasePath = ""
+	}
+	d.Set("base_path", mappingBasePath)
+	d.Set(names.AttrDomainName, domainName)
+	d.Set("domain_name_id", domainNameID)
+	d.Set("stage_name", mapping.Stage)
+
+	return diags
+}
+
+func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	operations := make([]types.PatchOperation, 0)
+
 	if d.HasChange("api_id") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+		operations = append(operations, types.PatchOperation{
+			Op:    types.Op("replace"),
 			Path:  aws.String("/restapiId"),
 			Value: aws.String(d.Get("api_id").(string)),
 		})
 	}
 
 	if d.HasChange("base_path") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+		operations = append(operations, types.PatchOperation{
+			Op:    types.Op("replace"),
 			Path:  aws.String("/basePath"),
 			Value: aws.String(d.Get("base_path").(string)),
 		})
 	}
 
-	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating API Gateway Base Path Mapping (%s): %s", d.Id(), err)
+	if d.HasChange("stage_name") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.Op("replace"),
+			Path:  aws.String("/stage"),
+			Value: aws.String(d.Get("stage_name").(string)),
+		})
 	}
 
 	input := apigateway.UpdateBasePathMappingInput{
@@ -134,105 +174,116 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 		DomainName:      aws.String(domainName),
 		PatchOperations: operations,
 	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
+	}
 
-	log.Printf("[INFO] Updating API Gateway Base Path Mapping: %s", input)
-
-	_, err = conn.UpdateBasePathMappingWithContext(ctx, &input)
+	_, err = conn.UpdateBasePathMapping(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Base Path Mapping (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("base_path") {
-		id := fmt.Sprintf("%s/%s", d.Get("domain_name").(string), d.Get("base_path").(string))
+		id := basePathMappingCreateResourceID(d.Get(names.AttrDomainName).(string), d.Get("base_path").(string), domainNameID)
 		d.SetId(id)
 	}
-
-	log.Printf("[DEBUG] API Gateway Base Path Mapping updated: %s", d.Id())
 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Base Path Mapping (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	mapping, err := conn.GetBasePathMappingWithContext(ctx, &apigateway.GetBasePathMappingInput{
+	log.Printf("[INFO] Deleting API Gateway Base Path Mapping: %s", d.Id())
+	input := apigateway.DeleteBasePathMappingInput{
 		DomainName: aws.String(domainName),
 		BasePath:   aws.String(basePath),
-	})
-	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Base Path Mapping (%s): %s", d.Id(), err)
+	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
 	}
 
-	mappingBasePath := aws.StringValue(mapping.BasePath)
+	_, err = conn.DeleteBasePathMapping(ctx, &input)
 
-	if mappingBasePath == EmptyBasePathMappingValue {
-		mappingBasePath = ""
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
-	d.Set("base_path", mappingBasePath)
-	d.Set("domain_name", domainName)
-	d.Set("api_id", mapping.RestApiId)
-	d.Set("stage_name", mapping.Stage)
-
-	return diags
-}
-
-func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
-
-	domainName, basePath, err := DecodeBasePathMappingID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Base Path Mapping (%s): %s", d.Id(), err)
-	}
-
-	_, err = conn.DeleteBasePathMappingWithContext(ctx, &apigateway.DeleteBasePathMappingInput{
-		DomainName: aws.String(domainName),
-		BasePath:   aws.String(basePath),
-	})
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			return diags
-		}
-
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Base Path Mapping (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func DecodeBasePathMappingID(id string) (string, string, error) {
-	idFormatErr := fmt.Errorf("Unexpected format of ID (%q), expected DOMAIN/BASEPATH", id)
+const basePathMappingResourceIDSeparator = "/"
 
-	parts := strings.SplitN(id, "/", 2)
-	if len(parts) != 2 {
-		return "", "", idFormatErr
+func basePathMappingCreateResourceID(domainName, basePath, domainNameID string) string {
+	var id string
+	parts := []string{domainName, basePath}
+
+	if domainNameID != "" {
+		parts = append(parts, domainNameID)
 	}
 
-	domainName := parts[0]
-	basePath := parts[1]
+	id = strings.Join(parts, basePathMappingResourceIDSeparator)
 
-	if domainName == "" {
-		return "", "", idFormatErr
+	return id
+}
+
+func basePathMappingParseResourceID(id string) (string, string, string, error) {
+	switch parts := strings.SplitN(id, basePathMappingResourceIDSeparator, 3); len(parts) {
+	case 2:
+		if domainName, basePath := parts[0], parts[1]; domainName != "" {
+			if basePath == "" {
+				basePath = emptyBasePathMappingValue
+			}
+			return domainName, basePath, "", nil
+		}
+	case 3:
+		if domainName, basePath, domainNameID := parts[0], parts[1], parts[2]; domainName != "" && domainNameID != "" {
+			if basePath == "" {
+				basePath = emptyBasePathMappingValue
+			}
+			return domainName, basePath, domainNameID, nil
+		}
 	}
 
-	if basePath == "" {
-		basePath = EmptyBasePathMappingValue
+	return "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected DOMAIN-NAME%[2]sBASEPATH or DOMAIN-NAME%[2]sBASEPATH%[2]sDOMAIN-NAME-ID", id, basePathMappingResourceIDSeparator)
+}
+
+func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Client, domainName, basePath, domainNameID string) (*apigateway.GetBasePathMappingOutput, error) {
+	input := apigateway.GetBasePathMappingInput{
+		BasePath:   aws.String(basePath),
+		DomainName: aws.String(domainName),
+	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
 	}
 
-	return domainName, basePath, nil
+	output, err := conn.GetBasePathMapping(ctx, &input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

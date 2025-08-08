@@ -41,20 +41,17 @@ resource "aws_sfn_alias" "my_sfn_alias" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the alias you are creating.
 * `description` - (Optional) Description of the alias.
 * `routing_configuration` - (Required) The StateMachine alias' route configuration settings. Fields documented below
 
 `routing_configuration` supports the following arguments:
 
-* `state_machine_version_arn` - (Required) A version of the state machine.
+* `state_machine_version_arn` - (Required) The Amazon Resource Name (ARN) of the state machine version.
 * `weight` - (Required) Percentage of traffic routed to the state machine version.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Attribute Reference
 

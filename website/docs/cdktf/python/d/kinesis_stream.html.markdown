@@ -36,21 +36,26 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Stream.
 
 ## Attribute Reference
 
-`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Kinesis Stream (same as id).
-* `name` - Name of the Kinesis Stream.
-* `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
-* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
-* `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.
-* `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
+* `id` - ARN of the Kinesis Stream.
+* `arn` - ARN of the Kinesis Stream (same as `id`).
 * `closed_shards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
+* `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
+* `encryption_type` - Encryption type used.
+* `kms_key_id` - GUID for the customer-managed AWS KMS key to use for encryption.
+* `name` - Name of the Kinesis Stream.
+* `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
+* `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.
 * `shard_level_metrics` - List of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch][3] for more.
+* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
 * `stream_mode_details` - [Capacity mode][4] of the data stream. Detailed below.
 * `tags` - Map of tags to assigned to the stream.
 
@@ -63,4 +68,4 @@ are exported:
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 [4]: https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html
 
-<!-- cache-key: cdktf-0.18.0 input-d035d44fea77906534614187920d80dfcb1210dd3b168e9a8322ca2eeaffb5f5 -->
+<!-- cache-key: cdktf-0.20.8 input-824ecbe9bfca1a41f514b9010b41fb913bf727f382d85b84612673f570f46fa2 -->

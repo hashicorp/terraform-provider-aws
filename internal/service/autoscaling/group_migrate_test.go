@@ -17,49 +17,48 @@ func TestGroupStateUpgradeV0(t *testing.T) {
 
 	testCases := []struct {
 		testName string
-		rawState map[string]interface{}
-		want     map[string]interface{}
+		rawState map[string]any
+		want     map[string]any
 	}{
 		{
 			testName: "empty state",
-			rawState: map[string]interface{}{},
-			want: map[string]interface{}{
-				"ignore_failed_scaling_activities": "false",
+			rawState: map[string]any{},
+			want: map[string]any{
+				"ignore_failed_scaling_activities": acctest.CtFalse,
 			},
 		},
 		{
 			testName: "non-empty state",
-			rawState: map[string]interface{}{
-				"capacity_rebalance":        "true",
+			rawState: map[string]any{
+				"capacity_rebalance":        acctest.CtTrue,
 				"health_check_grace_period": "600",
 				"max_instance_lifetime":     "3600",
 			},
-			want: map[string]interface{}{
-				"capacity_rebalance":               "true",
+			want: map[string]any{
+				"capacity_rebalance":               acctest.CtTrue,
 				"health_check_grace_period":        "600",
-				"ignore_failed_scaling_activities": "false",
+				"ignore_failed_scaling_activities": acctest.CtFalse,
 				"max_instance_lifetime":            "3600",
 			},
 		},
 		{
 			testName: "ignore_failed_scaling_activities set",
-			rawState: map[string]interface{}{
-				"capacity_rebalance":               "false",
+			rawState: map[string]any{
+				"capacity_rebalance":               acctest.CtFalse,
 				"health_check_grace_period":        "400",
-				"ignore_failed_scaling_activities": "true",
+				"ignore_failed_scaling_activities": acctest.CtTrue,
 				"max_instance_lifetime":            "36000",
 			},
-			want: map[string]interface{}{
-				"capacity_rebalance":               "false",
+			want: map[string]any{
+				"capacity_rebalance":               acctest.CtFalse,
 				"health_check_grace_period":        "400",
-				"ignore_failed_scaling_activities": "true",
+				"ignore_failed_scaling_activities": acctest.CtTrue,
 				"max_instance_lifetime":            "36000",
 			},
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 

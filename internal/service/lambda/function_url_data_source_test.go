@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -35,8 +35,8 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.allow_origins.#", resourceName, "cors.0.allow_origins.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.expose_headers.#", resourceName, "cors.0.expose_headers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.max_age", resourceName, "cors.0.max_age"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFunctionARN, resourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_mode", resourceName, "invoke_mode"),
@@ -111,7 +111,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_function_url" "test" {

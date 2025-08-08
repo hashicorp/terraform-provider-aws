@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS QuickSight Account Subscription.
 
+~> Due to the absence of the `adminGroup`, `authorGroup`, and `readerGroup` fields in the [`DescribeAccountSettings`](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DescribeAccountSettings.html) API response, changes made to these groups post-subscription will not be detected by this resource.
+
 ## Example Usage
 
 ```typescript
@@ -42,22 +44,24 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `accountName` - (Required) Name of your Amazon QuickSight account. This name is unique over all of AWS, and it appears only when users sign in.
-* `authenticationMethod` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `iamAndQuicksight`, `iamOnly`, and `activeDirectory`.
-* `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `standard`, `enterprise` or `enterpriseAndQ`.
+* `authenticationMethod` - (Required) Method that you want to use to authenticate your Amazon QuickSight account. Currently, the valid values for this parameter are `IAM_AND_QUICKSIGHT`, `IAM_ONLY`, `IAM_IDENTITY_CENTER`, and `ACTIVE_DIRECTORY`.
+* `edition` - (Required) Edition of Amazon QuickSight that you want your account to have. Currently, you can choose from `STANDARD`, `ENTERPRISE` or `ENTERPRISE_AND_Q`.
 * `notificationEmail` - (Required) Email address that you want Amazon QuickSight to send notifications to regarding your Amazon QuickSight account or Amazon QuickSight subscription.
 
 The following arguments are optional:
 
-* `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `activeDirectory` is the selected authentication method of the new Amazon QuickSight account.
-* `adminGroup` - (Optional) Admin group associated with your Active Directory. This field is required if `activeDirectory` is the selected authentication method of the new Amazon QuickSight account.
-* `authorGroup` - (Optional) Author group associated with your Active Directory.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
+* `adminGroup` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
+* `authorGroup` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
 * `awsAccountId` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
-* `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
+* `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directoryId` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
-* `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
-* `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
-* `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `enterppriseAndQ` is the selected edition of the new Amazon QuickSight account.
-* `readerGroup` - (Optional) Reader group associated with your Active Direcrtory.
+* `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iamIdentityCenterInstanceArn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
+* `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `readerGroup` - (Optional) Reader group associated with your Active Directory or IAM Identity Center account.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
 
 ## Attribute Reference
@@ -70,11 +74,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-You cannot import this resource.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Account Subscription using `awsAccountId`. For example:
 
-<!-- cache-key: cdktf-0.18.0 input-875d75585da05795e23c019e0ffaab500682447eb4464a05a6d4c3ae31219bd9 -->
+```typescript
+// DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
+import { Construct } from "constructs";
+import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { QuicksightAccountSubscription } from "./.gen/providers/aws/quicksight-account-subscription";
+class MyConvertedCode extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+    QuicksightAccountSubscription.generateConfigForImport(
+      this,
+      "example",
+      "012345678901"
+    );
+  }
+}
+
+```
+
+Using `terraform import`, import a QuickSight Account Subscription using `awsAccountId`. For example:
+
+```console
+% terraform import aws_quicksight_account_subscription.example "012345678901"
+```
+
+<!-- cache-key: cdktf-0.20.8 input-91f15acfde890cfcdac040526affe195a1fd48d31edee885daba381184ecfb08 -->

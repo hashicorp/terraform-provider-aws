@@ -60,13 +60,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instanceId` or `instanceAlias` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Optional) Returns information on a specific connect instance by id
-
 * `instanceAlias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instanceId` or `instanceAlias` is required.
 
 ## Attribute Reference
 
@@ -80,10 +80,11 @@ This data source exports the following attributes in addition to the arguments a
 * `earlyMediaEnabled` - Whether early media for outbound calls is enabled .
 * `contactFlowLogsEnabled` - Whether contact flow logs are enabled.
 * `contactLensEnabled` - Whether contact lens is enabled.
-* `autoResolveBestVoices` - Whether auto resolve best voices is enabled.
+* `auto_resolve_best_voices` - Whether auto resolve best voices is enabled.
 * `multiPartyConferenceEnabled` - Whether multi-party calls/conference is enabled.
-* `useCustomTtsVoices` - Whether use custom tts voices is enabled.
+* `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `serviceRole` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.
 
-<!-- cache-key: cdktf-0.18.0 input-f348847518408d57a1b3c05acaebc2f7c353201d2c00301debc08e5c4c84bccc -->
+<!-- cache-key: cdktf-0.20.8 input-c32a17ecd6c0c47a21038fc69d6955947565ac2871bd485f076d94c78e61056a -->

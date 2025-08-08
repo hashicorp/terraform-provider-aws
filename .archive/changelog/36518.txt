@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_db_instance: Adds warning when setting `character_set_name` when `replicate_source_db`, `restore_to_point_in_time`, or `snapshot_identifier` is set
+```

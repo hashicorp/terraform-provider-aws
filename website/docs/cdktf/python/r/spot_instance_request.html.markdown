@@ -62,9 +62,10 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-Spot Instance Requests support all the same arguments as
-[`aws_instance`](instance.html), with the addition of:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+Spot Instance Requests support all the same arguments as [`aws_instance`](instance.html), with the addition of:
 * `spot_price` - (Optional; Default: On-demand price) The maximum price to request on the spot market.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
@@ -73,9 +74,6 @@ Spot Instance Requests support all the same arguments as
   the instance is terminated, the spot request will be closed.
 * `launch_group` - (Optional) A launch group is a group of spot instances that launch together and terminate together.
   If left empty instances are launched and terminated individually.
-* `block_duration_minutes` - (Optional) The required duration for the Spot instances, in minutes. This value must be a multiple of 60 (60, 120, 180, 240, 300, or 360).
-  The duration period starts as soon as your Spot instance receives its instance ID. At the end of the duration period, Amazon EC2 marks the Spot instance for termination and provides a Spot instance termination notice, which gives the instance a two-minute warning before it terminates.
-  Note that you can't specify an Availability Zone group or a launch group if you specify a duration.
 * `instance_interruption_behavior` - (Optional) Indicates Spot instance behavior when it is interrupted. Valid values are `terminate`, `stop`, or `hibernate`. Default value is `terminate`.
 * `valid_until` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request. The default end date is 7 days from the current date.
 * `valid_from` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
@@ -112,6 +110,7 @@ should only be used for informational purposes, not for resource dependencies:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->
+<!-- cache-key: cdktf-0.20.8 input-50307933fada942576beaa181659096ae40adb8da4b5a7ed19aaaa574eb2d97a -->

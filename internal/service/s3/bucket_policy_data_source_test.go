@@ -23,13 +23,13 @@ func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
+					testAccCheckBucketPolicyMatch(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 				),
 			},
 		},
@@ -73,6 +73,10 @@ func testAccCheckBucketPolicyMatch(nameFirst, keyFirst, nameSecond, keySecond st
 
 func testAccDataSourceBucketPolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_service_principal" "current" {
+  service_name = "lambda"
+}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -98,7 +102,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["lambda.amazonaws.com"]
+      identifiers = [data.aws_service_principal.current.name]
     }
   }
 }

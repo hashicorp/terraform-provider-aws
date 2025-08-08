@@ -16,6 +16,8 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 
 ~> **NOTE:** If you are enabling versioning on the bucket for the first time, AWS recommends that you wait for 15 minutes after enabling versioning before issuing write operations (PUT or DELETE) on objects in the bucket.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With Versioning Enabled
@@ -90,6 +92,7 @@ resource "aws_s3_object" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the S3 bucket.
 * `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.

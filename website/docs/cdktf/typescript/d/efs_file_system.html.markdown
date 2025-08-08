@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fileSystemId` - (Optional) ID that identifies the file system (e.g., fs-ccfc0d65).
 * `creationToken` - (Optional) Restricts the list to the file system with this creation token.
 * `tags` - (Optional) Restricts the list to the file system with these tags.
@@ -64,11 +65,11 @@ This data source exports the following attributes in addition to the arguments a
 * `encrypted` - Whether EFS is encrypted.
 * `kmsKeyId` - ARN for the KMS encryption key.
 * `lifecyclePolicy` - File system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
-* `name` - The value of the file system's `name` tag.
+* `name` - The value of the file system's `Name` tag.
 * `performanceMode` - File system performance mode.
 * `provisionedThroughputInMibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
 * `tags` -A map of tags to assign to the file system.
 * `throughputMode` - Throughput mode for the file system.
 * `sizeInBytes` - Current byte count used by the file system.
 
-<!-- cache-key: cdktf-0.18.0 input-91848697481eb0959ef949486e3ade78e73077540a9a38720f250c99edbeced7 -->
+<!-- cache-key: cdktf-0.20.8 input-8d973ab22e27bba6dea659308613f2ce962941e0a93266de4aa7cb36df7dc7a2 -->

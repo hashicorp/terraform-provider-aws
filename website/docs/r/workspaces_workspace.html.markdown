@@ -19,6 +19,10 @@ data "aws_workspaces_bundle" "value_windows_10" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
+data "aws_kms_key" "workspaces" {
+  key_id = "alias/aws/workspaces"
+}
+
 resource "aws_workspaces_workspace" "example" {
   directory_id = aws_workspaces_directory.example.id
   bundle_id    = data.aws_workspaces_bundle.value_windows_10.id
@@ -26,7 +30,7 @@ resource "aws_workspaces_workspace" "example" {
 
   root_volume_encryption_enabled = true
   user_volume_encryption_enabled = true
-  volume_encryption_key          = "alias/aws/workspaces"
+  volume_encryption_key          = data.aws_kms_key.workspaces.arn
 
   workspace_properties {
     compute_type_name                         = "VALUE"
@@ -46,22 +50,23 @@ resource "aws_workspaces_workspace" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directory_id` - (Required) The ID of the directory for the WorkSpace.
 * `bundle_id` - (Required) The ID of the bundle for the WorkSpace.
-* `user_name` – (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.
+* `user_name` - (Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace.
 * `root_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
-* `user_volume_encryption_enabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
-* `volume_encryption_key` – (Optional) The symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
+* `user_volume_encryption_enabled` - (Optional) Indicates whether the data stored on the user volume is encrypted.
+* `volume_encryption_key` - (Optional) The ARN of a symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
 * `tags` - (Optional) The tags for the WorkSpace. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `workspace_properties` – (Optional) The WorkSpace properties.
+* `workspace_properties` - (Optional) The WorkSpace properties.
 
 `workspace_properties` supports the following:
 
-* `compute_type_name` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
-* `root_volume_size_gib` – (Optional) The size of the root volume.
-* `running_mode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
-* `running_mode_auto_stop_timeout_in_minutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
-* `user_volume_size_gib` – (Optional) The size of the user storage.
+* `compute_type_name` - (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
+* `root_volume_size_gib` - (Optional) The size of the root volume.
+* `running_mode` - (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
+* `running_mode_auto_stop_timeout_in_minutes` - (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
+* `user_volume_size_gib` - (Optional) The size of the user storage.
 
 ## Attribute Reference
 

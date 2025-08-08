@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -81,6 +81,7 @@ This data source exports the following attributes in addition to the arguments a
 * `master_account_arn` - ARN of the account that is designated as the master account for the organization.
 * `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
 * `master_account_id` - Unique identifier (ID) of the master account of an organization.
+* `master_account_name` - Name of the master account of an organization.
 
 ### Master Account or Delegated Administrator Attribute Reference
 

@@ -52,12 +52,16 @@ class MyConvertedCode extends TerraformStack {
             "s3://${" +
             awsS3BucketDocuments.bucket +
             "}/${" +
-            documents.id +
+            documents.key +
             "}",
         },
         entityList: {
           s3Uri:
-            "s3://${" + awsS3BucketEntities.bucket + "}/${" + entities.id + "}",
+            "s3://${" +
+            awsS3BucketEntities.bucket +
+            "}/${" +
+            entities.key +
+            "}",
         },
         entityTypes: [
           {
@@ -91,6 +95,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `modelKmsKeyId` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionName` - (Optional) Name for the version of the Entity Recognizer.
@@ -113,13 +118,13 @@ The following arguments are optional:
 * `annotations` - (Optional) Specifies location of the document annotation data.
   See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
   One of `annotations` or `entityList` is required.
-* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
-  Used if `dataFormat` is `augmentedManifest`.
+* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
+  Used if `dataFormat` is `AUGMENTED_MANIFEST`.
   See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
-* `dataFormat` - (Optional, Default: `comprehendCsv`) The format for the training data.
-  One of `comprehendCsv` or `augmentedManifest`.
+* `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
+  One of `COMPREHEND_CSV` or `AUGMENTED_MANIFEST`.
 * `documents` - (Optional) Specifies a collection of training documents.
-  Used if `dataFormat` is `comprehendCsv`.
+  Used if `dataFormat` is `COMPREHEND_CSV`.
   See the [`documents` Configuration Block](#documents-configuration-block) section below.
 * `entityList` - (Optional) Specifies location of the entity list data.
   See the [`entityList` Configuration Block](#entity_list-configuration-block) section below.
@@ -131,25 +136,25 @@ The following arguments are optional:
 ### `annotations` Configuration Block
 
 * `s3Uri` - (Required) Location of training annotations.
-* `testS3Uri` - (Optional) Location of test annotations.
+* `test_s3uri` - (Optional) Location of test annotations.
 
 ### `augmentedManifests` Configuration Block
 
 * `annotationDataS3Uri` - (Optional) Location of annotation files.
 * `attributeNames` - (Required) The JSON attribute that contains the annotations for the training documents.
-* `documentType` - (Optional, Default: `plainTextDocument`) Type of augmented manifest.
-  One of `plainTextDocument` or `semiStructuredDocument`.
+* `documentType` - (Optional, Default: `PLAIN_TEXT_DOCUMENT`) Type of augmented manifest.
+  One of `PLAIN_TEXT_DOCUMENT` or `SEMI_STRUCTURED_DOCUMENT`.
 * `s3Uri` - (Required) Location of augmented manifest file.
 * `sourceDocumentsS3Uri` - (Optional) Location of source PDF files.
-* `split` - (Optional, Default: `train`) Purpose of data in augmented manifest.
-  One of `train` or `test`.
+* `split` - (Optional, Default: `TRAIN`) Purpose of data in augmented manifest.
+  One of `TRAIN` or `TEST`.
 
 ### `documents` Configuration Block
 
-* `inputFormat` - (Optional, Default: `oneDocPerLine`) Specifies how the input files should be processed.
-  One of `oneDocPerLine` or `oneDocPerFile`.
+* `inputFormat` - (Optional, Default: `ONE_DOC_PER_LINE`) Specifies how the input files should be processed.
+  One of `ONE_DOC_PER_LINE` or `ONE_DOC_PER_FILE`.
 * `s3Uri` - (Required) Location of training documents.
-* `testS3Uri` - (Optional) Location of test documents.
+* `test_s3uri` - (Optional) Location of test documents.
 
 ### `entityList` Configuration Block
 
@@ -174,11 +179,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-`awsComprehendEntityRecognizer` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
+`aws_comprehend_entity_recognizer` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
-* `create` - (Optional, Default: `60M`)
-* `update` - (Optional, Default: `60M`)
-* `delete` - (Optional, Default: `30M`)
+* `create` - (Optional, Default: `60m`)
+* `update` - (Optional, Default: `60m`)
+* `delete` - (Optional, Default: `30m`)
 
 ## Import
 
@@ -188,9 +193,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ComprehendEntityRecognizer } from "./.gen/providers/aws/comprehend-entity-recognizer";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ComprehendEntityRecognizer.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+    );
   }
 }
 
@@ -202,4 +217,4 @@ Using `terraform import`, import Comprehend Entity Recognizer using the ARN. For
 % terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5a4f330d945c67ebd2c327cc9ed1a4d3cbd7331cc6eefe3c8b6a54590b34a394 -->
+<!-- cache-key: cdktf-0.20.8 input-a322b23d77ddec60dd96293537854094550b4b3142e94fd0a14ebac19e3ef22e -->

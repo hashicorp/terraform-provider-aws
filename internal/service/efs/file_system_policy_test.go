@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
@@ -26,7 +28,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +36,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -47,7 +49,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},
@@ -62,7 +64,7 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +88,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +96,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -107,7 +109,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_bypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},
@@ -123,7 +125,7 @@ func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,12 +133,24 @@ func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_firstEquivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccFileSystemPolicyConfig_secondEquivalent(rName),
-				PlanOnly: true,
+				Config: testAccFileSystemPolicyConfig_secondEquivalent(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -151,7 +165,7 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,12 +173,24 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
-				PlanOnly: true,
+				Config: testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -172,7 +198,7 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 
 func testAccCheckFileSystemPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_file_system_policy" {
@@ -203,11 +229,7 @@ func testAccCheckFileSystemPolicyExists(ctx context.Context, n string, v *efs.De
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS File System Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		output, err := tfefs.FindFileSystemPolicyByID(ctx, conn, rs.Primary.ID)
 

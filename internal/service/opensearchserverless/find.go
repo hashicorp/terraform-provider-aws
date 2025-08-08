@@ -5,12 +5,12 @@ package opensearchserverless
 
 import (
 	"context"
-	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -20,15 +20,15 @@ func findAccessPolicyByNameAndType(ctx context.Context, conn *opensearchserverle
 		Type: types.AccessPolicyType(policyType),
 	}
 	out, err := conn.GetAccessPolicy(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -44,23 +44,19 @@ func findCollectionByID(ctx context.Context, conn *opensearchserverless.Client, 
 		Ids: []string{id},
 	}
 	out, err := conn.BatchGetCollection(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.CollectionDetails == nil || len(out.CollectionDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.CollectionDetails[0], nil
+	return tfresource.AssertSingleValueResult(out.CollectionDetails)
 }
 
 func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client, name string) (*types.CollectionDetail, error) {
@@ -68,27 +64,19 @@ func findCollectionByName(ctx context.Context, conn *opensearchserverless.Client
 		Names: []string{name},
 	}
 	out, err := conn.BatchGetCollection(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.CollectionDetails == nil || len(out.CollectionDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	if len(out.CollectionDetails) > 1 {
-		return nil, tfresource.NewTooManyResultsError(len(out.CollectionDetails), in)
-	}
-
-	return &out.CollectionDetails[0], nil
+	return tfresource.AssertSingleValueResult(out.CollectionDetails)
 }
 
 func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.SecurityConfigDetail, error) {
@@ -96,15 +84,15 @@ func findSecurityConfigByID(ctx context.Context, conn *opensearchserverless.Clie
 		Id: aws.String(id),
 	}
 	out, err := conn.GetSecurityConfig(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -121,15 +109,15 @@ func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 		Type: types.SecurityPolicyType(policyType),
 	}
 	out, err := conn.GetSecurityPolicy(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -140,27 +128,27 @@ func findSecurityPolicyByNameAndType(ctx context.Context, conn *opensearchserver
 	return out.SecurityPolicyDetail, nil
 }
 
-func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*types.VpcEndpointDetail, error) {
-	in := &opensearchserverless.BatchGetVpcEndpointInput{
-		Ids: []string{id},
+func findLifecyclePolicyByNameAndType(ctx context.Context, conn *opensearchserverless.Client, name, policyType string) (*types.LifecyclePolicyDetail, error) {
+	in := &opensearchserverless.BatchGetLifecyclePolicyInput{
+		Identifiers: []types.LifecyclePolicyIdentifier{
+			{
+				Name: aws.String(name),
+				Type: types.LifecyclePolicyType(policyType),
+			},
+		},
 	}
-	out, err := conn.BatchGetVpcEndpoint(ctx, in)
+
+	out, err := conn.BatchGetLifecyclePolicy(ctx, in)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
 		return nil, err
 	}
 
-	if out == nil || out.VpcEndpointDetails == nil || len(out.VpcEndpointDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.VpcEndpointDetails[0], nil
+	return tfresource.AssertSingleValueResult(out.LifecyclePolicyDetails)
 }

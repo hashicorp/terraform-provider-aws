@@ -46,17 +46,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
 several valid keys, for a full reference, check out
 [describe-instances in the AWS CLI reference][1].
-
 * `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `passwordData` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
 * `getUserData` - (Optional) Retrieve Base64 encoded User Data contents into the `userDataBase64` attribute. A SHA-1 hash of the User Data contents will always be present in the `userData` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instanceTags`, or `instanceId` must be specified.
@@ -100,10 +99,11 @@ interpolation.
 * `hostId` - ID of the dedicated host the instance will be assigned to.
 * `hostResourceGroupArn` - ARN of the host resource group the instance is associated with.
 * `iamInstanceProfile` - Name of the instance profile associated with the Instance.
-* `instanceState` - State of the instance. One of: `pending`, `running`, `shuttingDown`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
+* `instanceState` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `instanceType` - Type of the Instance.
 * `ipv6Addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `keyName` - Key name of the Instance.
+* `launchTime` - Time the instance was launched.
 * `maintenanceOptions` - Maintenance and recovery options for the instance.
     * `autoRecovery` - Automatic recovery behavior of the instance.
 * `metadataOptions` - Metadata options of the Instance.
@@ -125,7 +125,7 @@ interpolation.
     * `hostnameType` - Type of hostname for EC2 instances.
 * `privateIp` - Private IP address assigned to the Instance.
 * `publicDns` - Public DNS name assigned to the Instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
-* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`awsEip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp`, as this field will change after the EIP is attached.
+* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp`, as this field will change after the EIP is attached.
 * `rootBlockDevice` - Root block device mappings of the Instance
     * `deviceName` - Physical name of the device.
     * `deleteOnTermination` - If the root block device will be deleted on termination.
@@ -142,15 +142,15 @@ interpolation.
 * `tags` - Map of tags assigned to the Instance.
 * `tenancy` - Tenancy of the instance: `dedicated`, `default`, `host`.
 * `userData` - SHA-1 hash of User Data supplied to the Instance.
-* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64Decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `getUserData` is true.
+* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `getUserData` is true.
 * `vpcSecurityGroupIds` - Associated security groups in a non-default VPC.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.18.0 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
+<!-- cache-key: cdktf-0.20.8 input-f70e1e075123a472ddd8795c02fe5708eb38af5f5278746a1d85046d66c1ebda -->

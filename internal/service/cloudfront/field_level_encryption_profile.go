@@ -7,35 +7,43 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudfront_field_level_encryption_profile")
-func ResourceFieldLevelEncryptionProfile() *schema.Resource {
+// @SDKResource("aws_cloudfront_field_level_encryption_profile", name="Field-level Encryption Profile")
+func resourceFieldLevelEncryptionProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFieldLevelEncryptionProfileCreate,
 		ReadWithoutTimeout:   resourceFieldLevelEncryptionProfileRead,
 		UpdateWithoutTimeout: resourceFieldLevelEncryptionProfileUpdate,
 		DeleteWithoutTimeout: resourceFieldLevelEncryptionProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"caller_reference": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -82,7 +90,7 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -90,44 +98,44 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 	}
 }
 
-func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
+	name := d.Get(names.AttrName).(string)
+	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.CreateFieldLevelEncryptionProfileInput{
 		FieldLevelEncryptionProfileConfig: apiObject,
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Field-level Encryption Profile: (%s)", input)
-	output, err := conn.CreateFieldLevelEncryptionProfileWithContext(ctx, input)
+	output, err := conn.CreateFieldLevelEncryptionProfile(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.FieldLevelEncryptionProfile.Id))
+	d.SetId(aws.ToString(output.FieldLevelEncryptionProfile.Id))
 
 	return append(diags, resourceFieldLevelEncryptionProfileRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindFieldLevelEncryptionProfileByID(ctx, conn, d.Id())
+	output, err := findFieldLevelEncryptionProfileByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Field-level Encryption Profile (%s) not found, removing from state", d.Id())
@@ -139,37 +147,38 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Field-level Encryption Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, fieldLevelEncryptionProfileARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
 	d.Set("caller_reference", apiObject.CallerReference)
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.EncryptionEntities != nil {
-		if err := d.Set("encryption_entities", []interface{}{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
+		if err := d.Set("encryption_entities", []any{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_entities: %s", err)
 		}
 	} else {
 		d.Set("encryption_entities", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 
 	return diags
 }
 
-func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
+	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("encryption_entities"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.EncryptionEntities = expandEncryptionEntities(v.([]any)[0].(map[string]any))
 	}
 
 	input := &cloudfront.UpdateFieldLevelEncryptionProfileInput{
@@ -178,8 +187,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 		IfMatch:                           aws.String(d.Get("etag").(string)),
 	}
 
-	log.Printf("[DEBUG] Updating CloudFront Field-level Encryption Profile: (%s)", input)
-	_, err := conn.UpdateFieldLevelEncryptionProfileWithContext(ctx, input)
+	_, err := conn.UpdateFieldLevelEncryptionProfile(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudFront Field-level Encryption Profile (%s): %s", d.Id(), err)
@@ -188,17 +196,18 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 	return append(diags, resourceFieldLevelEncryptionProfileRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionProfileWithContext(ctx, &cloudfront.DeleteFieldLevelEncryptionProfileInput{
+	input := cloudfront.DeleteFieldLevelEncryptionProfileInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeleteFieldLevelEncryptionProfile(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionProfile) {
+	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
 		return diags
 	}
 
@@ -209,31 +218,56 @@ func resourceFieldLevelEncryptionProfileDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func expandEncryptionEntities(tfMap map[string]interface{}) *cloudfront.EncryptionEntities {
+func findFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetFieldLevelEncryptionProfileOutput, error) {
+	input := &cloudfront.GetFieldLevelEncryptionProfileInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetFieldLevelEncryptionProfile(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FieldLevelEncryptionProfile == nil || output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandEncryptionEntities(tfMap map[string]any) *awstypes.EncryptionEntities {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.EncryptionEntities{}
+	apiObject := &awstypes.EncryptionEntities{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
 		items := expandEncryptionEntityItems(v.List())
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int64(int64(len(items)))
+		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
 	return apiObject
 }
 
-func expandEncryptionEntity(tfMap map[string]interface{}) *cloudfront.EncryptionEntity {
+func expandEncryptionEntity(tfMap map[string]any) *awstypes.EncryptionEntity {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.EncryptionEntity{}
+	apiObject := &awstypes.EncryptionEntity{}
 
-	if v, ok := tfMap["field_patterns"].([]interface{}); ok && len(v) > 0 {
-		apiObject.FieldPatterns = expandFieldPatterns(v[0].(map[string]interface{}))
+	if v, ok := tfMap["field_patterns"].([]any); ok && len(v) > 0 {
+		apiObject.FieldPatterns = expandFieldPatterns(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["provider_id"].(string); ok && v != "" {
@@ -247,15 +281,15 @@ func expandEncryptionEntity(tfMap map[string]interface{}) *cloudfront.Encryption
 	return apiObject
 }
 
-func expandEncryptionEntityItems(tfList []interface{}) []*cloudfront.EncryptionEntity {
+func expandEncryptionEntityItems(tfList []any) []awstypes.EncryptionEntity {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*cloudfront.EncryptionEntity
+	var apiObjects []awstypes.EncryptionEntity
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -267,34 +301,34 @@ func expandEncryptionEntityItems(tfList []interface{}) []*cloudfront.EncryptionE
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandFieldPatterns(tfMap map[string]interface{}) *cloudfront.FieldPatterns {
+func expandFieldPatterns(tfMap map[string]any) *awstypes.FieldPatterns {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.FieldPatterns{}
+	apiObject := &awstypes.FieldPatterns{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		items := flex.ExpandStringSet(v)
+		items := flex.ExpandStringValueSet(v)
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int64(int64(len(items)))
+		apiObject.Quantity = aws.Int32(int32(len(items)))
 	}
 
 	return apiObject
 }
 
-func flattenEncryptionEntities(apiObject *cloudfront.EncryptionEntities) map[string]interface{} {
+func flattenEncryptionEntities(apiObject *awstypes.EncryptionEntities) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
 		tfMap["items"] = flattenEncryptionEntityItems(v)
@@ -303,41 +337,37 @@ func flattenEncryptionEntities(apiObject *cloudfront.EncryptionEntities) map[str
 	return tfMap
 }
 
-func flattenEncryptionEntity(apiObject *cloudfront.EncryptionEntity) map[string]interface{} {
+func flattenEncryptionEntity(apiObject *awstypes.EncryptionEntity) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := flattenFieldPatterns(apiObject.FieldPatterns); len(v) > 0 {
-		tfMap["field_patterns"] = []interface{}{v}
+		tfMap["field_patterns"] = []any{v}
 	}
 
 	if v := apiObject.ProviderId; v != nil {
-		tfMap["provider_id"] = aws.StringValue(v)
+		tfMap["provider_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PublicKeyId; v != nil {
-		tfMap["public_key_id"] = aws.StringValue(v)
+		tfMap["public_key_id"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenEncryptionEntityItems(apiObjects []*cloudfront.EncryptionEntity) []interface{} {
+func flattenEncryptionEntityItems(apiObjects []awstypes.EncryptionEntity) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if v := flattenEncryptionEntity(apiObject); len(v) > 0 {
+		if v := flattenEncryptionEntity(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -345,16 +375,21 @@ func flattenEncryptionEntityItems(apiObjects []*cloudfront.EncryptionEntity) []i
 	return tfList
 }
 
-func flattenFieldPatterns(apiObject *cloudfront.FieldPatterns) map[string]interface{} {
+func flattenFieldPatterns(apiObject *awstypes.FieldPatterns) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = aws.StringValueSlice(v)
+		tfMap["items"] = v
 	}
 
 	return tfMap
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazoncloudfront.html#amazoncloudfront-resources-for-iam-policies.
+func fieldLevelEncryptionProfileARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "cloudfront", "field-level-encryption-profile/"+id)
 }

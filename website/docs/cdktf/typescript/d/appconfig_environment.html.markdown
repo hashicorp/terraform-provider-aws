@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) ID of the AppConfig Application to which this Environment belongs.
 * `environmentId` - (Required) ID of the AppConfig Environment.
 
@@ -54,8 +55,8 @@ This data source exports the following attributes in addition to the arguments a
 * `monitor` - Set of Amazon CloudWatch alarms to monitor during the deployment process.
     * `alarmArn` - ARN of the Amazon CloudWatch alarm.
     * `alarmRoleArn` - ARN of an IAM role for AWS AppConfig to monitor.
-* `state` - State of the environment. Possible values are `readyForDeployment`, `deploying`, `rollingBack`
-  or `rolledBack`.
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
+  or `ROLLED_BACK`.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-2536eae28938ccf1a8bf0a1e33718611d0fbfe4294f71a133d77dbe21bc83180 -->
+<!-- cache-key: cdktf-0.20.8 input-235942dae8af62f5ed0a43d9dbf5688d078ba8df22c127396d081ffb76b3cf69 -->

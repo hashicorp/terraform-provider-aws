@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the slot type. The name is case sensitive.
 * `version` - (Optional) Version of the slot type.
 
@@ -56,9 +57,9 @@ train the machine learning model about the values that it resolves for a slot.
 * `lastUpdatedDate` - Date when the $LATEST version of this slot type was updated.
 * `name` - Name of the slot type. The name is not case sensitive.
 * `valueSelectionStrategy` - Determines the slot resolution strategy that Amazon Lex
-uses to return slot type values. `originalValue` returns the value entered by the user if the user
-value is similar to the slot value. `topResolution` returns the first value in the resolution list
+uses to return slot type values. `ORIGINAL_VALUE` returns the value entered by the user if the user
+value is similar to the slot value. `TOP_RESOLUTION` returns the first value in the resolution list
 if there is a resolution list for the slot, otherwise null is returned.
 * `version` - Version of the slot type.
 
-<!-- cache-key: cdktf-0.18.0 input-49d6a5803a0366ff33a06d9d299d17bb3b22f57aa09b8faad79c4b2c1781df65 -->
+<!-- cache-key: cdktf-0.20.8 input-ccef47983314c781f24e05186679b747e8ef48afa0c137a9241ef95719e0ea10 -->

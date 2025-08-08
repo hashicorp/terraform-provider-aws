@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfresourcegroups "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -44,7 +45,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -52,10 +53,11 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -66,7 +68,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 			{
 				Config: testAccGroupConfig_basic(rName, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc2),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
 				),
 			},
@@ -74,25 +76,49 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccResourceGroupsGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
+				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -101,20 +127,20 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupConfig_tags2(rName, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupConfig_tags2(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
+				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -123,7 +149,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 
 func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -134,7 +160,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,15 +168,15 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -163,21 +189,21 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", acctest.CtTrue),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
 				Config: testAccGroupConfig_configuration(rName, desc2, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc2),
 				),
 			},
 			// Check that trying to change the configuration group to a resource-query group fails
@@ -191,7 +217,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 
 func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -200,7 +226,7 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -208,8 +234,8 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 				Config: testAccGroupConfig_configurationParametersOptional(rName, configType1, configType2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
@@ -228,7 +254,7 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 
 func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -236,7 +262,7 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -244,8 +270,8 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 				Config: testAccGroupConfig_resourceQueryAndConfiguration(rName, testAccResourceGroupQueryConfig, configType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),
@@ -260,18 +286,14 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceGroupExists(ctx context.Context, n string, v *resourcegroups.Group) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(ctx context.Context, n string, v *types.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Resource Groups Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 		output, err := tfresourcegroups.FindGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -287,7 +309,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, n string, v *resourceg
 
 func testAccCheckResourceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourcegroups_group" {

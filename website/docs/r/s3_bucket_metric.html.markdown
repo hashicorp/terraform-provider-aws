@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add metrics configuration for entire S3 bucket
@@ -47,18 +49,47 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 }
 ```
 
+### Add metrics configuration with S3 object filter for S3 Access Point
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_access_point" "example-access-point" {
+  bucket = aws_s3_bucket.example.id
+  name   = "example-access-point"
+}
+
+resource "aws_s3_bucket_metric" "example-filtered" {
+  bucket = aws_s3_bucket.example.id
+  name   = "ImportantBlueDocuments"
+
+  filter {
+    access_point = aws_s3_access_point.example-access-point.arn
+
+    tags = {
+      priority = "high"
+      class    = "blue"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to put metric configuration.
 * `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 
 The `filter` metric configuration supports the following:
 
-~> **NOTE:** At least one of `prefix` or `tags` is required when specifying a `filter`
+~> **NOTE:** At least one of `access_point`, `prefix`, or `tags` is required when specifying a `filter`
 
+* `access_point` - (Optional) S3 Access Point ARN for filtering (singular).
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 

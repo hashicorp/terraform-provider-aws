@@ -16,11 +16,6 @@ import (
 
 func TestAccVPCLatticeAuthPolicyDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_auth_policy.test"
 
@@ -30,15 +25,14 @@ func TestAccVPCLatticeAuthPolicyDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "policy", regexache.MustCompile(`"Action":"*"`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_identifier", "aws_vpclattice_service.test", "arn"),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrPolicy, regexache.MustCompile(`"Action":"*"`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_identifier", "aws_vpclattice_service.test", names.AttrARN),
 				),
 			},
 		},

@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_kendra_data_source: Add `configuration.template_configuration` argument
+```
+```release-note:note
+resource/aws_kendra_data_source: The `configuration.s3_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the upgraded Amazon S3 connector. Amazon has ended support for the older architecture as of June 2024, and resources created with this argument cannot be edited or updated. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-s3.html) for additional details.
+```
+```release-note:note
+resource/aws_kendra_data_source: The `configuration.web_crawler_configuration` argument is deprecated. Use `configuration.template_configuration` instead, which supports the Amazon Kendra Web Crawler connector v2.0. See the [Amazon Kendra documentation](https://docs.aws.amazon.com/kendra/latest/dg/data-source-web-crawler.html) for additional details.
+```

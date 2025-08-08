@@ -3,7 +3,7 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
-  Generates an Core Network policy document in JSON format
+  Generates a Core Network policy document in JSON format
 ---
 
 
@@ -176,12 +176,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are available:
+This data source supports the following arguments:
 
 * `attachment_policies` (Optional) - In a core network, all attachments use the block argument `attachment_policies` section to map an attachment to a segment. Instead of manually associating a segment to each attachment, attachments use tags, and then the tags are used to associate the attachment to the specified segment. Detailed below.
 * `core_network_configuration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
 * `segments` (Required) - Block argument that defines the different segments in the network. Here you can provide descriptions, change defaults, and provide explicit Regional operational and route filters. The names defined for each segment are used in the `segment_actions` and `attachment_policies` section. Each segment is created, and operates, as a completely separated routing domain. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
 * `segment_actions` (Optional) - A block argument, `segment_actions` define how routing works between segments. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
+* `network_function_groups` (Optional) - Block argument that defines the service insertion actions you want to include. Detailed below.
 
 ### `attachment_policies`
 
@@ -197,10 +198,11 @@ The following arguments are available:
 
 The following arguments are available:
 
-* `association_method` (Required) - Defines how a segment is mapped. Values can be `constant` or `tag`. `constant` statically defines the segment to associate the attachment to. `tag` uses the value of a tag to dynamically try to map to a segment.reference_policies_elements_condition_operators.html) to evaluate.
+* `association_method` (Optional) - Defines how a segment is mapped. Values can be `constant` or `tag`. `constant` statically defines the segment to associate the attachment to. `tag` uses the value of a tag to dynamically try to map to a segment.reference_policies_elements_condition_operators.html) to evaluate.
 * `segment` (Optional) - Name of the `segment` to share as defined in the `segments` section. This is used only when the `association_method` is `constant`.
 * `tag_value_of_key` (Optional) - Maps the attachment to the value of a known key. This is used with the `association_method` is `tag`. For example a `tag` of `stage = “test”`, will map to a segment named `test`. The value must exactly match the name of a segment. This allows you to have many segments, but use only a single rule without having to define multiple nearly identical conditions. This prevents creating many similar conditions that all use the same keys to map to segments.
 * `require_acceptance` (Optional) - Determines if this mapping should override the segment value for `require_attachment_acceptance`. You can only set this to `true`, indicating that this setting applies only to segments that have `require_attachment_acceptance` set to `false`. If the segment already has the default `require_attachment_acceptance`, you can set this to inherit segment’s acceptance value.
+* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `conditions`
 
@@ -221,6 +223,8 @@ The following arguments are available:
 * `inside_cidr_blocks` (Optional) - The Classless Inter-Domain Routing (CIDR) block range used to create tunnels for AWS Transit Gateway Connect. The format is standard AWS CIDR range (for example, `10.0.1.0/24`). You can optionally define the inside CIDR in the Core Network Edges section per Region. The minimum is a `/24` for IPv4 or `/64` for IPv6. You can provide multiple `/24` subnets or a larger CIDR range. If you define a larger CIDR range, new Core Network Edges will be automatically assigned `/24` and `/64` subnets from the larger CIDR. an Inside CIDR block is required for attaching Connect attachments to a Core Network Edge.
 * `vpn_ecmp_support` (Optional) - Indicates whether the core network forwards traffic over multiple equal-cost routes using VPN. The value can be either `true` or `false`. The default is `true`.
 * `edge_locations` (Required) - A block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
+* `dns_support` (Optional) - Indicates whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
+* `security_group_referencing_support` — (Optional) Indicates whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
 
 ### `edge_locations`
 
@@ -244,20 +248,34 @@ The following arguments are available:
 
 ### `segment_actions`
 
-`segment_actions` have differnet outcomes based on their `action` argument value. There are 2 valid values for `action`: `create-route` & `share`. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
+`segment_actions` have different outcomes based on their `action` argument value. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
 
 ~> **NOTE:** `share_with` and `share_with_except` break from the AWS API specification. The API has 1 argument `share-with` and it can accept 3 input types as valid (`"*"`, `["<segment-name>"]`, or `{ except: ["<segment-name>"]}`). To emulate this behavior, `share_with` is always a list that can accept the argument `["*"]` as valid for `"*"` and `share_with_except` is a that can accept `["<segment-name>"]` as valid for `{ except: ["<segment-name>"]}`. You may only specify one of: `share_with` or `share_with_except`.
 
 The following arguments are available:
 
-* `action` (Required) - Action to take for the chosen segment. Valid values `create-route` or `share`.
+* `action` (Required) - Action to take for the chosen segment. Valid values: `create-route`, `share`, `send-via` and `send-to`.
 * `description` (Optional) - A user-defined string describing the segment action.
 * `destination_cidr_blocks` (Optional) - List of strings containing CIDRs. You can define the IPv4 and IPv6 CIDR notation for each AWS Region. For example, `10.1.0.0/16` or `2001:db8::/56`. This is an array of CIDR notation strings.
 * `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment ids.
-* `mode` (Optional) - String. This mode places the attachment and return routes in each of the `share_with` segments. Valid values include: `attachment-route`.
+* `mode` (Optional) - String. When `action` is `share`, a `mode` value of `attachment-route` places the attachment and return routes in each of the `share_with` segments. When `action` is `send-via`, indicates the mode used for packets. Valid values: `attachment-route`, `single-hop`, `dual-hop`.
 * `segment` (Optional) - Name of the segment.
 * `share_with` (Optional) - A list of strings to share with. Must be a substring is all segments. Valid values include: `["*"]` or `["<segment-names>"]`.
 * `share_with_except` (Optional) - A set subtraction of segments to not share with.
+* `when_sent_to` (Optional) - The destination segments for the `send-via` or `send-to` `action`.
+    * `segments` (Optional) - A list of strings. The list of segments that the `send-via` `action` uses.
+* `via` (Optional) - The network function groups and any edge overrides associated with the action.
+    * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
+    * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
+        * `edge_sets` (Optional) - A list of a list of strings. The list of edges associated with the network function group.
+        * `use_edge_location` (Optional) - The preferred edge to use.
+        * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
+
+### `network_function_groups`
+
+* `name` (Required) - This identifies the network function group container.
+* `description` (Optional) - Optional description of the network function group.
+* `require_attachment_acceptance` (Required) - This will be either `true`, that attachment acceptance is required, or `false`, that it is not required.
 
 ## Attribute Reference
 
@@ -265,4 +283,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.18.0 input-2d3a246690051cddc4eb7a0126e5c94a805d1a1904d829fcafd01fc1ad9efb5b -->
+<!-- cache-key: cdktf-0.20.8 input-56e6b6619d7f4da214d8edb84d237c5917a104883cf345208b1801297dbe9761 -->

@@ -12,7 +12,10 @@ description: |-
 
 Registers a Lake Formation resource (e.g., S3 bucket) as managed by the Data Catalog. In other words, the S3 path is added to the data lake.
 
-Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role. When you register the S3 path, the service-linked role and a new inline policy are created on your behalf. Lake Formation adds the first path to the inline policy and attaches it to the service-linked role. When you register subsequent paths, Lake Formation adds the path to the existing policy.
+Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role.
+When you register the S3 path, the service-linked role and a new inline policy are created on your behalf.
+Lake Formation adds the first path to the inline policy and attaches it to the service-linked role.
+When you register subsequent paths, Lake Formation adds the path to the existing policy.
 
 ## Example Usage
 
@@ -41,8 +44,18 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
-* `role_arn` – (Optional) Role that has read/write access to the resource. If not provided, the Lake Formation service-linked role must exist and is used.
+The following arguments are required:
+
+* `arn` - (Required) Amazon Resource Name (ARN) of the resource.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Optional) Role that has read/write access to the resource.
+* `use_service_linked_role` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
+* `hybrid_access_enabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.
+* `with_federation`- (Optional) Whether or not the resource is a federated resource. Set to true when registering AWS Glue connections for federated catalog functionality.
+* `with_privileged_access` - (Optional) Boolean to grant the calling principal the permissions to perform all supported Lake Formation operations on the registered data location.
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
@@ -50,6 +63,6 @@ class MyConvertedCode(TerraformStack):
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `last_modified` - (Optional) The date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `last_modified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-<!-- cache-key: cdktf-0.18.0 input-13bd8e71cdf5fa3e7a18a3d1a2e20ff12ed7d291e84a336a056ad1006100d7f8 -->
+<!-- cache-key: cdktf-0.20.8 input-1b00e3a131d1fe3bfb1681d441c5ae9446653803683ae849bce3ea4c1b2debd2 -->

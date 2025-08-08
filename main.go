@@ -7,14 +7,24 @@ import (
 	"context"
 	"flag"
 	"log"
+	"runtime/debug"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 func main() {
 	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
 	flag.Parse()
+
+	logFlags := log.Flags()
+	logFlags = logFlags &^ (log.Ldate | log.Ltime)
+	log.SetFlags(logFlags)
+
+	if buildInfo, ok := debug.ReadBuildInfo(); ok {
+		log.Printf("Starting %s@%s (%s)...", buildInfo.Main.Path, version.ProviderVersion, buildInfo.GoVersion)
+	}
 
 	serverFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())
 
@@ -27,10 +37,6 @@ func main() {
 	if *debugFlag {
 		serveOpts = append(serveOpts, tf5server.WithManagedDebug())
 	}
-
-	logFlags := log.Flags()
-	logFlags = logFlags &^ (log.Ldate | log.Ltime)
-	log.SetFlags(logFlags)
 
 	err = tf5server.Serve(
 		"registry.terraform.io/hashicorp/aws",

@@ -220,9 +220,12 @@ output "scala_code" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dagEdge` - (Required) List of the edges in the DAG. Defined below.
 * `dagNode` - (Required) List of the nodes in the DAG. Defined below.
-* `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `python`. Valid values are `python` and `scala`.
+* `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
 
 ### dag_edge Argument Reference
 
@@ -248,7 +251,7 @@ output "scala_code" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `pythonScript` - Python script generated from the DAG when the `language` argument is set to `python`.
-* `scalaCode` - Scala code generated from the DAG when the `language` argument is set to `scala`.
+* `pythonScript` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
+* `scalaCode` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.
 
-<!-- cache-key: cdktf-0.18.0 input-be24758996e8a89722ff26b1265bf9700176ddfdb291cd62471cea079785dce2 -->
+<!-- cache-key: cdktf-0.20.8 input-722be06a94f9871cc019a3dc0e3bb3585b206d30f6de5b998e21aeca0e39f5db -->

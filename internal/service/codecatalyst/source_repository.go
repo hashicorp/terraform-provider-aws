@@ -42,7 +42,7 @@ func ResourceSourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +54,7 @@ func ResourceSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -66,32 +66,32 @@ const (
 	ResNameSourceRepository = "Source Repository"
 )
 
-func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateSourceRepositoryInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 	}
 
 	out, err := conn.CreateSourceRepository(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
 
-	return resourceSourceRepositoryRead(ctx, d, meta)
+	return append(diags, resourceSourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
@@ -107,35 +107,36 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameSourceRepository, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameSourceRepository, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 
 	return diags
 }
 
-func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCatalyst SourceRepository %s", d.Id())
 
-	_, err := conn.DeleteSourceRepository(ctx, &codecatalyst.DeleteSourceRepositoryInput{
+	input := codecatalyst.DeleteSourceRepositoryInput{
 		Name:        aws.String(d.Id()),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteSourceRepository(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameSourceRepository, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionDeleting, ResNameSourceRepository, d.Id(), err)
 	}
 
 	return diags

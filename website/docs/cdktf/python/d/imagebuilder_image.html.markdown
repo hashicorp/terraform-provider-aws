@@ -35,6 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference
@@ -47,6 +50,11 @@ This data source exports the following attributes in addition to the arguments a
 * `distribution_configuration_arn` - ARN of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - Whether additional information about the image being created is collected.
 * `image_recipe_arn` - ARN of the image recipe.
+* `image_scanning_configuration` - List of an object with image scanning configuration fields.
+    * `image_scanning_enabled` - Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image.
+    * `ecr_configuration` - Configuration block with ECR configuration.
+        * `repository_name` - The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+        * `container_tags` - Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 * `image_tests_configuration` - List of an object with image tests configuration.
     * `image_tests_enabled` - Whether image tests are enabled.
     * `timeout_minutes` - Number of minutes before image tests time out.
@@ -67,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.18.0 input-53a7f339aa6dcc7a25e0208e25307d27d8c96291fcb0093e705d220d99e734c2 -->
+<!-- cache-key: cdktf-0.20.8 input-016265026bf87b899faf1a651a4874099adeff366423cc3535f1a776e15e7608 -->

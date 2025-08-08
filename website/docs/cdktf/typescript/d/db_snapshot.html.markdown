@@ -13,7 +13,7 @@ description: |-
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
 ~> **NOTE:** This data source does not apply to snapshots created on Aurora DB clusters.
-See the [`awsDbClusterSnapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
+See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
 
 ## Example Usage
 
@@ -64,10 +64,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `dbInstanceIdentifier` or `dbSnapshotIdentifier` is required.
+This data source supports the following arguments:
 
-This argument supports the following arguments:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
 * `dbInstanceIdentifier` - (Optional) Returns the list of snapshots created by the specific db_instance
@@ -80,8 +79,10 @@ AWS accounts that this AWS account has been given permission to copy or restore,
 The default is `false`.
 * `includePublic` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
-`tags` - (Optional) Mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired DB snapshot.
+
+~> **NOTE:** One of either `dbInstanceIdentifier` or `dbSnapshotIdentifier` is required.
 
 ## Attribute Reference
 
@@ -103,6 +104,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this DB snapshot.
 * `storageType` - Storage type associated with DB snapshot.
 * `vpcId` - ID of the VPC associated with the DB snapshot.
-* `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `originalSnapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.18.0 input-453c07311432431ff619a675fedc77cdb7b11651f38957e4c10480c9e5d7bb31 -->
+<!-- cache-key: cdktf-0.20.8 input-12aac62838e5f54c5bfdb6d1fef69863950942daba6c81aed2882527b5e1b82e -->

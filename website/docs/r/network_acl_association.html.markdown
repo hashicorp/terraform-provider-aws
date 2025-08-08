@@ -27,6 +27,7 @@ resource "aws_network_acl_association" "main" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `network_acl_id` - (Required) The ID of the network ACL.
 * `subnet_id` - (Required) The ID of the associated Subnet.
 
@@ -35,3 +36,20 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the network ACL association
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network ACL associations using the `id`. For example:
+
+```terraform
+import {
+  to = aws_network_acl_association.main
+  id = "aclassoc-02baf37f20966b3e6"
+}
+```
+
+Using `terraform import`, import Network ACL associations using the `id`. For example:
+
+```console
+% terraform import aws_network_acl_association.main aclassoc-02baf37f20966b3e6
+```

@@ -45,7 +45,7 @@ func ResourceKxUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func ResourceKxUser() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -69,7 +69,6 @@ func ResourceKxUser() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -79,12 +78,12 @@ const (
 	kxUserIDPartCount = 2
 )
 
-func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxUserInput{
-		UserName:      aws.String(d.Get("name").(string)),
+		UserName:      aws.String(d.Get(names.AttrName).(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		IamRole:       aws.String(d.Get("iam_role").(string)),
 		Tags:          getTagsIn(ctx),
@@ -92,11 +91,11 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := client.CreateKxUser(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	idParts := []string{
@@ -105,14 +104,14 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	id, err := flex.FlattenResourceId(idParts, kxUserIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get(names.AttrName).(string), err)
 	}
 	d.SetId(id)
 
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
-func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -124,38 +123,38 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)
 	}
 
-	d.Set("arn", out.UserArn)
-	d.Set("name", out.UserName)
+	d.Set(names.AttrARN, out.UserArn)
+	d.Set(names.AttrName, out.UserName)
 	d.Set("iam_role", out.IamRole)
 	d.Set("environment_id", out.EnvironmentId)
 
 	return diags
 }
 
-func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	if d.HasChange("iam_role") {
 		in := &finspace.UpdateKxUserInput{
 			EnvironmentId: aws.String(d.Get("environment_id").(string)),
-			UserName:      aws.String(d.Get("name").(string)),
+			UserName:      aws.String(d.Get(names.AttrName).(string)),
 			IamRole:       aws.String(d.Get("iam_role").(string)),
 		}
 
 		_, err := conn.UpdateKxUser(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceKxUserRead(ctx, d, meta)...)
 }
 
-func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
@@ -163,16 +162,16 @@ func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	_, err := conn.DeleteKxUser(ctx, &finspace.DeleteKxUserInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		UserName:      aws.String(d.Get("name").(string)),
+		UserName:      aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)
 	}
 
 	return diags

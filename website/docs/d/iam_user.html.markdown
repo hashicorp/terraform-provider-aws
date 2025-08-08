@@ -22,6 +22,8 @@ data "aws_iam_user" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attribute Reference
@@ -29,6 +31,7 @@ data "aws_iam_user" "example" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS for this user.
+* `id` - Unique ID assigned by AWS for this user.
 * `path` - Path in which this user was created.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the user.
 * `user_id` - Unique ID assigned by AWS for this user.

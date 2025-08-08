@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_guardduty_detector_feature
+```
+
+```release-note:enhancement
+data-source/aws_guardduty_detector: Add `features` attribute
+```

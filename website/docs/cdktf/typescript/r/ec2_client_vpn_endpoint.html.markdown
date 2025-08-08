@@ -52,12 +52,15 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticationOptions` - (Required) Information about the authentication method to be used to authenticate clients.
 * `clientCidrBlock` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `clientConnectOptions` - (Optional) The options for managing connection authorization for new client connections.
 * `clientLoginBannerOptions` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `clientRouteEnforcementOptions` - (Optional) Options for enforce administrator defined routes on devices connected through the VPN.
 * `connectionLogOptions` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
+* `disconnectOnSessionTimeout` - (Optional) Indicates whether the client VPN session is disconnected after the maximum `sessionTimeoutHours` is reached. If `true`, users are prompted to reconnect client VPN. If `false`, client VPN attempts to reconnect automatically. The default value is `false`.
 * `dnsServers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
 * `securityGroupIds` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups.
 * `selfServicePortal` - (Optional) Specify whether to enable the self-service portal for the Client VPN endpoint. Values can be `enabled` or `disabled`. Default value is `disabled`.
@@ -73,11 +76,11 @@ This resource supports the following arguments:
 
 One of the following arguments must be supplied:
 
-* `activeDirectoryId` - (Optional) The ID of the Active Directory to be used for authentication if type is `directoryServiceAuthentication`.
-* `rootCertificateChainArn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificateAuthentication`.
-* `samlProviderArn` - (Optional) The ARN of the IAM SAML identity provider if type is `federatedAuthentication`.
-* `selfServiceSamlProviderArn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federatedAuthentication`.
-* `type` - (Required) The type of client authentication to be used. Specify `certificateAuthentication` to use certificate-based authentication, `directoryServiceAuthentication` to use Active Directory authentication, or `federatedAuthentication` to use Federated Authentication via SAML 2.0.
+* `activeDirectoryId` - (Optional) The ID of the Active Directory to be used for authentication if type is `directory-service-authentication`.
+* `rootCertificateChainArn` - (Optional) The ARN of the client certificate. The certificate must be signed by a certificate authority (CA) and it must be provisioned in AWS Certificate Manager (ACM). Only necessary when type is set to `certificate-authentication`.
+* `samlProviderArn` - (Optional) The ARN of the IAM SAML identity provider if type is `federated-authentication`.
+* `selfServiceSamlProviderArn` - (Optional) The ARN of the IAM SAML identity provider for the self service portal if type is `federated-authentication`.
+* `type` - (Required) The type of client authentication to be used. Specify `certificate-authentication` to use certificate-based authentication, `directory-service-authentication` to use Active Directory authentication, or `federated-authentication` to use Federated Authentication via SAML 2.0.
 
 ### `clientConnectOptions` Argument reference
 
@@ -88,6 +91,10 @@ One of the following arguments must be supplied:
 
 * `bannerText` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
 * `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
+
+### `clientRouteEnforcementOptions` Argument reference
+
+* `enforced` - (Optional) Enable or disable Client Route Enforcement. The default is `false` (not enabled).
 
 ### `connectionLogOptions` Argument Reference
 
@@ -104,6 +111,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Client VPN endpoint.
 * `dnsName` - The DNS name to be used by clients when establishing their VPN session.
 * `id` - The ID of the Client VPN endpoint.
+* `selfServicePortalUrl` - The URL of the self-service portal.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -114,9 +122,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Ec2ClientVpnEndpoint } from "./.gen/providers/aws/ec2-client-vpn-endpoint";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Ec2ClientVpnEndpoint.generateConfigForImport(
+      this,
+      "example",
+      "cvpn-endpoint-0ac3a1abbccddd666"
+    );
   }
 }
 
@@ -128,4 +146,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f4f8dbe89d75774796b216907972bd2bf3f8642b0b7ab8cdca495678b4b52ef6 -->
+<!-- cache-key: cdktf-0.20.8 input-f065ad9ab33bbc106a9cc63080a2e311a400e08bcfeabfc201937d1909427766 -->

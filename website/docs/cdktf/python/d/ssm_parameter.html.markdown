@@ -40,10 +40,13 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `name` - Name of the parameter.
@@ -52,4 +55,4 @@ In addition to all arguments above, the following attributes are exported:
 * `insecure_value` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.
 
-<!-- cache-key: cdktf-0.18.0 input-89a145f5b43a3c824da664ca5cd8985b70d4cc516d350f4aa2411cd727cc5e4b -->
+<!-- cache-key: cdktf-0.20.8 input-7bab32aeb80d7eb85b1dc28d74a3eb1d88dc9d03be9b681bd95289e6d53bee26 -->

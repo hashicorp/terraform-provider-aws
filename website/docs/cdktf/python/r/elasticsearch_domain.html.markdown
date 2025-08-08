@@ -68,7 +68,7 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         data_aws_region_current.override_logical_id("current")
         ElasticsearchDomain(self, "example",
-            access_policies="{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": \"es:*\",\n      \"Principal\": \"*\",\n      \"Effect\": \"Allow\",\n      \"Resource\": \"arn:aws:es:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:domain/${" + domain.value + "}/*\",\n      \"Condition\": {\n        \"IpAddress\": {\"aws:SourceIp\": [\"66.193.100.22/32\"]}\n      }\n    }\n  ]\n}\n\n",
+            access_policies="{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Action\": \"es:*\",\n      \"Principal\": \"*\",\n      \"Effect\": \"Allow\",\n      \"Resource\": \"arn:aws:es:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:domain/${" + domain.value + "}/*\",\n      \"Condition\": {\n        \"IpAddress\": {\"aws:SourceIp\": [\"66.193.100.22/32\"]}\n      }\n    }\n  ]\n}\n\n",
             domain_name=domain.string_value
         )
 ```
@@ -193,7 +193,7 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         data_aws_subnets_selected.override_logical_id("selected")
         aws_elasticsearch_domain_es = ElasticsearchDomain(self, "es_8",
-            access_policies="{\n\t\"Version\": \"2012-10-17\",\n\t\"Statement\": [\n\t\t{\n\t\t\t\"Action\": \"es:*\",\n\t\t\t\"Principal\": \"*\",\n\t\t\t\"Effect\": \"Allow\",\n\t\t\t\"Resource\": \"arn:aws:es:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:domain/${" + domain.value + "}/*\"\n\t\t}\n\t]\n}\n\n",
+            access_policies="{\n\t\"Version\": \"2012-10-17\",\n\t\"Statement\": [\n\t\t{\n\t\t\t\"Action\": \"es:*\",\n\t\t\t\"Principal\": \"*\",\n\t\t\t\"Effect\": \"Allow\",\n\t\t\t\"Resource\": \"arn:aws:es:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:domain/${" + domain.value + "}/*\"\n\t\t}\n\t]\n}\n\n",
             advanced_options={
                 "rest.action.multi.allow_explicit_index": "true"
             },
@@ -227,6 +227,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -309,7 +310,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 * `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the Elasticsearch domain.
 * `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07`, `Policy-Min-TLS-1-2-2019-07`, and `Policy-Min-TLS-1-2-PFS-2023-10`. Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
@@ -359,7 +360,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
-* `domain_name` - Name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -382,9 +382,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.elasticsearch_domain import ElasticsearchDomain
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        ElasticsearchDomain.generate_config_for_import(self, "example", "domain_name")
 ```
 
 Using `terraform import`, import Elasticsearch domains using the `domain_name`. For example:
@@ -393,4 +399,4 @@ Using `terraform import`, import Elasticsearch domains using the `domain_name`. 
 % terraform import aws_elasticsearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2ba3b0b9b5de9cf5e4bfb0c3d93db7aa5852b5b15d23694c08cdf16cdf8481e6 -->
+<!-- cache-key: cdktf-0.20.8 input-face87336885dfc641e0b06a92ee81cef51f4eb39910843254eb7aa3de9a7902 -->

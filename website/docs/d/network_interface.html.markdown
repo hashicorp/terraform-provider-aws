@@ -6,7 +6,7 @@ description: |-
   Get information on a Network Interface resource.
 ---
 
-# aws_network_interface
+# Data Source: aws_network_interface
 
 Use this data source to get information about a Network Interface.
 
@@ -22,14 +22,13 @@ data "aws_network_interface" "bar" {
 
 This data source supports the following arguments:
 
-* `id` – (Optional) Identifier for the network interface.
-* `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) Identifier for the network interface.
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
 ## Attribute Reference
 
-See the [Network Interface](/docs/providers/aws/r/network_interface.html) for details on the returned attributes.
-
-Additionally, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
 * `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.

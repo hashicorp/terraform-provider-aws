@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Decrease replica count after other updates
+```

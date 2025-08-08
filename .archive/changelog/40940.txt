@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_s3_bucket: Add hosted zone ID for `mx-central-1` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `mx-central-1` AWS Region
+```
+
+```release-note:enhancement
+data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `mx-central-1` AWS Region
+```
+
+```release-note:enhancement
+provider: Support `mx-central-1` as a valid AWS Region
+```

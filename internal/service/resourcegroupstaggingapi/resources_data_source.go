@@ -6,18 +6,20 @@ package resourcegroupstaggingapi
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_resourcegroupstaggingapi_resources")
-func DataSourceResources() *schema.Resource {
+// @SDKDataSource("aws_resourcegroupstaggingapi_resources", name="Resources")
+func dataSourceResources() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourcesRead,
 
@@ -49,11 +51,11 @@ func DataSourceResources() *schema.Resource {
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 20,
@@ -67,7 +69,7 @@ func DataSourceResources() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_arn": {
+						names.AttrResourceARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -93,7 +95,7 @@ func DataSourceResources() *schema.Resource {
 								},
 							},
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -101,9 +103,9 @@ func DataSourceResources() *schema.Resource {
 	}
 }
 
-func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn(ctx)
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 
@@ -116,65 +118,64 @@ func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("resource_arn_list"); ok && v.(*schema.Set).Len() > 0 {
-		input.ResourceARNList = flex.ExpandStringSet(v.(*schema.Set))
+		input.ResourceARNList = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("tag_filter"); ok {
-		input.TagFilters = expandTagFilters(v.([]interface{}))
+		input.TagFilters = expandTagFilters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("resource_type_filters"); ok && v.(*schema.Set).Len() > 0 {
-		input.ResourceTypeFilters = flex.ExpandStringSet(v.(*schema.Set))
+		input.ResourceTypeFilters = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	var taggings []*resourcegroupstaggingapi.ResourceTagMapping
+	var taggings []types.ResourceTagMapping
 
-	err := conn.GetResourcesPagesWithContext(ctx, input, func(page *resourcegroupstaggingapi.GetResourcesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := resourcegroupstaggingapi.NewGetResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Resource Groups Tagging API Resources: %s", err)
 		}
 
 		taggings = append(taggings, page.ResourceTagMappingList...)
-		return !lastPage
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Resource Groups Tags API Resources: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Partition)
+	d.SetId(meta.(*conns.AWSClient).Partition(ctx))
 
-	if err := d.Set("resource_tag_mapping_list", flattenResourcesTagMappingList(ctx, taggings)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenResourceTagMappings(ctx, taggings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resource tag mapping list: %s", err)
 	}
 
 	return diags
 }
 
-func expandTagFilters(filters []interface{}) []*resourcegroupstaggingapi.TagFilter {
-	result := make([]*resourcegroupstaggingapi.TagFilter, len(filters))
+func expandTagFilters(filters []any) []types.TagFilter {
+	result := make([]types.TagFilter, len(filters))
 
 	for i, filter := range filters {
-		m := filter.(map[string]interface{})
+		m := filter.(map[string]any)
 
-		result[i] = &resourcegroupstaggingapi.TagFilter{
-			Key: aws.String(m["key"].(string)),
+		result[i] = types.TagFilter{
+			Key: aws.String(m[names.AttrKey].(string)),
 		}
 
-		if v, ok := m["values"]; ok && v.(*schema.Set).Len() > 0 {
-			result[i].Values = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := m[names.AttrValues]; ok && v.(*schema.Set).Len() > 0 {
+			result[i].Values = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 	}
 
 	return result
 }
 
-func flattenResourcesTagMappingList(ctx context.Context, list []*resourcegroupstaggingapi.ResourceTagMapping) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMapping) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 
 	for _, i := range list {
-		l := map[string]interface{}{
-			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         KeyValueTags(ctx, i.Tags).Map(),
+		l := map[string]any{
+			names.AttrResourceARN: aws.ToString(i.ResourceARN),
+			names.AttrTags:        keyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
@@ -187,16 +188,16 @@ func flattenResourcesTagMappingList(ctx context.Context, list []*resourcegroupst
 	return result
 }
 
-func flattenComplianceDetails(details *resourcegroupstaggingapi.ComplianceDetails) []map[string]interface{} {
+func flattenComplianceDetails(details *types.ComplianceDetails) []map[string]any {
 	if details == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"compliance_status":             aws.BoolValue(details.ComplianceStatus),
-		"keys_with_noncompliant_values": flex.FlattenStringSet(details.KeysWithNoncompliantValues),
-		"non_compliant_keys":            flex.FlattenStringSet(details.NoncompliantKeys),
+	m := map[string]any{
+		"compliance_status":             aws.ToBool(details.ComplianceStatus),
+		"keys_with_noncompliant_values": details.KeysWithNoncompliantValues,
+		"non_compliant_keys":            details.NoncompliantKeys,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

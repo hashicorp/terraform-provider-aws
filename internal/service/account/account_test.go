@@ -14,12 +14,18 @@ func TestAccAccount_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AlternateContact": {
-			"basic":      testAccAlternateContact_basic,
-			"disappears": testAccAlternateContact_disappears,
-			"AccountID":  testAccAlternateContact_accountID,
+			acctest.CtBasic:      testAccAlternateContact_basic,
+			acctest.CtDisappears: testAccAlternateContact_disappears,
+			"AccountID":          testAccAlternateContact_accountID,
 		},
 		"PrimaryContact": {
-			"basic": testAccPrimaryContact_basic,
+			acctest.CtBasic:       testAccPrimaryContact_basic,
+			"dataSourceBasic":     testAccPrimaryContactDataSource_basic,
+			"dataSourceAccountID": testAccPrimaryContactDataSource_accountID,
+		},
+		"Region": {
+			acctest.CtBasic: testAccRegion_basic,
+			"AccountID":     testAccRegion_accountID,
 		},
 	}
 

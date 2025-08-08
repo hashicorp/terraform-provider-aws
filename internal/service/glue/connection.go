@@ -9,16 +9,19 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,42 +30,48 @@ import (
 
 // @SDKResource("aws_glue_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
-func ResourceConnection() *schema.Resource {
+func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
 		ReadWithoutTimeout:   resourceConnectionRead,
 		UpdateWithoutTimeout: resourceConnectionUpdate,
 		DeleteWithoutTimeout: resourceConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			"athena_properties": {
+				Type:      schema.TypeMap,
+				Optional:  true,
+				Sensitive: true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: mapKeyInSlice(glue.ConnectionPropertyKey_Values(), false),
-				Elem:         &schema.Schema{Type: schema.TypeString},
+				Type:             schema.TypeMap,
+				Optional:         true,
+				Sensitive:        true,
+				ValidateDiagFunc: verify.MapKeysAre(validation.ToDiagFunc(validation.StringInSlice(connectionPropertyKey_Values(), false))),
+				Elem:             &schema.Schema{Type: schema.TypeString},
 			},
 			"connection_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      glue.ConnectionTypeJdbc,
-				ValidateFunc: validation.StringInSlice(glue.ConnectionType_Values(), false),
+				Default:      awstypes.ConnectionTypeJdbc,
+				ValidateFunc: validation.StringInSlice(connectionType_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -76,7 +85,7 @@ func ResourceConnection() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,7 +97,7 @@ func ResourceConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -98,7 +107,7 @@ func ResourceConnection() *schema.Resource {
 							MaxItems: 50,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -111,45 +120,47 @@ func ResourceConnection() *schema.Resource {
 	}
 }
 
-func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	var catalogID string
-	if v, ok := d.GetOkExists("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*conns.AWSClient).AccountID
+		catalogID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
-	input := &glue.CreateConnectionInput{
+	input := glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandConnectionInput(d),
 		Tags:            getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
-	_, err := conn.CreateConnectionWithContext(ctx, input)
+	_, err := conn.CreateConnection(ctx, &input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Connection (%s): %s", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
+	d.SetId(connectionCreateResourceID(catalogID, name))
 
 	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
-func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.GlueClient(ctx)
 
-	catalogID, connectionName, err := DecodeConnectionID(d.Id())
+	catalogID, connectionName, err := connectionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -160,25 +171,14 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", d.Id(), err)
 	}
 
-	connectionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("connection/%s", connectionName),
-	}.String()
-	d.Set("arn", connectionArn)
-
-	d.Set("catalog_id", catalogID)
-	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
-	}
+	d.Set(names.AttrARN, connectionARN(ctx, c, connectionName))
+	d.Set("athena_properties", connection.AthenaProperties)
+	d.Set(names.AttrCatalogID, catalogID)
+	d.Set("connection_properties", connection.ConnectionProperties)
 	d.Set("connection_type", connection.ConnectionType)
-	d.Set("description", connection.Description)
-	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting match_criteria: %s", err)
-	}
-	d.Set("name", connection.Name)
+	d.Set(names.AttrDescription, connection.Description)
+	d.Set("match_criteria", connection.MatchCriteria)
+	d.Set(names.AttrName, connection.Name)
 	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
@@ -186,24 +186,24 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		catalogID, connectionName, err := DecodeConnectionID(d.Id())
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		catalogID, connectionName, err := connectionParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
 		}
 
-		input := &glue.UpdateConnectionInput{
+		input := glue.UpdateConnectionInput{
 			CatalogId:       aws.String(catalogID),
 			ConnectionInput: expandConnectionInput(d),
 			Name:            aws.String(connectionName),
 		}
 
-		log.Printf("[DEBUG] Updating Glue Connection: %s", input)
-		_, err = conn.UpdateConnectionWithContext(ctx, input)
+		_, err = conn.UpdateConnection(ctx, &input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
 		}
@@ -212,108 +212,153 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	catalogID, connectionName, err := DecodeConnectionID(d.Id())
+	catalogID, connectionName, err := connectionParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Glue Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Connection: %s", d.Id())
-	err = DeleteConnection(ctx, conn, catalogID, connectionName)
-	if err != nil {
+	if err := deleteConnection(ctx, conn, catalogID, connectionName); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Connection (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func DecodeConnectionID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format CATALOG-ID:NAME, provided: %s", id)
-	}
-	return idParts[0], idParts[1], nil
+const connectionResourceIDSeparator = ":"
+
+func connectionCreateResourceID(catalogID, connectionName string) string {
+	parts := []string{catalogID, connectionName}
+	id := strings.Join(parts, connectionResourceIDSeparator)
+
+	return id
 }
 
-func DeleteConnection(ctx context.Context, conn *glue.Glue, catalogID, connectionName string) error {
-	input := &glue.DeleteConnectionInput{
+func connectionParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, connectionResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CATALOG-ID%[2]sNAME", id, connectionResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func deleteConnection(ctx context.Context, conn *glue.Client, catalogID, connectionName string) error {
+	input := glue.DeleteConnectionInput{
 		CatalogId:      aws.String(catalogID),
 		ConnectionName: aws.String(connectionName),
 	}
 
-	_, err := conn.DeleteConnectionWithContext(ctx, input)
+	_, err := conn.DeleteConnection(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil
+	}
+
+	return err
+}
+
+func findConnectionByTwoPartKey(ctx context.Context, conn *glue.Client, name, catalogID string) (*awstypes.Connection, error) {
+	input := glue.GetConnectionInput{
+		CatalogId: aws.String(catalogID),
+		Name:      aws.String(name),
+	}
+	output, err := conn.GetConnection(ctx, &input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
-		}
-		return err
+		return nil, err
 	}
 
-	return nil
+	if output == nil || output.Connection == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Connection, nil
 }
 
-func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
-	connectionProperties := make(map[string]string)
-	if val, ok := d.GetOkExists("connection_properties"); ok {
-		for k, v := range val.(map[string]interface{}) {
-			connectionProperties[k] = v.(string)
-		}
-	}
-
-	connectionInput := &glue.ConnectionInput{
-		ConnectionProperties: aws.StringMap(connectionProperties),
-		ConnectionType:       aws.String(d.Get("connection_type").(string)),
-		Name:                 aws.String(d.Get("name").(string)),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		connectionInput.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("match_criteria"); ok {
-		connectionInput.MatchCriteria = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("physical_connection_requirements"); ok {
-		physicalConnectionRequirementsList := v.([]interface{})
-		physicalConnectionRequirementsMap := physicalConnectionRequirementsList[0].(map[string]interface{})
-		connectionInput.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(physicalConnectionRequirementsMap)
-	}
-
-	return connectionInput
+func connectionARN(ctx context.Context, c *conns.AWSClient, connectionName string) string {
+	return c.RegionalARN(ctx, "glue", "connection/"+connectionName)
 }
 
-func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
-	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
-
-	if v, ok := m["availability_zone"]; ok {
-		physicalConnectionRequirements.AvailabilityZone = aws.String(v.(string))
+func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
+	apiObject := &awstypes.ConnectionInput{
+		ConnectionType: awstypes.ConnectionType(d.Get("connection_type").(string)),
+		Name:           aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := m["security_group_id_list"]; ok {
-		physicalConnectionRequirements.SecurityGroupIdList = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("athena_properties"); ok && len(v.(map[string]any)) > 0 {
+		apiObject.AthenaProperties = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
-	if v, ok := m["subnet_id"]; ok {
-		physicalConnectionRequirements.SubnetId = aws.String(v.(string))
+	if v, ok := d.GetOk("connection_properties"); ok && len(v.(map[string]any)) > 0 {
+		apiObject.ConnectionProperties = flex.ExpandStringValueMap(v.(map[string]any))
+	} else {
+		apiObject.ConnectionProperties = make(map[string]string)
 	}
 
-	return physicalConnectionRequirements
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		apiObject.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("match_criteria"); ok && len(v.([]any)) > 0 {
+		apiObject.MatchCriteria = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk("physical_connection_requirements"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(v.([]any)[0].(map[string]any))
+	}
+
+	return apiObject
 }
 
-func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.PhysicalConnectionRequirements) []map[string]interface{} {
-	if physicalConnectionRequirements == nil {
-		return []map[string]interface{}{}
+func expandPhysicalConnectionRequirements(tfMap map[string]any) *awstypes.PhysicalConnectionRequirements {
+	apiObject := &awstypes.PhysicalConnectionRequirements{}
+
+	if v, ok := tfMap[names.AttrAvailabilityZone]; ok {
+		apiObject.AvailabilityZone = aws.String(v.(string))
 	}
 
-	m := map[string]interface{}{
-		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
-		"security_group_id_list": flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
-		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
+	if v, ok := tfMap["security_group_id_list"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIdList = flex.ExpandStringValueSet(v)
 	}
 
-	return []map[string]interface{}{m}
+	if v, ok := tfMap[names.AttrSubnetID]; ok {
+		apiObject.SubnetId = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenPhysicalConnectionRequirements(apiObject *awstypes.PhysicalConnectionRequirements) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrAvailabilityZone: aws.ToString(apiObject.AvailabilityZone),
+		"security_group_id_list":   apiObject.SecurityGroupIdList,
+		names.AttrSubnetID:         aws.ToString(apiObject.SubnetId),
+	}
+
+	return []any{tfMap}
+}
+
+func connectionPropertyKey_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionPropertyKey](), "SparkProperties")
+}
+
+func connectionType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.ConnectionType](), "AZURECOSMOS", "AZURESQL", "BIGQUERY", "DYNAMODB", "OPENSEARCH", "SNOWFLAKE")
 }

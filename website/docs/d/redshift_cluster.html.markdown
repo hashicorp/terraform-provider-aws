@@ -45,6 +45,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required) Cluster identifier
 
 ## Attribute Reference
@@ -76,6 +77,7 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_roles` - IAM roles associated to the cluster
 * `kms_key_id` - KMS encryption key associated to the cluster
 * `master_username` - Username for the master DB user
+* `multi_az` - If the cluster is a Multi-AZ deployment
 * `node_type` - Cluster node type
 * `number_of_nodes` - Number of nodes in the cluster
 * `maintenance_track_name` - The name of the maintenance track for the restored cluster.

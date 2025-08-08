@@ -136,17 +136,57 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Custom Headers
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  custom_headers = <<-EOT
+    customHeaders:
+      - pattern: '**'
+        headers:
+          - key: 'Strict-Transport-Security'
+            value: 'max-age=31536000; includeSubDomains'
+          - key: 'X-Frame-Options'
+            value: 'SAMEORIGIN'
+          - key: 'X-XSS-Protection'
+            value: '1; mode=block'
+          - key: 'X-Content-Type-Options'
+            value: 'nosniff'
+          - key: 'Content-Security-Policy'
+            value: "default-src 'self'"
+  EOT
+}
+```
+
+### Job Config
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  job_config {
+    build_compute_type = "STANDARD_8GB"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for an Amplify app.
-* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
-* `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. An `auto_branch_creation_config` block is documented below.
+* `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. This token must have write access to the relevant repo to create a webhook and a read-only deploy key for the Amplify project. The token is not stored, so after applying this attribute can be removed and the setup token deleted.
+* `auto_branch_creation_config` - (Optional) Automated branch creation configuration for an Amplify app. See [`auto_branch_creation_config` Block](#auto_branch_creation_config-block) for details.
 * `auto_branch_creation_patterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
 * `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
 * `build_spec` - (Optional) The [build specification](https://docs.aws.amazon.com/amplify/latest/userguide/build-settings.html) (build spec) for an Amplify app.
-* `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. A `custom_rule` block is documented below.
+* `cache_config` - (Optional) Cache configuration for the Amplify app. See [`cache_config` Block](#cache_config-block) for details.
+* `compute_role_arn` - (Optional) AWS Identity and Access Management (IAM) SSR compute role for an Amplify app.
+* `custom_headers` - (Optional) The [custom HTTP headers](https://docs.aws.amazon.com/amplify/latest/userguide/custom-headers.html) for an Amplify app.
+* `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. See [`custom_rule` Block](#custom_rule-block) for details.
 * `description` - (Optional) Description for an Amplify app.
 * `enable_auto_branch_creation` - (Optional) Enables automated branch creation for an Amplify app.
 * `enable_basic_auth` - (Optional) Enables basic authorization for an Amplify app. This will apply to all branches that are part of this app.
@@ -154,12 +194,15 @@ This resource supports the following arguments:
 * `enable_branch_auto_deletion` - (Optional) Automatically disconnects a branch in the Amplify Console when you delete a branch from your Git repository.
 * `environment_variables` - (Optional) Environment variables map for an Amplify app.
 * `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
+* `job_config` - (Optional) Used to configure the [Amplify Application build instance compute type](https://docs.aws.amazon.com/amplify/latest/APIReference/API_JobConfig.html#amplify-Type-JobConfig-buildComputeType). See [`job_config` Block](#job_config-block) for details.
 * `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
 * `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
 * `repository` - (Optional) Repository for an Amplify app.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-An `auto_branch_creation_config` block supports the following arguments:
+### `auto_branch_creation_config` Block
+
+The `auto_branch_creation_config` configuration block supports the following arguments:
 
 * `basic_auth_credentials` - (Optional) Basic authorization credentials for the autocreated branch.
 * `build_spec` - (Optional) Build specification (build spec) for the autocreated branch.
@@ -172,12 +215,26 @@ An `auto_branch_creation_config` block supports the following arguments:
 * `pull_request_environment_name` - (Optional) Amplify environment name for the pull request.
 * `stage` - (Optional) Describes the current stage for the autocreated branch. Valid values: `PRODUCTION`, `BETA`, `DEVELOPMENT`, `EXPERIMENTAL`, `PULL_REQUEST`.
 
-A `custom_rule` block supports the following arguments:
+### `cache_config` Block
+
+The `cache_config` configuration block supports the following arguments:
+
+- `type` - (Required) Type of cache configuration to use for an Amplify app. Valid values: `AMPLIFY_MANAGED`, `AMPLIFY_MANAGED_NO_COOKIES`.
+
+### `custom_rule` Block
+
+The `custom_rule` configuration block supports the following arguments:
 
 * `condition` - (Optional) Condition for a URL rewrite or redirect rule, such as a country code.
 * `source` - (Required) Source pattern for a URL rewrite or redirect rule.
 * `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) Target pattern for a URL rewrite or redirect rule.
+
+### `job_config` Block
+
+The `job_config` configuration block supports the following arguments:
+
+* `build_compute_type` - (Optional) Size of the build instance. Valid values: `STANDARD_8GB`, `LARGE_16GB`, and `XLARGE_72GB`. Default: `STANDARD_8GB`.
 
 ## Attribute Reference
 

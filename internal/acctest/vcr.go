@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -20,8 +19,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,16 +27,12 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"gopkg.in/dnaeon/go-vcr.v3/cassette"
-	"gopkg.in/dnaeon/go-vcr.v3/recorder"
-)
-
-const (
-	envVarVCRMode = "VCR_MODE"
-	envVarVCRPath = "VCR_PATH"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/cassette"
+	"gopkg.in/dnaeon/go-vcr.v4/pkg/recorder"
 )
 
 type randomnessSource struct {
@@ -80,8 +73,10 @@ var (
 	randomnessSources = randomnessSourceMap(make(map[string]*randomnessSource, 0))
 )
 
-// ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
-func ProviderMeta(t *testing.T) *conns.AWSClient {
+// ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient")
+func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
+	t.Helper()
+
 	providerMetas.Lock()
 	meta, ok := providerMetas[t.Name()]
 	defer providerMetas.Unlock()
@@ -93,28 +88,16 @@ func ProviderMeta(t *testing.T) *conns.AWSClient {
 	return meta
 }
 
-func isVCREnabled() bool {
-	return os.Getenv(envVarVCRMode) != "" && os.Getenv(envVarVCRPath) != ""
-}
+// vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use
+// with VCR
+func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 
-func vcrMode() (recorder.Mode, error) {
-	switch v := os.Getenv(envVarVCRMode); v {
-	case "RECORDING":
-		return recorder.ModeRecordOnce, nil
-	case "REPLAYING":
-		return recorder.ModeReplayOnly, nil
-	default:
-		return recorder.ModePassthrough, fmt.Errorf("unsupported value for %s: %s", envVarVCRMode, v)
-	}
-}
-
-// vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
-func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
 	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
 	for name := range input {
 		output[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -129,11 +112,14 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 	return output
 }
 
-// vcrProviderConfigureContextFunc returns a provider configuration function returning cached provider instance state.
-// This is necessary as ConfigureContextFunc is called multiple times for a given test, each time creating a new HTTP client.
-// VCR requires a single HTTP client to handle all interactions.
+// vcrProviderConfigureContextFunc returns a provider configuration function returning
+// cached provider instance state
+//
+// This is necessary as ConfigureContextFunc is called multiple times for a given test,
+// each time creating a new HTTP client. VCR requires a single HTTP client to handle all
+// interactions.
 func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
-	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	return func(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		var diags diag.Diagnostics
 
 		providerMetas.Lock()
@@ -144,48 +130,36 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			return meta, nil
 		}
 
-		vcrMode, err := vcrMode()
-
+		vcrMode, err := vcr.Mode()
 		if err != nil {
 			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
-		// Cribbed from aws-sdk-go-base.
+		// Real transport config, cribbed from aws-sdk-go-base.
 		httpClient := cleanhttp.DefaultPooledClient()
 		transport := httpClient.Transport.(*http.Transport)
 		transport.MaxIdleConnsPerHost = 10
-		tlsConfig := transport.TLSClientConfig
-		if tlsConfig == nil {
-			tlsConfig = &tls.Config{}
+		if tlsConfig := transport.TLSClientConfig; tlsConfig == nil {
+			tlsConfig = &tls.Config{
+				MinVersion: tls.VersionTLS13,
+			}
 			transport.TLSClientConfig = tlsConfig
 		}
-		tlsConfig.MinVersion = tls.VersionTLS12
 
-		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
-
-		// Create a VCR recorder around a default HTTP client.
-		r, err := recorder.NewWithOptions(&recorder.Options{
-			CassetteName:  path,
-			Mode:          vcrMode,
-			RealTransport: httpClient.Transport,
-		})
-
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-
-		// Remove sensitive HTTP headers.
-		r.AddHook(func(i *cassette.Interaction) error {
+		// After capture hook to remove sensitive HTTP headers.
+		sensitiveHeaderHook := func(i *cassette.Interaction) error {
 			delete(i.Request.Headers, "Authorization")
 			delete(i.Request.Headers, "X-Amz-Security-Token")
-
 			return nil
-		}, recorder.AfterCaptureHook)
+		}
 
-		// Defines how VCR will match requests to responses.
-		r.SetMatcher(func(r *http.Request, i cassette.Request) bool {
-			// Default matcher compares method and URL only.
-			if !cassette.DefaultMatcher(r, i) {
+		// Define how VCR will match requests to stored interactions.
+		matchFunc := func(r *http.Request, i cassette.Request) bool {
+			if r.Method != i.Method {
+				return false
+			}
+
+			if r.URL.String() != i.URL {
 				return false
 			}
 
@@ -195,7 +169,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(r.Body); err != nil {
-				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]interface{}{
+				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]any{
 					"error": err,
 				})
 				return false
@@ -212,37 +186,21 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			switch contentType := r.Header.Get("Content-Type"); contentType {
 			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
 				// JSON might be the same, but reordered. Try parsing and comparing.
-				var requestJson, cassetteJson interface{}
-
-				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]interface{}{
-						"error": err,
-					})
-					return false
-				}
-
-				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]interface{}{
-						"error": err,
-					})
-					return false
-				}
-
-				return reflect.DeepEqual(requestJson, cassetteJson)
+				return tfjson.EqualStrings(body, i.Body)
 
 			case "application/xml":
 				// XML might be the same, but reordered. Try parsing and comparing.
-				var requestXml, cassetteXml interface{}
+				var requestXml, cassetteXml any
 
 				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]any{
 						"error": err,
 					})
 					return false
 				}
 
 				if err := xml.Unmarshal([]byte(i.Body), &cassetteXml); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]interface{}{
+					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]any{
 						"error": err,
 					})
 					return false
@@ -252,7 +210,22 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			}
 
 			return false
-		})
+		}
+
+		cassetteName := filepath.Join(vcr.Path(), vcrFileName(testName))
+
+		// Create a VCR recorder around a default HTTP client.
+		r, err := recorder.New(cassetteName,
+			recorder.WithHook(sensitiveHeaderHook, recorder.AfterCaptureHook),
+			recorder.WithMatcher(matchFunc),
+			recorder.WithMode(vcrMode),
+			recorder.WithRealTransport(httpClient.Transport),
+			recorder.WithSkipRequestLatency(true),
+		)
+
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
 
 		// Use the wrapped HTTP Client for AWS APIs.
 		// As the HTTP client is used in the provider's ConfigureContextFunc
@@ -263,7 +236,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		} else {
 			meta = new(conns.AWSClient)
 		}
-		meta.SetHTTPClient(httpClient)
+		meta.SetHTTPClient(ctx, httpClient)
 		provider.SetMeta(meta)
 
 		if v, ds := configureContextFunc(ctx, d); ds.HasError() {
@@ -272,27 +245,19 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			meta = v.(*conns.AWSClient)
 		}
 
-		// Don't retry requests if a recorded interaction isn't found.
-		// TODO Need to loop through all API clients to do this.
-		// TODO Use []*client.Client?
-		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
-			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
-			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
-				r.Retryable = aws.Bool(false)
-			}
-		})
-
 		providerMetas[testName] = meta
 
 		return meta, diags
 	}
 }
 
-// vcrRandomnessSource returns a rand.Source for VCR testing.
-// In RECORDING mode, generates a new seed and saves it to a file, using the seed for the source.
-// In REPLAYING mode, reads a seed from a file and creates a source from it.
+// vcrRandomnessSource returns a rand.Source for VCR testing
+//
+// In RECORD_ONLY mode, generates a new seed and saves it to a file, using the
+// seed for the source.
+// In REPLAY_ONLY mode, reads a seed from a file and creates a source from it.
 func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
+	t.Helper()
 	testName := t.Name()
 
 	randomnessSources.Lock()
@@ -303,24 +268,23 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 		return s, nil
 	}
 
-	vcrMode, err := vcrMode()
-
+	vcrMode, err := vcr.Mode()
 	if err != nil {
 		return nil, err
 	}
 
 	switch vcrMode {
-	case recorder.ModeRecordOnce:
+	case recorder.ModeRecordOnly:
 		seed := rand.Int63()
 		s = &randomnessSource{
 			seed:   seed,
 			source: rand.NewSource(seed),
 		}
 	case recorder.ModeReplayOnly:
-		seed, err := readSeedFromFile(vcrSeedFile(os.Getenv(envVarVCRPath), testName))
+		seed, err := readSeedFromFile(vcrSeedFile(vcr.Path(), testName))
 
 		if err != nil {
-			return nil, fmt.Errorf("no cassette found on disk for %s, please replay this testcase in recording mode - %w", testName, err)
+			return nil, fmt.Errorf("no cassette found on disk for %s, please replay this testcase in RECORD_ONLY mode - %w", testName, err)
 		}
 
 		s = &randomnessSource{
@@ -328,6 +292,7 @@ func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
 			source: rand.NewSource(seed),
 		}
 	default:
+		t.Log("unsupported VCR mode")
 		t.FailNow()
 	}
 
@@ -379,8 +344,10 @@ func writeSeedToFile(seed int64, fileName string) error {
 	return err
 }
 
-// closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
-func closeVCRRecorder(t *testing.T) {
+// closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed
+func closeVCRRecorder(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	// Don't close the recorder if we're running because of a panic.
 	if p := recover(); p != nil {
 		panic(p)
@@ -392,8 +359,8 @@ func closeVCRRecorder(t *testing.T) {
 	defer providerMetas.Unlock()
 
 	if ok {
-		if !t.Failed() {
-			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+		if !t.Failed() && !t.Skipped() {
+			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)
@@ -402,6 +369,8 @@ func closeVCRRecorder(t *testing.T) {
 		}
 
 		delete(providerMetas, testName)
+	} else {
+		t.Log("provider meta not found for test", testName)
 	}
 
 	// Save the randomness seed.
@@ -410,40 +379,56 @@ func closeVCRRecorder(t *testing.T) {
 	defer randomnessSources.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			t.Log("persisting randomness seed")
-			if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
+			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
 			}
 		}
 
 		delete(randomnessSources, testName)
+	} else {
+		t.Log("randomness source not found for test", testName)
 	}
 }
 
-// ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
-func ParallelTest(t *testing.T, c resource.TestCase) {
-	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+// ParallelTest wraps resource.ParallelTest, initializing VCR if enabled
+func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
+	t.Helper()
+
+	if vcr.IsEnabled() {
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.ParallelTest(t, c)
 }
 
-// Test wraps resource.Test, initializing VCR if enabled.
-func Test(t *testing.T, c resource.TestCase) {
-	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+// Test wraps resource.Test, initializing VCR if enabled
+func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
+	t.Helper()
+
+	if vcr.IsEnabled() {
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.Test(t, c)
 }
 
-// RandInt is a VCR-friendly replacement for acctest.RandInt.
+// RandInt is a VCR-friendly replacement for acctest.RandInt
 func RandInt(t *testing.T) int {
-	if !isVCREnabled() {
+	t.Helper()
+
+	if !vcr.IsEnabled() {
 		return sdkacctest.RandInt()
 	}
 
@@ -456,7 +441,9 @@ func RandInt(t *testing.T) int {
 	return rand.New(s.source).Int()
 }
 
-// RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix.
+// RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix
 func RandomWithPrefix(t *testing.T, prefix string) string {
+	t.Helper()
+
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }

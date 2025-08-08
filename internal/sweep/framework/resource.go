@@ -5,18 +5,18 @@ package framework
 
 import (
 	"context"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type attribute struct {
@@ -45,26 +45,28 @@ func NewSweepResource(factory func(context.Context) (fwresource.ResourceWithConf
 	}
 }
 
-func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+func (sr *sweepResource) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
 	resource, err := sr.factory(ctx)
-
 	if err != nil {
 		return err
 	}
 
-	metadata := resourceMetadata(ctx, resource)
-	ctx = tflog.SetField(ctx, "resource_type", metadata.TypeName)
+	var configureResp fwresource.ConfigureResponse
+	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: sr.meta}, &configureResp)
+	if configureResp.Diagnostics.HasError() {
+		return fwdiag.DiagnosticsError(configureResp.Diagnostics)
+	}
 
-	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: sr.meta}, &fwresource.ConfigureResponse{})
-
-	schemaResp := fwresource.SchemaResponse{}
+	var schemaResp fwresource.SchemaResponse
 	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
+	if schemaResp.Diagnostics.HasError() {
+		return fwdiag.DiagnosticsError(schemaResp.Diagnostics)
+	}
 
 	state := tfsdk.State{
 		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
 		Schema: schemaResp.Schema,
 	}
-
 	for _, attr := range sr.attributes {
 		d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
 		if d.HasError() {
@@ -75,24 +77,27 @@ func (sr *sweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 
 	tflog.Info(ctx, "Sweeping resource")
 
-	err = tfresource.Retry(ctx, timeout, func() *retry.RetryError {
-		err := deleteResource(ctx, state, resource)
+	err = deleteResource(ctx, state, resource)
 
-		if err != nil {
-			if strings.Contains(err.Error(), "Throttling") {
-				tflog.Info(ctx, "Retrying throttling error", map[string]any{
-					"err": err.Error(),
-				})
-				return retry.RetryableError(err)
+	if errs.Contains(err, "Value Conversion Error") {
+		// Hack for per-resource Region override.
+		// Inject a top-level region attribute into the schema and retry.
+		schema := state.Schema.(rschema.Schema)
+		schema.Attributes[names.AttrRegion] = rschema.StringAttribute{
+			Optional: true,
+			Computed: true,
+		}
+		state := tfsdk.State{
+			Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
+			Schema: schema,
+		}
+		for _, attr := range sr.attributes {
+			d := state.SetAttribute(ctx, path.Root(attr.path), attr.value)
+			if d.HasError() {
+				return fwdiag.DiagnosticsError(d)
 			}
-
-			return retry.NonRetryableError(err)
 		}
 
-		return nil
-	}, optFns...)
-
-	if tfresource.TimedOut(err) {
 		err = deleteResource(ctx, state, resource)
 	}
 
@@ -104,11 +109,4 @@ func deleteResource(ctx context.Context, state tfsdk.State, resource fwresource.
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
 	return fwdiag.DiagnosticsError(response.Diagnostics)
-}
-
-func resourceMetadata(ctx context.Context, resource fwresource.Resource) fwresource.MetadataResponse {
-	var response fwresource.MetadataResponse
-	resource.Metadata(ctx, fwresource.MetadataRequest{}, &response)
-
-	return response
 }

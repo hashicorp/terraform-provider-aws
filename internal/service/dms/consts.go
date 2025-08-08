@@ -3,7 +3,18 @@
 
 package dms
 
+import (
+	"time"
+)
+
 const (
+	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	connectionStatusSuccessful = "successful"
+	connectionStatusTesting    = "testing"
+
 	endpointStatusDeleting = "deleting"
 
 	replicationInstanceStatusAvailable = "available"
@@ -16,6 +27,7 @@ const (
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
 	replicationTaskStatusModifying = "modifying"
+	replicationTaskStatusMoving    = "moving"
 	replicationTaskStatusReady     = "ready"
 	replicationTaskStatusStopped   = "stopped"
 	replicationTaskStatusStopping  = "stopping"
@@ -81,7 +93,6 @@ func engineName_Values() []string {
 		engineNameRedis,
 		engineNameRedshift,
 		engineNameRedshiftServerless,
-		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
 	}
@@ -109,18 +120,6 @@ func mongoDBAuthMechanismValue_Values() []string {
 const (
 	mongoDBAuthSourceAdmin = "admin"
 )
-
-const (
-	s3SettingsCompressionTypeGzip = "GZIP"
-	s3SettingsCompressionTypeNone = "NONE"
-)
-
-func s3SettingsCompressionType_Values() []string {
-	return []string{
-		s3SettingsCompressionTypeGzip,
-		s3SettingsCompressionTypeNone,
-	}
-}
 
 const (
 	encryptionModeSseKMS = "SSE_KMS"
@@ -166,3 +165,10 @@ func networkType_Values() []string {
 		networkTypeIPv4,
 	}
 }
+
+const (
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
+)

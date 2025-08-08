@@ -29,7 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsVpclatticeServiceNetwork(this, "example", {
-      serviceNetworkIdentifier: "",
+      serviceNetworkIdentifier: "snsa-01112223334445556",
     });
   }
 }
@@ -38,16 +38,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `serviceNetworkIdentifier` - (Required) Identifier of the network service.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `serviceNetworkIdentifier` - (Required) Identifier of the service network.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
-* `authType` - Authentication type for the service network. Either `none` or `awsIam`.
+* `authType` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.
 * `createdAt` - Date and time the service network was created.
 * `id` - ID of the service network.
 * `lastUpdatedAt` - Date and time the service network was last updated.
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfAssociatedServices` - Number of services associated with this service network.
 * `numberOfAssociatedVpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.18.0 input-c539f91d88b5096cbf562c14cc4bb30e227fb9632cb22b7e29fdfe584d5c8b9b -->
+<!-- cache-key: cdktf-0.20.8 input-2c51ddaae628d2b7c8c6f40ed62775719fe1cd2f4eb9e1f1b9fca02f7c958b10 -->

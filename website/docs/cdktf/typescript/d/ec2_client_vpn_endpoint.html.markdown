@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientVpnEndpointId` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
@@ -89,12 +90,14 @@ This data source exports the following attributes in addition to the arguments a
 * `clientCidrBlock` - IPv4 address range, in CIDR notation, from which client IP addresses are assigned.
 * `clientConnectOptions` - The options for managing connection authorization for new client connections.
 * `clientLoginBannerOptions` - Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `clientRouteEnforcementOptions` - Options for enforce administrator defined routes on devices connected through the VPN.
 * `connectionLogOptions` - Information about the client connection logging options for the Client VPN endpoint.
 * `description` - Brief description of the endpoint.
 * `dnsName` - DNS name to be used by clients when connecting to the Client VPN endpoint.
 * `dnsServers` - Information about the DNS servers to be used for DNS resolution.
 * `securityGroupIds` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `selfServicePortal` - Whether the self-service portal for the Client VPN endpoint is enabled.
+* `selfServicePortalUrl` - The URL of the self-service portal.
 * `serverCertificateArn` - The ARN of the server certificate.
 * `sessionTimeoutHours` - The maximum VPN session duration time in hours.
 * `splitTunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
@@ -106,6 +109,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-59f6f06c6cf9645ca1b189844289fe1fb6172dca20e441b5097e6b1a94115c5a -->
+<!-- cache-key: cdktf-0.20.8 input-7f12c9facea58d3ce201e579737f6038588f970f5adfa8d68d90d639791fbadf -->

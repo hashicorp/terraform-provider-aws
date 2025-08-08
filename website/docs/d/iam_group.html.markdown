@@ -22,6 +22,8 @@ data "aws_iam_group" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `group_name` - (Required) Friendly IAM group name to match.
 
 ## Attribute Reference
@@ -30,6 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Group ARN.
 * `group_id` - Stable and unique string identifying the group.
+* `id` - Stable and unique string identifying the group.
 * `path` - Path to the group.
 * `users` - List of objects containing group member information. See below.
 

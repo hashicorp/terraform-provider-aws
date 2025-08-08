@@ -12,8 +12,8 @@ description: |-
 
 Represents a successful verification of an SES domain identity.
 
-Most commonly, this resource is used together with [`awsRoute53Record`](route53_record.html) and
-[`awsSesDomainIdentity`](ses_domain_identity.html) to request an SES domain identity,
+Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
+[`aws_ses_domain_identity`](ses_domain_identity.html) to request an SES domain identity,
 deploy the required DNS verification records, and wait for verification to complete.
 
 ~> **WARNING:** This resource implements a part of the verification workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_amazonses_verification_record",
       {
-        name: "_amazonses.${" + example.id + "}",
+        name: "_amazonses.${" + example.domain + "}",
         records: [example.verificationToken],
         ttl: Token.asNumber("600"),
         type: "TXT",
@@ -50,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
     );
     new SesDomainIdentityVerification(this, "example_verification", {
       dependsOn: [exampleAmazonsesVerificationRecord],
-      domain: example.id,
+      domain: example.domain,
     });
   }
 }
@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name of the SES domain identity to verify.
 
 ## Attribute Reference
@@ -74,6 +75,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45M`)
+- `create` - (Default `45m`)
 
-<!-- cache-key: cdktf-0.18.0 input-01264da5e2e5cedeff8b5da6bb3720236b99d8827e99483d8586f6e5626fdcb4 -->
+<!-- cache-key: cdktf-0.20.8 input-9fe3a20174811c0235d4b6d0722d8038b96343aa88ae77e6aa91b911e986abcb -->

@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Cloudwatch log group
 
 ## Attribute Reference
@@ -43,8 +44,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Cloudwatch log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
 * `creation_time` - Creation time of the log group, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC.
-* `retention_in_days` - Number of days log events retained in the specified log group.
 * `kms_key_id` - ARN of the KMS Key to use when encrypting log data.
+* `log_group_class` - The log class of the log group.
+* `retention_in_days` - Number of days log events retained in the specified log group.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-98c67f629213b5447fa03395fb5fb657973411cf76bb2bdbeae232bee8c64098 -->
+<!-- cache-key: cdktf-0.20.8 input-e7879d304d8048d76879cb64c54f5caedf62bf105ce50e567093881cc0304391 -->

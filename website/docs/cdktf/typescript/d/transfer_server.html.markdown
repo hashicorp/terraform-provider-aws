@@ -37,6 +37,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `serverId` - (Required) ID for an SFTP server.
 
 ## Attribute Reference
@@ -46,14 +49,15 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of Transfer Server.
 * `certificate` - ARN of any certificate.
 * `domain` -  The domain of the storage system that is used for file transfers.
-* `endpoint` - Endpoint of the Transfer Server (e.g., `s12345678ServerTransferRegionAmazonawsCom`).
+* `endpoint` - Endpoint of the Transfer Server (e.g., `s-12345678.server.transfer.REGION.amazonaws.com`).
 * `endpointType` - Type of endpoint that the server is connected to.
-* `identityProviderType` - The mode of authentication enabled for this service. The default value is `serviceManaged`, which allows you to store and access SFTP user credentials within the service. `apiGateway` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice.
-* `invocationRole` - ARN of the IAM role used to authenticate the user account with an `identityProviderType` of `apiGateway`.
+* `identityProviderType` - The mode of authentication enabled for this service. The default value is `SERVICE_MANAGED`, which allows you to store and access SFTP user credentials within the service. `API_GATEWAY` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice.
+* `invocationRole` - ARN of the IAM role used to authenticate the user account with an `identityProviderType` of `API_GATEWAY`.
 * `loggingRole` - ARN of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `protocols` - File transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint.
 * `securityPolicyName` - The name of the security policy that is attached to the server.
 * `structuredLogDestinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
-* `url` - URL of the service endpoint used to authenticate users with an `identityProviderType` of `apiGateway`.
+* `tags` - Map of tags assigned to the resource.
+* `url` - URL of the service endpoint used to authenticate users with an `identityProviderType` of `API_GATEWAY`.
 
-<!-- cache-key: cdktf-0.18.0 input-527a93818210197a7ed1dcc84d2ff4fa1fd16ef88ced9a8af3676cc1ab7b8447 -->
+<!-- cache-key: cdktf-0.20.8 input-28745451d1e7b2a0bd0bd7f12d032083034fce4530ccfe478e300b54a6b6967b -->

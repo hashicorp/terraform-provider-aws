@@ -62,6 +62,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) CodeStar Connection ARN.
 * `name` - (Optional) CodeStar Connection name.
 
@@ -71,11 +72,11 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `connectionStatus` - CodeStar Connection status. Possible values are `pending`, `available` and `error`.
+* `connectionStatus` - CodeStar Connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
 * `id` - CodeStar Connection ARN.
 * `hostArn` - ARN of the host associated with the connection.
 * `name` - Name of the CodeStar Connection. The name is unique in the calling AWS account.
-* `providerType` - Name of the external provider where your third-party code repository is configured. Possible values are `bitbucket` and `gitHub`. For connections to a GitHub Enterprise Server instance, you must create an [aws_codestarconnections_host](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codestarconnections_host) resource and use `hostArn` instead.
+* `providerType` - Name of the external provider where your third-party code repository is configured. Possible values are `Bitbucket`, `GitHub` and `GitLab`. For connections to GitHub Enterprise Server or GitLab Self-Managed instances, you must create an [aws_codestarconnections_host](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codestarconnections_host) resource and use `hostArn` instead.
 * `tags` - Map of key-value resource tags to associate with the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-ab1b1d204990cc42834998f3ea8aaf072f9c3accf6d33f73782ae59f7304b4b6 -->
+<!-- cache-key: cdktf-0.20.8 input-9a9a2da1dba0d97cdc2167f83306a6d2c6b6b100d0ab205b1a1459113b464fa4 -->

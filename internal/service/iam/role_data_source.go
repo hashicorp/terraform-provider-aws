@@ -8,22 +8,25 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_role")
-func DataSourceRole() *schema.Resource {
+// @SDKDataSource("aws_iam_role", name="Role")
+// @Tags
+// @Testing(tagsIdentifierAttribute="name", tagsResourceType="Role")
+func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +38,7 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +46,11 @@ func DataSourceRole() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +63,7 @@ func DataSourceRole() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -71,7 +74,7 @@ func DataSourceRole() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -80,25 +83,24 @@ func DataSourceRole() *schema.Resource {
 	}
 }
 
-func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
-	role, err := FindRoleByName(ctx, conn, name)
+	name := d.Get(names.AttrName).(string)
+	role, err := findRoleByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-	d.Set("arn", role.Arn)
+	d.Set(names.AttrARN, role.Arn)
 	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
-	d.Set("description", role.Description)
+	d.Set(names.AttrDescription, role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
-	d.Set("name", role.RoleName)
-	d.Set("path", role.Path)
+	d.Set(names.AttrName, role.RoleName)
+	d.Set(names.AttrPath, role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
@@ -109,33 +111,28 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("unique_id", role.RoleId)
 
-	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set("assume_role_policy", assumeRolePolicy)
 
-	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }
 
-func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"region": aws.StringValue(apiObject.Region),
+	tfMap := map[string]any{
+		names.AttrRegion: aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {
 		tfMap["last_used_date"] = apiObject.LastUsedDate.Format(time.RFC3339)
 	}
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

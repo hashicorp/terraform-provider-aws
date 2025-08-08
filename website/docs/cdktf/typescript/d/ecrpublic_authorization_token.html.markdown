@@ -12,7 +12,7 @@ description: |-
 
 The Public ECR Authorization Token data source allows the authorization token, token expiration date, user name, and password to be retrieved for a Public ECR repository.
 
-~> **NOTE:** This data source can only be used in the `usEast1` region.
+~> **NOTE:** This data source can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -34,14 +34,20 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `userName:password`.
+* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expiresAt` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.18.0 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->
+<!-- cache-key: cdktf-0.20.8 input-ece012b6e5ae8de14ec6e3b09c22a4ad28d8fd3bcdd6e268233938cf36886aa0 -->

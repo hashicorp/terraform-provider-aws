@@ -37,7 +37,6 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new AmiCopy(this, "example", {
-      description: "A copy of ami-xxxxxxxx",
       name: "terraform-example",
       sourceAmiId: "ami-xxxxxxxx",
       sourceAmiRegion: "us-west-1",
@@ -54,6 +53,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `sourceAmiId` - (Required) Id of the AMI to copy. This id must be valid in the region
   given by `sourceAmiRegion`.
@@ -65,7 +65,7 @@ This resource supports the following arguments:
 * `kmsKeyId` - (Optional) Full ARN of the KMS Key to use when encrypting the snapshots of an image during a copy operation. If not specified, then the default AWS KMS Key will be used
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-This resource also exposes the full set of arguments from the [`awsAmi`](ami.html) resource.
+This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 
 ## Attribute Reference
 
@@ -75,15 +75,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
-[`awsAmi`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
+[`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `40M`)
-* `update` - (Default `40M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-24f70ab5d03ce5421bd9ce27fd5b5602c0ac4eedfab0b82ddfc7fec0c10806cf -->
+<!-- cache-key: cdktf-0.20.8 input-f98d7e99c733a296b32252161fdfde5067757995a233d70155a1867ce5b7501b -->

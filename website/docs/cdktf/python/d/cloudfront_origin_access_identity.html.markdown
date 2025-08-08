@@ -29,18 +29,21 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsCloudfrontOriginAccessIdentity(self, "example",
-            id="EDFDVBD632BHDS5"
+            id="E1ZAKK699EOLAL"
         )
 ```
 
 ## Argument Reference
 
-* `id` (Required) -  The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+This data source supports the following arguments:
+
+* `id` (Required) -  The identifier for the origin access identity. For example: `E1ZAKK699EOLAL`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin access identity ARN.
 * `caller_reference` - Internal value used by CloudFront to allow future
    updates to the origin access identity.
 * `cloudfront_access_identity_path` - A shortcut to the full path for the
@@ -50,9 +53,9 @@ This data source exports the following attributes in addition to the arguments a
    For example: `E2QWRUHAPOMQZL`.
 * `iam_arn` - Pre-generated ARN for use in S3 bucket policies (see below).
    Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
- E2QWRUHAPOMQZL`.
+   E2QWRUHAPOMQZL`.
 * `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
 
-<!-- cache-key: cdktf-0.18.0 input-6ee07d67e88c83135a682bc01ecae9a6413d07992377fed93295e34cd1b0ceec -->
+<!-- cache-key: cdktf-0.20.8 input-9db8c38175d99e971d847739ed678089026a0013ee0d5648ce5a78ef59aa10bd -->

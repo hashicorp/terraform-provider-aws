@@ -33,20 +33,23 @@ class MyConvertedCode(TerraformStack):
             engine_version="OpenSearch_1.1"
         )
         main = DataAwsIamPolicyDocument(self, "main",
-            actions=["es:*"],
-            condition=[{
-                "test": "IpAddress",
-                "values": "127.0.0.1/32",
-                "variable": "aws:SourceIp"
-            }
-            ],
-            effect="Allow",
-            principals=[{
-                "identifiers": ["*"],
-                "type": "*"
-            }
-            ],
-            resources=["${" + example.arn + "}/*"]
+            statement=[DataAwsIamPolicyDocumentStatement(
+                actions=["es:*"],
+                condition=[DataAwsIamPolicyDocumentStatementCondition(
+                    test="IpAddress",
+                    values=["127.0.0.1/32"],
+                    variable="aws:SourceIp"
+                )
+                ],
+                effect="Allow",
+                principals=[DataAwsIamPolicyDocumentStatementPrincipals(
+                    identifiers=["*"],
+                    type="*"
+                )
+                ],
+                resources=["${" + example.arn + "}/*"]
+            )
+            ]
         )
         aws_opensearch_domain_policy_main = OpensearchDomainPolicy(self, "main_2",
             access_policies=Token.as_string(main.json),
@@ -60,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `domain_name` - (Required) Name of the domain.
 
@@ -74,4 +78,4 @@ This resource exports no additional attributes.
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-a328eddc117438efb16775e086884fddbd2aac0ed901d693d862f7b23e059951 -->
+<!-- cache-key: cdktf-0.20.8 input-9558e5d80278f43e608d4546d96c11aa7b6e54d6436ec0944803ec9ca9ed8b2b -->

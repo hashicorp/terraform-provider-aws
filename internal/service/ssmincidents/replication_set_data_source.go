@@ -6,50 +6,29 @@ package ssmincidents
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmincidents_replication_set")
-func DataSourceReplicationSet() *schema.Resource {
+// @SDKDataSource("aws_ssmincidents_replication_set", name="Replication Set")
+// @Region(overrideEnabled=false)
+// @Tags(identifierAttribute="id")
+func dataSourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kms_key_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status_message": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"tags": tftags.TagsSchemaComputed(),
-			// all other computed fields in alphabetic order
 			"created_by": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -62,57 +41,121 @@ func DataSourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrRegion: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrKMSKeyARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatusMessage: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Deprecated: "region is deprecated. Use regions instead.",
+			},
+			"regions": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKMSKeyARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatusMessage: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameReplicationSet = "Replication Set Data Source"
-)
+func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
-
-	arn, err := getReplicationSetARN(ctx, client)
+	var input ssmincidents.ListReplicationSetsInput
+	arn, err := findReplicationSetARN(ctx, conn, &input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSMIncidents Replication Set: %s", err)
 	}
 
-	d.SetId(arn)
+	d.SetId(aws.ToString(arn))
 
-	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
+	replicationSet, err := findReplicationSetByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSMIncidents Replication Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", replicationSet.Arn)
+	d.Set(names.AttrARN, replicationSet.Arn)
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	d.Set("status", replicationSet.Status)
-
-	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
+	if err := d.Set(names.AttrRegion, flattenRegionInfos(replicationSet.RegionMap)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting region: %s", err)
 	}
+	if err := d.Set("regions", flattenRegionInfos(replicationSet.RegionMap)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting regions: %s", err)
+	}
+	d.Set(names.AttrStatus, replicationSet.Status)
 
-	tags, err := listTags(ctx, client, d.Id())
+	return diags
+}
+
+func findReplicationSetARN(context context.Context, conn *ssmincidents.Client, input *ssmincidents.ListReplicationSetsInput) (*string, error) {
+	output, err := findReplicationSetARNs(context, conn, input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameReplicationSet, d.Id(), err)
+		return nil, err
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	return tfresource.AssertSingleValueResult(output)
+}
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameReplicationSet, d.Id(), err)
+func findReplicationSetARNs(context context.Context, conn *ssmincidents.Client, input *ssmincidents.ListReplicationSetsInput) ([]string, error) {
+	var output []string
+
+	pages := ssmincidents.NewListReplicationSetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(context)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ReplicationSetArns...)
 	}
 
-	return nil
+	return output, nil
 }

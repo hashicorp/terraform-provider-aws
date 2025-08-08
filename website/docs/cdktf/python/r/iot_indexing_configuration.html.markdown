@@ -43,6 +43,9 @@ class MyConvertedCode(TerraformStack):
                 )
                 ],
                 device_defender_indexing_mode="VIOLATIONS",
+                filter=IotIndexingConfigurationThingIndexingConfigurationFilter(
+                    named_shadow_names=["thing1shadow"]
+                ),
                 named_shadow_indexing_mode="ON",
                 thing_connectivity_indexing_mode="STATUS",
                 thing_indexing_mode="REGISTRY_AND_SHADOW"
@@ -52,6 +55,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `thing_group_indexing_configuration` - (Optional) Thing group indexing configuration. See below.
 * `thing_indexing_configuration` - (Optional) Thing indexing configuration. See below.
 
@@ -71,6 +77,7 @@ The `thing_indexing_configuration` configuration block supports the following:
 * `device_defender_indexing_mode` - (Optional) Device Defender indexing mode. Valid values: `VIOLATIONS`, `OFF`. Default: `OFF`.
 * `managed_field` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
 * `named_shadow_indexing_mode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `ON`, `OFF`. Default: `OFF`.
+* `filter` - (Optional) Required if `named_shadow_indexing_mode` is `ON`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
 * `thing_connectivity_indexing_mode` - (Optional) Thing connectivity indexing mode. Valid values: `STATUS`, `OFF`. Default: `OFF`.
 * `thing_indexing_mode` - (Required) Thing indexing mode. Valid values: `REGISTRY`, `REGISTRY_AND_SHADOW`, `OFF`.
 
@@ -81,8 +88,14 @@ The `custom_field` and `managed_field` configuration blocks supports the followi
 * `name` - (Optional) The name of the field.
 * `type` - (Optional) The data type of the field. Valid values: `Number`, `String`, `Boolean`.
 
+### filter
+
+The `filter` configuration block supports the following:
+
+* `named_shadow_names` - (Optional) List of shadow names that you select to index.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-f7efbd9e6b20237c5f64b6bb401a63af7cf9384ee0544a5856bb5370e10c1f1e -->
+<!-- cache-key: cdktf-0.20.8 input-7b93778083724f9d7803ecb63527b89e0f851b13c0add32c93da3c2521db8a8a -->

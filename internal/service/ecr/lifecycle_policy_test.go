@@ -8,25 +8,25 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	randString := sdkacctest.RandString(10)
-	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,6 +45,29 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccECRLifecyclePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceLifecyclePolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,7 +75,7 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,10 +84,22 @@ func TestAccECRLifecyclePolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccLifecyclePolicyConfig_newOrder(rName),
-				PlanOnly: true,
+				Config: testAccLifecyclePolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -77,7 +112,7 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,11 +121,53 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:             testAccLifecyclePolicyConfig_changed(rName),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccLifecyclePolicyConfig_changed(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECRLifecyclePolicy_detectTagPatternListDiff(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_tagPatternList(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccLifecyclePolicyConfig_tagPatternListChanged(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -98,47 +175,41 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_lifecycle_policy" {
 				continue
 			}
 
-			input := &ecr.GetLifecyclePolicyInput{
-				RepositoryName: aws.String(rs.Primary.ID),
+			_, err := tfecr.FindLifecyclePolicyByRepositoryName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetLifecyclePolicyWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-					return nil
-				}
-				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("ECR Lifecycle Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		input := &ecr.GetLifecyclePolicyInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfecr.FindLifecyclePolicyByRepositoryName(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetLifecyclePolicyWithContext(ctx, input)
 		return err
 	}
 }
@@ -146,7 +217,7 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resourc
 func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -178,7 +249,7 @@ EOF
 func testAccLifecyclePolicyConfig_changed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -258,7 +329,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
 func testAccLifecyclePolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -297,6 +368,72 @@ resource "aws_ecr_lifecycle_policy" "test" {
           type = "expire"
         }
       },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_tagPatternList(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = "%s"
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPatternList = [
+            "alpha-*"
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_tagPatternListChanged(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPatternList = [
+            "beta-*"
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      }
     ]
   })
 }

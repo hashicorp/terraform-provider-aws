@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Multiple AWS Buckets in Different Regions
@@ -56,6 +58,7 @@ resource "aws_s3control_multi_region_access_point" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 

@@ -208,6 +208,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
@@ -219,16 +220,25 @@ This resource supports the following arguments:
 Action Blocks (for `action`) support the following:
 
 * `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
-* `target_group_arn` - (Optional) The ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
-* `forward` - (Optional) Information for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `target_group_arn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `target_group_arn`.
-* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
-* `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `authenticate_cognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
 * `authenticate_oidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
+* `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
+  Specify only if `type` is `forward`.
+  Cannot be specified with `target_group_arn`.
+* `order` - (Optional) Order for the action.
+  The action with the lowest value for order is performed first.
+  Valid values are between `1` and `50000`.
+  Defaults to the position in the list of actions.
+* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
+* `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic.
+  Specify only if `type` is `forward` and you want to route to a single target group.
+  To route to one or more target groups, use a `forward` block instead.
+  Cannot be specified with `forward`.
 
 Forward Blocks (for `forward`) support the following:
 
-* `target_group` - (Required) One or more target groups block.
+* `target_group` - (Required) One or more target group blocks.
 * `stickiness` - (Optional) The target group stickiness for the rule.
 
 Target Group Blocks (for `target_group`) supports the following:

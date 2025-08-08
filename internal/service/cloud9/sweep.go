@@ -1,22 +1,19 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package cloud9
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cloud9_environment_ec2", &resource.Sweeper{
 		Name: "aws_cloud9_environment_ec2",
 		F:    sweepEnvironmentEC2s,
@@ -29,33 +26,30 @@ func sweepEnvironmentEC2s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.Cloud9Conn(ctx)
+	conn := client.Cloud9Client(ctx)
 	input := &cloud9.ListEnvironmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListEnvironmentsPagesWithContext(ctx, input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cloud9.NewListEnvironmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Cloud9 EC2 Environment sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Cloud9 EC2 Environments (%s): %w", region, err)
 		}
 
 		for _, v := range page.EnvironmentIds {
-			r := ResourceEnvironmentEC2()
+			r := resourceEnvironmentEC2()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v))
+			d.SetId(v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Cloud9 EC2 Environment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Cloud9 EC2 Environments (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

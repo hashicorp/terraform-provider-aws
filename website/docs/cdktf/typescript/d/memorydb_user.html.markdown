@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_user"
 description: |-
@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `userName` - (Required) Name of the user.
 
 ## Attribute Reference
@@ -48,9 +49,9 @@ This data source exports the following attributes in addition to the arguments a
 * `accessString` - Access permissions string used for this user.
 * `arn` - ARN of the user.
 * `authenticationMode` - Denotes the user's authentication properties.
-    * `passwordCount` - The number of passwords belonging to the user.
-    * `type` - Whether the user requires a password to authenticate.
-* `minimumEngineVersion` - The minimum engine version supported for the user.
-* `tags` - Map of tags assigned to the subnet group.
+    * `passwordCount` - Number of passwords belonging to the user if `type` is set to `password`.
+    * `type` - Type of authentication configured.
+* `minimumEngineVersion` - Minimum engine version supported for the user.
+* `tags` - Map of tags assigned to the user.
 
-<!-- cache-key: cdktf-0.18.0 input-c6f19bc84dfa577edf03fcc5ca3f615821c417f424a780c64de232dacc41af5a -->
+<!-- cache-key: cdktf-0.20.8 input-bf355f5ee03097eb8d7ac1639f8aed02bb4134efd53a38df6e0afe4739c493b7 -->

@@ -13,10 +13,15 @@ Provides a AWS Transfer User SSH Key resource.
 ## Example Usage
 
 ```terraform
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_transfer_ssh_key" "example" {
   server_id = aws_transfer_server.example.id
   user_name = aws_transfer_user.example.user_name
-  body      = "... SSH key ..."
+  body      = trimspace(tls_private_key.example.public_key_openssh)
 }
 
 resource "aws_transfer_server" "example" {
@@ -75,6 +80,7 @@ resource "aws_iam_role_policy" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `server_id` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.

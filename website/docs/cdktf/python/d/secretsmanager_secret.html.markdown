@@ -54,6 +54,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the secret to retrieve.
 * `name` - (Optional) Name of the secret to retrieve.
 
@@ -62,10 +65,12 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
+* `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
 * `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - ARN of the secret.
-* `tags` - Tags of the secret.
+* `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
+* `tags` - Tags of the secret.
 
-<!-- cache-key: cdktf-0.18.0 input-0fca6cfb25caf0f32cdf4fba62b9433e266444e38aa59620febc991b1723f0c4 -->
+<!-- cache-key: cdktf-0.20.8 input-38c85767e85f8518c95a3e8cded6487df7c19d31be18afc5dce39e7ae3153c3a -->

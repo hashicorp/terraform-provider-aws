@@ -18,12 +18,23 @@ data "aws_guardduty_detector" "example" {}
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the detector.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the detector.
+* `features` - Current configuration of the detector features.
+    * `additional_configuration` - Additional feature configuration.
+        * `name` - The name of the additional configuration.
+        * `status` - The status of the additional configuration.
+    * `name` - The name of the detector feature.
+    * `status` - The status of the detector feature.
 * `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
 * `service_role_arn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
+* `tags` - Map of tags for the resource.

@@ -14,6 +14,8 @@ in the AWS S3 User Guide.
 ~> **Note:** Amazon S3 supports server access logging, AWS CloudTrail, or a combination of both. Refer to the [Logging options for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html)
 to decide which method meets your requirements.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform
@@ -47,11 +49,13 @@ resource "aws_s3_bucket_logging" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `target_bucket` - (Required) Name of the bucket where you want Amazon S3 to store server access logs.
 * `target_prefix` - (Required) Prefix for all log object keys.
 * `target_grant` - (Optional) Set of configuration blocks with information for granting permissions. [See below](#target_grant).
+* `target_object_key_format` - (Optional) Amazon S3 key format for log objects. [See below](#target_object_key_format).
 
 ### target_grant
 
@@ -68,6 +72,19 @@ The `grantee` configuration block supports the following arguments:
 * `id` - (Optional) Canonical user ID of the grantee.
 * `type` - (Required) Type of grantee. Valid values: `CanonicalUser`, `AmazonCustomerByEmail`, `Group`.
 * `uri` - (Optional) URI of the grantee group.
+
+### target_object_key_format
+
+The `target_object_key_format` configuration block supports the following arguments:
+
+* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects. [See below](#partitioned_prefix).
+* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects. To use, set `simple_prefix {}`.
+
+### partitioned_prefix
+
+The `partitioned_prefix` configuration block supports the following arguments:
+
+* `partition_date_source` - (Required) Specifies the partition date source for the partitioned prefix. Valid values: `EventTime`, `DeliveryTime`.
 
 ## Attribute Reference
 

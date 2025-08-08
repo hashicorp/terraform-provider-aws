@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package acm
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_acm_certificate", &resource.Sweeper{
 		Name: "aws_acm_certificate",
 		F:    sweepCertificates,
@@ -35,6 +32,7 @@ func init() {
 			"aws_elb",
 			"aws_iam_server_certificate",
 			"aws_iam_signing_certificate",
+			"aws_iot_domain_configuration",
 			"aws_lb",
 			"aws_lb_listener",
 		},
@@ -48,10 +46,10 @@ func sweepCertificates(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.ACMClient(ctx)
-	input := &acm.ListCertificatesInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := acm.NewListCertificatesPaginator(conn, input)
+	input := acm.ListCertificatesInput{}
+	pages := acm.NewListCertificatesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -66,10 +64,10 @@ func sweepCertificates(region string) error {
 
 		for _, v := range page.CertificateSummaryList {
 			arn := aws.ToString(v.CertificateArn)
-			input := &acm.DescribeCertificateInput{
+			input := acm.DescribeCertificateInput{
 				CertificateArn: aws.String(arn),
 			}
-			certificate, err := findCertificate(ctx, conn, input)
+			certificate, err := findCertificate(ctx, conn, &input)
 
 			if err != nil {
 				log.Printf("[ERROR] Reading ACM Certificate (%s): %s", arn, err)

@@ -18,24 +18,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccXRayEncryptionConfig_basic(t *testing.T) {
+func TestAccXRayEncryptionConfig_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccXRayEncryptionConfig_basic,
+		"Identity":      testAccXRayEncryptionConfig_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccXRayEncryptionConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.EncryptionConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_xray_encryption_config.test"
 	keyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{
@@ -45,17 +56,17 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			},
 			{
 				Config: testAccEncryptionConfigConfig_key(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 		},
@@ -100,6 +111,7 @@ func testAccEncryptionConfigConfig_key(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

@@ -8,9 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -18,51 +19,70 @@ func TestAccGuardDuty_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":                             testAccDetector_basic,
+			acctest.CtBasic:                     testAccDetector_basic,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			"tags":                              testAccDetector_tags,
+			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
+			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
+		},
+		"DetectorFeature": {
+			acctest.CtBasic:            testAccDetectorFeature_basic,
+			"additional_configuration": testAccDetectorFeature_additionalConfiguration,
+			"multiple":                 testAccDetectorFeature_multiple,
 		},
 		"Filter": {
-			"basic":      testAccFilter_basic,
-			"update":     testAccFilter_update,
-			"tags":       testAccFilter_tags,
-			"disappears": testAccFilter_disappears,
+			acctest.CtBasic:      testAccFilter_basic,
+			"update":             testAccFilter_update,
+			"tags":               testAccGuardDutyFilter_tagsSerial,
+			acctest.CtDisappears: testAccFilter_disappears,
+		},
+		"FindingIDs": {
+			"datasource_basic": testAccFindingIDsDataSource_basic,
 		},
 		"InviteAccepter": {
-			"basic": testAccInviteAccepter_basic,
+			acctest.CtBasic: testAccInviteAccepter_basic,
 		},
 		"IPSet": {
-			"basic": testAccIPSet_basic,
-			"tags":  testAccIPSet_tags,
+			acctest.CtBasic: testAccIPSet_basic,
+			"tags":          testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
-			"basic": testAccOrganizationAdminAccount_basic,
+			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":                         testAccOrganizationConfiguration_basic,
+			acctest.CtBasic:                 testAccOrganizationConfiguration_basic,
 			"autoEnableOrganizationMembers": testAccOrganizationConfiguration_autoEnableOrganizationMembers,
 			"s3Logs":                        testAccOrganizationConfiguration_s3logs,
 			"kubernetes":                    testAccOrganizationConfiguration_kubernetes,
 			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
+		"OrganizationConfigurationFeature": {
+			acctest.CtBasic:            testAccOrganizationConfigurationFeature_basic,
+			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
+			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
+		},
+		"MemberDetectorFeature": {
+			acctest.CtBasic:            testAccMemberDetectorFeature_basic,
+			"additional_configuration": testAccMemberDetectorFeature_additionalConfiguration,
+			"multiple":                 testAccMemberDetectorFeature_multiple,
+		},
 		"ThreatIntelSet": {
-			"basic": testAccThreatIntelSet_basic,
-			"tags":  testAccThreatIntelSet_tags,
+			acctest.CtBasic: testAccThreatIntelSet_basic,
+			"tags":          testAccGuardDutyThreatIntelSet_tagsSerial,
 		},
 		"Member": {
-			"basic":              testAccMember_basic,
+			acctest.CtBasic:      testAccMember_basic,
 			"inviteOnUpdate":     testAccMember_invite_onUpdate,
 			"inviteDisassociate": testAccMember_invite_disassociate,
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			"basic":      testAccPublishingDestination_basic,
-			"disappears": testAccPublishingDestination_disappears,
+			acctest.CtBasic:      testAccPublishingDestination_basic,
+			acctest.CtDisappears: testAccPublishingDestination_disappears,
 		},
 	}
 
@@ -87,20 +107,45 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 	return accountID, email
 }
 
-// testAccPreCheckDetectorExists verifies the current account has a single active
-// GuardDuty detector configured.
-func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
-
-	out, err := conn.ListDetectorsWithContext(ctx, &guardduty.ListDetectorsInput{})
-	if out == nil || len(out.DetectorIds) == 0 {
-		t.Skip("this AWS account must have an existing GuardDuty detector configured")
+func testAccMemberAccountFromEnv(t *testing.T) string {
+	accountID := os.Getenv("AWS_GUARDDUTY_MEMBER_ACCOUNT_ID")
+	if accountID == "" {
+		t.Skip(
+			"Environment variable AWS_GUARDDUTY_MEMBER_ACCOUNT_ID is not set. " +
+				"To properly test GuardDuty member accounts, " +
+				"a valid AWS account ID must be provided.")
 	}
-	if len(out.DetectorIds) > 1 {
-		t.Skipf("this AWS account must have a single existing GuardDuty detector configured. Found %d.", len(out.DetectorIds))
+	return accountID
+}
+
+// testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
+func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+
+	_, err := tfguardduty.FindDetector(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		t.Skipf("reading this AWS account's single GuardDuty Detector: %s", err)
 	}
 
 	if err != nil {
 		t.Fatalf("listing GuardDuty Detectors: %s", err)
 	}
+}
+
+// testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
+func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+
+	_, err := tfguardduty.FindDetector(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		return
+	}
+
+	if err != nil {
+		t.Fatalf("listing GuardDuty Detectors: %s", err)
+	}
+
+	t.Skip("this AWS account has a GuardDuty Detector")
 }

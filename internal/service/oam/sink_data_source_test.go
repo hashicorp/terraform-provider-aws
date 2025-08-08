@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -15,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
+func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -23,6 +22,7 @@ func TestAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_sink.test"
+	resourceName := "aws_oam_sink.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -30,7 +30,7 @@ func TestAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,13 +38,12 @@ func TestAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
 				Config: testAccSinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, dataSourceName, &sink),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_identifier"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_id", resourceName, "sink_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_identifier", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

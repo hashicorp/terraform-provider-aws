@@ -18,15 +18,20 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Analyzer": {
-			"basic":             testAccAnalyzer_basic,
-			"disappears":        testAccAnalyzer_disappears,
-			"tags":              testAccAnalyzer_tags,
-			"Type_Organization": testAccAnalyzer_Type_Organization,
+			acctest.CtBasic:              testAccAnalyzer_basic,
+			"accountInternalAccess":      testAccAnalyzer_accountInternalAccess,
+			"accountUnusedAccess":        testAccAnalyzer_accountUnusedAccess,
+			"organizationInternalAccess": testAccAnalyzer_organizationInternalAccess,
+			"organizationUnusedAccess":   testAccAnalyzer_organizationUnusedAccess,
+			acctest.CtDisappears:         testAccAnalyzer_disappears,
+			"tags":                       testAccAccessAnalyzerAnalyzer_tagsSerial,
+			"type_Organization":          testAccAnalyzer_typeOrganization,
+			"upgradeV5_95_0":             testAccAnalyzer_upgradeV5_95_0,
 		},
 		"ArchiveRule": {
-			"basic":          testAccAnalyzerArchiveRule_basic,
-			"disappears":     testAccAnalyzerArchiveRule_disappears,
-			"update_filters": testAccAnalyzerArchiveRule_updateFilters,
+			acctest.CtBasic:      testAccAnalyzerArchiveRule_basic,
+			acctest.CtDisappears: testAccAnalyzerArchiveRule_disappears,
+			"update_filters":     testAccAnalyzerArchiveRule_updateFilters,
 		},
 	}
 
@@ -36,9 +41,9 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	input := &accessanalyzer.ListAnalyzersInput{}
+	input := accessanalyzer.ListAnalyzersInput{}
 
-	_, err := conn.ListAnalyzers(ctx, input)
+	_, err := conn.ListAnalyzers(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

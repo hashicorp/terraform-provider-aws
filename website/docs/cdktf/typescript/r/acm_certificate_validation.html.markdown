@@ -13,8 +13,8 @@ description: |-
 This resource represents a successful validation of an ACM certificate in concert
 with other resources.
 
-Most commonly, this resource is used together with [`awsRoute53Record`](route53_record.html) and
-[`awsAcmCertificate`](acm_certificate.html) to request a DNS validated certificate,
+Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
+[`aws_acm_certificate`](acm_certificate.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
 ~> **WARNING:** This resource implements a part of the validation workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
@@ -249,6 +249,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `certificateArn` - (Required) ARN of the certificate that is being validated.
 * `validationRecordFqdns` - (Optional) List of FQDNs that implement the validation. Only valid for DNS validation method ACM certificates. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 
@@ -262,6 +263,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `75M`)
+- `create` - (Default `75m`)
 
-<!-- cache-key: cdktf-0.18.0 input-bd8c04ee824aa9ba9e41a615796c1554d255a22e9d0a9dd833af77b9c40bb301 -->
+<!-- cache-key: cdktf-0.20.8 input-f49ccc5aa81977176d3b025efffafe70fda6898f3e52e95e429e7a8664655cb7 -->

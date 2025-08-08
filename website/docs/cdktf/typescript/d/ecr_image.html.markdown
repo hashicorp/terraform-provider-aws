@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registryId` - (Optional) ID of the Registry where the repository resides.
 * `repositoryName` - (Required) Name of the ECR Repository.
 * `imageDigest` - (Optional) Sha256 digest of the image manifest. At least one of `imageDigest`, `imageTag`, or `mostRecent` must be specified.
@@ -53,5 +54,6 @@ This data source exports the following attributes in addition to the arguments a
 * `imagePushedAt` - Date and time, expressed as a unix timestamp, at which the current image was pushed to the repository.
 * `imageSizeInBytes` - Size, in bytes, of the image in the repository.
 * `imageTags` - List of tags associated with this image.
+* `imageUri` - The URI for the specific image version specified by `imageTag` or `imageDigest`.
 
-<!-- cache-key: cdktf-0.18.0 input-eb75c0a7672b4cf7c02f9b64096974ed3f209abe2c9c03438c3aa07107bc2b28 -->
+<!-- cache-key: cdktf-0.20.8 input-63eef38a898d86216206a97ad502fac2fac17e8a2672fa1939bf34d26eff511f -->

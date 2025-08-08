@@ -35,6 +35,8 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attribute Reference
@@ -42,10 +44,11 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS for this user.
+* `id` - Unique ID assigned by AWS for this user.
 * `path` - Path in which this user was created.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the user.
 * `user_id` - Unique ID assigned by AWS for this user.
 * `user_name` - Name associated to this User
 * `tags` - Map of key-value pairs associated with the user.
 
-<!-- cache-key: cdktf-0.18.0 input-311b2756445d8c90d21040b26efe2adc4c762ad5827739191b5f65d550f8435c -->
+<!-- cache-key: cdktf-0.20.8 input-8df9c6e13bb781b376dc22243957609d8aa6c9f6491a910a92212113d62c538f -->
