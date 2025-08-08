@@ -152,7 +152,7 @@ func (r *browserSettingsAssociationResource) ImportState(ctx context.Context, re
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: function_name,qualifier. Got: %q", request.ID),
+			fmt.Sprintf("Expected import identifier with format: browser_settings_arn,portal_arn. Got: %q", request.ID),
 		)
 		return
 	}
