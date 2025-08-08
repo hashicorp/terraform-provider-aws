@@ -31,6 +31,9 @@ import (
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
+// @IdentityAttribute("alarm_name")
+// @Testing(idAttrDuplicates="alarm_name")
+// @Testing(preIdentityVersion="v6.7.0")
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -41,10 +44,6 @@ func resourceMetricAlarm() *schema.Resource {
 
 		SchemaVersion: 1,
 		MigrateState:  MetricAlarmMigrateState,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"actions_enabled": {

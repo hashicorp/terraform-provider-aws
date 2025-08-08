@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_cloudwatch_metric_alarm" "test" {
-{{- template "region" }}
+  region = var.region
+
   alarm_name                = var.rName
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = 2
@@ -14,6 +18,16 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   dimensions = {
     InstanceId = "i-abcd1234"
   }
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
