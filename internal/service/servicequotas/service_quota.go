@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,12 +16,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,6 +36,11 @@ func resourceServiceQuota() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -134,6 +140,11 @@ func resourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Required: true,
 			},
+			"wait_for_fulfillment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -156,7 +167,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	default:
@@ -178,6 +189,14 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		d.Set("request_id", output.RequestedQuota.Id)
+
+		// Wait for fulfillment if requested
+		if d.Get("wait_for_fulfillment").(bool) {
+			requestID := aws.ToString(output.RequestedQuota.Id)
+			if err := waitServiceQuotaRequestFulfilled(ctx, conn, requestID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "Service Quota (%s) request (%s) not fulfilled within the timeout period: %s", id, requestID, err)
+			}
+		}
 	}
 
 	d.SetId(id)
@@ -197,7 +216,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Quotas default Service Quota (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -222,7 +241,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		tflog.Debug(ctx, "No quota value set", map[string]any{
 			"service_code": serviceCode,
 			"quota_code":   quotaCode,
@@ -238,7 +257,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 
@@ -286,6 +305,14 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("request_id", output.RequestedQuota.Id)
 
+	// Wait for fulfillment if requested
+	if d.Get("wait_for_fulfillment").(bool) {
+		requestID := aws.ToString(output.RequestedQuota.Id)
+		if err := waitServiceQuotaRequestFulfilled(ctx, conn, requestID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Service Quota (%s) request (%s) not fulfilled within the timeout period: %s", d.Id(), requestID, err)
+		}
+	}
+
 	return append(diags, resourceServiceQuotaRead(ctx, d, meta)...)
 }
 
@@ -317,8 +344,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -347,8 +373,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -384,8 +409,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -427,4 +451,42 @@ func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
 	})
 
 	return tfList
+}
+
+func waitServiceQuotaRequestFulfilled(ctx context.Context, conn *servicequotas.Client, requestID string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{string(awstypes.RequestStatusCaseOpened), string(awstypes.RequestStatusPending)},
+		Target:     []string{string(awstypes.RequestStatusApproved)},
+		Refresh:    statusServiceQuotaRequest(ctx, conn, requestID),
+		Timeout:    timeout,
+		Delay:      30 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func statusServiceQuotaRequest(ctx context.Context, conn *servicequotas.Client, requestID string) retry.StateRefreshFunc {
+	return func(context.Context) (any, string, error) {
+		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Provide clear error messages for denial cases
+		if output.Status == awstypes.RequestStatusDenied {
+			return output, string(output.Status), fmt.Errorf("service quota increase request was denied")
+		}
+		if output.Status == awstypes.RequestStatusCaseClosed && output.DesiredValue != nil {
+			return output, string(output.Status), fmt.Errorf("service quota increase request was closed without approval")
+		}
+
+		return output, string(output.Status), nil
+	}
 }
