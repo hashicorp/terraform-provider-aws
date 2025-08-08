@@ -451,11 +451,11 @@ resource "aws_cognito_risk_configuration" "test" {
     actions {
       medium_action {
         event_action = "MFA_REQUIRED"
-        notify 	      = false
+        notify       = false
       }
       high_action {
         event_action = "BLOCK"
-        notify 	      = false
+        notify       = false
       }
     }
   }
