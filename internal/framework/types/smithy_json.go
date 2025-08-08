@@ -137,6 +137,25 @@ func (v SmithyJSON[T]) Type(context.Context) attr.Type {
 	}
 }
 
+func (v SmithyJSON[T]) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	newValue, ok := newValuable.(SmithyJSON[T])
+	if !ok {
+		diags.AddError(
+			"Semantic Equality Check Error",
+			"An unexpected value type was received while performing semantic equality checks. "+
+				"Please report this to the provider developers.\n\n"+
+				"Expected Value Type: "+fmt.Sprintf("%T", v)+"\n"+
+				"Got Value Type: "+fmt.Sprintf("%T", newValuable),
+		)
+
+		return false, diags
+	}
+
+	return v.Normalized.StringSemanticEquals(ctx, newValue.Normalized)
+}
+
 func NewSmithyJSONValue[T tfsmithy.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
 	return SmithyJSON[T]{
 		Normalized: jsontypes.NewNormalizedValue(value),
