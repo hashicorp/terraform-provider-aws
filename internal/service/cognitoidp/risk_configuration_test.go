@@ -143,7 +143,7 @@ func TestAccCognitoIDPRiskConfiguration_takeover_without_notification(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,24 +151,6 @@ func TestAccCognitoIDPRiskConfiguration_takeover_without_notification(t *testing
 				Config: testAccRiskConfigurationConfig_takeover_without_notification(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					/*
-						resource "aws_cognito_risk_configuration" "test" {
-						  user_pool_id = aws_cognito_user_pool.test.id
-
-						  account_takeover_risk_configuration {
-						    actions {
-						      medium_action {
-						        event_action = "MFA_REQUIRED"
-						        notify 	      = false
-						      }
-						      high_action {
-						        event_action = "BLOCK"
-						        notify 	      = false
-						      }
-						    }
-						  }
-						}
-					*/
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.0.actions.#", "1"),

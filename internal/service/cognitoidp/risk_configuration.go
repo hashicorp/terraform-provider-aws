@@ -201,7 +201,7 @@ func resourceRiskConfiguration() *schema.Resource {
 									},
 									"source_arn": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
@@ -580,7 +580,7 @@ func flattenAccountTakeoverRiskConfigurationType(apiObject *awstypes.AccountTake
 	}
 
 	if v := apiObject.NotifyConfiguration; v != nil {
-		tfMap["notify_configuration"] = flattemNotifyConfigurationType(v)
+		tfMap["notify_configuration"] = flattenNotifyConfigurationType(v)
 	}
 
 	return []any{tfMap}
@@ -698,7 +698,7 @@ func expandNotifyConfigurationType(tfList []any) *awstypes.NotifyConfigurationTy
 	return apiObject
 }
 
-func flattemNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType) []any {
+func flattenNotifyConfigurationType(apiObject *awstypes.NotifyConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
