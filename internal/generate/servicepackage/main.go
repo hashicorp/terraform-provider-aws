@@ -62,6 +62,7 @@ func main() {
 		v := &visitor{
 			g: g,
 
+			actions:              make(map[string]ResourceDatum, 0),
 			ephemeralResources:   make(map[string]ResourceDatum, 0),
 			frameworkDataSources: make(map[string]ResourceDatum, 0),
 			frameworkResources:   make(map[string]ResourceDatum, 0),
@@ -94,6 +95,7 @@ func main() {
 			GoV2Package:             l.GoV2Package(),
 			ProviderPackage:         p,
 			ProviderNameUpper:       l.ProviderNameUpper(),
+			Actions:                 v.actions,
 			EphemeralResources:      v.ephemeralResources,
 			FrameworkDataSources:    v.frameworkDataSources,
 			FrameworkResources:      v.frameworkResources,
@@ -102,6 +104,9 @@ func main() {
 		}
 
 		var imports []goImport
+		for resource := range maps.Values(v.actions) {
+			imports = append(imports, resource.goImports...)
+		}
 		for resource := range maps.Values(v.ephemeralResources) {
 			imports = append(imports, resource.goImports...)
 		}
@@ -232,6 +237,7 @@ type ServiceDatum struct {
 	GoV2Package             string // AWS SDK for Go v2 package name
 	ProviderPackage         string
 	ProviderNameUpper       string
+	Actions                 map[string]ResourceDatum
 	EphemeralResources      map[string]ResourceDatum
 	FrameworkDataSources    map[string]ResourceDatum
 	FrameworkResources      map[string]ResourceDatum
@@ -260,6 +266,7 @@ type visitor struct {
 	functionName string
 	packageName  string
 
+	actions              map[string]ResourceDatum
 	ephemeralResources   map[string]ResourceDatum
 	frameworkDataSources map[string]ResourceDatum
 	frameworkResources   map[string]ResourceDatum
@@ -512,6 +519,34 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
+			case "Action":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if d.Name == "" {
+					v.errs = append(v.errs, fmt.Errorf("no friendly name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.actions[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Action (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.actions[typeName] = d
+				}
+
+				if d.HasV6_0SDKv2Fix {
+					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Actions: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 			case "EphemeralResource":
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

@@ -6,6 +6,8 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -269,6 +271,119 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 
 func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
 	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
+type wrappedActionOptions struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	interceptors     interceptorInvocations
+	typeName         string
+}
+
+// wrappedAction represents an interceptor dispatcher for a Plugin Framework action.
+type wrappedAction struct {
+	inner action.ActionWithConfigure
+	meta  *conns.AWSClient
+	opts  wrappedActionOptions
+}
+
+func newWrappedAction(inner action.ActionWithConfigure, opts wrappedActionOptions) action.ActionWithConfigure {
+	return &wrappedAction{
+		inner: inner,
+		opts:  opts,
+	}
+}
+
+func (w *wrappedAction) Metadata(ctx context.Context, request action.MetadataRequest, response *action.MetadataResponse) {
+	// This method does not call down to the inner action.
+	response.TypeName = w.opts.typeName
+}
+
+func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
+	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request *action.SchemaRequest, response *action.SchemaResponse) diag.Diagnostics {
+		w.inner.Schema(ctx, *request, response)
+		return response.Diagnostics
+	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.actionSchema(), f, w.meta)(ctx, &request, response)...)
+
+	// Validate the action's model against the schema.
+	if v, ok := w.inner.(framework.ActionValidateModel); ok {
+		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
+			response.Diagnostics.Append(v.ValidateModel(ctx, &schema)...)
+			if response.Diagnostics.HasError() {
+				response.Diagnostics.AddError("action model validation error", w.opts.typeName)
+				return
+			}
+		} else {
+			response.Diagnostics.AddError("unsupported action schema type", w.opts.typeName)
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.opts.typeName)
+	}
+}
+
+func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
+	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request *action.InvokeRequest, response *action.InvokeResponse) diag.Diagnostics {
+		w.inner.Invoke(ctx, *request, response)
+		return response.Diagnostics
+	}
+	response.Diagnostics.Append(interceptedHandler(w.opts.interceptors.actionInvoke(), f, w.meta)(ctx, &request, response)...)
+}
+
+func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureRequest, response *action.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigValidator {
+	if v, ok := w.inner.(action.ActionWithConfigValidators); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
+				"action":                 w.opts.typeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+
+			return nil
+		}
+
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.ValidateConfigRequest, response *action.ValidateConfigResponse) {
+	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
 		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {

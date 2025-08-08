@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -287,9 +288,45 @@ const (
 	Finally                  // Interceptor is invoked after After or OnError
 )
 
+// An action interceptor is functionality invoked during the action's lifecycle.
+// If a Before interceptor returns Diagnostics indicating an error occurred then
+// no further interceptors in the chain are run and neither is the schema's method.
+// In other cases all interceptors in the chain are run.
+type actionInvokeInterceptor interface {
+	// invoke is invoked for an Invoke call.
+	invoke(context.Context, interceptorOptions[action.InvokeRequest, action.InvokeResponse]) diag.Diagnostics
+}
+
+// actionInvoke returns a slice of interceptors that run on action Invoke.
+func (s interceptorInvocations) actionInvoke() []interceptorFunc[action.InvokeRequest, action.InvokeResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(actionInvokeInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[action.InvokeRequest, action.InvokeResponse] {
+		return e.(actionInvokeInterceptor).invoke
+	})
+}
+
+type actionSchemaInterceptor interface {
+	// schema is invoked for a Schema call.
+	schema(context.Context, interceptorOptions[action.SchemaRequest, action.SchemaResponse]) diag.Diagnostics
+}
+
+// actionSchema returns a slice of interceptors that run on action Schema.
+func (s interceptorInvocations) actionSchema() []interceptorFunc[action.SchemaRequest, action.SchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(actionSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[action.SchemaRequest, action.SchemaResponse] {
+		return e.(actionSchemaInterceptor).schema
+	})
+}
+
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
-	datasource.SchemaRequest |
+	action.SchemaRequest |
+		action.InvokeRequest |
+		datasource.SchemaRequest |
 		datasource.ReadRequest |
 		ephemeral.SchemaRequest |
 		ephemeral.OpenRequest |
@@ -306,7 +343,9 @@ type interceptedRequest interface {
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
 type interceptedResponse interface {
-	datasource.SchemaResponse |
+	action.SchemaResponse |
+		action.InvokeResponse |
+		datasource.SchemaResponse |
 		datasource.ReadResponse |
 		ephemeral.SchemaResponse |
 		ephemeral.OpenResponse |

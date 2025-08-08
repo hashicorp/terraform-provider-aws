@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -406,4 +408,54 @@ func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Contex
 // resourceImportRegionNoDefault sets the value of the top-level `region` attribute during import.
 func resourceImportRegionNoDefault() resourceImportStateInterceptor {
 	return &resourceImportRegionNoDefaultInterceptor{}
+}
+
+type actionInjectRegionAttributeInterceptor struct{}
+
+func (a actionInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[action.SchemaRequest, action.SchemaResponse]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
+			if _, exists := schema.Attributes[names.AttrRegion]; !exists {
+				// Inject a top-level "region" attribute.
+				if schema.Attributes == nil {
+					schema.Attributes = make(map[string]aschema.Attribute)
+				}
+				schema.Attributes[names.AttrRegion] = aschema.StringAttribute{
+					Optional:    true,
+					Description: names.TopLevelRegionAttributeDescription,
+				}
+				response.Schema = schema
+			}
+		}
+	}
+
+	return diags
+}
+
+// actionInjectRegionAttribute injects a top-level "region" attribute into an action's schema.
+func actionInjectRegionAttribute() actionSchemaInterceptor {
+	return &actionInjectRegionAttributeInterceptor{}
+}
+
+type actionValidateRegionInterceptor struct {
+}
+
+func (a actionValidateRegionInterceptor) invoke(ctx context.Context, opts interceptorOptions[action.InvokeRequest, action.InvokeResponse]) diag.Diagnostics {
+	c := opts.c
+	var diags diag.Diagnostics
+
+	switch when := opts.when; when {
+	case Before:
+		diags.Append(validateInContextRegionInPartition(ctx, c)...)
+	}
+
+	return diags
+}
+
+// actionValidateRegion validates that the value of the top-level `region` attribute is in the configured AWS partition.
+func actionValidateRegion() actionInvokeInterceptor {
+	return &actionValidateRegionInterceptor{}
 }
