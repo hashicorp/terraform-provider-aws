@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -24,10 +23,7 @@ func TestResourceSetRegionInStateInterceptor_Read(t *testing.T) {
 
 	const name = "example"
 
-	region := os.Getenv("AWS_DEFAULT_REGION")
-	if region == "" {
-		t.Skip("AWS_DEFAULT_REGION env var must be set for ResourceSetRegionInStateInterceptor test.")
-	}
+	region := "a_region"
 
 	ctx := context.Background()
 	client := mockClient{region: region}
