@@ -176,6 +176,11 @@ func resourceCluster() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.LogType](),
 				},
 			},
+			"enable_deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"encryption_config": {
 				Type:          schema.TypeList,
 				MaxItems:      1,
@@ -556,6 +561,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	if v, ok := d.GetOk("zonal_shift_config"); ok {
 		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]any))
 	}
+	if v, ok := d.GetOk("enable_deletion_protection"); ok {
+		input.DeletionProtection = aws.Bool(v.(bool))
+	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (any, error) {
@@ -801,6 +809,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("enable_deletion_protection") {
+		input := &eks.UpdateClusterConfigInput{
+			Name:               aws.String(d.Id()),
+			DeletionProtection: aws.Bool(d.Get("enable_deletion_protection").(bool)),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) deletion protection: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) deletion proctection update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
