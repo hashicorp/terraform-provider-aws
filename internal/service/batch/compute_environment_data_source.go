@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -85,7 +85,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	computeEnvironment, err := findComputeEnvironmentDetailByName(ctx, conn, name)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	arn := aws.ToString(computeEnvironment.ComputeEnvironmentArn)
@@ -99,7 +99,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID)
 	}
 
 	setTagsOut(ctx, computeEnvironment.Tags)
