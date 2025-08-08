@@ -1,16 +1,17 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package json
+package smithy
 
 import (
 	smithydocument "github.com/aws/smithy-go/document"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func SmithyDocumentFromString[T smithydocument.Marshaler](s string, f func(any) T) (T, error) {
 	var v any
 
-	err := DecodeFromString(s, &v)
+	err := tfjson.DecodeFromString(s, &v)
 	if err != nil {
 		var zero T
 		return zero, err
@@ -28,7 +29,7 @@ func SmithyDocumentToString(document smithydocument.Unmarshaler) (string, error)
 		return "", err
 	}
 
-	return EncodeToString(v)
+	return tfjson.EncodeToString(v)
 }
 
 // JSONStringer interface is used to marshal and unmarshal JSON interface objects.

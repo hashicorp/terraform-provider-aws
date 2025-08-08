@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
 // Expand  = TF -->  AWS
@@ -487,7 +487,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		}
 
 	case reflect.Interface:
-		if s, ok := vFrom.(fwtypes.SmithyJSON[smithyjson.JSONStringer]); ok {
+		if s, ok := vFrom.(fwtypes.SmithyJSON[tfsmithy.JSONStringer]); ok {
 			v, d := s.ValueInterface()
 			diags.Append(d...)
 			if diags.HasError() {

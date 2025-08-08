@@ -13,19 +13,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
 var (
-	_ basetypes.StringTypable = (*SmithyJSONType[tfjson.JSONStringer])(nil)
+	_ basetypes.StringTypable = (*SmithyJSONType[tfsmithy.JSONStringer])(nil)
 )
 
-type SmithyJSONType[T tfjson.JSONStringer] struct {
+type SmithyJSONType[T tfsmithy.JSONStringer] struct {
 	jsontypes.NormalizedType
 	f func(any) T
 }
 
-func NewSmithyJSONType[T tfjson.JSONStringer](_ context.Context, f func(any) T) SmithyJSONType[T] {
+func NewSmithyJSONType[T tfsmithy.JSONStringer](_ context.Context, f func(any) T) SmithyJSONType[T] {
 	return SmithyJSONType[T]{
 		f: f,
 	}
@@ -85,12 +85,12 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 }
 
 var (
-	_ basetypes.StringValuable                   = (*SmithyJSON[tfjson.JSONStringer])(nil)
-	_ basetypes.StringValuableWithSemanticEquals = (*SmithyJSON[tfjson.JSONStringer])(nil)
-	_ xattr.ValidateableAttribute                = (*SmithyJSON[tfjson.JSONStringer])(nil)
+	_ basetypes.StringValuable                   = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
+	_ basetypes.StringValuableWithSemanticEquals = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
+	_ xattr.ValidateableAttribute                = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
 )
 
-type SmithyJSON[T tfjson.JSONStringer] struct {
+type SmithyJSON[T tfsmithy.JSONStringer] struct {
 	jsontypes.Normalized
 	f func(any) T
 }
@@ -112,7 +112,7 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 		return zero, diags
 	}
 
-	t, err := tfjson.SmithyDocumentFromString(v.ValueString(), v.f)
+	t, err := tfsmithy.SmithyDocumentFromString(v.ValueString(), v.f)
 	if err != nil {
 		diags.AddError(
 			"JSON Unmarshal Error",
@@ -130,20 +130,20 @@ func (v SmithyJSON[T]) Type(context.Context) attr.Type {
 	return SmithyJSONType[T]{}
 }
 
-func NewSmithyJSONValue[T tfjson.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
+func NewSmithyJSONValue[T tfsmithy.JSONStringer](value string, f func(any) T) SmithyJSON[T] {
 	return SmithyJSON[T]{
 		Normalized: jsontypes.NewNormalizedValue(value),
 		f:          f,
 	}
 }
 
-func NewSmithyJSONNull[T tfjson.JSONStringer]() SmithyJSON[T] {
+func NewSmithyJSONNull[T tfsmithy.JSONStringer]() SmithyJSON[T] {
 	return SmithyJSON[T]{
 		Normalized: jsontypes.NewNormalizedNull(),
 	}
 }
 
-func NewSmithyJSONUnknown[T tfjson.JSONStringer]() SmithyJSON[T] {
+func NewSmithyJSONUnknown[T tfsmithy.JSONStringer]() SmithyJSON[T] {
 	return SmithyJSON[T]{
 		Normalized: jsontypes.NewNormalizedUnknown(),
 	}

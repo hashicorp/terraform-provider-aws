@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/shopspring/decimal"
 )
 
@@ -619,7 +619,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		//
 		// JSONStringer -> types.String-ish.
 		//
-		if vFrom.Type().Implements(reflect.TypeFor[smithyjson.JSONStringer]()) {
+		if vFrom.Type().Implements(reflect.TypeFor[tfsmithy.JSONStringer]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
 
 			stringValue := types.StringNull()
@@ -627,7 +627,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 			if vFrom.IsNil() {
 				tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 			} else {
-				doc := vFrom.Interface().(smithyjson.JSONStringer)
+				doc := vFrom.Interface().(tfsmithy.JSONStringer)
 				b, err := doc.MarshalSmithyDocument()
 				if err != nil {
 					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal

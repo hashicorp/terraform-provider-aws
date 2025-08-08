@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
 func TestSmithyJSONTypeValueFromTerraform(t *testing.T) {
@@ -25,15 +25,15 @@ func TestSmithyJSONTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwtypes.NewSmithyJSONNull[tfjson.JSONStringer](),
+			expected: fwtypes.NewSmithyJSONNull[tfsmithy.JSONStringer](),
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwtypes.NewSmithyJSONUnknown[tfjson.JSONStringer](),
+			expected: fwtypes.NewSmithyJSONUnknown[tfsmithy.JSONStringer](),
 		},
 		"valid SmithyJSON": {
 			val:      tftypes.NewValue(tftypes.String, `{"test": "value"}`),
-			expected: fwtypes.NewSmithyJSONValue[tfjson.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
+			expected: fwtypes.NewSmithyJSONValue[tfsmithy.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
 		},
 	}
 
@@ -42,7 +42,7 @@ func TestSmithyJSONTypeValueFromTerraform(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			val, err := fwtypes.SmithyJSONType[tfjson.JSONStringer]{}.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.SmithyJSONType[tfsmithy.JSONStringer]{}.ValueFromTerraform(ctx, test.val)
 
 			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
@@ -59,20 +59,20 @@ func TestSmithyJSONValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		val         fwtypes.SmithyJSON[tfjson.JSONStringer]
+		val         fwtypes.SmithyJSON[tfsmithy.JSONStringer]
 		expectError bool
 	}{
 		"null value": {
-			val: fwtypes.NewSmithyJSONNull[tfjson.JSONStringer](),
+			val: fwtypes.NewSmithyJSONNull[tfsmithy.JSONStringer](),
 		},
 		"unknown value": {
-			val: fwtypes.NewSmithyJSONUnknown[tfjson.JSONStringer](),
+			val: fwtypes.NewSmithyJSONUnknown[tfsmithy.JSONStringer](),
 		},
 		"valid SmithyJSON": { // lintignore:AWSAT003,AWSAT005
-			val: fwtypes.NewSmithyJSONValue[tfjson.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
+			val: fwtypes.NewSmithyJSONValue[tfsmithy.JSONStringer](`{"test": "value"}`, nil), // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid SmithyJSON": {
-			val:         fwtypes.NewSmithyJSONValue[tfjson.JSONStringer]("not ok", nil),
+			val:         fwtypes.NewSmithyJSONValue[tfsmithy.JSONStringer]("not ok", nil),
 			expectError: true,
 		},
 	}
@@ -98,7 +98,7 @@ type testJSONDocument struct {
 	Value any
 }
 
-func newTestJSONDocument(v any) tfjson.JSONStringer {
+func newTestJSONDocument(v any) tfsmithy.JSONStringer {
 	return &testJSONDocument{Value: v}
 }
 
@@ -118,15 +118,15 @@ func TestSmithyJSONValueInterface(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		val         fwtypes.SmithyJSON[tfjson.JSONStringer]
-		expected    tfjson.JSONStringer
+		val         fwtypes.SmithyJSON[tfsmithy.JSONStringer]
+		expected    tfsmithy.JSONStringer
 		expectError bool
 	}{
 		"null value": {
-			val: fwtypes.NewSmithyJSONNull[tfjson.JSONStringer](),
+			val: fwtypes.NewSmithyJSONNull[tfsmithy.JSONStringer](),
 		},
 		"unknown value": {
-			val: fwtypes.NewSmithyJSONUnknown[tfjson.JSONStringer](),
+			val: fwtypes.NewSmithyJSONUnknown[tfsmithy.JSONStringer](),
 		},
 		"valid SmithyJSON": { // lintignore:AWSAT003,AWSAT005
 			val: fwtypes.NewSmithyJSONValue(`{"test": "value"}`, newTestJSONDocument), // lintignore:AWSAT003,AWSAT005
