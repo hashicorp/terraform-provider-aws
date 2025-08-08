@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -325,8 +326,127 @@ type innerFunc[Request, Response any] func(ctx context.Context, request *Request
 
 // interceptedHandler returns a handler that runs any interceptors.
 func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], c awsClient) func(context.Context, *Request, *Response) diag.Diagnostics {
-	return func(ctx context.Context, request *Request, response *Response) diag.Diagnostics {
-		var diags diag.Diagnostics
+	return func(ctx context.Context, request *Request, response *Response) (diags diag.Diagnostics) {
+		var stashDiags diag.Diagnostics
+		switch v := any(response).(type) {
+		case *datasource.SchemaResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *datasource.ReadResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *ephemeral.SchemaResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *ephemeral.OpenResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *ephemeral.RenewResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *ephemeral.CloseResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.SchemaResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.CreateResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.ReadResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.UpdateResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.DeleteResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.ModifyPlanResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		case *resource.ImportStateResponse:
+			stashDiags = v.Diagnostics
+			v.Diagnostics = diag.Diagnostics{}
+
+		default:
+			// Catches when Response type is added to `interceptedResponse` but not handled here.
+			diags.Append(
+				diag.NewErrorDiagnostic(
+					"Unexpected Response Type",
+					"This is always an error in the provider. "+
+						"Please report the following to the provider developer:\n\n"+
+						fmt.Sprintf("Response type %T is not supported when stashing diags in \"interceptedHandler\".", v),
+				),
+			)
+			return diags
+		}
+		defer func() {
+			switch v := any(response).(type) {
+			case *datasource.SchemaResponse:
+				v.Diagnostics = stashDiags
+
+			case *datasource.ReadResponse:
+				v.Diagnostics = stashDiags
+
+			case *ephemeral.SchemaResponse:
+				v.Diagnostics = stashDiags
+
+			case *ephemeral.OpenResponse:
+				v.Diagnostics = stashDiags
+
+			case *ephemeral.RenewResponse:
+				v.Diagnostics = stashDiags
+
+			case *ephemeral.CloseResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.SchemaResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.CreateResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.ReadResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.UpdateResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.DeleteResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.ModifyPlanResponse:
+				v.Diagnostics = stashDiags
+
+			case *resource.ImportStateResponse:
+				v.Diagnostics = stashDiags
+
+			default:
+				// Catches when Response type is added to `interceptedResponse` but not handled here.
+				diags.Append(
+					diag.NewErrorDiagnostic(
+						"Unexpected Response Type",
+						"This is always an error in the provider. "+
+							"Please report the following to the provider developer:\n\n"+
+							fmt.Sprintf("Response type %T is not supported when restoring diags in \"interceptedHandler\".", v),
+					),
+				)
+			}
+		}()
+
 		// Before interceptors are run first to last.
 		forward := interceptors
 
