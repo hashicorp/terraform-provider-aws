@@ -27,7 +27,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
-	return []*inttypes.ServicePackageSDKDataSource{}
+	return []*inttypes.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourcePlan,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
