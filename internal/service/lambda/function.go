@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -121,16 +122,7 @@ func resourceFunction() *schema.Resource {
 					},
 				},
 				// Suppress diff if change is to an empty list
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == "1" {
-						_, n := d.GetChange("environment.0.variables")
-						newn, ok := n.(map[string]any)
-						if ok && len(newn) == 0 {
-							return true
-						}
-					}
-					return false
-				},
+				DiffSuppressFunc: suppressEnvironmentEmptyVariables,
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
@@ -1451,6 +1443,16 @@ func hasChangeForLoggingConfigLogLevel(d sdkv2.ResourceDiffer, key string, logFo
 	}
 }
 
+func hasChangeForEnvironment(d sdkv2.ResourceDiffer) bool {
+	if d.HasChange(names.AttrEnvironment) {
+		oldEnvironment, newEnvironment := d.GetChange(names.AttrEnvironment)
+		_, newVariables := d.GetChange("environment.0.variables")
+		suppressed := suppressEnvironmentEmptyVariablesPrimitive(strconv.Itoa(len(oldEnvironment.([]any))), strconv.Itoa(len(newEnvironment.([]any))), newVariables)
+		return !suppressed
+	}
+	return false
+}
+
 func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange(names.AttrDescription) ||
 		d.HasChange("handler") ||
@@ -1472,7 +1474,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange(names.AttrEnvironment) ||
+		hasChangeForEnvironment(d) ||
 		d.HasChange("ephemeral_storage")
 }
 
@@ -1530,6 +1532,21 @@ func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []any {
 	}
 
 	return []any{tfMap}
+}
+
+func suppressEnvironmentEmptyVariablesPrimitive(oldEnvironment, newEnvironment string, newVariables any) bool {
+	if oldEnvironment == "0" && newEnvironment == "1" {
+		newn, ok := newVariables.(map[string]any)
+		if ok && len(newn) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func suppressEnvironmentEmptyVariables(_, old, new string, d *schema.ResourceData) bool { //nolint:unparam
+	_, newVariables := d.GetChange("environment.0.variables")
+	return suppressEnvironmentEmptyVariablesPrimitive(old, new, newVariables)
 }
 
 func flattenFileSystemConfigs(apiObjects []awstypes.FileSystemConfig) []any {
