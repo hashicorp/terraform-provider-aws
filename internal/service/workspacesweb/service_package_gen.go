@@ -49,6 +49,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newDataProtectionSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_data_protection_settings_association",
+			Name:     "Data Protection Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newIdentityProviderResource,
 			TypeName: "aws_workspacesweb_identity_provider",
 			Name:     "Identity Provider",
