@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -301,6 +302,31 @@ func resourceCluster() *schema.Resource {
 					"snapshot_identifier",
 				},
 			},
+			"serverless_v2_scaling_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMaxCapacity: {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(1.0, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(0.5, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+					},
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -346,7 +372,37 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
+			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
+				func(_ context.Context, old, new, meta any) bool {
+					o := old != nil && len(old.([]any)) > 0
+					n := new != nil && len(new.([]any)) > 0
+					if (o && n) || (!o && !n) {
+						return false
+					}
+					return true
+				}),
+		),
 	}
+}
+
+func validateServerlessCapacity(i any, k string) (ws []string, es []error) {
+	const (
+		epsilon = 1.0e-10
+	)
+
+	v, ok := i.(float64)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be float64", k))
+		return
+	}
+	// add a small epsilon to avoid floating point precision issues
+	if int(v*10+epsilon)%5 != 0 {
+		es = append(es, fmt.Errorf("%s must be a multiple of 0.5", k))
+		return
+	}
+	return
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -444,6 +500,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
@@ -499,6 +559,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -595,6 +659,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
@@ -704,6 +772,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfiguration(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
+	}
 	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
@@ -769,6 +840,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("preferred_backup_window") {
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("serverless_v2_scaling_configuration") {
+			if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrStorageType) {
@@ -927,6 +1004,38 @@ func diffCloudWatchLogsExportConfiguration(old, new []any) ([]any, []any) {
 	}
 
 	return add, disable
+}
+
+func expandServerlessV2ScalingConfiguration(v map[string]any) *awstypes.ServerlessV2ScalingConfiguration {
+	if v == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ServerlessV2ScalingConfiguration{}
+	if v, ok := v[names.AttrMaxCapacity].(float64); ok {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+	if v, ok := v["min_capacity"].(float64); ok {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfiguration(v *awstypes.ServerlessV2ScalingConfigurationInfo) []any {
+	if v == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v.MaxCapacity != nil {
+		tfMap[names.AttrMaxCapacity] = aws.ToFloat64(v.MaxCapacity)
+	}
+	if v.MinCapacity != nil {
+		tfMap["min_capacity"] = aws.ToFloat64(v.MinCapacity)
+	}
+	return []any{tfMap}
 }
 
 func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clusterARN, globalClusterID string, timeout time.Duration) error {

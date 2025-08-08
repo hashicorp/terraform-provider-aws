@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 (Elastic Compute Cloud) EBS Fast Snapshot Restore using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 (Elastic Compute Cloud) EBS Fast Snapshot Restore using the `availability_zone` and `snapshot_id` separated by `,`. For example:
 
 ```terraform
 import {
@@ -54,7 +54,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 (Elastic Compute Cloud) EBS Fast Snapshot Restore using the `id`. For example:
+Using `terraform import`, import EC2 (Elastic Compute Cloud) EBS Fast Snapshot Restore using the `availability_zone` and `snapshot_id` separated by `,`. For example:
 
 ```console
 % terraform import aws_ebs_fast_snapshot_restore.example us-west-2a,snap-abcdef123456

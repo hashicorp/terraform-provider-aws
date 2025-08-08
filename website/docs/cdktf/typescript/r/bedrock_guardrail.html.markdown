@@ -157,13 +157,21 @@ The `tier_config` configuration block supports the following arguments:
 
 #### PII Entities Config
 
-* `action` (Required) Options for sensitive information action.
+* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `inputAction` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `inputEnabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `outputAction` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `outputEnabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 * `type` (Required) The currently supported PII entities.
 
 #### Regexes Config
 
-* `action` (Required) Options for sensitive information action.
+* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
 * `name` (Required) The regex name.
+* `inputAction` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `inputEnabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `outputAction` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `outputEnabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 * `pattern` (Required) The regex pattern.
 * `description` (Optional) The regex description.
 
