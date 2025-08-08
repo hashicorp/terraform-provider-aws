@@ -88,6 +88,7 @@ var (
 	_ basetypes.StringValuable                   = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
 	_ basetypes.StringValuableWithSemanticEquals = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
 	_ xattr.ValidateableAttribute                = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
+	_ SmithyDocumentValue                        = (*SmithyJSON[tfsmithy.JSONStringer])(nil)
 )
 
 type SmithyJSON[T tfsmithy.JSONStringer] struct {
@@ -104,7 +105,11 @@ func (v SmithyJSON[T]) Equal(o attr.Value) bool {
 	return v.Normalized.Equal(other.Normalized)
 }
 
-func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
+func (v SmithyJSON[T]) ToSmithyObjectDocument(ctx context.Context) (any, diag.Diagnostics) {
+	return v.ToSmithyDocument(ctx)
+}
+
+func (v SmithyJSON[T]) ToSmithyDocument(context.Context) (T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var zero T
@@ -149,4 +154,13 @@ func NewSmithyJSONUnknown[T tfsmithy.JSONStringer]() SmithyJSON[T] {
 	return SmithyJSON[T]{
 		Normalized: jsontypes.NewNormalizedUnknown(),
 	}
+}
+
+// SmithyDocumentValue extends the Value interface for values that represent Smithy documents.
+// It isn't generic on the Go interface type as it's referenced within AutoFlEx.
+type SmithyDocumentValue interface {
+	attr.Value
+
+	// ToSmithyObjectDocument returns the value as a Smithy document.
+	ToSmithyObjectDocument(context.Context) (any, diag.Diagnostics)
 }

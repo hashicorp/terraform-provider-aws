@@ -152,7 +152,7 @@ func TestSmithyJSONValueInterface(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			s, err := test.val.ValueInterface()
+			s, err := test.val.ToSmithyDocument(t.Context())
 			gotErr := err.HasError()
 
 			if gotErr != test.expectError {
