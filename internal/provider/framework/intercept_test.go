@@ -14,6 +14,8 @@ import (
 )
 
 func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
@@ -64,6 +66,8 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
@@ -114,6 +118,8 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
@@ -164,6 +170,8 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
@@ -214,6 +222,8 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
@@ -269,6 +279,8 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 }
 
 func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
@@ -318,6 +330,8 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
@@ -367,6 +381,8 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
@@ -422,6 +438,8 @@ func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing
 }
 
 func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
@@ -497,6 +515,8 @@ func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
 }
 
 func TestInterceptedHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.T) {
+	t.Parallel()
+
 	expectedDiags := diag.Diagnostics{
 		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),

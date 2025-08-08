@@ -50,6 +50,8 @@ func TestAppliedToEach(t *testing.T) {
 
 // Copied and adapted from stdlib slices package
 func TestBackwardValues(t *testing.T) {
+	t.Parallel()
+
 	for size := range 10 {
 		var s []int
 		for i := range size {
