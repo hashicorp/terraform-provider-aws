@@ -15,6 +15,7 @@ import (
 
 func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
 	}
 
@@ -39,9 +40,12 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
-	// interceptedHandler is always called like this
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
@@ -61,6 +65,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 
 func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
 	}
 
@@ -85,7 +90,11 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
@@ -106,6 +115,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 
 func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
 	}
 
@@ -130,7 +140,11 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
@@ -151,6 +165,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 
 func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
 	}
 
@@ -175,7 +190,11 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
@@ -196,6 +215,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 
 func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
 		diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
 	}
@@ -225,7 +245,11 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
@@ -246,6 +270,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 
 func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
 	}
 
@@ -269,7 +294,11 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
@@ -290,6 +319,7 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 
 func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 	expectedDiags := diag.Diagnostics{
+		diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
 		diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
 	}
 
@@ -313,7 +343,11 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
-	var response resource.SchemaResponse
+	response := resource.SchemaResponse{
+		Diagnostics: diag.Diagnostics{
+			diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+		},
+	}
 
 	response.Diagnostics.Append(handler(ctx, &request, &response)...)
 
