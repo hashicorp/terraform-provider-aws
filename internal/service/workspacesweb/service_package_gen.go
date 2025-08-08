@@ -135,6 +135,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newUserSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_user_settings_association",
+			Name:     "User Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
