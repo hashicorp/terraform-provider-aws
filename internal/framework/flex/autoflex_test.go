@@ -5,7 +5,6 @@ package flex
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"reflect"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
@@ -448,15 +448,15 @@ func newTestJSONDocument(v any) tfsmithy.JSONStringer {
 }
 
 func (m *testJSONDocument) UnmarshalSmithyDocument(v any) error {
-	data, err := json.Marshal(m.Value)
+	data, err := tfjson.EncodeToBytes(m.Value)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, v)
+	return tfjson.DecodeFromBytes(data, v)
 }
 
 func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
-	return json.Marshal(m.Value)
+	return tfjson.EncodeToBytes(m.Value)
 }
 
 var _ tfsmithy.JSONStringer = &testJSONDocumentError{}

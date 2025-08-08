@@ -4429,7 +4429,7 @@ func TestFlattenInterfaceToStringTypable(t *testing.T) {
 			},
 			Target: &tfSingleStringField{},
 			expectedDiags: diag.Diagnostics{
-				diagFlatteningMarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errMarshallSmithyDocument),
+				diagFlatteningUnmarshalSmithyDocument(reflect.TypeFor[*testJSONDocumentError](), errUnmarshallSmithyDocument),
 			},
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*awsJSONStringer](), reflect.TypeFor[*tfSingleStringField]()),
@@ -4438,7 +4438,7 @@ func TestFlattenInterfaceToStringTypable(t *testing.T) {
 				infoConvertingWithPath("Field1", reflect.TypeFor[tfsmithy.JSONStringer](), "Field1", reflect.TypeFor[types.String]()),
 				// infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[testJSONDocument](), "Field1", reflect.TypeFor[types.String]()),
 				infoSourceImplementsJSONStringer("Field1", reflect.TypeFor[tfsmithy.JSONStringer](), "Field1", reflect.TypeFor[types.String]()), // TODO: fix source type
-				errorMarshallingJSONDocument("Field1", reflect.TypeFor[tfsmithy.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errMarshallSmithyDocument),
+				errorUnmarshallingJSONDocument("Field1", reflect.TypeFor[tfsmithy.JSONStringer](), "Field1", reflect.TypeFor[types.String](), errUnmarshallSmithyDocument),
 			},
 		},
 
