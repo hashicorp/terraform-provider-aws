@@ -620,7 +620,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		// JSONStringer -> types.String-ish.
 		//
 		if vFrom.Type().Implements(reflect.TypeFor[tfsmithy.JSONStringer]()) {
-			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
+			tflog.SubsystemInfo(ctx, subsystemName, "Source implements tfsmithy.JSONStringer")
 
 			stringValue := types.StringNull()
 

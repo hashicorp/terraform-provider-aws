@@ -8,7 +8,8 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
-func SmithyDocumentFromString[T smithydocument.Marshaler](s string, f func(any) T) (T, error) {
+// DocumentFromJSONString converts a JSON string to a [Smithy document](https://smithy.io/2.0/spec/simple-types.html#document).
+func DocumentFromJSONString[T any](s string, f func(any) T) (T, error) {
 	var v any
 
 	err := tfjson.DecodeFromString(s, &v)
@@ -20,8 +21,8 @@ func SmithyDocumentFromString[T smithydocument.Marshaler](s string, f func(any) 
 	return f(v), nil
 }
 
-// SmithyDocumentToString converts a [Smithy document](https://smithy.io/2.0/spec/simple-types.html#document) to a JSON string.
-func SmithyDocumentToString(document smithydocument.Unmarshaler) (string, error) {
+// DocumentToJSONString converts a [Smithy document](https://smithy.io/2.0/spec/simple-types.html#document) to a JSON string.
+func DocumentToJSONString(document smithydocument.Unmarshaler) (string, error) {
 	var v any
 
 	err := document.UnmarshalSmithyDocument(&v)

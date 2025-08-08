@@ -112,7 +112,7 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 		return zero, diags
 	}
 
-	t, err := tfsmithy.SmithyDocumentFromString(v.ValueString(), v.f)
+	t, err := tfsmithy.DocumentFromJSONString(v.ValueString(), v.f)
 	if err != nil {
 		diags.AddError(
 			"JSON Unmarshal Error",
@@ -127,7 +127,9 @@ func (v SmithyJSON[T]) ValueInterface() (T, diag.Diagnostics) {
 }
 
 func (v SmithyJSON[T]) Type(context.Context) attr.Type {
-	return SmithyJSONType[T]{}
+	return SmithyJSONType[T]{
+		f: v.f,
+	}
 }
 
 func NewSmithyJSONValue[T tfsmithy.JSONStringer](value string, f func(any) T) SmithyJSON[T] {

@@ -685,7 +685,7 @@ func (m promptVariantModel) Expand(ctx context.Context) (any, diag.Diagnostics) 
 	}
 
 	if !m.AdditionalModelRequestFields.IsNull() {
-		json, err := tfsmithy.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.AdditionalModelRequestFields), document.NewLazyDocument)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(
 				"Decoding JSON",
@@ -723,7 +723,7 @@ func (m *promptVariantModel) Flatten(ctx context.Context, v any) diag.Diagnostic
 		}
 
 		if v.AdditionalModelRequestFields != nil {
-			json, err := tfsmithy.SmithyDocumentToString(v.AdditionalModelRequestFields)
+			json, err := tfsmithy.DocumentToJSONString(v.AdditionalModelRequestFields)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
@@ -1182,7 +1182,7 @@ func (m toolInputSchemaModel) Expand(ctx context.Context) (any, diag.Diagnostics
 
 	switch {
 	case !m.JSON.IsNull():
-		json, err := tfsmithy.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, m.JSON), document.NewLazyDocument)
+		json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, m.JSON), document.NewLazyDocument)
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic(
 				"Decoding JSON",
@@ -1207,7 +1207,7 @@ func (m *toolInputSchemaModel) Flatten(ctx context.Context, v any) diag.Diagnost
 	switch v := v.(type) {
 	case awstypes.ToolInputSchemaMemberJson:
 		if v.Value != nil {
-			json, err := tfsmithy.SmithyDocumentToString(v.Value)
+			json, err := tfsmithy.DocumentToJSONString(v.Value)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
