@@ -41,9 +41,9 @@ func main() {
 
 	log.SetFlags(0)
 
-	seed := int64(1) // Default rand seed
+	seed := int64(48) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	fake := faker.New()
+	fake := faker.NewWithSeedInt64(seed)
 
 	entitiesFile, err := os.OpenFile("./test-fixtures/entity_recognizer/entitylist.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
