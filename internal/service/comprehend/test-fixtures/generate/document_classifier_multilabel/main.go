@@ -14,7 +14,7 @@ import (
 	"os"
 	"strings"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 const (
@@ -43,7 +43,7 @@ func main() {
 
 	seed := int64(1) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	faker.Seed(seed)
+	fake := faker.New()
 
 	// documentFile, err := os.OpenFile("./test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	documentFile, err := os.OpenFile("../../../test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -62,7 +62,7 @@ func main() {
 			doctype = strings.Join(doctypes, defaultSeparator)
 		}
 
-		title := faker.Lorem().Word()
+		title := fake.Lorem().Word()
 
 		var desc string
 		if doctype == "DRAMA" {

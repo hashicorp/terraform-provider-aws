@@ -13,7 +13,7 @@ import (
 	"math/rand"
 	"os"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 var doctypes = []string{
@@ -38,7 +38,7 @@ func main() {
 
 	seed := int64(1) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	faker.Seed(seed)
+	fake := faker.New()
 
 	documentFile, err := os.OpenFile("./test-fixtures/document_classifier/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -48,19 +48,19 @@ func main() {
 	documentsWriter := csv.NewWriter(documentFile)
 
 	for i := 0; i < 100; i++ {
-		name := faker.Name().Name()
+		name := fake.Person().Name()
 		doctype := doctypes[r.Intn(len(doctypes))]
 
 		var line string
 		if doctype == "PHISHING" {
-			order := faker.RandomString(10)
-			phone := faker.PhoneNumber().PhoneNumber()
+			order := fake.RandomStringWithLength(10)
+			phone := fake.Phone().Number()
 			doc := phishingDocs[r.Intn(len(phishingDocs))]
 			line = fmt.Sprintf(doc, name, order, phone)
 		} else {
 			doc := spamDocs[r.Intn(len(spamDocs))]
-			product := faker.Commerce().ProductName()
-			company := faker.Company().Name()
+			product := fake.Beer().Name()
+			company := fake.Company().Name()
 			line = fmt.Sprintf(doc, name, product, company)
 		}
 

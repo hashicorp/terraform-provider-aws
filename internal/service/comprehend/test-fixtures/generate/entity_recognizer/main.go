@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 
 	seed := int64(1) // Default rand seed
 	r := rand.New(rand.NewSource(seed))
-	faker.Seed(seed)
+	fake := faker.New()
 
 	entitiesFile, err := os.OpenFile("./test-fixtures/entity_recognizer/entitylist.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -72,7 +72,7 @@ func main() {
 	}
 
 	for i := 0; i < 1000; i++ {
-		name := faker.Name().Name()
+		name := fake.Person().Name()
 		entity := entities[r.Intn(len(entities))]
 
 		if _, err := fmt.Fprintf(entitiesFile, "%s,%s\n", name, entity); err != nil {
