@@ -6,7 +6,6 @@ package appsync
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/smarterr"
@@ -42,7 +41,7 @@ import (
 // @IdentityAttribute("id")
 // @#Testing(importStateIdAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
-// @Testing(preIdentityVersion="")
+// @Testing(hasNoPreExistingResource=true)
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAPI{}
 
@@ -315,7 +314,6 @@ func (r *resourceAPI) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	apiId := state.ApiId.ValueString()
-	fmt.Println("Read api id", apiId)
 
 	out, err := findAPIByID(ctx, conn, apiId)
 	if tfresource.NotFound(err) {
@@ -426,11 +424,6 @@ func waitAPICreated(ctx context.Context, conn *appsync.Client, id string, timeou
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		fmt.Printf("[DEBUG] waitAPICreated: Wait failed with error: %v\n", err)
-	} else {
-		fmt.Printf("[DEBUG] waitAPICreated: Wait completed successfully for API: %s\n", id)
-	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
 		return out, smarterr.NewError(err)
@@ -440,7 +433,6 @@ func waitAPICreated(ctx context.Context, conn *appsync.Client, id string, timeou
 }
 
 func waitAPIDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
-	fmt.Printf("[DEBUG] waitAPIDeleted: Starting wait for API deletion: %s\n", id)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
@@ -449,11 +441,6 @@ func waitAPIDeleted(ctx context.Context, conn *appsync.Client, id string, timeou
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		fmt.Printf("[DEBUG] waitAPIDeleted: Wait failed with error: %v\n", err)
-	} else {
-		fmt.Printf("[DEBUG] waitAPIDeleted: Wait completed successfully for API: %s\n", id)
-	}
 
 	if out, ok := outputRaw.(*awstypes.Api); ok {
 		return out, smarterr.NewError(err)
