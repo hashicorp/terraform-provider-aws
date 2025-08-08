@@ -169,6 +169,7 @@ resource "aws_acmpca_certificate_authority" "test" {
       common_name = "example.com"
     }
   }
+  permanent_deletion_time_in_days = 7
 }
 
 resource "aws_acmpca_certificate" "test1" {
