@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -448,10 +449,8 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		}()
 
 		// Before interceptors are run first to last.
-		forward := interceptors
-
 		when := Before
-		for _, v := range forward {
+		for v := range slices.Values(interceptors) {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
 				request:  request,
@@ -466,17 +465,16 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
 		d := f(ctx, request, response)
 		diags.Append(d...)
 
+		// All other interceptors are run last to first.
 		if d.HasError() {
 			when = OnError
 		} else {
 			when = After
 		}
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
 				request:  request,
@@ -487,7 +485,7 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 		}
 
 		when = Finally
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			opts := interceptorOptions[Request, Response]{
 				c:        c,
 				request:  request,
