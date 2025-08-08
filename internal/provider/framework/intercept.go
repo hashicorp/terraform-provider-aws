@@ -278,6 +278,9 @@ func (s interceptorInvocations) resourceImportState() []interceptorFunc[resource
 	})
 }
 
+// Only generate strings for use in tests
+//go:generate stringer -type=when -output=when_string_test.go
+
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
 type when uint16
