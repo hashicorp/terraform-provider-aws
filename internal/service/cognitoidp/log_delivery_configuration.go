@@ -4,13 +4,16 @@
 package cognitoidp
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	gocmp "github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -153,6 +156,13 @@ func (r *logDeliveryConfigurationResource) Create(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve original log_configurations order if content is equivalent
+	var config resourceLogDeliveryConfigurationModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	r.preserveConfigurationOrder(ctx, &plan, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -176,11 +186,18 @@ func (r *logDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
+	// Save the current LogConfigurations before flex.Flatten overwrites it
+	originalState := resourceLogDeliveryConfigurationModel{
+		LogConfigurations: state.LogConfigurations,
+	}
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve original log_configurations order if content is equivalent
+	r.preserveConfigurationOrder(ctx, &state, originalState)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -221,6 +238,14 @@ func (r *logDeliveryConfigurationResource) Update(ctx context.Context, req resou
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		// Preserve original log_configurations order if content is equivalent
+		var config resourceLogDeliveryConfigurationModel
+		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		r.preserveConfigurationOrder(ctx, &plan, config)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -300,4 +325,59 @@ type firehoseConfigurationModel struct {
 
 type s3ConfigurationModel struct {
 	BucketArn fwtypes.ARN `tfsdk:"bucket_arn"`
+}
+
+// preserveConfigurationOrder replaces plan's LogConfigurations with config's if they are equal ignoring order
+func (r *logDeliveryConfigurationResource) preserveConfigurationOrder(ctx context.Context, plan *resourceLogDeliveryConfigurationModel, config resourceLogDeliveryConfigurationModel) {
+	if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
+		plan.LogConfigurations = config.LogConfigurations
+	}
+}
+
+func compareLogConfigurations(x, y logConfigurationModel) int {
+	if c := cmp.Compare(x.LogLevel.ValueString(), y.LogLevel.ValueString()); c != 0 {
+		return c
+	}
+	if c := cmp.Compare(x.EventSource.ValueString(), y.EventSource.ValueString()); c != 0 {
+		return c
+	}
+	if c := cmp.Compare(x.CloudWatchLogsConfiguration.String(), y.CloudWatchLogsConfiguration.String()); c != 0 {
+		return c
+	}
+	if c := cmp.Compare(x.FirehoseConfiguration.String(), y.FirehoseConfiguration.String()); c != 0 {
+		return c
+	}
+	return cmp.Compare(x.S3Configuration.String(), y.S3Configuration.String())
+}
+
+func logConfigurationsEqualIgnoreOrder(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[logConfigurationModel]) bool {
+	// Check if both are null/empty
+	if a.IsNull() && b.IsNull() {
+		return true
+	}
+	if a.IsNull() || b.IsNull() {
+		return false
+	}
+
+	// Extract elements to slices with proper error handling
+	var aSlice, bSlice []logConfigurationModel
+	if diag := a.ElementsAs(ctx, &aSlice, false); diag.HasError() {
+		return false
+	}
+	if diag := b.ElementsAs(ctx, &bSlice, false); diag.HasError() {
+		return false
+	}
+
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	if len(aSlice) <= 1 {
+		return gocmp.Equal(aSlice, bSlice)
+	}
+
+	slices.SortFunc(aSlice, compareLogConfigurations)
+	slices.SortFunc(bSlice, compareLogConfigurations)
+
+	return gocmp.Equal(aSlice, bSlice)
 }

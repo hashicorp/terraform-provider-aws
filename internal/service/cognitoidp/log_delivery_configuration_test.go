@@ -87,7 +87,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
 				),
 			},
 			{
@@ -96,6 +96,16 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", false, true},
+						},
+					),
+				),
 			},
 		},
 	})
@@ -127,6 +137,72 @@ func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_log_delivery_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, "INFO", "INFO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", true, false},
+						},
+					),
+				),
+			},
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, "ERROR", "INFO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
+				),
+			},
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrderUpdated(rName, "ERROR"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
 				),
 			},
 		},
@@ -181,7 +257,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
-					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_configurations.1.firehose_configuration.0.stream_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
 				),
 			},
@@ -191,6 +267,16 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", false, true},
+						},
+					),
+				),
 			},
 		},
 	})
@@ -258,10 +344,49 @@ func testAccLogDeliveryConfigurationImportStateIdFunc(resourceName string) resou
 	}
 }
 
+type testAccCognitoIDPLogDeliveryConfigurationLogConfig struct {
+	eventSource, logLevel        string
+	logGroupARNSet, streamARNSet bool
+}
+
+// validates that imported log configurations match expected values including event sources, log levels, and configuration types (CloudWatch Logs or Kinesis Data Firehose).
+// This function performs order-agnostic verification by building a map of configurations indexed by event source.
+func testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(expected []testAccCognitoIDPLogDeliveryConfigurationLogConfig) resource.ImportStateCheckFunc {
+	return func(states []*terraform.InstanceState) error {
+		found := make(map[string]testAccCognitoIDPLogDeliveryConfigurationLogConfig)
+		for _, rs := range states {
+			for i := range len(expected) {
+				eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
+				logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
+				logGroupARN := rs.Attributes[fmt.Sprintf("log_configurations.%d.cloud_watch_logs_configuration.0.log_group_arn", i)]
+				streamARN := rs.Attributes[fmt.Sprintf("log_configurations.%d.firehose_configuration.0.stream_arn", i)]
+				if eventSource != "" && logLevel != "" {
+					found[eventSource] = testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+						eventSource:    eventSource,
+						logLevel:       logLevel,
+						logGroupARNSet: logGroupARN != "",
+						streamARNSet:   streamARN != "",
+					}
+				}
+			}
+		}
+
+		for _, exp := range expected {
+			if foundLogConfig, ok := found[exp.eventSource]; !ok {
+				return fmt.Errorf("expected event_source %s not found", exp.eventSource)
+			} else if foundLogConfig != exp {
+				return fmt.Errorf("expected %v, got %v", exp, foundLogConfig)
+			}
+		}
+		return nil
+	}
+}
+
 func testAccLogDeliveryConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
+  name           = %[1]q
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -286,7 +411,8 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 func testAccLogDeliveryConfigurationConfig_firehose(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = %[1]q
+  name           = %[1]q
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -349,6 +475,9 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
+  tags = {
+    "LogDeliveryEnabled" = "true"
+  }
 }
 
 resource "aws_cognito_log_delivery_configuration" "test" {
@@ -365,7 +494,7 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.test.arn
@@ -398,4 +527,64 @@ resource "aws_cognito_log_delivery_configuration" "test" {
   }
 }
 `, rName, logLevel)
+}
+
+func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, logLevel1, logLevel2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_log_delivery_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  log_configurations {
+    event_source = "userNotification"
+    log_level    = %[2]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+  log_configurations {
+    event_source = "userAuthEvents"
+    log_level    = %[3]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+}
+`, rName, logLevel1, logLevel2)
+}
+
+func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrderUpdated(rName, logLevel1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_log_delivery_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  log_configurations {
+    event_source = "userNotification"
+    log_level    = %[2]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+}
+`, rName, logLevel1)
 }
