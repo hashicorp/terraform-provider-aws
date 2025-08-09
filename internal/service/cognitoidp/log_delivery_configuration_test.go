@@ -4,9 +4,11 @@
 package cognitoidp_test
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -159,6 +161,54 @@ func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t 
 				),
 			},
 			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					func(states []*terraform.InstanceState) error {
+						type logConfiguration struct {
+							eventSource string
+							logLevel    string
+						}
+						got := make([]logConfiguration, 2)
+						expected := []logConfiguration{
+							{eventSource: "userNotification", logLevel: "INFO"},
+							{eventSource: "userAuthEvents", logLevel: "INFO"},
+						}
+						for _, rs := range states {
+							if v, ok := rs.Attributes["log_configurations.0.event_source"]; ok && v != "" {
+								got[0].eventSource = v
+							}
+							if v, ok := rs.Attributes["log_configurations.0.log_level"]; ok && v != "" {
+								got[0].logLevel = v
+							}
+							if v, ok := rs.Attributes["log_configurations.1.event_source"]; ok && v != "" {
+								got[1].eventSource = v
+							}
+							if v, ok := rs.Attributes["log_configurations.1.log_level"]; ok && v != "" {
+								got[1].logLevel = v
+							}
+						}
+						compareFunc := func(a, b logConfiguration) int {
+							return cmp.Compare(a.eventSource, b.eventSource)
+						}
+						slices.SortFunc(got, compareFunc)
+						slices.SortFunc(expected, compareFunc)
+
+						for i := range got {
+							if got[i].eventSource != expected[i].eventSource || got[i].logLevel != expected[i].logLevel {
+								return fmt.Errorf("ImportStateCheck failed: log_configurations did not match expected values. expected: %v, got %v", expected, got)
+							}
+						}
+						return nil
+					},
+				),
+			},
+			{
 				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, "ERROR", "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
@@ -167,6 +217,15 @@ func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t 
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
 					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
+				),
+			},
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrderUpdated(rName, "ERROR"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
 				),
 			},
 		},
@@ -472,4 +531,30 @@ resource "aws_cognito_log_delivery_configuration" "test" {
   }
 }
 `, rName, logLevel1, logLevel2)
+}
+
+func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrderUpdated(rName, logLevel1 string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_log_delivery_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  log_configurations {
+    event_source = "userNotification"
+    log_level    = %[2]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+}
+`, rName, logLevel1)
 }
