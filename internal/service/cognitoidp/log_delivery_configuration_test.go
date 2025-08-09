@@ -133,6 +133,46 @@ func TestAccCognitoIDPLogDeliveryConfiguration_logLevelUpdate(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_log_delivery_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, "INFO", "INFO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
+				),
+			},
+			{
+				Config: testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, "ERROR", "INFO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.event_source", "userAuthEvents"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.1.log_level", "INFO"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPLogDeliveryConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
@@ -398,4 +438,38 @@ resource "aws_cognito_log_delivery_configuration" "test" {
   }
 }
 `, rName, logLevel)
+}
+
+func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName, logLevel1, logLevel2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name           = %[1]q
+  user_pool_tier = "PLUS"
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_log_delivery_configuration" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  log_configurations {
+    event_source = "userNotification"
+    log_level    = %[2]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+  log_configurations {
+    event_source = "userAuthEvents"
+    log_level    = %[3]q
+
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
+  }
+}
+`, rName, logLevel1, logLevel2)
 }
