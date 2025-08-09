@@ -41,7 +41,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS" # Required for log delivery configuration with `userAuthEvents` event source
 }
 
 resource "aws_cloudwatch_log_group" "example" {
@@ -100,6 +101,13 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   name        = "example-stream"
   destination = "extended_s3"
 
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html#AWS-logs-infrastructure-V2-Firehose
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+
   extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.example.arn
@@ -120,7 +128,7 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
@@ -171,7 +179,7 @@ The following arguments are optional:
 The `log_configurations` block supports the following:
 
 * `event_source` - (Required) The event source to configure logging for. Valid values are `userNotification` and `userAuthEvents`.
-* `log_level` - (Required) The log level to set for the event source. Valid values are `ERROR` and `INFO`.
+* `log_level` - (Required) The log level to set for the event source. Valid values are `ERROR` and `INFO`. When `event_source` is set to `userAuthEvents`, the only valid value for `log_level` is `INFO`.
 * `cloud_watch_logs_configuration` - (Optional) Configuration for CloudWatch Logs delivery. See [CloudWatch Logs Configuration](#cloudwatch-logs-configuration) below.
 * `firehose_configuration` - (Optional) Configuration for Kinesis Data Firehose delivery. See [Firehose Configuration](#firehose-configuration) below.
 * `s3_configuration` - (Optional) Configuration for S3 delivery. See [S3 Configuration](#s3-configuration) below.
