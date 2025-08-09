@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -304,7 +303,7 @@ type interceptedResponse interface {
 		resource.ImportStateResponse
 }
 
-type innerFunc[Request, Response any] func(ctx context.Context, request *Request, response *Response) diag.Diagnostics
+type innerFunc[Request, Response any] func(ctx context.Context, request *Request, response *Response)
 
 // interceptedHandler returns a handler that runs any interceptors.
 func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], hasError hasErrorFn[Response], c awsClient) func(context.Context, *Request, *Response) {

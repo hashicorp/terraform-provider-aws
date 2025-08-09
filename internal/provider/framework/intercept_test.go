@@ -613,8 +613,7 @@ type mockInnerFunc struct {
 	count int
 }
 
-func (m *mockInnerFunc) Call(ctx context.Context, request *resource.SchemaRequest, response *resource.SchemaResponse) diag.Diagnostics {
+func (m *mockInnerFunc) Call(ctx context.Context, request *resource.SchemaRequest, response *resource.SchemaResponse) {
 	m.count++
 	response.Diagnostics.Append(m.diags...)
-	return response.Diagnostics
 }
