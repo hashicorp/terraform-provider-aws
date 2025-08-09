@@ -167,32 +167,12 @@ func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t 
 				ImportStateVerifyIgnore:              []string{"log_configuration"},
 				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
 					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
-					func(states []*terraform.InstanceState) error {
-						expected := []struct{ eventSource, logLevel string }{
-							{"userNotification", "INFO"},
-							{"userAuthEvents", "INFO"},
-						}
-
-						found := make(map[string]string)
-						for _, rs := range states {
-							for i := range 2 {
-								eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
-								logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
-								if eventSource != "" && logLevel != "" {
-									found[eventSource] = logLevel
-								}
-							}
-						}
-
-						for _, exp := range expected {
-							if foundLevel, ok := found[exp.eventSource]; !ok {
-								return fmt.Errorf("expected event_source %s not found", exp.eventSource)
-							} else if foundLevel != exp.logLevel {
-								return fmt.Errorf("expected %s=%s, got %s", exp.eventSource, exp.logLevel, foundLevel)
-							}
-						}
-						return nil
-					},
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", true, false},
+						},
+					),
 				),
 			},
 			{
@@ -341,6 +321,44 @@ func testAccLogDeliveryConfigurationImportStateIdFunc(resourceName string) resou
 		}
 
 		return rs.Primary.Attributes[names.AttrUserPoolID], nil
+	}
+}
+
+type testAccCognitoIDPLogDeliveryConfigurationLogConfig struct {
+	eventSource, logLevel        string
+	logGroupARNSet, streamARNSet bool
+}
+
+// validates that imported log configurations match expected values including event sources, log levels, and configuration types (CloudWatch Logs or Kinesis Data Firehose).
+// This function performs order-agnostic verification by building a map of configurations indexed by event source.
+func testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(expected []testAccCognitoIDPLogDeliveryConfigurationLogConfig) resource.ImportStateCheckFunc {
+	return func(states []*terraform.InstanceState) error {
+		found := make(map[string]testAccCognitoIDPLogDeliveryConfigurationLogConfig)
+		for _, rs := range states {
+			for i := range len(expected) {
+				eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
+				logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
+				logGroupARN, _ := rs.Attributes[fmt.Sprintf("log_configurations.%d.cloud_watch_logs_configuration.0.log_group_arn", i)]
+				streamARN, _ := rs.Attributes[fmt.Sprintf("log_configurations.%d.firehose_configuration.0.stream_arn", i)]
+				if eventSource != "" && logLevel != "" {
+					found[eventSource] = testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+						eventSource:    eventSource,
+						logLevel:       logLevel,
+						logGroupARNSet: logGroupARN != "",
+						streamARNSet:   streamARN != "",
+					}
+				}
+			}
+		}
+
+		for _, exp := range expected {
+			if foundLogConfig, ok := found[exp.eventSource]; !ok {
+				return fmt.Errorf("expected event_source %s not found", exp.eventSource)
+			} else if foundLogConfig != exp {
+				return fmt.Errorf("expected %v, got %v", exp, foundLogConfig)
+			}
+		}
+		return nil
 	}
 }
 
