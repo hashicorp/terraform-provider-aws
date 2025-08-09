@@ -4,13 +4,16 @@
 package cognitoidp
 
 import (
+	"cmp"
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	gocmp "github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -153,6 +156,16 @@ func (r *logDeliveryConfigurationResource) Create(ctx context.Context, req resou
 		return
 	}
 
+	// If the LogConfigurations in the plan are equal to the config except order,
+	// replace LogConfiguration in the plan with the config
+	var config resourceLogDeliveryConfigurationModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
+		plan.LogConfigurations = config.LogConfigurations
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -176,11 +189,19 @@ func (r *logDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
+	// Save the current LogConfigurations before flex.Flatten overwrites it
+	originalLogConfigurations := state.LogConfigurations
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// If the LogConfigurations in the state are equal to the pre-refreshed one except order,
+	// replace LogConfiguration in the state with the pre-refreshed one
+	if logConfigurationsEqualIgnoreOrder(ctx, state.LogConfigurations, originalLogConfigurations) {
+		state.LogConfigurations = originalLogConfigurations
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -220,6 +241,17 @@ func (r *logDeliveryConfigurationResource) Update(ctx context.Context, req resou
 		resp.Diagnostics.Append(flex.Flatten(ctx, out.LogDeliveryConfiguration, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
+		}
+
+		// If the LogConfigurations in the plan are equal to the ones in the config except order,
+		// replace LogConfiguration in the plan with the config
+		var config resourceLogDeliveryConfigurationModel
+		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
+			plan.LogConfigurations = config.LogConfigurations
 		}
 	}
 
@@ -300,4 +332,55 @@ type firehoseConfigurationModel struct {
 
 type s3ConfigurationModel struct {
 	BucketArn fwtypes.ARN `tfsdk:"bucket_arn"`
+}
+
+func compareLogConfigurations(x, y logConfigurationModel) int {
+	// Compare LogLevel first
+	if c := cmp.Compare(x.LogLevel.ValueString(), y.LogLevel.ValueString()); c != 0 {
+		return c
+	}
+	// Then EventSource
+	if c := cmp.Compare(x.EventSource.ValueString(), y.EventSource.ValueString()); c != 0 {
+		return c
+	}
+	// Then CloudWatchLogsConfiguration
+	if c := cmp.Compare(x.CloudWatchLogsConfiguration.String(), y.CloudWatchLogsConfiguration.String()); c != 0 {
+		return c
+	}
+	// Then FirehoseConfiguration
+	if c := cmp.Compare(x.FirehoseConfiguration.String(), y.FirehoseConfiguration.String()); c != 0 {
+		return c
+	}
+	// Finally S3Configuration
+	return cmp.Compare(x.S3Configuration.String(), y.S3Configuration.String())
+}
+
+func logConfigurationsEqualIgnoreOrder(ctx context.Context, a, b fwtypes.ListNestedObjectValueOf[logConfigurationModel]) bool {
+	// Check if both are null/empty
+	if a.IsNull() && b.IsNull() {
+		return true
+	}
+	if a.IsNull() || b.IsNull() {
+		return false
+	}
+
+	// Extract elements to slices
+	var aSlice, bSlice []logConfigurationModel
+	a.ElementsAs(ctx, &aSlice, false)
+	b.ElementsAs(ctx, &bSlice, false)
+
+	// Check lengths
+	if len(aSlice) != len(bSlice) {
+		return false
+	}
+
+	// Sort both slices for comparison
+	sortLogConfigurations := func(slice []logConfigurationModel) {
+		slices.SortFunc(slice, compareLogConfigurations)
+	}
+	sortLogConfigurations(aSlice)
+	sortLogConfigurations(bSlice)
+
+	// Compare sorted slices using go-cmp
+	return gocmp.Equal(aSlice, bSlice)
 }
