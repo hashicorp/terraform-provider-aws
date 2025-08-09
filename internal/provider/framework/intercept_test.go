@@ -38,7 +38,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 	}
 
 	var f mockInnerFunc
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -48,7 +48,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -90,7 +90,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 	}
 
 	var f mockInnerFunc
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -100,7 +100,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -142,7 +142,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 	}
 
 	var f mockInnerFunc
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -152,7 +152,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -194,7 +194,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 	}
 
 	var f mockInnerFunc
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -204,7 +204,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -251,7 +251,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 	}
 
 	var f mockInnerFunc
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -261,7 +261,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -302,7 +302,7 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 	f.diags = diag.Diagnostics{
 		diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
 	}
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -312,7 +312,7 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -353,7 +353,7 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 	f.diags = diag.Diagnostics{
 		diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
 	}
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -363,7 +363,7 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -410,7 +410,7 @@ func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing
 	f.diags = diag.Diagnostics{
 		diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
 	}
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -420,7 +420,7 @@ func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -487,7 +487,7 @@ func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
 	f.diags = diag.Diagnostics{
 		diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
 	}
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -497,7 +497,7 @@ func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -564,7 +564,7 @@ func TestInterceptedHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.
 	f.diags = diag.Diagnostics{
 		diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
 	}
-	handler := interceptedHandler(interceptors, f.Call, client)
+	handler := interceptedHandler(interceptors, f.Call, resourceSchemaHasError, client)
 
 	ctx := t.Context()
 	var request resource.SchemaRequest
@@ -574,7 +574,7 @@ func TestInterceptedHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.
 		},
 	}
 
-	response.Diagnostics.Append(handler(ctx, &request, &response)...)
+	handler(ctx, &request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -602,9 +602,10 @@ func newMockInterceptor(diags map[when]diag.Diagnostics) *mockInterceptor {
 	}
 }
 
-func (m *mockInterceptor) Intercept(ctx context.Context, opts interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) diag.Diagnostics {
+func (m *mockInterceptor) Intercept(ctx context.Context, opts interceptorOptions[resource.SchemaRequest, resource.SchemaResponse]) {
 	m.called = append(m.called, opts.when)
-	return m.diags[opts.when]
+	// return m.diags[opts.when]
+	opts.response.Diagnostics.Append(m.diags[opts.when]...)
 }
 
 type mockInnerFunc struct {

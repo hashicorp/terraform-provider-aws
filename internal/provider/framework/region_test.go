@@ -60,13 +60,14 @@ func TestResourceSetRegionInStateInterceptor_Read(t *testing.T) {
 			req := resource.ReadRequest{State: tc.startState}
 			resp := resource.ReadResponse{State: tc.startState}
 
-			if diags := icpt.read(ctx, interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+			icpt.read(ctx, interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
 				c:        client,
 				request:  &req,
 				response: &resp,
 				when:     After,
-			}); diags.HasError() {
-				t.Fatalf("unexpected diags: %s", diags)
+			})
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diags: %s", resp.Diagnostics)
 			}
 
 			if tc.expectSet {
