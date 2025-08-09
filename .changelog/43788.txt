@@ -1,0 +1,3 @@
+```release-note:bug
+resource/custom_key_store: Make `xks_proxy_authentication_credential` sensitive input values
+```
