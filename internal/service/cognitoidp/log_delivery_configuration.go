@@ -156,7 +156,7 @@ func (r *logDeliveryConfigurationResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	// Preserve original configuration order if content is equivalent
+	// Preserve original log_configurations order if content is equivalent
 	var config resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -196,7 +196,7 @@ func (r *logDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	// Preserve original configuration order if content is equivalent
+	// Preserve original log_configurations order if content is equivalent
 	r.preserveConfigurationOrder(ctx, &state, originalState)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -239,7 +239,7 @@ func (r *logDeliveryConfigurationResource) Update(ctx context.Context, req resou
 			return
 		}
 
-		// Preserve original configuration order if content is equivalent
+		// Preserve original log_configurations order if content is equivalent
 		var config resourceLogDeliveryConfigurationModel
 		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 		if resp.Diagnostics.HasError() {
@@ -335,23 +335,18 @@ func (r *logDeliveryConfigurationResource) preserveConfigurationOrder(ctx contex
 }
 
 func compareLogConfigurations(x, y logConfigurationModel) int {
-	// Compare LogLevel first
 	if c := cmp.Compare(x.LogLevel.ValueString(), y.LogLevel.ValueString()); c != 0 {
 		return c
 	}
-	// Then EventSource
 	if c := cmp.Compare(x.EventSource.ValueString(), y.EventSource.ValueString()); c != 0 {
 		return c
 	}
-	// Then CloudWatchLogsConfiguration
 	if c := cmp.Compare(x.CloudWatchLogsConfiguration.String(), y.CloudWatchLogsConfiguration.String()); c != 0 {
 		return c
 	}
-	// Then FirehoseConfiguration
 	if c := cmp.Compare(x.FirehoseConfiguration.String(), y.FirehoseConfiguration.String()); c != 0 {
 		return c
 	}
-	// Finally S3Configuration
 	return cmp.Compare(x.S3Configuration.String(), y.S3Configuration.String())
 }
 
@@ -373,20 +368,16 @@ func logConfigurationsEqualIgnoreOrder(ctx context.Context, a, b fwtypes.ListNes
 		return false
 	}
 
-	// Early length check before expensive operations
 	if len(aSlice) != len(bSlice) {
 		return false
 	}
 
-	// For small slices, avoid sorting overhead
 	if len(aSlice) <= 1 {
 		return gocmp.Equal(aSlice, bSlice)
 	}
 
-	// Sort and compare for larger slices
 	slices.SortFunc(aSlice, compareLogConfigurations)
 	slices.SortFunc(bSlice, compareLogConfigurations)
 
-	// Compare sorted slices using go-cmp
 	return gocmp.Equal(aSlice, bSlice)
 }
