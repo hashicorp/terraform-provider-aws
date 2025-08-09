@@ -156,16 +156,13 @@ func (r *logDeliveryConfigurationResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	// If the LogConfigurations in the plan are equal to the config except order,
-	// replace LogConfiguration in the plan with the config
+	// Preserve original configuration order if content is equivalent
 	var config resourceLogDeliveryConfigurationModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
-		plan.LogConfigurations = config.LogConfigurations
-	}
+	r.preserveConfigurationOrder(ctx, &plan, config)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -190,18 +187,17 @@ func (r *logDeliveryConfigurationResource) Read(ctx context.Context, req resourc
 	}
 
 	// Save the current LogConfigurations before flex.Flatten overwrites it
-	originalLogConfigurations := state.LogConfigurations
+	originalState := resourceLogDeliveryConfigurationModel{
+		LogConfigurations: state.LogConfigurations,
+	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// If the LogConfigurations in the state are equal to the pre-refreshed one except order,
-	// replace LogConfiguration in the state with the pre-refreshed one
-	if logConfigurationsEqualIgnoreOrder(ctx, state.LogConfigurations, originalLogConfigurations) {
-		state.LogConfigurations = originalLogConfigurations
-	}
+	// Preserve original configuration order if content is equivalent
+	r.preserveConfigurationOrder(ctx, &state, originalState)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -243,16 +239,13 @@ func (r *logDeliveryConfigurationResource) Update(ctx context.Context, req resou
 			return
 		}
 
-		// If the LogConfigurations in the plan are equal to the ones in the config except order,
-		// replace LogConfiguration in the plan with the config
+		// Preserve original configuration order if content is equivalent
 		var config resourceLogDeliveryConfigurationModel
 		resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
-			plan.LogConfigurations = config.LogConfigurations
-		}
+		r.preserveConfigurationOrder(ctx, &plan, config)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -334,6 +327,13 @@ type s3ConfigurationModel struct {
 	BucketArn fwtypes.ARN `tfsdk:"bucket_arn"`
 }
 
+// preserveConfigurationOrder replaces plan's LogConfigurations with config's if they are equal ignoring order
+func (r *logDeliveryConfigurationResource) preserveConfigurationOrder(ctx context.Context, plan *resourceLogDeliveryConfigurationModel, config resourceLogDeliveryConfigurationModel) {
+	if logConfigurationsEqualIgnoreOrder(ctx, plan.LogConfigurations, config.LogConfigurations) {
+		plan.LogConfigurations = config.LogConfigurations
+	}
+}
+
 func compareLogConfigurations(x, y logConfigurationModel) int {
 	// Compare LogLevel first
 	if c := cmp.Compare(x.LogLevel.ValueString(), y.LogLevel.ValueString()); c != 0 {
@@ -364,22 +364,28 @@ func logConfigurationsEqualIgnoreOrder(ctx context.Context, a, b fwtypes.ListNes
 		return false
 	}
 
-	// Extract elements to slices
+	// Extract elements to slices with proper error handling
 	var aSlice, bSlice []logConfigurationModel
-	a.ElementsAs(ctx, &aSlice, false)
-	b.ElementsAs(ctx, &bSlice, false)
+	if diag := a.ElementsAs(ctx, &aSlice, false); diag.HasError() {
+		return false
+	}
+	if diag := b.ElementsAs(ctx, &bSlice, false); diag.HasError() {
+		return false
+	}
 
-	// Check lengths
+	// Early length check before expensive operations
 	if len(aSlice) != len(bSlice) {
 		return false
 	}
 
-	// Sort both slices for comparison
-	sortLogConfigurations := func(slice []logConfigurationModel) {
-		slices.SortFunc(slice, compareLogConfigurations)
+	// For small slices, avoid sorting overhead
+	if len(aSlice) <= 1 {
+		return gocmp.Equal(aSlice, bSlice)
 	}
-	sortLogConfigurations(aSlice)
-	sortLogConfigurations(bSlice)
+
+	// Sort and compare for larger slices
+	slices.SortFunc(aSlice, compareLogConfigurations)
+	slices.SortFunc(bSlice, compareLogConfigurations)
 
 	// Compare sorted slices using go-cmp
 	return gocmp.Equal(aSlice, bSlice)
