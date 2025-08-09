@@ -346,23 +346,23 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 	plan.Namespace = types.StringValue(table.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           plan.Name.ValueStringPointer(),
-		Namespace:      plan.Namespace.ValueStringPointer(),
-		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
+	awsMaintenanceConfig, err := findTableMaintenanceConfiguration(ctx, conn, plan.Name.ValueString(), plan.Namespace.ValueString(), plan.TableBucketARN.ValueString())
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
 			err.Error(),
 		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
 		return
+	default:
+		maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.MaintenanceConfiguration = maintenanceConfiguration
 	}
-	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
 		Name:           plan.Name.ValueStringPointer(),
@@ -382,6 +382,7 @@ func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, 
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		var d diag.Diagnostics
 		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
@@ -420,23 +421,23 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 	state.Namespace = types.StringValue(out.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           state.Name.ValueStringPointer(),
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
+	awsMaintenanceConfig, err := findTableMaintenanceConfiguration(ctx, conn, state.Name.ValueString(), state.Namespace.ValueString(), state.TableBucketARN.ValueString())
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
 			err.Error(),
 		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
 		return
+	default:
+		maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.MaintenanceConfiguration = maintenanceConfiguration
 	}
-	state.MaintenanceConfiguration = maintenanceConfiguration
 
 	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
 		Name:           state.Name.ValueStringPointer(),
@@ -456,6 +457,7 @@ func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		var d diag.Diagnostics
 		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
 		resp.Diagnostics.Append(d...)
 		if resp.Diagnostics.HasError() {
@@ -579,23 +581,23 @@ func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 	plan.Namespace = types.StringValue(table.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           plan.Name.ValueStringPointer(),
-		Namespace:      plan.Namespace.ValueStringPointer(),
-		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
+	awsMaintenanceConfig, err := findTableMaintenanceConfiguration(ctx, conn, plan.Name.ValueString(), plan.Namespace.ValueString(), plan.TableBucketARN.ValueString())
+	switch {
+	case tfresource.NotFound(err):
+	case err != nil:
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
 			err.Error(),
 		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
 		return
+	default:
+		maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.MaintenanceConfiguration = maintenanceConfiguration
 	}
-	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -981,4 +983,26 @@ func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Dia
 	}
 
 	return out, diags
+}
+
+func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Client, name, namespace, tableBucketARN string) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {
+	in := s3tables.GetTableMaintenanceConfigurationInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	out, err := conn.GetTableMaintenanceConfiguration(ctx, &in)
+	if err != nil {
+		if errs.IsA[*awstypes.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	return out, nil
 }
