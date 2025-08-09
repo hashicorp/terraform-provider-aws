@@ -43,6 +43,8 @@ func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
 	}
 
 	var cloudvmcluster odbtypes.CloudVmCluster
+	odbNetRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.odbNetDisplayNamePrefix)
+	exaInfraRName := sdkacctest.RandomWithPrefix(vmClusterTestDS.exaInfraDisplayNamePrefix)
 	vmcDisplayName := sdkacctest.RandomWithPrefix(vmClusterTestDS.vmClusterDisplayNamePrefix)
 	dataSourceName := "data.aws_odb_cloud_vm_cluster.test"
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -53,14 +55,14 @@ func TestAccODBCloudVmClusterDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//	testAccPreCheck(ctx, t)
+			vmClusterTestDS.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             vmClusterTestDS.testAccCheckCloudVmClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: vmClusterTestDS.cloudVmClusterWithHardcoded("odbnet_c91byo6y6m", "exa_ji5quxxzn9", vmcDisplayName, publicKey),
+				Config: vmClusterTestDS.cloudVMClusterConfig(odbNetRName, exaInfraRName, vmcDisplayName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					vmClusterTestDS.testAccCheckCloudVmClusterExists(ctx, dataSourceName, &cloudvmcluster),
 					resource.TestCheckResourceAttr(dataSourceName, "display_name", vmcDisplayName),
@@ -133,21 +135,56 @@ func (cloudVmClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func (cloudVmClusterDSTest) cloudVmClusterWithHardcoded(odbNet, exaInfra, displayName, sshKey string) string {
+func (cloudVmClusterDSTest) cloudVMClusterConfig(odbNet, exaInfra, displayName, sshKey string) string {
 	dsTfCodeVmCluster := fmt.Sprintf(`
+
+resource "aws_odb_network" "test" {
+  display_name          = %[1]q
+  availability_zone_id = "use1-az6"
+  client_subnet_cidr   = "10.2.0.0/24"
+  backup_subnet_cidr   = "10.2.1.0/24"
+  s3_access = "DISABLED"
+  zero_etl_access = "DISABLED"
+}
+
+resource "aws_odb_cloud_exadata_infrastructure" "test" {
+  display_name          = %[2]q
+  shape             	= "Exadata.X9M"
+  storage_count      	= 3
+  compute_count         = 2
+  availability_zone_id 	= "use1-az6"
+  customer_contacts_to_send_to_oci = ["abc@example.com"]
+  maintenance_window = {
+  		custom_action_timeout_in_mins = 16
+		days_of_week =	[]
+        hours_of_day =	[]
+        is_custom_action_timeout_enabled = true
+        lead_time_in_weeks = 0
+        months = []
+        patching_mode = "ROLLING"
+        preference = "NO_PREFERENCE"
+		weeks_of_month =[]
+  }
+  
+}
+
+data "aws_odb_db_servers_list" "test" {
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
+}
+
 resource "aws_odb_cloud_vm_cluster" "test" {
-  odb_network_id                  	= %[1]q
-  cloud_exadata_infrastructure_id 	= %[2]q
-  display_name             			= %[3]q
-  ssh_public_keys                 	= [%[4]q]
+  display_name             = %[3]q
+  cloud_exadata_infrastructure_id = aws_odb_cloud_exadata_infrastructure.test.id
   cpu_core_count                  = 6
   gi_version                	  = "23.0.0.0"
   hostname_prefix                 = "apollo12"
+  ssh_public_keys                 = [%[4]q]
+  odb_network_id                  = aws_odb_network.test.id
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
   data_storage_size_in_tbs        = 20.0
-  db_servers					  = [ "dbs_7ecm4wbjxy","dbs_uy5wmaqk6s"]
+  db_servers					  = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   db_node_storage_size_in_gbs     = 120.0
   memory_size_in_gbs              = 60
   tags = {
@@ -160,6 +197,5 @@ data "aws_odb_cloud_vm_cluster" "test" {
   id             = aws_odb_cloud_vm_cluster.test.id
 }
 `, odbNet, exaInfra, displayName, sshKey)
-	//fmt.Println(dsTfCodeVmCluster)
 	return dsTfCodeVmCluster
 }
