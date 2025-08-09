@@ -96,6 +96,16 @@ func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", false, true},
+						},
+					),
+				),
 			},
 		},
 	})
@@ -257,6 +267,16 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 				ImportStateIdFunc:                    testAccLogDeliveryConfigurationImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserPoolID,
+				ImportStateVerifyIgnore:              []string{"log_configuration"},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
+					testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
+						[]testAccCognitoIDPLogDeliveryConfigurationLogConfig{
+							{"userNotification", "INFO", true, false},
+							{"userAuthEvents", "INFO", false, true},
+						},
+					),
+				),
 			},
 		},
 	})
