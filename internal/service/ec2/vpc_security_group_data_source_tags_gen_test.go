@@ -21,6 +21,7 @@ import (
 
 func TestAccVPCSecurityGroupDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -49,6 +50,7 @@ func TestAccVPCSecurityGroupDataSource_tags(t *testing.T) {
 
 func TestAccVPCSecurityGroupDataSource_tags_NullMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -73,6 +75,7 @@ func TestAccVPCSecurityGroupDataSource_tags_NullMap(t *testing.T) {
 
 func TestAccVPCSecurityGroupDataSource_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -97,6 +100,7 @@ func TestAccVPCSecurityGroupDataSource_tags_EmptyMap(t *testing.T) {
 
 func TestAccVPCSecurityGroupDataSource_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -129,6 +133,7 @@ func TestAccVPCSecurityGroupDataSource_tags_DefaultTags_nonOverlapping(t *testin
 
 func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -167,6 +172,7 @@ func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_DefaultTag(t *tes
 
 func TestAccVPCSecurityGroupDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	dataSourceName := "data.aws_security_group.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

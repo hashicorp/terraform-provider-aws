@@ -17,6 +17,7 @@ import (
 
 func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -189,6 +190,7 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 
 func TestAccNetworkManagerGlobalNetwork_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -251,6 +253,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_null(t *testing.T) {
 
 func TestAccNetworkManagerGlobalNetwork_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -309,6 +312,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_EmptyMap(t *testing.T) {
 
 func TestAccNetworkManagerGlobalNetwork_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -387,6 +391,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_EmptyTag_OnCreate(t *testing.T) {
 	t.Skip("Resource GlobalNetwork does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -472,6 +477,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_EmptyTag_OnUpdate_Add(t *testing.T)
 	t.Skip("Resource GlobalNetwork does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -604,6 +610,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_EmptyTag_OnUpdate_Replace(t *testin
 	t.Skip("Resource GlobalNetwork does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -688,6 +695,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_EmptyTag_OnUpdate_Replace(t *testin
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -859,6 +867,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_providerOnly(t *testing
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1011,6 +1020,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nonOverlapping(t *testi
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1179,6 +1189,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_overlapping(t *testing.
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1264,6 +1275,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_updateToProviderOnly(t 
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1350,6 +1362,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_emptyResourceTag(t *tes
 	t.Skip("Resource GlobalNetwork does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1413,6 +1426,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_emptyProviderOnlyTag(t 
 	t.Skip("Resource GlobalNetwork does not support empty tags")
 
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1466,6 +1480,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_emptyProviderOnlyTag(t 
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1524,6 +1539,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nullOverlappingResource
 
 func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1582,6 +1598,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_DefaultTags_nullNonOverlappingResou
 
 func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1633,6 +1650,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnCreate(t *testing.T) 
 
 func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1725,6 +1743,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnUpdate_Add(t *testing
 
 func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1807,6 +1826,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_ComputedTag_OnUpdate_Replace(t *tes
 
 func TestAccNetworkManagerGlobalNetwork_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -1964,6 +1984,7 @@ func TestAccNetworkManagerGlobalNetwork_tags_IgnoreTags_Overlap_DefaultTag(t *te
 
 func TestAccNetworkManagerGlobalNetwork_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resourceName := "aws_networkmanager_global_network.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

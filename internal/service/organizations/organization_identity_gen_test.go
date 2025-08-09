@@ -36,7 +36,7 @@ func testAccOrganizationsOrganization_Identity_Basic(t *testing.T) {
 	var v awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func testAccOrganizationsOrganization_Identity_ExistingResource(t *testing.T) {
 	var v awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

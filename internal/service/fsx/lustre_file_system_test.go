@@ -883,7 +883,15 @@ func TestAccFSxLustreFileSystem_intelligentTiering(t *testing.T) {
 		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLustreFileSystemConfig_intelligentTiering(rName),
+				Config:      testAccLustreFileSystemConfig_intelligentTiering(rName, 4000, 31),
+				ExpectError: regexache.MustCompile("File systems with throughput capacity of 4000 MB/s support a minimum read cache size of 32 GiB and maximum read cache size of 131072 GiB"),
+			},
+			{
+				Config:      testAccLustreFileSystemConfig_intelligentTiering(rName, 8000, 32),
+				ExpectError: regexache.MustCompile("File systems with throughput capacity of 8000 MB/s support a minimum read cache size of 64 GiB and maximum read cache size of 262144 GiB"),
+			},
+			{
+				Config: testAccLustreFileSystemConfig_intelligentTiering(rName, 4000, 32),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
@@ -2089,17 +2097,17 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, rName, efaEnabled))
 }
 
-func testAccLustreFileSystemConfig_intelligentTiering(rName string) string {
-	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), `
+func testAccLustreFileSystemConfig_intelligentTiering(rName string, throughputCapacity, cacheSize int) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "PERSISTENT_2"
   storage_type        = "INTELLIGENT_TIERING"
-  throughput_capacity = 4000
+  throughput_capacity = %[1]d
 
   data_read_cache_configuration {
     sizing_mode = "USER_PROVISIONED"
-    size        = 32
+    size        = %[2]d
   }
 
   metadata_configuration {
@@ -2108,5 +2116,5 @@ resource "aws_fsx_lustre_file_system" "test" {
   }
 
 }
-`)
+`, throughputCapacity, cacheSize))
 }

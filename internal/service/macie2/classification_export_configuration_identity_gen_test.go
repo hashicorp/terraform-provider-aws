@@ -38,7 +38,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_Basic(t *testing.T)
 	var v macie2.GetClassificationExportConfigurationOutput
 	resourceName := "aws_macie2_classification_export_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -112,7 +112,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_RegionOverride(t *t
 
 	resourceName := "aws_macie2_classification_export_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -223,7 +223,7 @@ func testAccMacie2ClassificationExportConfiguration_Identity_ExistingResource(t 
 	var v macie2.GetClassificationExportConfigurationOutput
 	resourceName := "aws_macie2_classification_export_configuration.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

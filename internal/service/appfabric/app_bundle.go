@@ -34,6 +34,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;awstypes;awstypes.AppBundle")
 // @Testing(preCheckRegion="us-east-1;ap-northeast-1;eu-west-1")
+// @Testing(preIdentityVersion="v5.100.0")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
