@@ -175,7 +175,7 @@ func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t 
 
 						found := make(map[string]string)
 						for _, rs := range states {
-							for i := 0; i < 2; i++ {
+							for i := range 2 {
 								eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
 								logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
 								if eventSource != "" && logLevel != "" {
