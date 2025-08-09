@@ -358,8 +358,8 @@ func testAccLogDeliveryConfigurationImportStateFuncForMultipleLogConfigurations(
 			for i := range len(expected) {
 				eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
 				logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
-				logGroupARN, _ := rs.Attributes[fmt.Sprintf("log_configurations.%d.cloud_watch_logs_configuration.0.log_group_arn", i)]
-				streamARN, _ := rs.Attributes[fmt.Sprintf("log_configurations.%d.firehose_configuration.0.stream_arn", i)]
+				logGroupARN := rs.Attributes[fmt.Sprintf("log_configurations.%d.cloud_watch_logs_configuration.0.log_group_arn", i)]
+				streamARN := rs.Attributes[fmt.Sprintf("log_configurations.%d.firehose_configuration.0.stream_arn", i)]
 				if eventSource != "" && logLevel != "" {
 					found[eventSource] = testAccCognitoIDPLogDeliveryConfigurationLogConfig{
 						eventSource:    eventSource,
