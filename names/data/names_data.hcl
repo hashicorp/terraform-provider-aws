@@ -876,36 +876,36 @@ service "bedrockagent" {
 }
 
 service "bedrockagentcore" {
-   cli_v2_command {
+  cli_v2_command {
      aws_cli_v2_command           = "bedrock-agentcore-control"
      aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
-   }
+  }
 
-   go_packages {
-     v2_package = "bedrockagentcorecontrol"
-   }
+  go_packages {
+    v2_package = "bedrockagentcorecontrol"
+  }
 
-   sdk {
+  sdk {
      id            = "Bedrock AgentCore Control"
-     arn_namespace = "bedrock-agentcore"
-   }
+    arn_namespace = "bedrock-agentcore"
+  }
 
-   names {
-     provider_name_upper = "BedrockAgentCore"
-     human_friendly      = "Bedrock AgentCore"
-   }
+  names {
+    provider_name_upper = "BedrockAgentCore"
+    human_friendly      = "Bedrock AgentCore"
+  }
 
-   endpoint_info {
-     endpoint_api_call = "ListAgentRuntimes"
-   }
+  endpoint_info {
+    endpoint_api_call = "ListAgentRuntimes"
+  }
 
-   resource_prefix {
-     correct = "aws_bedrockagentcore_"
-   }
+  resource_prefix {
+    correct = "aws_bedrockagentcore_"
+  }
 
-   provider_package_correct = "bedrockagentcore"
-   doc_prefix               = ["bedrockagentcore_"]
-   brand                    = "Amazon"
+  provider_package_correct = "bedrockagentcore"
+  doc_prefix               = ["bedrockagentcore_"]
+  brand                    = "Amazon"
 }
 
 service "bcmdataexports" {
