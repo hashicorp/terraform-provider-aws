@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_networkmanager_vpc_attachment: Add dns_support and security_group_referencing_support arguments
+```
