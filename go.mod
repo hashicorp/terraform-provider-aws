@@ -40,9 +40,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/backup v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/batch v1.56.0
+	github.com/aws/aws-sdk-go-v2/service/batch v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.4.0
@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.63.0
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.29.0
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.8.0
@@ -129,11 +129,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.122.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.123.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.30.0
