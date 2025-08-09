@@ -303,14 +303,14 @@ type interceptedResponse interface {
 		resource.ImportStateResponse
 }
 
-type innerFunc[Request, Response any] func(ctx context.Context, request *Request, response *Response)
+type innerFunc[Request, Response any] func(ctx context.Context, request Request, response *Response)
 
 // interceptedHandler returns a handler that runs any interceptors.
-func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], hasError hasErrorFn[Response], c awsClient) func(context.Context, *Request, *Response) {
-	return func(ctx context.Context, request *Request, response *Response) {
+func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], hasError hasErrorFn[Response], c awsClient) func(context.Context, Request, *Response) {
+	return func(ctx context.Context, request Request, response *Response) {
 		opts := interceptorOptions[Request, Response]{
 			c:        c,
-			request:  request,
+			request:  &request,
 			response: response,
 		}
 

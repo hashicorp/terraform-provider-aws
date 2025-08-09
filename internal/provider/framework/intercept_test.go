@@ -48,7 +48,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -100,7 +100,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -152,7 +152,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -204,7 +204,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -261,7 +261,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -312,7 +312,7 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -363,7 +363,7 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -420,7 +420,7 @@ func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -497,7 +497,7 @@ func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -574,7 +574,7 @@ func TestInterceptedHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.
 		},
 	}
 
-	handler(ctx, &request, &response)
+	handler(ctx, request, &response)
 
 	if diff := cmp.Diff(response.Diagnostics, expectedDiags); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -613,7 +613,7 @@ type mockInnerFunc struct {
 	count int
 }
 
-func (m *mockInnerFunc) Call(ctx context.Context, request *resource.SchemaRequest, response *resource.SchemaResponse) {
+func (m *mockInnerFunc) Call(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	m.count++
 	response.Diagnostics.Append(m.diags...)
 }
