@@ -309,15 +309,15 @@ type innerFunc[Request, Response any] func(ctx context.Context, request *Request
 // interceptedHandler returns a handler that runs any interceptors.
 func interceptedHandler[Request interceptedRequest, Response interceptedResponse](interceptors []interceptorFunc[Request, Response], f innerFunc[Request, Response], hasError hasErrorFn[Response], c awsClient) func(context.Context, *Request, *Response) {
 	return func(ctx context.Context, request *Request, response *Response) {
+		opts := interceptorOptions[Request, Response]{
+			c:        c,
+			request:  request,
+			response: response,
+		}
+
 		// Before interceptors are run first to last.
-		when := Before
+		opts.when = Before
 		for v := range slices.Values(interceptors) {
-			opts := interceptorOptions[Request, Response]{
-				c:        c,
-				request:  request,
-				response: response,
-				when:     when,
-			}
 			v(ctx, opts)
 
 			// Short circuit if any Before interceptor errors.
@@ -330,28 +330,16 @@ func interceptedHandler[Request interceptedRequest, Response interceptedResponse
 
 		// All other interceptors are run last to first.
 		if hasError(response) {
-			when = OnError
+			opts.when = OnError
 		} else {
-			when = After
+			opts.when = After
 		}
 		for v := range tfslices.BackwardValues(interceptors) {
-			opts := interceptorOptions[Request, Response]{
-				c:        c,
-				request:  request,
-				response: response,
-				when:     when,
-			}
 			v(ctx, opts)
 		}
 
-		when = Finally
+		opts.when = Finally
 		for v := range tfslices.BackwardValues(interceptors) {
-			opts := interceptorOptions[Request, Response]{
-				c:        c,
-				request:  request,
-				response: response,
-				when:     when,
-			}
 			v(ctx, opts)
 		}
 	}
