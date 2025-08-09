@@ -75,12 +75,14 @@ func resourceCustomKeyStore() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"access_key_id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 						"raw_secret_access_key": {
 							Type:     schema.TypeString,
-							Required: true,
+							Required:  true,
+							Sensitive: true,
 						},
 					},
 				},
