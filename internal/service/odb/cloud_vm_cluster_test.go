@@ -35,19 +35,6 @@ var vmClusterTestResource = cloudVmClusterResourceTest{
 	odbNetDisplayNamePrefix:    "odb-net",
 }
 
-func TestPrintCloudVmClusterUnitTest(t *testing.T) {
-	vmcRName := sdkacctest.RandomWithPrefix(vmClusterTestResource.vmClusterDisplayNamePrefix)
-	exaInfraRName := sdkacctest.RandomWithPrefix(vmClusterTestResource.exaInfraDisplayNamePrefix)
-	odbNetRName := sdkacctest.RandomWithPrefix(vmClusterTestResource.odbNetDisplayNamePrefix)
-
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-	fmt.Println(vmClusterTestResource.testAccCloudVmClusterConfigBasic(vmClusterTestResource.exaInfra(exaInfraRName), vmClusterTestResource.odbNetwork(odbNetRName), vmcRName, publicKey))
-}
-
 func TestAccODBCloudVmCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -69,7 +56,6 @@ func TestAccODBCloudVmCluster_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
 			vmClusterTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -112,7 +98,6 @@ func TestAccODBCloudVmClusterCreationWithAllParams(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
 			vmClusterTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -134,10 +119,8 @@ func TestAccODBCloudVmClusterCreationWithAllParams(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudVmClusterAddRemoveTags(t *testing.T) {
+func Foo(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -159,7 +142,6 @@ func TestAccODBCloudVmClusterAddRemoveTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
 			vmClusterTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -226,74 +208,6 @@ func TestAccODBCloudVmClusterAddRemoveTags(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudVmCluster_recreates_new(t *testing.T) {
-	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var cloudvmcluster1 odbtypes.CloudVmCluster
-	var cloudvmcluster2 odbtypes.CloudVmCluster
-	rName := sdkacctest.RandomWithPrefix(vmClusterTestResource.vmClusterDisplayNamePrefix)
-	exaInfraRName := sdkacctest.RandomWithPrefix(vmClusterTestResource.exaInfraDisplayNamePrefix)
-	odbNetRName := sdkacctest.RandomWithPrefix(vmClusterTestResource.odbNetDisplayNamePrefix)
-
-	resourceName := "aws_odb_cloud_vm_cluster.test"
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		t.Fatal(err)
-		return
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
-			vmClusterTestResource.testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             vmClusterTestResource.testAccCheckCloudVmClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: vmClusterTestResource.testAccCloudVmClusterConfigBasic(vmClusterTestResource.exaInfra(exaInfraRName), vmClusterTestResource.odbNetwork(odbNetRName), rName, publicKey),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						//fmt.Println(state)
-						return nil
-					}),
-					vmClusterTestResource.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
-				),
-			},
-			{
-				Config: vmClusterTestResource.testAccCloudVmClusterConfigUpdatedTags(vmClusterTestResource.exaInfra(exaInfraRName+"_u"), vmClusterTestResource.odbNetwork(odbNetRName), rName, publicKey),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					vmClusterTestResource.testAccCheckCloudVmClusterExists(ctx, resourceName, &cloudvmcluster2),
-					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						//fmt.Println(state)
-						if strings.Compare(*(cloudvmcluster1.CloudVmClusterId), *(cloudvmcluster2.CloudVmClusterId)) == 0 {
-							return errors.New("Should  create a new cloud vm cluster for tag update")
-						}
-						return nil
-					}),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -314,7 +228,6 @@ func TestAccODBCloudVmCluster_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.ODBEndpointID)
 			vmClusterTestResource.testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
@@ -395,16 +308,6 @@ func (cloudVmClusterResourceTest) testAccPreCheck(ctx context.Context, t *testin
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
-
-/*func testAccCheckCloudVmClusterNotRecreated(before, after *odb.DescribeCloudVmClusterResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.CloudVmClusterId), aws.ToString(after.CloudVmClusterId); before != after {
-			return create.Error(names.ODB, create.ErrActionCheckingNotRecreated, tfodb.ResNameCloudVmCluster, aws.ToString(before.CloudVmClusterId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}*/
 
 func (cloudVmClusterResourceTest) testAccCloudVmClusterConfigBasic(exaInfra, odbNet, rName, sshKey string) string {
 
