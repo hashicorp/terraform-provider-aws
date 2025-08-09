@@ -4,11 +4,9 @@
 package cognitoidp_test
 
 import (
-	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -170,38 +168,27 @@ func TestAccCognitoIDPLogDeliveryConfiguration_multipleLogConfigurationsOrder(t 
 				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
 					acctest.ImportCheckResourceAttr("log_configurations.#", "2"),
 					func(states []*terraform.InstanceState) error {
-						type logConfiguration struct {
-							eventSource string
-							logLevel    string
+						expected := []struct{ eventSource, logLevel string }{
+							{"userNotification", "INFO"},
+							{"userAuthEvents", "INFO"},
 						}
-						got := make([]logConfiguration, 2)
-						expected := []logConfiguration{
-							{eventSource: "userNotification", logLevel: "INFO"},
-							{eventSource: "userAuthEvents", logLevel: "INFO"},
-						}
-						for _, rs := range states {
-							if v, ok := rs.Attributes["log_configurations.0.event_source"]; ok && v != "" {
-								got[0].eventSource = v
-							}
-							if v, ok := rs.Attributes["log_configurations.0.log_level"]; ok && v != "" {
-								got[0].logLevel = v
-							}
-							if v, ok := rs.Attributes["log_configurations.1.event_source"]; ok && v != "" {
-								got[1].eventSource = v
-							}
-							if v, ok := rs.Attributes["log_configurations.1.log_level"]; ok && v != "" {
-								got[1].logLevel = v
-							}
-						}
-						compareFunc := func(a, b logConfiguration) int {
-							return cmp.Compare(a.eventSource, b.eventSource)
-						}
-						slices.SortFunc(got, compareFunc)
-						slices.SortFunc(expected, compareFunc)
 
-						for i := range got {
-							if got[i].eventSource != expected[i].eventSource || got[i].logLevel != expected[i].logLevel {
-								return fmt.Errorf("ImportStateCheck failed: log_configurations did not match expected values. expected: %v, got %v", expected, got)
+						found := make(map[string]string)
+						for _, rs := range states {
+							for i := 0; i < 2; i++ {
+								eventSource := rs.Attributes[fmt.Sprintf("log_configurations.%d.event_source", i)]
+								logLevel := rs.Attributes[fmt.Sprintf("log_configurations.%d.log_level", i)]
+								if eventSource != "" && logLevel != "" {
+									found[eventSource] = logLevel
+								}
+							}
+						}
+
+						for _, exp := range expected {
+							if foundLevel, ok := found[exp.eventSource]; !ok {
+								return fmt.Errorf("expected event_source %s not found", exp.eventSource)
+							} else if foundLevel != exp.logLevel {
+								return fmt.Errorf("expected %s=%s, got %s", exp.eventSource, exp.logLevel, foundLevel)
 							}
 						}
 						return nil
