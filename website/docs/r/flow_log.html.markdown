@@ -192,7 +192,7 @@ provider "aws" {
 
 # For source account
 resource "aws_vpc" "src" {
-  // conf...
+  # config...
 }
 
 data "aws_iam_policy_document" "src_assume_role_policy" {
