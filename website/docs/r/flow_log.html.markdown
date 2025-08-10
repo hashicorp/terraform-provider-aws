@@ -276,7 +276,7 @@ data "aws_iam_policy_document" "dst_assume_role_policy" {
 
 resource "aws_iam_role" "dst" {
   provider           = aws.destination_account
-  name               = "AWSLogDeliveryFirehoseCrossAccountRole"  // must start with "AWSLogDeliveryFirehoseCrossAccountRolePolicy"
+  name               = "AWSLogDeliveryFirehoseCrossAccountRole" // must start with "AWSLogDeliveryFirehoseCrossAccountRolePolicy"
   assume_role_policy = data.aws_iam_policy_document.dst_assume_role_policy.json
 }
 
