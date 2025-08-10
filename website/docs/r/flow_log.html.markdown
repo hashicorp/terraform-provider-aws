@@ -174,6 +174,142 @@ resource "aws_s3_bucket" "example" {
 }
 ```
 
+### Cross-Account Amazon Data Firehose Logging
+
+The following example shows how to set up a flow log in one AWS account (source) that sends logs to an Amazon Data Firehose delivery stream in another AWS account (destination).
+See the [AWS Documentation](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs-firehose.html).
+
+```terraform
+# Provider configurations
+provider "aws" {
+  profile = "admin-src"
+}
+
+provider "aws" {
+  alias   = "destination_account"
+  profile = "admin-dst"
+}
+
+# For source account
+resource "aws_vpc" "src" {
+  // conf...
+}
+
+data "aws_iam_policy_document" "src_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "src" {
+  name               = "tf-example-mySourceRole"
+  assume_role_policy = data.aws_iam_policy_document.src_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "src_role_policy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.src.arn]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["delivery.logs.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "iam:AssociatedResourceARN"
+      values   = [aws_vpc.src.arn]
+    }
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogDelivery",
+      "logs:DeleteLogDelivery",
+      "logs:ListLogDeliveries",
+      "logs:GetLogDelivery"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["sts:AssumeRole"]
+    resources = [aws_iam_role.dst.arn]
+  }
+}
+resource "aws_iam_role_policy" "src_policy" {
+  name   = "tf-example-mySourceRolePolicy"
+  role   = aws_iam_role.src.name
+  policy = data.aws_iam_policy_document.src_role_policy.json
+}
+
+resource "aws_flow_log" "src" {
+  log_destination_type       = "kinesis-data-firehose"
+  log_destination            = aws_kinesis_firehose_delivery_stream.dst.arn
+  traffic_type               = "ALL"
+  vpc_id                     = aws_vpc.src.id
+  iam_role_arn               = aws_iam_role.src.arn
+  deliver_cross_account_role = aws_iam_role.dst.arn
+}
+
+# For destination account
+data "aws_iam_policy_document" "dst_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.src.arn]
+    }
+  }
+}
+
+resource "aws_iam_role" "dst" {
+  provider           = aws.destination_account
+  name               = "AWSLogDeliveryFirehoseCrossAccountRole"  // must start with "AWSLogDeliveryFirehoseCrossAccountRolePolicy"
+  assume_role_policy = data.aws_iam_policy_document.dst_assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "dst_role_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:CreateServiceLinkedRole",
+      "firehose:TagDeliveryStream"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "dst" {
+  provider = aws.destination_account
+  name     = "AWSLogDeliveryFirehoseCrossAccountRolePolicy"
+  role     = aws_iam_role.dst.name
+  policy   = data.aws_iam_policy_document.dst_role_policy.json
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "dst" {
+  provider = aws.destination_account
+  # The tag named "LogDeliveryEnabled" must be set to "true" to allow the service-linked role "AWSServiceRoleForLogDelivery"
+  # to perform permitted actions on your behalf.
+  # See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-infrastructure-Firehose.html
+  tags = {
+    LogDeliveryEnabled = "true"
+  }
+  # other config...
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
