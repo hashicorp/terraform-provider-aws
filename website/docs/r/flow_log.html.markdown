@@ -247,6 +247,7 @@ data "aws_iam_policy_document" "src_role_policy" {
     resources = [aws_iam_role.dst.arn]
   }
 }
+
 resource "aws_iam_role_policy" "src_policy" {
   name   = "tf-example-mySourceRolePolicy"
   role   = aws_iam_role.src.name
