@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_flow_log
 
 Provides a VPC/Subnet/ENI/Transit Gateway/Transit Gateway Attachment Flow Log to capture IP traffic for a specific network
-interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group, a S3 Bucket, or Amazon Kinesis Data Firehose
+interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group, a S3 Bucket, or Amazon Data Firehose
 
 ## Example Usage
 
@@ -68,7 +68,7 @@ resource "aws_iam_role_policy" "example" {
 }
 ```
 
-### Amazon Kinesis Data Firehose logging
+### Amazon Data Firehose logging
 
 ```terraform
 resource "aws_flow_log" "example" {
