@@ -172,7 +172,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		for _, v := range forward {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -198,7 +198,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -211,7 +211,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
