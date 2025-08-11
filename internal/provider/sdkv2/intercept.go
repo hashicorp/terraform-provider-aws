@@ -6,6 +6,7 @@ package sdkv2
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -169,7 +170,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 
 		// Before interceptors are run first to last.
 		when := Before
-		for _, v := range interceptors {
+		for v := range slices.Values(interceptors) {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
@@ -186,17 +187,16 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(interceptors)
 		d := f(ctx, rd, meta)
 		diags = append(diags, d...)
 
+		// All other interceptors are run last to first.
 		if d.HasError() {
 			when = OnError
 		} else {
 			when = After
 		}
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
@@ -209,7 +209,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		when = Finally
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
