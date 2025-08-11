@@ -210,6 +210,100 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 	}
 }
 
+func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
+	t.Parallel()
+
+	expectedDiags := diag.Diagnostics{
+		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+	}
+
+	first := mockInterceptor{}
+	second := mockInterceptor{}
+	interceptors := append(
+		first.Invocations(),
+		second.Invocations()...,
+	)
+
+	client := mockClient{
+		accountID: "123456789012",
+		region:    "us-west-2", //lintignore:AWSAT003
+	}
+
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+		return ctx, nil
+	}
+
+	var f mockInnerFunc
+	f.diags = diag.Diagnostics{
+		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+	}
+	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
+
+	ctx := t.Context()
+	diags := handler(ctx, nil, client)
+
+	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
+		t.Errorf("unexpected diagnostics difference: %s", diff)
+	}
+
+	if !slices.Equal(first.called, []when{Before, OnError, Finally}) {
+		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
+	}
+	if !slices.Equal(second.called, []when{Before, OnError, Finally}) {
+		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
+	}
+	if f.count != 1 {
+		t.Errorf("expected inner function to be called once, got %d", f.count)
+	}
+}
+
+func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
+	t.Parallel()
+
+	expectedDiags := diag.Diagnostics{
+		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+	}
+
+	first := mockInterceptor{}
+	second := mockInterceptor{}
+	interceptors := append(
+		first.Invocations(),
+		second.Invocations()...,
+	)
+
+	client := mockClient{
+		accountID: "123456789012",
+		region:    "us-west-2", //lintignore:AWSAT003
+	}
+
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+		return ctx, nil
+	}
+
+	var f mockInnerFunc
+	f.diags = diag.Diagnostics{
+		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+	}
+	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
+
+	ctx := t.Context()
+	diags := handler(ctx, nil, client)
+
+	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
+		t.Errorf("unexpected diagnostics difference: %s", diff)
+	}
+
+	if !slices.Equal(first.called, []when{Before, After, Finally}) {
+		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
+	}
+	if !slices.Equal(second.called, []when{Before, After, Finally}) {
+		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
+	}
+	if f.count != 1 {
+		t.Errorf("expected inner function to be called once, got %d", f.count)
+	}
+}
+
 type mockInterceptor struct {
 	diags  map[when]diag.Diagnostics
 	called []when
