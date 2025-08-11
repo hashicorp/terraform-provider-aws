@@ -40,6 +40,59 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccAPIConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAPIExists(ctx, resourceName, &api),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.cognito_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.lambda_authorizer_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_mode.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_mode.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_mode.0.auth_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.log_config.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "owner_contact"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "api_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "api_id"),
+			},
+		},
+	})
+}
+
+func TestAccAppSyncAPI_comprehensive(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var api awstypes.Api
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
 				Config: testAccAPIConfig_eventConfigComprehensive(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
