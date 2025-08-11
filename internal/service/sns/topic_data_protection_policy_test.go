@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -144,12 +142,7 @@ func testAccCheckTopicDataProtectionPolicyExists(ctx context.Context, n string) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
-
-		input := &sns.GetDataProtectionPolicyInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetDataProtectionPolicy(ctx, input)
+		_, err := tfsns.FindDataProtectionPolicyByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
