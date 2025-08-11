@@ -290,7 +290,7 @@ func TestInterceptedCRUDHandler(t *testing.T) {
 				second.Invocations()...,
 			)
 
-			f := newMockInnerFunc(tc.innerFuncDiags)
+			f := newMockInnerCRUDFunc(tc.innerFuncDiags)
 
 			handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
 
@@ -351,18 +351,18 @@ func (m *mockInterceptor) interceptor() crudInterceptor {
 	})
 }
 
-type mockInnerFunc struct {
+type mockInnerCRUDFunc struct {
 	diags diag.Diagnostics
 	count int
 }
 
-func newMockInnerFunc(diags diag.Diagnostics) mockInnerFunc {
-	return mockInnerFunc{
+func newMockInnerCRUDFunc(diags diag.Diagnostics) mockInnerCRUDFunc {
+	return mockInnerCRUDFunc{
 		diags: diags,
 	}
 }
 
-func (m *mockInnerFunc) Call(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func (m *mockInnerCRUDFunc) Call(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	m.count++
 	return m.diags
 }
