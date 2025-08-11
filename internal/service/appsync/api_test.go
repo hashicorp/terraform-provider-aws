@@ -45,7 +45,7 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 					// Cognito auth provider
@@ -120,7 +120,7 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 				),
@@ -130,7 +130,7 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "owner_contact", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 				),
@@ -345,7 +345,7 @@ resource "aws_iam_role_policy" "cloudwatch" {
 
 resource "aws_appsync_api" "test" {
   name          = %[1]q
-  owner_contact = "test@example.com"
+  owner_contact = %[2]q
 
   event_config {
     auth_provider {
@@ -402,5 +402,5 @@ resource "aws_appsync_api" "test" {
 }
 
 data "aws_region" "current" {}
-`, rName)
+`, rName, acctest.DefaultEmailAddress)
 }
