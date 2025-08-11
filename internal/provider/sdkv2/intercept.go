@@ -156,11 +156,10 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		// Before interceptors are run first to last.
-		var forward []crudInterceptorInvocation
+		var interceptors []crudInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(crudInterceptor); ok {
-				forward = append(forward, crudInterceptorInvocation{
+				interceptors = append(interceptors, crudInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -168,8 +167,9 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			}
 		}
 
+		// Before interceptors are run first to last.
 		when := Before
-		for _, v := range forward {
+		for _, v := range interceptors {
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
@@ -187,7 +187,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
+		reverse := tfslices.Reverse(interceptors)
 		d := f(ctx, rd, meta)
 		diags = append(diags, d...)
 
