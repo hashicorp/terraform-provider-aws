@@ -157,7 +157,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		}
 
 		// Before interceptors are run first to last.
-		forward := make([]crudInterceptorInvocation, 0)
+		var forward []crudInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(crudInterceptor); ok {
 				forward = append(forward, crudInterceptorInvocation{
