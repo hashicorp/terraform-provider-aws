@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestFiltered(t *testing.T) {
+func TestAppliedToEach(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -21,11 +21,11 @@ func TestFiltered(t *testing.T) {
 	tests := map[string]testCase{
 		"three elements": {
 			input:    []string{"one", "two", "3", "a0"},
-			expected: []string{"a0"},
+			expected: []string{"ONE", "TWO", "3"},
 		},
 		"one element": {
 			input:    []string{"abcdEFGH"},
-			expected: []string{"abcdEFGH"},
+			expected: []string{"ABCDEFGH"},
 		},
 		"zero elements": {
 			input:    []string{},
@@ -37,9 +37,7 @@ func TestFiltered(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			iter := Filtered(slices.Values(test.input), func(v string) bool {
-				return strings.HasPrefix(v, "a")
-			})
+			iter := AppliedToEach(slices.Values(test.input), strings.ToUpper)
 
 			got := slices.Collect(iter)
 
