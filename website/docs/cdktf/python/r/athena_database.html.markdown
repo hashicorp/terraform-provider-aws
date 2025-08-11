@@ -51,6 +51,7 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `force_destroy` - (Optional, Default: false) Boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
 * `properties` - (Optional) Key-value map of custom metadata properties for the database definition.
+* `workgroup` - (Optional) Name of the workgroup.
 
 ### ACL Configuration
 
@@ -118,4 +119,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-13188a81e96f866ade474043838b031d6458ee18f02d812ad9cabcf89e43f123 -->
+<!-- cache-key: cdktf-0.20.8 input-66cca99c501b9baea3d362cfd3062fce5d9e8e3593666bc4d9977dae22e196e7 -->
