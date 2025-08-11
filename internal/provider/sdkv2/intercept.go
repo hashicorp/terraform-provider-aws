@@ -148,10 +148,10 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 		return nil
 	}
 
-	return func(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return func(ctx context.Context, rd *schema.ResourceData, meta any) diag.Diagnostics {
 		var diags diag.Diagnostics
 
-		ctx, err := bootstrapContext(ctx, d.GetOk, meta)
+		ctx, err := bootstrapContext(ctx, rd.GetOk, meta)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -173,7 +173,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
-					d:    d,
+					d:    rd,
 					when: when,
 					why:  why,
 				}
@@ -188,9 +188,10 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 
 		// All other interceptors are run last to first.
 		reverse := tfslices.Reverse(forward)
-		diags = f(ctx, d, meta)
+		d := f(ctx, rd, meta)
+		diags = append(diags, d...)
 
-		if diags.HasError() {
+		if d.HasError() {
 			when = OnError
 		} else {
 			when = After
@@ -199,7 +200,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
-					d:    d,
+					d:    rd,
 					when: when,
 					why:  why,
 				}
@@ -212,7 +213,7 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			if v.when&when != 0 {
 				opts := crudInterceptorOptions{
 					c:    meta.(awsClient),
-					d:    d,
+					d:    rd,
 					when: when,
 					why:  why,
 				}
