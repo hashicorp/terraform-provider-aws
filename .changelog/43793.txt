@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_verifiedpermissions_policy: Upgrade `cedar-go` to v1.6.2 and replace previously experimental API usages with that of the current API
-```
