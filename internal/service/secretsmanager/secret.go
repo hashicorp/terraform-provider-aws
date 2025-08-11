@@ -35,7 +35,6 @@ import (
 // @SDKResource("aws_secretsmanager_secret", name="Secret")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
-// @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -44,7 +43,13 @@ func resourceSecret() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecretDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				// Note: The AWS SDK does not currently support reading the 'recovery_window_in_days' and 'force_overwrite_replica_secret' fields during read operations.
+				// These parameters can be set during write operations, but will not be returned when querying the resource.
+				d.Set("force_overwrite_replica_secret", false)
+				d.Set("recovery_window_in_days", 30)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -386,7 +391,6 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findSecretByID(ctx, conn, d.Id())
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret (%s) delete: %s", d.Id(), err)
 	}
@@ -406,7 +410,6 @@ func addSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id stri
 	}
 
 	_, err := conn.ReplicateSecretToRegions(ctx, input)
-
 	if err != nil {
 		return fmt.Errorf("adding Secrets Manager Secret (%s) replicas: %w", id, err)
 	}
