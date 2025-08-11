@@ -871,6 +871,35 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/27523.
+func TestAccStorageGatewayGateway_offline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_typeCached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_offline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
@@ -1493,4 +1522,14 @@ resource "aws_storagegateway_gateway" "test" {
   }
 }
 `, rName, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth))
+}
+
+func testAccGatewayConfig_offline(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_typeCached(rName), `
+resource "aws_ec2_instance_state" "test" {
+  instance_id = aws_instance.test.id
+  state       = "stopped"
+  force       = true
+}
+`)
 }
