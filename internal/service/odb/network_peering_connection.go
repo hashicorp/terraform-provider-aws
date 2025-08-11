@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -212,7 +213,7 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 		return
 	}
 
-	odbNetworks, err := conn.ListOdbNetworks(ctx, &odb.ListOdbNetworksInput{})
+	odbNetworkARNParsed, err := arn.Parse(*out.OdbNetworkArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
@@ -221,24 +222,17 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 		return
 	}
 
-	var odbNetworkId *string = nil
-	for _, tempOdbNetwork := range odbNetworks.OdbNetworks {
-		if *tempOdbNetwork.OdbNetworkArn == *out.OdbNetworkArn {
-			odbNetworkId = tempOdbNetwork.OdbNetworkId
-		}
-	}
-	if odbNetworkId == nil {
+	peerVpcARN, err := arn.Parse(*out.PeerNetworkArn)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-
-	peerVpcId := strings.Split(*out.PeerNetworkArn, "/")[1]
-	state.PeerNetworkId = types.StringValue(peerVpcId)
+	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
 	state.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
-	state.OdbNetworkId = types.StringValue(*odbNetworkId)
+	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
 		flex.WithIgnoredFieldNamesAppend("PeerNetworkId"), flex.WithIgnoredFieldNamesAppend("OdbNetworkId"))...)
@@ -267,8 +261,28 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 		)
 		return
 	}
-	plan.CreatedAt = types.StringValue(updatedOdbNetPeeringConn.CreatedAt.Format(time.RFC3339))
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNetPeeringConn, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"))...)
+	odbNetworkARNParsed, err := arn.Parse(*updatedOdbNetPeeringConn.OdbNetworkArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	peerVpcARN, err := arn.Parse(*updatedOdbNetPeeringConn.PeerNetworkArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
+	state.CreatedAt = types.StringValue(updatedOdbNetPeeringConn.CreatedAt.Format(time.RFC3339))
+	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
+	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNetPeeringConn, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"), flex.WithIgnoredFieldNamesAppend("CreatedAt"),
+		flex.WithIgnoredFieldNamesAppend("PeerNetworkId"), flex.WithIgnoredFieldNamesAppend("OdbNetworkId"))...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
