@@ -14,6 +14,8 @@ source (e.g., the "rebuild every time a code change is pushed" option in the Cod
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
@@ -259,6 +261,11 @@ resource "aws_codebuild_project" "project-using-github-app" {
   }
 }
 ```
+
+### Runner Project
+
+While no special configuration is required for `aws_codebuild_project` to create a project as a Runner Project, an `aws_codebuild_webhook` resource with an appropriate `filter_group` is required.
+See the [`aws_codebuild_webhook` resource documentation example](/docs/providers/aws/r/codebuild_webhook.html#for-codebuild-runner-project) for more details.
 
 ## Argument Reference
 
