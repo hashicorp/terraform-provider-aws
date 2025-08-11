@@ -28,7 +28,7 @@ resource "aws_appsync_event_api" "example" {
   owner_contact = "admin@example.com"
 }
 ```
-a
+
 ### With Cognito Authentication
 
 ```terraform
