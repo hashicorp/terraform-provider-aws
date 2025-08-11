@@ -283,8 +283,8 @@ func TestInterceptedCRUDHandler(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			first := newMockInterceptor(tc.firstInterceptorDiags)
-			second := newMockInterceptor(tc.secondInterceptorDiags)
+			first := newMockCRUDInterceptor(tc.firstInterceptorDiags)
+			second := newMockCRUDInterceptor(tc.secondInterceptorDiags)
 			interceptors := append(
 				first.Invocations(),
 				second.Invocations()...,
@@ -320,21 +320,21 @@ func TestInterceptedCRUDHandler(t *testing.T) {
 	}
 }
 
-type mockInterceptor struct {
+type mockCRUDInterceptor struct {
 	diags  map[when]diag.Diagnostics
 	called []when
 }
 
-func newMockInterceptor(diags map[when]diag.Diagnostics) *mockInterceptor {
+func newMockCRUDInterceptor(diags map[when]diag.Diagnostics) *mockCRUDInterceptor {
 	if diags == nil {
 		diags = make(map[when]diag.Diagnostics)
 	}
-	return &mockInterceptor{
+	return &mockCRUDInterceptor{
 		diags: diags,
 	}
 }
 
-func (m *mockInterceptor) Invocations() interceptorInvocations {
+func (m *mockCRUDInterceptor) Invocations() interceptorInvocations {
 	return interceptorInvocations{
 		{
 			why:         AllCRUDOps,
@@ -344,7 +344,7 @@ func (m *mockInterceptor) Invocations() interceptorInvocations {
 	}
 }
 
-func (m *mockInterceptor) interceptor() crudInterceptor {
+func (m *mockCRUDInterceptor) interceptor() crudInterceptor {
 	return crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
 		m.called = append(m.called, opts.when)
 		return m.diags[opts.when]
