@@ -168,16 +168,16 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 			}
 		}
 
+		opts := crudInterceptorOptions{
+			c:   meta.(awsClient),
+			d:   rd,
+			why: why,
+		}
+
 		// Before interceptors are run first to last.
-		when := Before
+		opts.when = Before
 		for v := range slices.Values(interceptors) {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    rd,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 
 				// Short circuit if any Before interceptor errors.
@@ -192,31 +192,19 @@ func interceptedCRUDHandler[F ~func(context.Context, *schema.ResourceData, any) 
 
 		// All other interceptors are run last to first.
 		if d.HasError() {
-			when = OnError
+			opts.when = OnError
 		} else {
-			when = After
+			opts.when = After
 		}
 		for v := range tfslices.BackwardValues(interceptors) {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    rd,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
 
-		when = Finally
+		opts.when = Finally
 		for v := range tfslices.BackwardValues(interceptors) {
-			if v.when&when != 0 {
-				opts := crudInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    rd,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				diags = append(diags, v.interceptor.run(ctx, opts)...)
 			}
 		}
