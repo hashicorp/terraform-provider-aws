@@ -61,7 +61,7 @@ func TestInterceptorsWhy(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_FirstHasBeforeError(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -109,7 +109,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeError(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_SecondHasBeforeError(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -157,7 +157,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeError(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -205,7 +205,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -253,7 +253,7 @@ func TestInterceptedHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -306,7 +306,7 @@ func TestInterceptedHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *
 	}
 }
 
-func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_InnerHasError(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -353,7 +353,7 @@ func TestInterceptedHandler_Diags_InnerHasError(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_InnerHasWarning(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -400,7 +400,7 @@ func TestInterceptedHandler_Diags_InnerHasWarning(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -453,7 +453,7 @@ func TestInterceptedHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing
 	}
 }
 
-func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_AllHaveWarnings(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
@@ -526,7 +526,7 @@ func TestInterceptedHandler_Diags_AllHaveWarnings(t *testing.T) {
 	}
 }
 
-func TestInterceptedHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.T) {
+func TestInterceptedCRUDHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.T) {
 	t.Parallel()
 
 	expectedDiags := diag.Diagnostics{
