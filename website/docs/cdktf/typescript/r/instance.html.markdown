@@ -312,6 +312,7 @@ This resource supports the following arguments:
 * `enablePrimaryIpv6` - (Optional) Whether to assign a primary IPv6 Global Unicast Address (GUA) to the instance when launched in a dual-stack or IPv6-only subnet. A primary IPv6 address ensures a consistent IPv6 address for the instance and is automatically assigned by AWS to the ENI. Once enabled, the first IPv6 GUA becomes the primary IPv6 address and cannot be disabled. The primary IPv6 address remains until the instance is terminated or the ENI is detached. Disabling `enablePrimaryIpv6` after it has been enabled forces recreation of the instance.
 * `enclaveOptions` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `ephemeralBlockDevice` - (Optional) One or more configuration blocks to customize Ephemeral (also known as "Instance Store") volumes on the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a set of objects.
+* `forceDestroy` - (Optional) Destroys instance even if `disableApiTermination` or `disableApiStop` is set to `true`. Defaults to `false`. Once this parameter is set to `true`, a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the instance or destroying the instance, this flag will not work. Additionally when importing an instance, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 * `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `passwordData` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
 * `hostId` - (Optional) ID of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
@@ -586,4 +587,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a97d9e501572f0b97fb8befc9f3be6af028aba829d0e53dee00f7a3698b271c8 -->
+<!-- cache-key: cdktf-0.20.8 input-69b68e5e9a431d7cb9d92de89883c3eead6d7909c8e0ef5a43d3675f46e6d183 -->

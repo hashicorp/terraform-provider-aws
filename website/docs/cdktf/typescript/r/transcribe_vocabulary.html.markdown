@@ -65,7 +65,6 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `languageCode` - (Required) The language code you selected for your vocabulary.
-* `vocabularyFileUri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
 * `vocabularyName` - (Required) The name of the Vocabulary.
 
 The following arguments are optional:
@@ -123,4 +122,4 @@ Using `terraform import`, import Transcribe Vocabulary using the `vocabularyName
 % terraform import aws_transcribe_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fa49810cbc714c4ca9f5ba5779f912ff769be88d9395a5b56b5eb0167216d6cf -->
+<!-- cache-key: cdktf-0.20.8 input-e5eaecd1fc1891acd1fe7e044eeaa735a0c36939046237cd27f15b83b14a4db7 -->

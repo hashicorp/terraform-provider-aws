@@ -363,6 +363,7 @@ The following arguments are optional:
   **Note:** This attribute will _not_ be populated with the ARN of _default_ keys.
   **Note:** Changing this value will recreate the replica.
 * `pointInTimeRecovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
+* `deletionProtectionEnabled` - (Optional) Whether deletion protection is enabled (true) or disabled (false) on the replica. Default is `false`.
 * `propagateTags` - (Optional) Whether to propagate the global table's tags to a replica.
   Default is `false`.
   Changes to tags only move in one direction: from global (source) to replica.
@@ -439,4 +440,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9d431668cce3a45f5db39617f54f6a63c7cf3f6db1f0546a2f195b8bf9081372 -->
+<!-- cache-key: cdktf-0.20.8 input-ab1f4e2bfa8fb2d25470c2b7f3326ac070b71ec7939fd2eaeecebad1e4c186f3 -->
