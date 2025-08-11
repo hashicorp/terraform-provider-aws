@@ -18,6 +18,7 @@ import (
 
 func TestAccWorkSpacesWebIdentityProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -199,6 +200,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags(t *testing.T) {
 
 func TestAccWorkSpacesWebIdentityProvider_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -260,6 +262,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_null(t *testing.T) {
 
 func TestAccWorkSpacesWebIdentityProvider_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -309,6 +312,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_EmptyMap(t *testing.T) {
 
 func TestAccWorkSpacesWebIdentityProvider_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -387,6 +391,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -476,6 +481,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -613,6 +619,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnUpdate_Add(t *testing.
 
 func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -701,6 +708,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_EmptyTag_OnUpdate_Replace(t *test
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -881,6 +889,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_providerOnly(t *testi
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1040,6 +1049,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nonOverlapping(t *tes
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1215,6 +1225,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_overlapping(t *testin
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1303,6 +1314,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_updateToProviderOnly(
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1390,6 +1402,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_updateToResourceOnly(
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1455,6 +1468,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_emptyResourceTag(t *t
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1512,6 +1526,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_emptyProviderOnlyTag(
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1580,6 +1595,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nullOverlappingResour
 
 func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1650,6 +1666,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_DefaultTags_nullNonOverlappingRes
 
 func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1704,6 +1721,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnCreate(t *testing.T
 
 func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1799,6 +1817,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnUpdate_Add(t *testi
 
 func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -1884,6 +1903,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_ComputedTag_OnUpdate_Replace(t *t
 
 func TestAccWorkSpacesWebIdentityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
@@ -2042,6 +2062,7 @@ func TestAccWorkSpacesWebIdentityProvider_tags_IgnoreTags_Overlap_DefaultTag(t *
 
 func TestAccWorkSpacesWebIdentityProvider_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.IdentityProvider
 	resourceName := "aws_workspacesweb_identity_provider.test"
 
