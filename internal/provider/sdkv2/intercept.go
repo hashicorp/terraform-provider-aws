@@ -243,7 +243,7 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		for _, v := range forward {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -270,7 +270,7 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -285,7 +285,7 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
