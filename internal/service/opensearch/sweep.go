@@ -18,6 +18,8 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_opensearch_application", sweepApplications)
+
 	resource.AddTestSweepers("aws_opensearch_domain", &resource.Sweeper{
 		Name: "aws_opensearch_domain",
 		F:    sweepDomains,
