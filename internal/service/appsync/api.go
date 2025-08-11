@@ -127,7 +127,7 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 														fwvalidators.AWSRegion(),
 													},
 												},
-												"user_pool_id": schema.StringAttribute{
+												names.AttrUserPoolID: schema.StringAttribute{
 													Required: true,
 												},
 											},
