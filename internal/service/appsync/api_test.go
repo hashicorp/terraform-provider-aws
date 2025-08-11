@@ -228,6 +228,7 @@ func TestAccAppSyncAPI_disappears(t *testing.T) {
 		},
 	})
 }
+
 func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
@@ -303,6 +304,8 @@ resource "aws_appsync_api" "test" {
 
 func testAccAPIConfig_eventConfigComprehensive(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
@@ -332,7 +335,7 @@ data "aws_iam_policy_document" "lambda_basic" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:*:*:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:*:*"]
   }
 }
 
@@ -385,7 +388,7 @@ data "aws_iam_policy_document" "cloudwatch_logs" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:*:*:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:logs:*:*:*"]
   }
 }
 
