@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -66,7 +66,7 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -109,7 +109,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -152,7 +152,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -195,7 +195,7 @@ func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -236,7 +236,7 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 
 func TestAccStorageGatewayGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -284,7 +284,7 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
@@ -321,7 +321,7 @@ func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 
 func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	resourceName2 := "aws_cloudwatch_log_group.test"
@@ -351,7 +351,7 @@ func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -387,7 +387,7 @@ func TestAccStorageGatewayGateway_gatewayTimezone(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -417,7 +417,7 @@ func TestAccStorageGatewayGateway_gatewayVPCEndpoint(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -450,7 +450,7 @@ func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 
 func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -482,7 +482,7 @@ func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.
 
 func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -516,7 +516,7 @@ func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing
 
 func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -548,7 +548,7 @@ func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t 
 
 func TestAccStorageGatewayGateway_smbGuestPassword(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -584,7 +584,7 @@ func TestAccStorageGatewayGateway_smbGuestPassword(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -621,7 +621,7 @@ func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -664,7 +664,7 @@ func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 
 func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -688,7 +688,7 @@ func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -731,7 +731,7 @@ func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -774,7 +774,7 @@ func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -820,7 +820,7 @@ func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 
 func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -874,7 +874,7 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/27523.
 func TestAccStorageGatewayGateway_offline(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -895,6 +895,7 @@ func TestAccStorageGatewayGateway_offline(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -926,7 +927,7 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, n string, v *storagegateway.DescribeGatewayInformationOutput) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, n string, v *awstypes.GatewayInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -935,7 +936,7 @@ func testAccCheckGatewayExists(ctx context.Context, n string, v *storagegateway.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		output, err := tfstoragegateway.FindGatewayByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfstoragegateway.FindGatewayInfoByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
