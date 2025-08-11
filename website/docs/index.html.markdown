@@ -7,18 +7,13 @@ description: |-
 
 # AWS Provider
 
-Use the Amazon Web Services (AWS) provider to interact with the
-many resources supported by AWS. You must configure the provider
-with the proper credentials before you can use it.
+The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. Trusted by organizations such as Netflix, Lyft, Stripe, Shopify, Slack, and the U.S. Department of Defense, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations every day.
 
-Use the navigation to the left to read about the available resources. There are currently 1516 resources and 609 data sources available in the provider.
+With 1,514 resources and 609 data sources, the AWS provider supports the full breadth of AWS services—from foundational compute, storage, and networking to advanced capabilities like Lambda, RDS, and IAM. Whether you are automating a single S3 bucket or operating a multi-region, enterprise-scale architecture, the provider delivers consistent, reliable workflows that scale with your needs.
 
-To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
-including Lambda, RDS, and IAM by following the [AWS services
-tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
+Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
-Some AWS services do not support IPv6. As a result, the provider may not be able to interact with AWS APIs using IPv6 addresses.
+Note: Some AWS services do not yet support IPv6. In those cases, the provider may not be able to connect to AWS APIs over IPv6 addresses.
 
 ## Example Usage
 
