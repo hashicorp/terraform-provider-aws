@@ -1,6 +1,4 @@
-data "aws_partition" "current" {
-{{- template "region" }}
-}
+data "aws_partition" "current" {}
 
 resource "aws_sns_topic" "test" {
 {{- template "region" }}
