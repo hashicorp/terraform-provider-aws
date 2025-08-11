@@ -243,9 +243,9 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *lifecyclePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, idSeparator)
+	parts := strings.Split(req.ID, resourceIDSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected lifecycle-policy-name%[2]slifecycle-policy-type", req.ID, idSeparator)
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected lifecycle-policy-name%[2]slifecycle-policy-type", req.ID, resourceIDSeparator)
 		resp.Diagnostics.AddError(fmt.Sprintf("importing %s (%s)", ResNameLifecyclePolicy, req.ID), err.Error())
 		return
 	}

@@ -238,9 +238,9 @@ func (r *securityPolicyResource) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *securityPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, idSeparator)
+	parts := strings.Split(req.ID, resourceIDSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
+		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, resourceIDSeparator)
 		resp.Diagnostics.AddError(fmt.Sprintf("importing Security Policy (%s)", req.ID), err.Error())
 		return
 	}
