@@ -109,7 +109,7 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 							CustomType: fwtypes.StringEnumType[awstypes.AssetExtensionType](),
 							Required:   true,
 						},
-						"resource_id": schema.StringAttribute{
+						names.AttrResourceID: schema.StringAttribute{
 							Optional: true,
 						},
 					},
