@@ -5,7 +5,6 @@ package sdkv2
 
 import (
 	"context"
-	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -61,23 +60,8 @@ func TestInterceptorsWhy(t *testing.T) {
 	}
 }
 
-func TestInterceptedCRUDHandler_Diags_FirstHasBeforeError(t *testing.T) {
+func TestInterceptedCRUDHandler(t *testing.T) {
 	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
-		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
 
 	client := mockClient{
 		accountID: "123456789012",
@@ -88,514 +72,251 @@ func TestInterceptedCRUDHandler_Diags_FirstHasBeforeError(t *testing.T) {
 		return ctx, nil
 	}
 
-	var f mockInnerFunc
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before}) {
-		t.Errorf("expected first interceptor to be called once, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{}) {
-		t.Errorf("expected second interceptor to not be called, got %v", second.called)
-	}
-	if f.count != 0 {
-		t.Errorf("expected inner function to not be called, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_SecondHasBeforeError(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{})
-	second := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+	testcases := map[string]struct {
+		firstInterceptorDiags  map[when]diag.Diagnostics
+		secondInterceptorDiags map[when]diag.Diagnostics
+		innerFuncDiags         diag.Diagnostics
+		expectedFirstCalls     []when
+		expectedSecondCalls    []when
+		expectedInnerCalls     int
+		expectedDiags          diag.Diagnostics
+	}{
+		"First has Before error": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls: []when{Before},
+			expectedInnerCalls: 0,
+			expectedDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
+			},
 		},
-	})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
 
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before}) {
-		t.Errorf("expected first interceptor to be called once, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before}) {
-		t.Errorf("expected second interceptor to be called once, got %v", second.called)
-	}
-	if f.count != 0 {
-		t.Errorf("expected inner function to not be called, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_FirstHasBeforeWarning(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+		"Second has Before error": {
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before},
+			expectedSecondCalls: []when{Before},
+			expectedInnerCalls:  0,
+			expectedDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+			},
 		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
 
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, After, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, After, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_SecondHasBeforeWarning(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{})
-	second := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+		"First has Before warning": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+			},
 		},
-	})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
 
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, After, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, After, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_FirstHasBeforeWarning_SecondHasBeforeError(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-		errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+		"Second has Before warning": {
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+			},
 		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+
+		"First has Before warning Second has Before error": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before},
+			expectedSecondCalls: []when{Before},
+			expectedInnerCalls:  0,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				errs.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+			},
 		},
-	})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
 
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before}) {
-		t.Errorf("expected first interceptor to be called once, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before}) {
-		t.Errorf("expected second interceptor to be called once, got %v", second.called)
-	}
-	if f.count != 0 {
-		t.Errorf("expected inner function to not be called, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_InnerHasError(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-	}
-
-	first := mockInterceptor{}
-	second := mockInterceptor{}
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
-
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	f.diags = diag.Diagnostics{
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-	}
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_InnerHasWarning(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
-	}
-
-	first := mockInterceptor{}
-	second := mockInterceptor{}
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
-
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	f.diags = diag.Diagnostics{
-		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
-	}
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, After, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, After, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_InnerHasError_FirstHasBeforeWarning(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+		"Inner has error": {
+			innerFuncDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
 		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{})
 
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
-
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	f.diags = diag.Diagnostics{
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-	}
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
-
-func TestInterceptedCRUDHandler_Diags_AllHaveWarnings(t *testing.T) {
-	t.Parallel()
-
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-		errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
-		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
-		errs.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
-		errs.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
-		errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
-		errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+		"Inner has warning": {
+			innerFuncDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
 		},
-		After: {
-			errs.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+
+		"Inner has error First has Before warning": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
 		},
-		Finally: {
-			errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+
+		"All have warnings": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+				After: {
+					errs.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+				},
+				Finally: {
+					errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+				After: {
+					errs.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
+				},
+				Finally: {
+					errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+				errs.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
+				errs.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+				errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+			},
 		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+
+		"Inner has error Handlers have warnings": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+				OnError: {
+					errs.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
+				},
+				Finally: {
+					errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+				OnError: {
+					errs.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
+				},
+				Finally: {
+					errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+				errs.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
+				errs.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
+				errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+			},
 		},
-		After: {
-			errs.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
-		},
-		Finally: {
-			errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
-		},
-	})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
-
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
 	}
 
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	var f mockInnerFunc
-	f.diags = diag.Diagnostics{
-		errs.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
-	}
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
+			first := newMockInterceptor(tc.firstInterceptorDiags)
+			second := newMockInterceptor(tc.secondInterceptorDiags)
+			interceptors := append(
+				first.Invocations(),
+				second.Invocations()...,
+			)
 
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
+			f := newMockInnerFunc(tc.innerFuncDiags)
 
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
+			handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
 
-	if !slices.Equal(first.called, []when{Before, After, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, After, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
-	}
-}
+			ctx := t.Context()
+			diags := handler(ctx, nil, client)
 
-func TestInterceptedCRUDHandler_Diags_InnerHasError_HandlersHaveWarnings(t *testing.T) {
-	t.Parallel()
+			if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
 
-	expectedDiags := diag.Diagnostics{
-		errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-		errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-		errs.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
-		errs.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
-		errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
-		errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
-	}
-
-	first := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
-		},
-		OnError: {
-			errs.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
-		},
-		Finally: {
-			errs.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
-		},
-	})
-	second := newMockInterceptor(map[when]diag.Diagnostics{
-		Before: {
-			errs.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
-		},
-		OnError: {
-			errs.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
-		},
-		Finally: {
-			errs.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
-		},
-	})
-	interceptors := append(
-		first.Invocations(),
-		second.Invocations()...,
-	)
-
-	client := mockClient{
-		accountID: "123456789012",
-		region:    "us-west-2", //lintignore:AWSAT003
-	}
-
-	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
-		return ctx, nil
-	}
-
-	var f mockInnerFunc
-	f.diags = diag.Diagnostics{
-		errs.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
-	}
-	handler := interceptedCRUDHandler(contextFunc, interceptors, f.Call, Create)
-
-	ctx := t.Context()
-	diags := handler(ctx, nil, client)
-
-	if diff := cmp.Diff(diags, expectedDiags); diff != "" {
-		t.Errorf("unexpected diagnostics difference: %s", diff)
-	}
-
-	if !slices.Equal(first.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected first interceptor to be called three times, got %v", first.called)
-	}
-	if !slices.Equal(second.called, []when{Before, OnError, Finally}) {
-		t.Errorf("expected second interceptor to be called three times, got %v", second.called)
-	}
-	if f.count != 1 {
-		t.Errorf("expected inner function to be called once, got %d", f.count)
+			if diff := cmp.Diff(first.called, tc.expectedFirstCalls); diff != "" {
+				t.Errorf("unexpected first interceptor calls difference: %s", diff)
+			}
+			if diff := cmp.Diff(second.called, tc.expectedSecondCalls); diff != "" {
+				t.Errorf("unexpected second interceptor calls difference: %s", diff)
+			}
+			if tc.expectedInnerCalls == 0 {
+				if f.count != 0 {
+					t.Errorf("expected inner function to not be called, got %d", f.count)
+				}
+			} else {
+				if f.count != tc.expectedInnerCalls {
+					t.Errorf("expected inner function to be called %d times, got %d", tc.expectedInnerCalls, f.count)
+				}
+			}
+		})
 	}
 }
 
@@ -605,6 +326,9 @@ type mockInterceptor struct {
 }
 
 func newMockInterceptor(diags map[when]diag.Diagnostics) *mockInterceptor {
+	if diags == nil {
+		diags = make(map[when]diag.Diagnostics)
+	}
 	return &mockInterceptor{
 		diags: diags,
 	}
@@ -630,6 +354,12 @@ func (m *mockInterceptor) interceptor() crudInterceptor {
 type mockInnerFunc struct {
 	diags diag.Diagnostics
 	count int
+}
+
+func newMockInnerFunc(diags diag.Diagnostics) mockInnerFunc {
+	return mockInnerFunc{
+		diags: diags,
+	}
 }
 
 func (m *mockInnerFunc) Call(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
