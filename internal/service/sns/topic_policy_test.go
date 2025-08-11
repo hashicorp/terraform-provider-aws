@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -341,18 +339,17 @@ func testAccCheckTopicPolicyExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
-
-		input := &sns.GetTopicAttributesInput{
-			TopicArn: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		output, err := conn.GetTopicAttributes(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSClient(ctx)
+		output, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if output.Attributes["Policy"] == "" {
+		if output[tfsns.TopicAttributeNamePolicy] == "" {
 			return fmt.Errorf("Topic policy not found")
 		}
 
