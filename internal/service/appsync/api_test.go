@@ -293,9 +293,9 @@ resource "aws_iam_role_policy" "lambda_basic" {
 resource "aws_lambda_function" "test" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = %[1]q
-  role            = aws_iam_role.lambda.arn
-  handler         = "index.handler"
-  runtime         = "nodejs18.x"
+  role             = aws_iam_role.lambda.arn
+  handler          = "index.handler"
+  runtime          = "nodejs18.x"
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
 
   depends_on = [aws_iam_role_policy.lambda_basic]
@@ -359,7 +359,7 @@ resource "aws_appsync_api" "test" {
     auth_provider {
       auth_type = "AWS_LAMBDA"
       lambda_authorizer_config {
-        authorizer_uri                  = aws_lambda_function.test.arn
+        authorizer_uri                   = aws_lambda_function.test.arn
         authorizer_result_ttl_in_seconds = 300
       }
     }
