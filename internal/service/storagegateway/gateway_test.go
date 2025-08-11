@@ -120,7 +120,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName),
+				Config: testAccGatewayConfig_typeFileS3(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
@@ -285,8 +285,9 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.GatewayInfo
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGateway1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGateway2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -296,17 +297,17 @@ func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName1),
+				Config: testAccGatewayConfig_typeFileS3(rName, rNameGateway1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_name", rNameGateway1),
 				),
 			},
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName2),
+				Config: testAccGatewayConfig_typeFileS3(rName, rNameGateway2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "gateway_name", rNameGateway2),
 				),
 			},
 			{
@@ -1009,7 +1010,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_baseFile(rName string) string {
+func testAccGatewayConfig_baseFileS3(rName string) string {
 	return acctest.ConfigCompose(
 		testAccGatewayConfig_baseVPC(rName),
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
@@ -1024,6 +1025,33 @@ resource "aws_instance" "test" {
   depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_baseFileFSx(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayConfig_baseVPC(rName),
+		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.xlarge", "m4.xlarge"),
+		fmt.Sprintf(`
+# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-file.html
+data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_FSX_SMB_latest" {
+  name = "/aws/service/storagegateway/ami/FILE_FSX_SMB/latest"
+}
+
+resource "aws_instance" "test" {
+  depends_on = [aws_route.test]
+
+  ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_FSX_SMB_latest.value
   associate_public_ip_address = true
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
@@ -1076,7 +1104,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_typeFileFSxSMB(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileFSx(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1086,19 +1114,19 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_typeFileS3(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+func testAccGatewayConfig_typeFileS3(rName, gatewayName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
 }
-`, rName))
+`, gatewayName))
 }
 
 func testAccGatewayConfig_logGroup(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1136,7 +1164,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_timezone(rName, gatewayTimezone string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1397,7 +1425,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbGuestPassword(rName, smbGuestPassword string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1409,7 +1437,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbSecurityStrategy(rName, strategy string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address    = aws_instance.test.public_ip
   gateway_name          = %[1]q
@@ -1421,7 +1449,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbVisibility(rName string, visible bool) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address        = aws_instance.test.public_ip
   gateway_name              = %[1]q
