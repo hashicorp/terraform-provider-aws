@@ -5,16 +5,15 @@ package appsync
 
 import (
 	"context"
-	"errors"
-	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -28,8 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -37,48 +37,26 @@ import (
 )
 
 // @FrameworkResource("aws_appsync_api", name="API")
-// @Tags(identifierAttribute="arn")
-// @IdentityAttribute("id")
-// @#Testing(importStateIdAttribute="id")
+// @Tags(identifierAttribute="api_arn")
+// @Testing(importStateIdAttribute="api_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
 // @Testing(hasNoPreExistingResource=true)
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAPI{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r := &apiResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameAPI = "API"
-)
-
-type resourceAPI struct {
-	framework.ResourceWithModel[resourceAPIModel]
-	framework.WithImportByIdentity
+type apiResource struct {
+	framework.ResourceWithModel[apiResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"created": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"api_arn": framework.ARNAttributeComputedOnly(),
+			"api_id":  framework.IDAttribute(),
 			"dns": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Computed:   true,
@@ -88,6 +66,10 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 50),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_\-\ ]+$`), ""),
+				},
 			},
 			"owner_contact": schema.StringAttribute{
 				Optional: true,
@@ -115,8 +97,12 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"auth_providers": schema.ListNestedBlock{
+						"auth_provider": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[authProviderModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"auth_type": schema.StringAttribute{
@@ -132,14 +118,17 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"app_id_client_regex": schema.StringAttribute{
+													Optional: true,
+												},
 												"aws_region": schema.StringAttribute{
 													Required: true,
+													Validators: []validator.String{
+														fwvalidators.AWSRegion(),
+													},
 												},
 												"user_pool_id": schema.StringAttribute{
 													Required: true,
-												},
-												"app_id_client_regex": schema.StringAttribute{
-													Optional: true,
 												},
 											},
 										},
@@ -200,8 +189,12 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 								},
 							},
 						},
-						"connection_auth_modes": schema.ListNestedBlock{
+						"connection_auth_mode": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"auth_type": schema.StringAttribute{
@@ -211,8 +204,12 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 								},
 							},
 						},
-						"default_publish_auth_modes": schema.ListNestedBlock{
+						"default_publish_auth_mode": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"auth_type": schema.StringAttribute{
@@ -222,8 +219,12 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 								},
 							},
 						},
-						"default_subscribe_auth_modes": schema.ListNestedBlock{
+						"default_subscribe_auth_mode": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"auth_type": schema.StringAttribute{
@@ -241,7 +242,8 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"cloudwatch_logs_role_arn": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 									"log_level": schema.StringAttribute{
 										Required:   true,
@@ -253,215 +255,144 @@ func (r *resourceAPI) Schema(ctx context.Context, req resource.SchemaRequest, re
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *resourceAPI) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *apiResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data apiResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var plan resourceAPIModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	var input appsync.CreateApiInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
-	if resp.Diagnostics.HasError() {
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateApi(ctx, &input)
+	output, err := conn.CreateApi(ctx, &input)
+
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil || out.Api == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.Api, &plan), smerr.ID, plan.Name.String())
-	if resp.Diagnostics.HasError() {
+	// Set values for unknowns.
+	api := output.Api
+	apiID := aws.ToString(api.ApiId)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, api, &data), smerr.ID, name)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitAPICreated(ctx, conn, plan.ApiId.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan), smerr.ID, plan.ApiId.String())
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data), smerr.ID, apiID)
 }
 
-func (r *resourceAPI) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AppSyncClient(ctx)
-
-	var state resourceAPIModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *apiResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data apiResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	apiId := state.ApiId.ValueString()
+	conn := r.Meta().AppSyncClient(ctx)
 
-	out, err := findAPIByID(ctx, conn, apiId)
+	apiID := fwflex.StringValueFromFramework(ctx, data.ApiID)
+	output, err := findAPIByID(ctx, conn, apiID)
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, apiID)
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state), smerr.ID, state.ApiId.String())
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data), smerr.ID, apiID)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.ApiId.String())
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data), smerr.ID, apiID)
 }
 
-func (r *resourceAPI) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AppSyncClient(ctx)
-
-	var plan, state resourceAPIModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
+func (r *apiResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old apiResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
+	if response.Diagnostics.HasError() {
+		return
+	}
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d, smerr.ID, plan.ApiId.String())
-	if resp.Diagnostics.HasError() {
+	conn := r.Meta().AppSyncClient(ctx)
+
+	apiID := fwflex.StringValueFromFramework(ctx, new.ApiID)
+	diff, d := fwflex.Diff(ctx, new, old)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, d, smerr.ID, apiID)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
 		var input appsync.UpdateApiInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input), smerr.ID, plan.ApiId.String())
-		if resp.Diagnostics.HasError() {
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input), smerr.ID, apiID)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input.ApiId = plan.ApiId.ValueStringPointer()
+		_, err := conn.UpdateApi(ctx, &input)
 
-		out, err := conn.UpdateApi(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ApiId.String())
-			return
-		}
-		if out == nil || out.Api == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ApiId.String())
-			return
-		}
-
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out.Api, &plan), smerr.ID, plan.ApiId.String())
-		if resp.Diagnostics.HasError() {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, apiID)
 			return
 		}
 	}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan), smerr.ID, plan.ApiId.String())
+
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new), smerr.ID, apiID)
 }
 
-func (r *resourceAPI) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *apiResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data apiResourceModel
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AppSyncClient(ctx)
 
-	var state resourceAPIModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	apiID := fwflex.StringValueFromFramework(ctx, data.ApiID)
 	input := appsync.DeleteApiInput{
-		ApiId: state.ApiId.ValueStringPointer(),
+		ApiId: aws.String(apiID),
 	}
-
 	_, err := conn.DeleteApi(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
 
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitAPIDeleted(ctx, conn, state.ApiId.ValueString(), deleteTimeout)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ApiId.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, apiID)
 		return
 	}
 }
 
-const (
-	statusDeleting = "Deleting"
-	statusNormal   = "Normal"
-)
-
-func waitAPICreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusAPI(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*awstypes.Api); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitAPIDeleted(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*awstypes.Api, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusAPI(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if out, ok := outputRaw.(*awstypes.Api); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func statusAPI(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findAPIByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", smarterr.NewError(err)
-		}
-
-		return out, statusNormal, nil
-	}
+func (r *apiResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("api_id"), request, response)
 }
 
 func findAPIByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.Api, error) {
@@ -469,45 +400,48 @@ func findAPIByID(ctx context.Context, conn *appsync.Client, id string) (*awstype
 		ApiId: aws.String(id),
 	}
 
-	out, err := conn.GetApi(ctx, &input)
+	return findAPI(ctx, conn, &input)
+}
+
+func findAPI(ctx context.Context, conn *appsync.Client, input *appsync.GetApiInput) (*awstypes.Api, error) {
+	output, err := conn.GetApi(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, smarterr.NewError(&retry.NotFoundError{
+			LastError: err,
+		})
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
-		}
 		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil || out.Api == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+	if output == nil || output.Api == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
-	return out.Api, nil
+	return output.Api, nil
 }
 
-type resourceAPIModel struct {
+type apiResourceModel struct {
 	framework.WithRegionModel
-	ApiArn       types.String                                      `tfsdk:"arn"`
-	ApiId        types.String                                      `tfsdk:"id"`
-	Created      timetypes.RFC3339                                 `tfsdk:"created"`
-	Dns          fwtypes.MapOfString                               `tfsdk:"dns"`
+	ApiARN       types.String                                      `tfsdk:"api_arn"`
+	ApiID        types.String                                      `tfsdk:"api_id"`
+	DNS          fwtypes.MapOfString                               `tfsdk:"dns"`
 	EventConfig  fwtypes.ListNestedObjectValueOf[eventConfigModel] `tfsdk:"event_config"`
 	Name         types.String                                      `tfsdk:"name"`
 	OwnerContact types.String                                      `tfsdk:"owner_contact"`
 	Tags         tftags.Map                                        `tfsdk:"tags"`
 	TagsAll      tftags.Map                                        `tfsdk:"tags_all"`
-	Timeouts     timeouts.Value                                    `tfsdk:"timeouts"`
-	WafWebAclArn types.String                                      `tfsdk:"waf_web_acl_arn"`
-	XrayEnabled  types.Bool                                        `tfsdk:"xray_enabled"`
+	WAFWebAclARN types.String                                      `tfsdk:"waf_web_acl_arn"`
+	XRayEnabled  types.Bool                                        `tfsdk:"xray_enabled"`
 }
 
 type eventConfigModel struct {
-	AuthProviders             fwtypes.ListNestedObjectValueOf[authProviderModel]   `tfsdk:"auth_providers"`
-	ConnectionAuthModes       fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"connection_auth_modes"`
-	DefaultPublishAuthModes   fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_publish_auth_modes"`
-	DefaultSubscribeAuthModes fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_subscribe_auth_modes"`
+	AuthProviders             fwtypes.ListNestedObjectValueOf[authProviderModel]   `tfsdk:"auth_provider"`
+	ConnectionAuthModes       fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"connection_auth_mode"`
+	DefaultPublishAuthModes   fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_publish_auth_mode"`
+	DefaultSubscribeAuthModes fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"default_subscribe_auth_mode"`
 	LogConfig                 fwtypes.ListNestedObjectValueOf[eventLogConfigModel] `tfsdk:"log_config"`
 }
 
@@ -523,25 +457,25 @@ type authModeModel struct {
 }
 
 type cognitoConfigModel struct {
-	AwsRegion        types.String `tfsdk:"aws_region"`
-	UserPoolId       types.String `tfsdk:"user_pool_id"`
-	AppIdClientRegex types.String `tfsdk:"app_id_client_regex"`
+	AppIDClientRegex types.String `tfsdk:"app_id_client_regex"`
+	AWSRegion        types.String `tfsdk:"aws_region"`
+	UserPoolID       types.String `tfsdk:"user_pool_id"`
 }
 
 type lambdaAuthorizerConfigModel struct {
-	AuthorizerResultTtlInSeconds types.Int64  `tfsdk:"authorizer_result_ttl_in_seconds"`
-	AuthorizerUri                types.String `tfsdk:"authorizer_uri"`
+	AuthorizerResultTTLInSeconds types.Int64  `tfsdk:"authorizer_result_ttl_in_seconds"`
+	AuthorizerURI                types.String `tfsdk:"authorizer_uri"`
 	IdentityValidationExpression types.String `tfsdk:"identity_validation_expression"`
 }
 
 type openIDConnectConfigModel struct {
-	AuthTtl  types.Int64  `tfsdk:"auth_ttl"`
-	ClientId types.String `tfsdk:"client_id"`
-	IatTtl   types.Int64  `tfsdk:"iat_ttl"`
+	AuthTTL  types.Int64  `tfsdk:"auth_ttl"`
+	ClientID types.String `tfsdk:"client_id"`
+	IatTTL   types.Int64  `tfsdk:"iat_ttl"`
 	Issuer   types.String `tfsdk:"issuer"`
 }
 
 type eventLogConfigModel struct {
-	CloudWatchLogsRoleArn types.String                               `tfsdk:"cloudwatch_logs_role_arn"`
+	CloudWatchLogsRoleArn fwtypes.ARN                                `tfsdk:"cloudwatch_logs_role_arn"`
 	LogLevel              fwtypes.StringEnum[awstypes.EventLogLevel] `tfsdk:"log_level"`
 }

@@ -5,7 +5,6 @@ package appsync_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
@@ -49,29 +47,29 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 					// Cognito auth provider
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.auth_type", "AMAZON_COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.cognito_config.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_providers.0.cognito_config.0.user_pool_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_providers.0.cognito_config.0.aws_region"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.auth_type", "AMAZON_COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.0.cognito_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_provider.0.cognito_config.0.user_pool_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_provider.0.cognito_config.0.aws_region"),
 					// Lambda auth provider
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.1.auth_type", "AWS_LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.1.lambda_authorizer_config.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_providers.1.lambda_authorizer_config.0.authorizer_uri"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.1.lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.1.auth_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.1.lambda_authorizer_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.auth_provider.1.lambda_authorizer_config.0.authorizer_uri"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.1.lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "300"),
 					// OpenID Connect auth provider
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.2.auth_type", "OPENID_CONNECT"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.2.openid_connect_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.2.openid_connect_config.0.issuer", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.2.openid_connect_config.0.client_id", "test-client-id"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.2.auth_type", "OPENID_CONNECT"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.2.openid_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.2.openid_connect_config.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.2.openid_connect_config.0.client_id", "test-client-id"),
 					// Auth modes
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.0.auth_type", "AWS_LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.0.auth_type", "AWS_LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.0.auth_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_mode.0.auth_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_mode.0.auth_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_mode.0.auth_type", "AWS_LAMBDA"),
 					// Log config
 					resource.TestCheckResourceAttr(resourceName, "event_config.0.log_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "event_config.0.log_config.0.cloudwatch_logs_role_arn"),
@@ -86,9 +84,11 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "api_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "api_id"),
 			},
 		},
 	})
@@ -122,7 +122,7 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 				),
 			},
 			{
@@ -132,13 +132,15 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "owner_contact", "test@example.com"),
 					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_provider.#", "3"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "api_id",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "api_id"),
 			},
 		},
 	})
@@ -167,16 +169,6 @@ func TestAccAppSyncAPI_disappears(t *testing.T) {
 				Config: testAccAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "event_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.auth_providers.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.connection_auth_modes.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_publish_auth_modes.0.auth_type", "API_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "event_config.0.default_subscribe_auth_modes.0.auth_type", "API_KEY"),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPI, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -193,40 +185,39 @@ func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.ID)
+			_, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.Attributes["api_id"])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameAPI, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.AppSync, create.ErrActionCheckingDestroyed, tfappsync.ResNameAPI, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("AppSync API %s still exists", rs.Primary.Attributes["api_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAPIExists(ctx context.Context, name string, api *awstypes.Api) resource.TestCheckFunc {
+func testAccCheckAPIExists(ctx context.Context, n string, v *awstypes.Api) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameAPI, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameAPI, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
-		resp, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.ID)
+		output, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.Attributes["api_id"])
+
 		if err != nil {
-			return create.Error(names.AppSync, create.ErrActionCheckingExistence, tfappsync.ResNameAPI, rs.Primary.ID, err)
+			return err
 		}
 
-		*api = *resp
+		*v = *output
 
 		return nil
 	}
@@ -238,19 +229,19 @@ resource "aws_appsync_api" "test" {
   name = %[1]q
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "API_KEY"
     }
 
-    connection_auth_modes {
+    connection_auth_mode {
       auth_type = "API_KEY"
     }
 
-    default_publish_auth_modes {
+    default_publish_auth_mode {
       auth_type = "API_KEY"
     }
 
-    default_subscribe_auth_modes {
+    default_subscribe_auth_mode {
       auth_type = "API_KEY"
     }
   }
@@ -357,7 +348,7 @@ resource "aws_appsync_api" "test" {
   owner_contact = "test@example.com"
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "AMAZON_COGNITO_USER_POOLS"
       cognito_config {
         user_pool_id = aws_cognito_user_pool.test.id
@@ -365,7 +356,7 @@ resource "aws_appsync_api" "test" {
       }
     }
 
-    auth_providers {
+    auth_provider {
       auth_type = "AWS_LAMBDA"
       lambda_authorizer_config {
         authorizer_uri                  = aws_lambda_function.test.arn
@@ -373,7 +364,7 @@ resource "aws_appsync_api" "test" {
       }
     }
 
-    auth_providers {
+    auth_provider {
       auth_type = "OPENID_CONNECT"
       openid_connect_config {
         issuer    = "https://example.com"
@@ -381,15 +372,15 @@ resource "aws_appsync_api" "test" {
       }
     }
 
-    connection_auth_modes {
+    connection_auth_mode {
       auth_type = "AWS_LAMBDA"
     }
 
-    default_publish_auth_modes {
+    default_publish_auth_mode {
       auth_type = "AWS_LAMBDA"
     }
 
-    default_subscribe_auth_modes {
+    default_subscribe_auth_mode {
       auth_type = "AWS_LAMBDA"
     }
 

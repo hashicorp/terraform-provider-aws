@@ -5,19 +5,19 @@ resource "aws_appsync_api" "test" {
   name = var.rName
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "API_KEY"
     }
 
-    connection_auth_modes {
+    connection_auth_mode {
       auth_type = "API_KEY"
     }
 
-    default_publish_auth_modes {
+    default_publish_auth_mode {
       auth_type = "API_KEY"
     }
 
-    default_subscribe_auth_modes {
+    default_subscribe_auth_mode {
       auth_type = "API_KEY"
     }
   }

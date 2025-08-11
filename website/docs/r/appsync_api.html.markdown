@@ -40,7 +40,7 @@ resource "aws_appsync_event_api" "example" {
   name = "example-event-api"
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "AMAZON_COGNITO_USER_POOLS"
       cognito_config {
         user_pool_id = aws_cognito_user_pool.example.id
@@ -85,7 +85,7 @@ resource "aws_appsync_event_api" "example" {
   name = "example-event-api"
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "AWS_LAMBDA"
       lambda_authorizer_config {
         authorizer_uri                   = aws_lambda_function.example.invoke_arn
@@ -103,7 +103,7 @@ resource "aws_appsync_event_api" "example" {
   name = "example-event-api"
 
   event_config {
-    auth_providers {
+    auth_provider {
       auth_type = "OPENID_CONNECT"
       openid_connect_config {
         issuer    = "https://example.com"
@@ -121,13 +121,13 @@ resource "aws_appsync_event_api" "example" {
   name = "example-event-api"
 
   event_config {
-    connection_auth_modes {
+    connection_auth_mode {
       auth_type = "API_KEY"
     }
-    default_publish_auth_modes {
+    default_publish_auth_mode {
       auth_type = "API_KEY"
     }
-    default_subscribe_auth_modes {
+    default_subscribe_auth_mode {
       auth_type = "API_KEY"
     }
   }
@@ -179,23 +179,24 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `owner_contact` - (Optional) Contact information for the owner of the Event API.
 * `event_config` - (Optional) Configuration for the Event API. See [Event Config](#event-config) below.
+* `owner_contact` - (Optional) Contact information for the owner of the Event API.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Event Config
 
 The `event_config` block supports the following:
 
-* `auth_providers` - (Optional) List of authentication providers. See [Auth Providers](#auth-providers) below.
-* `connection_auth_modes` - (Optional) List of authentication modes for connections. See [Auth Modes](#auth-modes) below.
-* `default_publish_auth_modes` - (Optional) List of default authentication modes for publishing. See [Auth Modes](#auth-modes) below.
-* `default_subscribe_auth_modes` - (Optional) List of default authentication modes for subscribing. See [Auth Modes](#auth-modes) below.
+* `auth_provider` - (Optional) List of authentication providers. See [Auth Providers](#auth-providers) below.
+* `connection_auth_mode` - (Optional) List of authentication modes for connections. See [Auth Modes](#auth-modes) below.
+* `default_publish_auth_mode` - (Optional) List of default authentication modes for publishing. See [Auth Modes](#auth-modes) below.
+* `default_subscribe_auth_mode` - (Optional) List of default authentication modes for subscribing. See [Auth Modes](#auth-modes) below.
 * `log_config` - (Optional) Logging configuration. See [Log Config](#log-config) below.
 
 ### Auth Providers
 
-The `auth_providers` block supports the following:
+The `auth_provider` block supports the following:
 
 * `auth_type` - (Required) Type of authentication provider. Valid values: `AMAZON_COGNITO_USER_POOLS`, `AWS_LAMBDA`, `OPENID_CONNECT`, `API_KEY`.
 * `cognito_config` - (Optional) Configuration for Cognito user pool authentication. Required when `auth_type` is `AMAZON_COGNITO_USER_POOLS`. See [Cognito Config](#cognito-config) below.
@@ -229,7 +230,7 @@ The `openid_connect_config` block supports the following:
 
 ### Auth Modes
 
-The `connection_auth_modes`, `default_publish_auth_modes`, and `default_subscribe_auth_modes` blocks support the following:
+The `connection_auth_mode`, `default_publish_auth_mode`, and `default_subscribe_auth_mode` blocks support the following:
 
 * `auth_type` - (Required) Type of authentication. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`.
 
@@ -245,19 +246,10 @@ The `log_config` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `api_id` - ID of the Event API.
-* `arn` - ARN of the Event API.
-* `created` - Date and time when the Event API was created.
+* `api_arn` - ARN of the Event API.
 * `dns` - DNS configuration for the Event API.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `waf_web_acl_arn` - ARN of the associated WAF web ACL.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
 
 ## Import
 
