@@ -189,7 +189,7 @@ func (r *securityPolicyResource) Update(ctx context.Context, request resource.Up
 		new.PolicyVersion = fwflex.StringToFramework(ctx, output.SecurityPolicyDetail.PolicyVersion)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *securityPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

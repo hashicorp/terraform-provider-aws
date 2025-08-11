@@ -189,7 +189,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		new.PolicyVersion = fwflex.StringToFramework(ctx, output.LifecyclePolicyDetail.PolicyVersion)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &old)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

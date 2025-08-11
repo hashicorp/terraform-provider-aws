@@ -161,10 +161,11 @@ func TestAccOpenSearchServerlessSecurityPolicy_string(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType),
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportStateIdFunc:       acctest.AttrsImportStateIdFunc(resourceName, "/", names.AttrName, names.AttrType),
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // JSON is semantically correct but can be set in state in a different order
 			},
 		},
 	})
