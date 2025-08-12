@@ -238,16 +238,16 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
+		opts := customizeDiffInterceptorOptions{
+			c:   meta.(awsClient),
+			d:   d,
+			why: why,
+		}
+
 		// Before interceptors are run first to last.
-		when := Before
+		opts.when = Before
 		for v := range slices.Values(interceptors) {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				// Short circuit if any Before interceptor errors.
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					return err
@@ -257,38 +257,26 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 
 		var errs []error
 
-		when = After
+		opts.when = After
 		if f != nil {
 			if err := f(ctx, d, meta); err != nil {
-				when = OnError
+				opts.when = OnError
 				errs = append(errs, err)
 			}
 		}
 
 		// All other interceptors are run last to first.
 		for v := range tfslices.BackwardValues(interceptors) {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}
 		}
 
-		when = Finally
+		opts.when = Finally
 		for v := range tfslices.BackwardValues(interceptors) {
-			if v.when&when != 0 {
-				opts := customizeDiffInterceptorOptions{
-					c:    meta.(awsClient),
-					d:    d,
-					when: when,
-					why:  why,
-				}
+			if v.when&opts.when != 0 {
 				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
