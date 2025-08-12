@@ -227,11 +227,10 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 
 		why := CustomizeDiff
 
-		// Before interceptors are run first to last.
-		forward := make([]customizeDiffInterceptorInvocation, 0)
+		var interceptors []customizeDiffInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(customizeDiffInterceptor); ok {
-				forward = append(forward, customizeDiffInterceptorInvocation{
+				interceptors = append(interceptors, customizeDiffInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -239,8 +238,9 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
+		// Before interceptors are run first to last.
 		when := Before
-		for _, v := range forward {
+		for v := range slices.Values(interceptors) {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
 					c:    meta.(awsClient),
@@ -255,8 +255,6 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
 		var errs []error
 
 		when = After
@@ -267,7 +265,8 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 			}
 		}
 
-		for _, v := range reverse {
+		// All other interceptors are run last to first.
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
 					c:    meta.(awsClient),
@@ -282,7 +281,7 @@ func interceptedCustomizeDiffHandler(bootstrapContext contextFunc, interceptorIn
 		}
 
 		when = Finally
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := customizeDiffInterceptorOptions{
 					c:    meta.(awsClient),
