@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
@@ -307,4 +308,159 @@ func newMockInnerFunc(diags diag.Diagnostics) mockInnerFunc {
 func (m *mockInnerFunc) Call(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	m.count++
 	response.Diagnostics.Append(m.diags...)
+}
+
+func TestInterceptedListHandler(t *testing.T) {
+	t.Parallel()
+
+	client := mockClient{
+		accountID: "123456789012",
+		region:    "us-west-2", //lintignore:AWSAT003
+	}
+
+	testcases := map[string]struct {
+		firstInterceptorDiags  map[when]diag.Diagnostics
+		secondInterceptorDiags map[when]diag.Diagnostics
+		innerFuncDiags         diag.Diagnostics
+		expectedFirstCalls     []when
+		expectedSecondCalls    []when
+		expectedInnerCalls     int
+		expectedDiags          diag.Diagnostics
+	}{
+		"First has Before error": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls: []when{Before},
+			expectedInnerCalls: 0,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("First interceptor Before error", "An error occurred in the first interceptor Before handler"),
+			},
+		},
+
+		"Second has Before error": {
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before},
+			expectedSecondCalls: []when{Before},
+			expectedInnerCalls:  0,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+			},
+		},
+
+		"First has Before warning Second has Before error": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before},
+			expectedSecondCalls: []when{Before},
+			expectedInnerCalls:  0,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
+			},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			first := newMockListInterceptor(tc.firstInterceptorDiags)
+			second := newMockListInterceptor(tc.secondInterceptorDiags)
+			interceptors := []listInterceptorFunc[list.ListRequest, list.ListResultsStream]{
+				first.Intercept,
+				second.Intercept,
+			}
+
+			f := newMockInnerListFunc(tc.innerFuncDiags)
+
+			handler := interceptedListHandler(interceptors, f.Call, client)
+
+			ctx := t.Context()
+			var request list.ListRequest
+			response := list.ListResultsStream{
+				Results: list.ListResultsStreamDiagnostics(diag.Diagnostics{
+					diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors"),
+				}),
+			}
+			tc.expectedDiags = slices.Insert(tc.expectedDiags, 0, diag.Diagnostic(diag.NewWarningDiagnostic("Pre-existing warning", "This is a pre-existing warning that should not be affected by the interceptors")))
+
+			handler(ctx, request, &response)
+
+			var diags diag.Diagnostics
+			for d := range response.Results {
+				if len(d.Diagnostics) > 0 {
+					diags = append(diags, d.Diagnostics...)
+				}
+			}
+
+			if diff := cmp.Diff(diags, tc.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			if diff := cmp.Diff(first.called, tc.expectedFirstCalls); diff != "" {
+				t.Errorf("unexpected first interceptor calls difference: %s", diff)
+			}
+			if diff := cmp.Diff(second.called, tc.expectedSecondCalls); diff != "" {
+				t.Errorf("unexpected second interceptor calls difference: %s", diff)
+			}
+			if tc.expectedInnerCalls == 0 {
+				if f.count != 0 {
+					t.Errorf("expected inner function to not be called, got %d", f.count)
+				}
+			} else {
+				if f.count != tc.expectedInnerCalls {
+					t.Errorf("expected inner function to be called %d times, got %d", tc.expectedInnerCalls, f.count)
+				}
+			}
+		})
+	}
+}
+
+type mockListInterceptor struct {
+	diags  map[when]diag.Diagnostics
+	called []when
+}
+
+func newMockListInterceptor(diags map[when]diag.Diagnostics) *mockListInterceptor {
+	return &mockListInterceptor{
+		diags: diags,
+	}
+}
+
+func (m *mockListInterceptor) Intercept(ctx context.Context, opts interceptorOptions[list.ListRequest, list.ListResultsStream]) diag.Diagnostics {
+	m.called = append(m.called, opts.when)
+	return m.diags[opts.when]
+}
+
+type mockInnerListFunc struct {
+	diags diag.Diagnostics
+	count int
+}
+
+func newMockInnerListFunc(diags diag.Diagnostics) mockInnerListFunc {
+	return mockInnerListFunc{
+		diags: diags,
+	}
+}
+
+func (m *mockInnerListFunc) Call(ctx context.Context, request list.ListRequest, response *list.ListResultsStream) {
+	m.count++
+	if len(m.diags) > 0 {
+		response.Results = list.ListResultsStreamDiagnostics(m.diags)
+	}
 }
