@@ -15,9 +15,7 @@ import (
 )
 
 type (
-	crudInterceptorFunc          = interceptorFunc1[schemaResourceData, diag.Diagnostics]
-	customizeDiffInterceptorFunc = interceptorFunc1[*schema.ResourceDiff, error]
-	importInterceptorFunc        = interceptorFunc1[*schema.ResourceData, error]
+	crudInterceptorFunc = interceptorFunc1[schemaResourceData, diag.Diagnostics]
 )
 
 func TestInterceptorsWhy(t *testing.T) {
@@ -342,16 +340,14 @@ func (m *mockCRUDInterceptor) Invocations() interceptorInvocations {
 		{
 			why:         AllCRUDOps,
 			when:        Before | After | OnError | Finally,
-			interceptor: m.interceptor(),
+			interceptor: m,
 		},
 	}
 }
 
-func (m *mockCRUDInterceptor) interceptor() crudInterceptor {
-	return crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-		m.called = append(m.called, opts.when)
-		return m.diags[opts.when]
-	})
+func (m *mockCRUDInterceptor) run(_ context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+	m.called = append(m.called, opts.when)
+	return m.diags[opts.when]
 }
 
 type mockInnerCRUDFunc struct {
@@ -525,16 +521,14 @@ func (m *mockCustomizeDiffInterceptor) Invocations() interceptorInvocations {
 		{
 			why:         CustomizeDiff,
 			when:        Before | After | OnError | Finally,
-			interceptor: m.interceptor(),
+			interceptor: m,
 		},
 	}
 }
 
-func (m *mockCustomizeDiffInterceptor) interceptor() customizeDiffInterceptor {
-	return customizeDiffInterceptorFunc(func(ctx context.Context, opts customizeDiffInterceptorOptions) error {
-		m.called = append(m.called, opts.when)
-		return m.errors[opts.when]
-	})
+func (m *mockCustomizeDiffInterceptor) run(_ context.Context, opts customizeDiffInterceptorOptions) error {
+	m.called = append(m.called, opts.when)
+	return m.errors[opts.when]
 }
 
 type mockInnerCustomizeDiffFunc struct {
@@ -708,16 +702,14 @@ func (m *mockImportInterceptor) Invocations() interceptorInvocations {
 		{
 			why:         Import,
 			when:        Before | After | OnError | Finally,
-			interceptor: m.interceptor(),
+			interceptor: m,
 		},
 	}
 }
 
-func (m *mockImportInterceptor) interceptor() importInterceptor {
-	return importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) error {
-		m.called = append(m.called, opts.when)
-		return m.errors[opts.when]
-	})
+func (m *mockImportInterceptor) run(_ context.Context, opts importInterceptorOptions) error {
+	m.called = append(m.called, opts.when)
+	return m.errors[opts.when]
 }
 
 type mockInnerImportFunc struct {
