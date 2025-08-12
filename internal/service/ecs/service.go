@@ -22,7 +22,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -1511,13 +1510,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			d.Set("deployment_circuit_breaker", nil)
 		}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> ff5bf3555b (WIP: Read Handler B/G)
 
 		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(ctx, service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
+<<<<<<< HEAD
 >>>>>>> 3a4db3db6c (WIP: Enable B/G graceful termination with SIGINT)
+=======
+
+>>>>>>> ff5bf3555b (WIP: Read Handler B/G)
 	}
+
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
@@ -2139,15 +2146,7 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 		output := outputRaw.(*awstypes.Service)
 
 		if *primaryTaskSet == nil {
-			tflog.Info(ctx, "UPDATING_PTS", map[string]interface{}{
-				"before": fmt.Sprintf("%p", *primaryTaskSet),
-			})
 			*primaryTaskSet = findPrimaryTaskSet(output.Deployments)
-			tflog.Info(ctx, "UPDATED_PTS", map[string]interface{}{
-				"after":            fmt.Sprintf("%p", *primaryTaskSet),
-				"deployment_count": len(output.Deployments),
-				"deployments":      output.Deployments,
-			})
 
 			if *primaryTaskSet != nil && (*primaryTaskSet).CreatedAt != nil {
 				createdAtUTC := (*primaryTaskSet).CreatedAt.UTC()
@@ -2161,7 +2160,6 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 		// For new deployments with ECS deployment controller, check the deployment status
 		if isNewECSDeployment {
-			tflog.Info(ctx, "ISNEWECSDEPLOYMENT", map[string]interface{}{})
 			if primaryDeploymentArn == nil {
 				serviceArn := aws.ToString(output.ServiceArn)
 
@@ -2183,13 +2181,6 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 		}
 
 		// For other deployment controllers or in-place updates, check based on desired count
-		tflog.Info(ctx, "STABILITY_CHECK", map[string]interface{}{
-			"deployment_count":      len(output.Deployments),
-			"desired_count":         output.DesiredCount,
-			"running_count":         output.RunningCount,
-			"primary_task_set":      *primaryTaskSet,
-			"is_new_ecs_deployment": isNewECSDeployment,
-		})
 		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
 			serviceStatus = serviceStatusStable
 		} else {
@@ -2254,10 +2245,6 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 	}
 
 	deployment := output.ServiceDeployments[0]
-	tflog.Info(ctx, "DEPLOYMENT_STATUS_CHECK", map[string]interface{}{
-		"status":     deployment.Status,
-		"deployment": deployment,
-	})
 
 	switch deployment.Status {
 	case awstypes.ServiceDeploymentStatusSuccessful:
@@ -2278,37 +2265,22 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 }
 
 func waitForCancellation(ctx context.Context, conn *ecs.Client, clusterName, serviceName string, primaryTaskSet **awstypes.Deployment, wg *sync.WaitGroup, operationTime time.Time) {
-	tflog.Info(ctx, "ENTERED WAIT FOR CANCEL", map[string]interface{}{})
 	defer wg.Done()
 	select {
 	case <-ctx.Done():
-		tflog.Info(ctx, "CANCELLATION TRIGGERED", map[string]interface{}{"PTS: ": *primaryTaskSet})
-
-		if *primaryTaskSet != nil {
-			fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment in progress (RolloutState: %s). Initiating rollback...\n",
-				string((*primaryTaskSet).RolloutState))
-		} else {
-			fmt.Fprintf(os.Stderr, "[INFO] Detected cancellation, initiating rollback for deployment\n")
-		}
-
+		log.Printf("[INFO] Detected cancellation. Initiating rollback for deployment.")
 		newContext := context.Background()
 		err := rollbackBlueGreenDeployment(newContext, conn, clusterName, serviceName, *primaryTaskSet, operationTime)
 		if err != nil {
-			// Check if this is actually a successful rollback
-			if strings.Contains(err.Error(), "rolled back by user") || strings.Contains(err.Error(), "ROLLBACK_SUCCESSFUL") {
-				fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment cancelled and rolled back successfully.\n")
-			} else {
-				fmt.Fprintf(os.Stderr, "[ERROR] Failed to rollback deployment: %s\n", err)
-			}
+			log.Printf("[ERROR] Failed to rollback deployment: %s", err)
 		} else {
-			fmt.Fprintf(os.Stderr, "[INFO] Blue/green deployment cancelled and rolled back successfully.\n")
+			log.Printf("[INFO] Blue/green deployment cancelled and rolled back successfully.")
 		}
 	}
 }
 
 func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterName, serviceName string, primaryTaskSet *awstypes.Deployment, operationTime time.Time) error {
 	if primaryTaskSet == nil {
-		tflog.Info(ctx, "DESCRIBESERVICES IN ROLLBACK", map[string]interface{}{})
 		service, err := conn.DescribeServices(ctx, &ecs.DescribeServicesInput{
 			Cluster:  aws.String(clusterName),
 			Services: []string{serviceName},
@@ -2337,8 +2309,7 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterN
 		return fmt.Errorf("no PRIMARY deployment found for service %s", serviceName)
 	}
 
-	tflog.Info(ctx, "PRIMARY DEPLOYMENT FOR ROLLBACK", map[string]interface{}{"PDARN": serviceDeploymentARN})
-	fmt.Fprintf(os.Stderr, "[INFO] Rolling back blue/green deployment. This may take a few minutes...\n")
+	log.Printf("[INFO] Rolling back blue/green deployment. This may take a few minutes...")
 
 	input := &ecs.StopServiceDeploymentInput{
 		ServiceDeploymentArn: serviceDeploymentARN,
@@ -2350,16 +2321,13 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterN
 		return err
 	}
 
-	tflog.Info(ctx, "STOP TRIGGERED", map[string]interface{}{})
 	err = waitForDeploymentTerminalStatus(ctx, conn, *serviceDeploymentARN)
 
-	// Handle successful rollback cases
-	if err != nil && (strings.Contains(err.Error(), "rolled back by user") ||
-		strings.Contains(err.Error(), "ROLLBACK_SUCCESSFUL")) {
-		return nil // Treat successful rollback as success, not error
+	if err != nil {
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, serviceDeploymentARN string) error {
@@ -2369,8 +2337,6 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, serv
 		Target:  deploymentTerminalStates,
 		Refresh: func() (interface{}, string, error) {
 			status, err := findDeploymentStatus(ctx, conn, serviceDeploymentARN)
-
-			tflog.Info(ctx, "WAIT STATUS", map[string]interface{}{"status": status})
 
 			return nil, status, err
 		},
@@ -2384,23 +2350,15 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, serv
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
 func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, sigintCancellation bool, timeout time.Duration) (*awstypes.Service, error) {
-	tflog.Info(ctx, "SIGINT CANCELLATION VALUE", map[string]interface{}{
-		"SIGINT_CANCELLATION_VALUE": sigintCancellation,
-	})
-	wg := &sync.WaitGroup{}
-
 	var primaryTaskSet **awstypes.Deployment = new(*awstypes.Deployment)
-	tflog.Info(ctx, "INIT_PTS", map[string]interface{}{
-		"primaryTaskSet_ptr": fmt.Sprintf("%p", primaryTaskSet),
-		"primaryTaskSet_val": fmt.Sprintf("%p", *primaryTaskSet),
-	})
-
+	wg := &sync.WaitGroup{}
+	
 	var cancelFunc context.CancelFunc
 	if sigintCancellation {
 		var cancelCtx context.Context
 		cancelCtx, cancelFunc = context.WithCancel(ctx)
 		wg.Add(1)
-		tflog.Info(ctx, "GO ROUTINE STARTING", map[string]interface{}{})
+
 		go waitForCancellation(cancelCtx, conn, clusterNameOrARN, serviceName, primaryTaskSet, wg, operationTime)
 	}
 
@@ -2414,7 +2372,6 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if sigintCancellation {
-		// Signal the goroutine to complete by canceling its context
 		cancelFunc()
 		wg.Wait()
 	}
@@ -2609,6 +2566,64 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
+}
+
+func flattenDeploymentConfiguration(ctx context.Context, apiObject *awstypes.DeploymentConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Strategy; v != "" && v != awstypes.DeploymentStrategy("") {
+		tfMap["strategy"] = string(v)
+	}
+
+	if v := apiObject.BakeTimeInMinutes; v != nil {
+		tfMap["bake_time_in_minutes"] = strconv.Itoa(int(*v))
+	}
+
+	if v := apiObject.LifecycleHooks; len(v) > 0 {
+		tfMap["lifecycle_hook"] = flattenLifecycleHooks(v)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
+}
+
+func flattenLifecycleHooks(apiObjects []awstypes.DeploymentLifecycleHook) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.HookTargetArn; v != nil {
+			tfMap["hook_target_arn"] = aws.ToString(v)
+		}
+
+		if v := apiObject.RoleArn; v != nil {
+			tfMap[names.AttrRoleARN] = aws.ToString(v)
+		}
+
+		if v := apiObject.LifecycleStages; len(v) > 0 {
+			stages := make([]string, 0, len(v))
+			for _, stage := range v {
+				stages = append(stages, string(stage))
+			}
+			tfMap["lifecycle_stages"] = stages
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func expandLifecycleHooks(tfList []any) []awstypes.DeploymentLifecycleHook {
