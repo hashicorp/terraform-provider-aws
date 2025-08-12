@@ -11,12 +11,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_appsync_api", sweepAPIs)
 	awsv2.Register("aws_appsync_graphql_api", sweepGraphQLAPIs, "aws_appsync_domain_name_api_association")
 	awsv2.Register("aws_appsync_domain_name", sweepDomainNames, "aws_appsync_domain_name_api_association")
 	awsv2.Register("aws_appsync_domain_name_api_association", sweepDomainNameAssociations)
+}
+
+func sweepAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListApisInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listAPIsPages(ctx, conn, &input, func(page *appsync.ListApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Apis {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAPIResource, client,
+				framework.NewAttribute("api_id", aws.ToString(v.ApiId))))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return sweepResources, nil
 }
 
 func sweepGraphQLAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
