@@ -373,6 +373,58 @@ func TestInterceptedListHandler(t *testing.T) {
 				diag.NewErrorDiagnostic("Second interceptor Before error", "An error occurred in the second interceptor Before handler"),
 			},
 		},
+
+		"Inner has warning": {
+			innerFuncDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+		},
+
+		"All have warnings": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+				After: {
+					diag.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+				},
+				Finally: {
+					diag.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+				After: {
+					diag.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
+				},
+				Finally: {
+					diag.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+				diag.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
+				diag.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+				diag.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				diag.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+			},
+		},
 	}
 
 	for name, tc := range testcases {

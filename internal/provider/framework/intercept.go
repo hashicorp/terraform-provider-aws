@@ -437,7 +437,7 @@ func listResourceConfigSchemaHasError(response *list.ListResourceSchemaResponse)
 	return response.Diagnostics.HasError()
 }
 
-func interceptedListHandler(interceptors []listInterceptorFunc[list.ListRequest, list.ListResultsStream], _ func(context.Context, list.ListRequest, *list.ListResultsStream), c awsClient) func(context.Context, list.ListRequest, *list.ListResultsStream) {
+func interceptedListHandler(interceptors []listInterceptorFunc[list.ListRequest, list.ListResultsStream], f func(context.Context, list.ListRequest, *list.ListResultsStream), c awsClient) func(context.Context, list.ListRequest, *list.ListResultsStream) {
 	return func(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 		opts := interceptorOptions[list.ListRequest, list.ListResultsStream]{
 			c:        c,
@@ -454,6 +454,30 @@ func interceptedListHandler(interceptors []listInterceptorFunc[list.ListRequest,
 			}
 			if diags.HasError() {
 				return
+			}
+		}
+
+		// Stash `stream.Results` so that inner function can be unaware of interceptors.
+		resultStream := stream.Results
+		stream.Results = nil
+
+		f(ctx, request, stream)
+
+		stream.Results = tfiter.Concat(resultStream, stream.Results)
+
+		opts.when = After
+		for v := range tfslices.BackwardValues(interceptors) {
+			diags := v(ctx, opts)
+			if len(diags) > 0 {
+				stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+			}
+		}
+
+		opts.when = Finally
+		for v := range tfslices.BackwardValues(interceptors) {
+			diags := v(ctx, opts)
+			if len(diags) > 0 {
+				stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
 			}
 		}
 	}
