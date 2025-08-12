@@ -1084,7 +1084,7 @@ func TestAccVPCNetworkInterface_instanceCustomPrimaryImport(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"user_data_replace_on_change",
 					"user_data_base64",
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1731,7 +1731,7 @@ func testAccCheckInstanceNetworkInterfaceAttachment(ctx context.Context, instanc
 			return fmt.Errorf("network interface %s not found attached to instance %s", *networkInterface.NetworkInterfaceId, *instance.InstanceId)
 		}
 
-		if int(*foundAttachment.Attachment.DeviceIndex) != expectedDeviceIndex {
+		if *foundAttachment.Attachment.DeviceIndex != int32(expectedDeviceIndex) {
 			return fmt.Errorf("network interface %s attached at device index %d, expected %d",
 				*networkInterface.NetworkInterfaceId,
 				*foundAttachment.Attachment.DeviceIndex,
