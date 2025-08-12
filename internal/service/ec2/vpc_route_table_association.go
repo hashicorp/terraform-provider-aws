@@ -27,6 +27,7 @@ import (
 // @MutableIdentity
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.RouteTableAssociation")
+// @Testing(generator=false)
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
