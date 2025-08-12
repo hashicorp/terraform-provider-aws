@@ -1178,6 +1178,18 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	c := meta.(*conns.AWSClient)
 	conn := c.EC2Client(ctx)
 
+	// Parse the resource ID to handle import scenarios
+	// The ID might be in the format "i-xxx:with-network-interfaces" during import
+	instanceID, includeNetworkInterfaces, err := parseInstanceImportID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing instance ID: %s", err)
+	}
+
+	// Update the resource ID to just the instance ID if it was an import ID
+	if d.Id() != instanceID {
+		d.SetId(instanceID)
+	}
+
 	instance, err := findInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -1284,8 +1296,16 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	// We only want to read, and populate state for the configured network_interface attachments. Otherwise, other
 	// resources have the potential to attach network interfaces to the instance, and cause a perpetual create/destroy
 	// diff. We should only read on changes configured for this specific resource because of this.
+
 	var configuredDeviceIndexes []int
-	if v, ok := d.GetOk("network_interface"); ok {
+
+	if includeNetworkInterfaces {
+		// During import with the flag, include all network interfaces
+		for _, iNi := range instance.NetworkInterfaces {
+			configuredDeviceIndexes = append(configuredDeviceIndexes, int(aws.ToInt32(iNi.Attachment.DeviceIndex)))
+		}
+	} else if v, ok := d.GetOk("network_interface"); ok {
+		// Normal operation: use configured interfaces
 		vL := v.(*schema.Set).List()
 		for _, vi := range vL {
 			mVi := vi.(map[string]any)
@@ -4089,6 +4109,34 @@ func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tag
 // isSnowballEdgeInstance returns whether or not the specified instance ID indicates an SBE instance.
 func isSnowballEdgeInstance(id string) bool {
 	return strings.Contains(id, "s.")
+}
+
+// parseInstanceImportID parses an instance import ID and returns the instance ID and whether to include network interfaces
+func parseInstanceImportID(importID string) (instanceID string, includeNetworkInterfaces bool, err error) {
+	const importIDSeparator = ":"
+	const networkInterfaceFlag = "with-network-interfaces"
+
+	parts := strings.Split(importID, importIDSeparator)
+	instanceID = parts[0]
+
+	// Validate instance ID format
+	if !regexache.MustCompile(`^i-[0-9a-f]{8,17}$`).MatchString(instanceID) {
+		return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
+	}
+
+	// Check for network interface flag
+	if len(parts) == 1 {
+		// Standard import: just instance ID
+		return instanceID, false, nil
+	} else if len(parts) == 2 {
+		if parts[1] != networkInterfaceFlag {
+			return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
+		}
+		// Import with network interfaces
+		return instanceID, true, nil
+	} else {
+		return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
+	}
 }
 
 // instanceType describes an EC2 instance type.
