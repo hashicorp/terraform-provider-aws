@@ -497,10 +497,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if isGatewayNotConnectedErr(err) {
-		var gatewayInfo *awstypes.GatewayInfo
-		gatewayInfo, err = findGatewayInfoByARN(ctx, conn, d.Id())
-
-		if err == nil {
+		if gatewayInfo, err := findGatewayInfoByARN(ctx, conn, d.Id()); err == nil {
 			d.Set(names.AttrARN, gatewayInfo.GatewayARN)
 			d.Set("ec2_instance_id", gatewayInfo.Ec2InstanceId)
 			d.Set("gateway_name", gatewayInfo.GatewayName)
