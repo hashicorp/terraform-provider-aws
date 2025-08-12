@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -29,12 +30,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_appsync_channel_namespace", name="Channel Namespace")
 // @Tags(identifierAttribute="channel_namespace_arn")
 // @Testing(importStateIdAttribute="name")
+// @Testing(importStateIdFunc=testAccChannelNamespaceImportStateID)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.ChannelNamespace")
 // @Testing(hasNoPreExistingResource=true)
 func newChannelNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -77,6 +80,18 @@ func (r *channelNamespaceResource) Schema(ctx context.Context, request resource.
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"handler_configs": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[handlerConfigsModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"on_publish":   handlerConfigBlock(ctx),
+						"on_subscribe": handlerConfigBlock(ctx),
+					},
+				},
+			},
 			"publish_auth_mode": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[authModeModel](ctx),
 				NestedObject: schema.NestedBlockObject{
@@ -95,6 +110,56 @@ func (r *channelNamespaceResource) Schema(ctx context.Context, request resource.
 						"auth_type": schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.StringEnumType[awstypes.AuthenticationType](),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func handlerConfigBlock(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[handlerConfigModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"behavior": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.HandlerBehavior](),
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"integration": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[integrationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtLeast(1),
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							"data_source_name": schema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]schema.Block{
+							"lambda_config": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaConfigModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Attributes: map[string]schema.Attribute{
+										"invoke_type": schema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.InvokeType](),
+											Optional:   true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -156,6 +221,10 @@ func (r *channelNamespaceResource) Read(ctx context.Context, request resource.Re
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
+	}
+
+	if inttypes.IsZero(output.HandlerConfigs) {
+		output.HandlerConfigs = nil
 	}
 
 	// Set attributes for import.
@@ -278,12 +347,32 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 
 type channelNamespaceResourceModel struct {
 	framework.WithRegionModel
-	ApiID               types.String                                   `tfsdk:"api_id"`
-	ChannelNamespaceARN types.String                                   `tfsdk:"channel_namespace_arn"`
-	CodeHandlers        types.String                                   `tfsdk:"code_handlers"`
-	Name                types.String                                   `tfsdk:"name"`
-	PublishAuthModes    fwtypes.ListNestedObjectValueOf[authModeModel] `tfsdk:"publish_auth_mode"`
-	SubscribeAuthModes  fwtypes.ListNestedObjectValueOf[authModeModel] `tfsdk:"subscribe_auth_mode"`
-	Tags                tftags.Map                                     `tfsdk:"tags"`
-	TagsAll             tftags.Map                                     `tfsdk:"tags_all"`
+	ApiID               types.String                                         `tfsdk:"api_id"`
+	ChannelNamespaceARN types.String                                         `tfsdk:"channel_namespace_arn"`
+	CodeHandlers        types.String                                         `tfsdk:"code_handlers"`
+	HandlerConfigs      fwtypes.ListNestedObjectValueOf[handlerConfigsModel] `tfsdk:"handler_configs"`
+	Name                types.String                                         `tfsdk:"name"`
+	PublishAuthModes    fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"publish_auth_mode"`
+	SubscribeAuthModes  fwtypes.ListNestedObjectValueOf[authModeModel]       `tfsdk:"subscribe_auth_mode"`
+	Tags                tftags.Map                                           `tfsdk:"tags"`
+	TagsAll             tftags.Map                                           `tfsdk:"tags_all"`
+}
+
+type handlerConfigsModel struct {
+	OnPublish   fwtypes.ListNestedObjectValueOf[handlerConfigModel] `tfsdk:"on_publish"`
+	OnSubscribe fwtypes.ListNestedObjectValueOf[handlerConfigModel] `tfsdk:"on_subscribe"`
+}
+
+type handlerConfigModel struct {
+	Behavior    fwtypes.StringEnum[awstypes.HandlerBehavior]      `tfsdk:"behavior"`
+	Integration fwtypes.ListNestedObjectValueOf[integrationModel] `tfsdk:"integration"`
+}
+
+type integrationModel struct {
+	DataSourceName types.String                                       `tfsdk:"data_source_name"`
+	LambdaConfig   fwtypes.ListNestedObjectValueOf[lambdaConfigModel] `tfsdk:"lambda_config"`
+}
+
+type lambdaConfigModel struct {
+	InvokeType fwtypes.StringEnum[awstypes.InvokeType] `tfsdk:"invoke_type"`
 }
