@@ -135,7 +135,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.61.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/iam v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.28.0
