@@ -276,7 +276,7 @@ func (s interceptorInvocations) resourceList() []listInterceptorFunc[list.ListRe
 }
 
 type listResourceSchemaInterceptor interface {
-	listResourceConfigSchema(context.Context, interceptorOptions[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse])
+	schema(context.Context, interceptorOptions[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse])
 }
 
 // resourceListResourceConfigSchema returns a slice of interceptors that run on resource ListResourceConfigSchema.
@@ -285,7 +285,7 @@ func (s interceptorInvocations) resourceListResourceConfigSchema() []interceptor
 		_, ok := e.(listResourceSchemaInterceptor)
 		return ok
 	}), func(e any) interceptorFunc[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse] {
-		return e.(listResourceSchemaInterceptor).listResourceConfigSchema
+		return e.(listResourceSchemaInterceptor).schema
 	})
 }
 
