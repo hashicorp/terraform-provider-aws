@@ -68,7 +68,7 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 
 func testAccLocalDiskDataSourceConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccGatewayConfig_typeFileS3(rName),
+		testAccGatewayConfig_typeFileS3(rName, rName),
 		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone

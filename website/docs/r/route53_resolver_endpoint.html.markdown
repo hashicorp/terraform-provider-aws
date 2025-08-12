@@ -46,8 +46,7 @@ This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `direction` - (Required) Direction of DNS queries to or from the Route 53 Resolver endpoint.
-Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
-or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC).
+Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC), `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to your network or another VPC) or `INBOUND_DELEGATION` (resolver delegates queries to Route 53 private hosted zones from your network).
 * `ip_address` - (Required) Subnets and IP addresses in your VPC that you want DNS queries to pass through on the way from your VPCs
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `name` - (Optional) Friendly name of the Route 53 Resolver endpoint.
