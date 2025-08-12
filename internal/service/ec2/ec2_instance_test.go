@@ -3252,7 +3252,7 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change", names.AttrForceDestroy},
 			},
 			{
 				// Test new import with network interfaces (should include network_interface in state)
@@ -3260,7 +3260,7 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3298,7 +3298,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3332,7 +3332,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3368,7 +3368,7 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 			{
 				Config: testAccInstanceConfig_addSecondaryNetworkInterfaceAfter(rName),
