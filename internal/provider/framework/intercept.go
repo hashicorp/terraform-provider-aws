@@ -9,9 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -255,8 +258,35 @@ func (s interceptorInvocations) resourceImportState() []interceptorFunc[resource
 	})
 }
 
-// Only generate strings for use in tests
-//go:generate stringer -type=when -output=when_string_test.go
+type listInterceptorFunc[Request, Response any] func(context.Context, interceptorOptions[Request, Response]) diag.Diagnostics
+
+type listResourceListInterceptor interface {
+	list(context.Context, interceptorOptions[list.ListRequest, list.ListResultsStream]) diag.Diagnostics
+}
+
+// resourceList returns a slice of interceptors that run on resource List.
+func (s interceptorInvocations) resourceList() []listInterceptorFunc[list.ListRequest, list.ListResultsStream] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(listResourceListInterceptor)
+		return ok
+	}), func(e any) listInterceptorFunc[list.ListRequest, list.ListResultsStream] {
+		return e.(listResourceListInterceptor).list
+	})
+}
+
+type listResourceSchemaInterceptor interface {
+	listResourceConfigSchema(context.Context, interceptorOptions[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse])
+}
+
+// resourceListResourceConfigSchema returns a slice of interceptors that run on resource ListResourceConfigSchema.
+func (s interceptorInvocations) resourceListResourceConfigSchema() []interceptorFunc[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse] {
+	return tfslices.ApplyToAll(tfslices.Filter(s, func(e any) bool {
+		_, ok := e.(listResourceSchemaInterceptor)
+		return ok
+	}), func(e any) interceptorFunc[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse] {
+		return e.(listResourceSchemaInterceptor).listResourceConfigSchema
+	})
+}
 
 // when represents the point in the CRUD request lifecycle that an interceptor is run.
 // Multiple values can be ORed together.
@@ -268,6 +298,9 @@ const (
 	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
 	Finally                  // Interceptor is invoked after After or OnError
 )
+
+// Only generate strings for use in tests
+//go:generate stringer -type=when -output=when_string_test.go
 
 // interceptedRequest represents a Plugin Framework request type that can be intercepted.
 type interceptedRequest interface {
@@ -283,7 +316,8 @@ type interceptedRequest interface {
 		resource.UpdateRequest |
 		resource.DeleteRequest |
 		resource.ModifyPlanRequest |
-		resource.ImportStateRequest
+		resource.ImportStateRequest |
+		list.ListResourceSchemaRequest
 }
 
 // interceptedResponse represents a Plugin Framework response type that can be intercepted.
@@ -300,7 +334,8 @@ type interceptedResponse interface {
 		resource.UpdateResponse |
 		resource.DeleteResponse |
 		resource.ModifyPlanResponse |
-		resource.ImportStateResponse
+		resource.ImportStateResponse |
+		list.ListResourceSchemaResponse
 }
 
 type innerFunc[Request, Response any] func(ctx context.Context, request Request, response *Response)
@@ -396,4 +431,30 @@ func resourceModifyPlanHasError(response *resource.ModifyPlanResponse) bool {
 
 func resourceImportStateHasError(response *resource.ImportStateResponse) bool {
 	return response.Diagnostics.HasError()
+}
+
+func listResourceConfigSchemaHasError(response *list.ListResourceSchemaResponse) bool {
+	return response.Diagnostics.HasError()
+}
+
+func interceptedListHandler(interceptors []listInterceptorFunc[list.ListRequest, list.ListResultsStream], _ func(context.Context, list.ListRequest, *list.ListResultsStream), c awsClient) func(context.Context, list.ListRequest, *list.ListResultsStream) {
+	return func(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+		opts := interceptorOptions[list.ListRequest, list.ListResultsStream]{
+			c:        c,
+			request:  &request,
+			response: stream,
+		}
+
+		// Before interceptors are run first to last.
+		opts.when = Before
+		for v := range slices.Values(interceptors) {
+			diags := v(ctx, opts)
+			if len(diags) > 0 {
+				stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+			}
+			if diags.HasError() {
+				return
+			}
+		}
+	}
 }
