@@ -354,6 +354,34 @@ func TestInterceptedListHandler(t *testing.T) {
 			},
 		},
 
+		"First has Before warning": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+			},
+		},
+
+		"Second has Before warning": {
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+			},
+		},
+
 		"First has Before warning Second has Before error": {
 			firstInterceptorDiags: map[when]diag.Diagnostics{
 				Before: {
@@ -374,6 +402,18 @@ func TestInterceptedListHandler(t *testing.T) {
 			},
 		},
 
+		"Inner has error": {
+			innerFuncDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+		},
+
 		"Inner has warning": {
 			innerFuncDiags: diag.Diagnostics{
 				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
@@ -383,6 +423,24 @@ func TestInterceptedListHandler(t *testing.T) {
 			expectedInnerCalls:  1,
 			expectedDiags: diag.Diagnostics{
 				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
+			},
+		},
+
+		"Inner has error First has Before warning": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
 			},
 		},
 
@@ -421,6 +479,46 @@ func TestInterceptedListHandler(t *testing.T) {
 				diag.NewWarningDiagnostic("Inner function warning", "A warning occurred in the inner function"),
 				diag.NewWarningDiagnostic("Second interceptor After warning", "A warning occurred in the second interceptor After handler"),
 				diag.NewWarningDiagnostic("First interceptor After warning", "A warning occurred in the first interceptor After handler"),
+				diag.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				diag.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+			},
+		},
+
+		"Inner has error Handlers have warnings": {
+			firstInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				},
+				OnError: {
+					diag.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
+				},
+				Finally: {
+					diag.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
+				},
+			},
+			secondInterceptorDiags: map[when]diag.Diagnostics{
+				Before: {
+					diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				},
+				OnError: {
+					diag.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
+				},
+				Finally: {
+					diag.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
+				},
+			},
+			innerFuncDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+			},
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedDiags: diag.Diagnostics{
+				diag.NewWarningDiagnostic("First interceptor Before warning", "A warning occurred in the first interceptor Before handler"),
+				diag.NewWarningDiagnostic("Second interceptor Before warning", "A warning occurred in the second interceptor Before handler"),
+				diag.NewErrorDiagnostic("Inner function error", "An error occurred in the inner function"),
+				diag.NewWarningDiagnostic("Second interceptor OnError warning", "A warning occurred in the second interceptor OnError handler"),
+				diag.NewWarningDiagnostic("First interceptor OnError warning", "A warning occurred in the first interceptor OnError handler"),
 				diag.NewWarningDiagnostic("Second interceptor Finally warning", "A warning occurred in the second interceptor Finally handler"),
 				diag.NewWarningDiagnostic("First interceptor Finally warning", "A warning occurred in the first interceptor Finally handler"),
 			},
@@ -514,5 +612,7 @@ func (m *mockInnerListFunc) Call(ctx context.Context, request list.ListRequest, 
 	m.count++
 	if len(m.diags) > 0 {
 		response.Results = list.ListResultsStreamDiagnostics(m.diags)
+	} else {
+		response.Results = list.NoListResults
 	}
 }
