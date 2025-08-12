@@ -169,3 +169,53 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 		})
 	}
 }
+
+func TestAssertSingleValueResult(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		input         []int
+		expectedValue int
+		expectedError error
+	}{
+		"empty slice": {
+			input:         []int{},
+			expectedError: NewEmptyResultError(nil),
+		},
+		"single element": {
+			input:         []int{42},
+			expectedValue: 42,
+		},
+		"multiple elements": {
+			input:         []int{42, 43},
+			expectedError: NewTooManyResultsError(2, nil),
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := AssertSingleValueResult(testCase.input)
+
+			if testCase.expectedError != nil {
+				if err == nil {
+					t.Errorf("expected error: %v, got nil", testCase.expectedError)
+				} else if err.Error() != testCase.expectedError.Error() {
+					t.Errorf("expected error: %v, got %v", testCase.expectedError, err)
+				}
+			} else if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+
+			if result == nil {
+				if testCase.expectedError == nil {
+					t.Errorf("expected %d, got nil", testCase.expectedValue)
+				}
+				return
+			} else if *result != testCase.expectedValue {
+				t.Errorf("expected %d, got %d", testCase.expectedValue, *result)
+			}
+		})
+	}
+}
