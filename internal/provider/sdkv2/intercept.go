@@ -58,10 +58,6 @@ type interceptor1[D, E any] interface {
 	run(context.Context, interceptorOptions[D]) E
 }
 
-type interceptor2[D, R, E any] interface {
-	run(context.Context, interceptorOptions[D]) (R, E)
-}
-
 type (
 	// crudInterceptor is functionality invoked during a CRUD request lifecycle.
 	crudInterceptor = interceptor1[schemaResourceData, diag.Diagnostics]
@@ -73,13 +69,7 @@ type (
 
 type interceptorFunc1[D, E any] func(context.Context, interceptorOptions[D]) E
 
-func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E { //nolint:unused // used via crudInterceptor/customizeDiffInterceptor
-	return f(ctx, opts)
-}
-
-type interceptorFunc2[D, R, E any] func(context.Context, interceptorOptions[D]) (R, E)
-
-func (f interceptorFunc2[D, R, E]) run(ctx context.Context, opts interceptorOptions[D]) (R, E) { //nolint:unused // used via importInterceptor
+func (f interceptorFunc1[D, E]) run(ctx context.Context, opts interceptorOptions[D]) E { //nolint:unused // used via crudInterceptor/customizeDiffInterceptor/importInterceptor
 	return f(ctx, opts)
 }
 
@@ -94,12 +84,6 @@ type typedInterceptorInvocation[D, E any] struct {
 	when        when
 	why         why
 	interceptor interceptor1[D, E]
-}
-
-type typedInterceptor2Invocation[D, R, E any] struct {
-	when        when
-	why         why
-	interceptor interceptor2[D, R, E]
 }
 
 type (
