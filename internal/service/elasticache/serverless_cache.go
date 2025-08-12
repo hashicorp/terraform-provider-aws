@@ -204,7 +204,10 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 									"minimum": schema.Int64Attribute{
 										Optional: true,
 										Validators: []validator.Int64{
-											int64validator.OneOf([]int64{0, int64validator.Between(1, 5000)}...)
+											int64validator.Any(
+												int64validator.OneOf(0),
+												int64validator.Between(1, 5000),
+											),
 										},
 									},
 									names.AttrUnit: schema.StringAttribute{
@@ -230,8 +233,10 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 									"minimum": schema.Int64Attribute{
 										Optional: true,
 										Validators: []validator.Int64{
-											int64validator.OneOf([]int64{0, int64validator.Between(1000, 15000000)}...)
-										},
+											int64validator.Any(
+												int64validator.OneOf(0),
+												int64validator.Between(1000, 15000000),
+											)},
 									},
 								},
 							},
