@@ -56,6 +56,52 @@ func TestAccCognitoIDPLogDeliveryConfiguration_basic(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPLogDeliveryConfiguration_upgradeFromV6_8_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_log_delivery_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		CheckDestroy: testAccCheckLogDeliveryConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.8.0",
+					},
+				},
+				Config: testAccLogDeliveryConfigurationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttrPair("aws_cognito_user_pool.test", names.AttrID, resourceName, names.AttrUserPoolID),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.event_source", "userNotification"),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.0.log_level", "ERROR"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccLogDeliveryConfigurationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogDeliveryConfigurationExists(ctx, resourceName, &logDeliveryConfiguration),
+					resource.TestCheckResourceAttrPair("aws_cognito_user_pool.test", names.AttrID, resourceName, names.AttrUserPoolID),
+					resource.TestCheckResourceAttr(resourceName, "log_configurations.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]string{
+						"event_source": "userNotification",
+						"log_level":    "ERROR",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPLogDeliveryConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var logDeliveryConfiguration awstypes.LogDeliveryConfigurationType
