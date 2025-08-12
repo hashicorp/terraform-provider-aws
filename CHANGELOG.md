@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
 * resource/aws_sagemaker_user_profile: Fix incomplete regex for `user_profile_name` ([#43807](https://github.com/hashicorp/terraform-provider-aws/issues/43807))
 * resource/aws_servicequotas_service_quota: Add validation, during `create`, to check if new value is less than current value of quota ([#43545](https://github.com/hashicorp/terraform-provider-aws/issues/43545))
+* resource/aws_storagegateway_gateway: Handle `InvalidGatewayRequestException: The specified gateway is not connected` errors during Read by using the [`ListGateways` API](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_ListGateways.html) to return minimal information about a disconnected gateway. This functionality requires the `storagegateway:ListGateways` IAM permission ([#43819](https://github.com/hashicorp/terraform-provider-aws/issues/43819))
 
 ## 6.8.0 (August 7, 2025)
 
