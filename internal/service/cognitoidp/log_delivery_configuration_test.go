@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -257,9 +258,9 @@ func TestAccCognitoIDPLogDeliveryConfiguration_firehose(t *testing.T) {
 						"log_level":    "ERROR",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "log_configurations.*", map[string]*regexp.Regexp{
-						"event_source":                        regexp.MustCompile(`^userAuthEvents$`),
-						"log_level":                           regexp.MustCompile(`^INFO$`),
-						"firehose_configuration.0.stream_arn": regexp.MustCompile(fmt.Sprintf(`arn:%s:firehose:%s:\d{12}:deliverystream/%s`, acctest.Partition(), acctest.Region(), rName)),
+						"event_source":                        regexache.MustCompile(`^userAuthEvents$`),
+						"log_level":                           regexache.MustCompile(`^INFO$`),
+						"firehose_configuration.0.stream_arn": regexache.MustCompile(fmt.Sprintf(`arn:%s:firehose:%s:\d{12}:deliverystream/%s`, acctest.Partition(), acctest.Region(), rName)),
 					}),
 				),
 			},
@@ -344,7 +345,7 @@ data "aws_partition" "current" {}
 `
 }
 
-func testAccLogDeliveryConfigurationConfig_baseCloudwatchLogs(rName string) string {
+func testAccLogDeliveryConfigurationConfig_baseCloudWatchLogs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -452,7 +453,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccLogDeliveryConfigurationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLogDeliveryConfigurationConfig_base(rName),
-		testAccLogDeliveryConfigurationConfig_baseCloudwatchLogs(rName),
+		testAccLogDeliveryConfigurationConfig_baseCloudWatchLogs(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name           = %[1]q
@@ -478,7 +479,7 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 func testAccLogDeliveryConfigurationConfig_firehose(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLogDeliveryConfigurationConfig_base(rName),
-		testAccLogDeliveryConfigurationConfig_baseCloudwatchLogs(rName),
+		testAccLogDeliveryConfigurationConfig_baseCloudWatchLogs(rName),
 		testAccLogDeliveryConfigurationConfig_baseFirehose(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -490,12 +491,12 @@ resource "aws_cognito_log_delivery_configuration" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 
   log_configurations {
-   event_source = "userNotification"
-   log_level    = "ERROR"
+    event_source = "userNotification"
+    log_level    = "ERROR"
 
-   cloud_watch_logs_configuration {
-     log_group_arn = aws_cloudwatch_log_group.test.arn
-   }
+    cloud_watch_logs_configuration {
+      log_group_arn = aws_cloudwatch_log_group.test.arn
+    }
   }
 
   log_configurations {
@@ -514,7 +515,7 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrder(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLogDeliveryConfigurationConfig_base(rName),
-		testAccLogDeliveryConfigurationConfig_baseCloudwatchLogs(rName),
+		testAccLogDeliveryConfigurationConfig_baseCloudWatchLogs(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name           = %[1]q
@@ -548,7 +549,7 @@ resource "aws_cognito_log_delivery_configuration" "test" {
 func testAccLogDeliveryConfigurationConfig_multipleLogConfigurationsOrderUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLogDeliveryConfigurationConfig_base(rName),
-		testAccLogDeliveryConfigurationConfig_baseCloudwatchLogs(rName),
+		testAccLogDeliveryConfigurationConfig_baseCloudWatchLogs(rName),
 		fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name           = %[1]q

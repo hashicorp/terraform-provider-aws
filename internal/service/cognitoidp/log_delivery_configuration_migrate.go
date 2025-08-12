@@ -5,6 +5,7 @@ package cognitoidp
 
 import (
 	"context"
+
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
