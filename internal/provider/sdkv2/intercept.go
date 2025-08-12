@@ -302,11 +302,10 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 
 		why := Import
 
-		// Before interceptors are run first to last.
-		forward := make([]importInterceptorInvocation, 0)
+		var interceptors []importInterceptorInvocation
 		for _, v := range interceptorInvocations.why(why) {
 			if interceptor, ok := v.interceptor.(importInterceptor); ok {
-				forward = append(forward, importInterceptorInvocation{
+				interceptors = append(interceptors, importInterceptorInvocation{
 					when:        v.when,
 					why:         v.why,
 					interceptor: interceptor,
@@ -314,8 +313,9 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 			}
 		}
 
+		// Before interceptors are run first to last.
 		when := Before
-		for _, v := range forward {
+		for v := range slices.Values(interceptors) {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
 					c:    meta.(awsClient),
@@ -330,8 +330,6 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 			}
 		}
 
-		// All other interceptors are run last to first.
-		reverse := tfslices.Reverse(forward)
 		var errs []error
 
 		r, err := f(ctx, d, meta)
@@ -342,7 +340,8 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 			when = After
 		}
 
-		for _, v := range reverse {
+		// All other interceptors are run last to first.
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
 					c:    meta.(awsClient),
@@ -357,7 +356,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		}
 
 		when = Finally
-		for _, v := range reverse {
+		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
 					c:    meta.(awsClient),
