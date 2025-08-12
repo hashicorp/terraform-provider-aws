@@ -60,18 +60,18 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	ctx := t.Context()
 	testCases := []struct {
 		Name        string
-		F           func() (any, error)
+		F           func(context.Context) (any, error)
 		ExpectError bool
 	}{
 		{
 			Name: "no error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, nil
 			},
 		},
 		{
 			Name: "non-retryable other error",
-			F: func() (any, error) {
+			F: func(context.Context) (any, error) {
 				return nil, errors.New("TestCode")
 			},
 			ExpectError: true,
