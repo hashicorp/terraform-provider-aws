@@ -17,6 +17,7 @@ import (
 type (
 	crudInterceptorFunc          = interceptorFunc1[schemaResourceData, diag.Diagnostics]
 	customizeDiffInterceptorFunc = interceptorFunc1[*schema.ResourceDiff, error]
+	importInterceptorFunc        = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error]
 )
 
 func TestInterceptorsWhy(t *testing.T) {
@@ -550,4 +551,187 @@ func newMockInnerCustomizeDiffFunc(err error) mockInnerCustomizeDiffFunc {
 func (m *mockInnerCustomizeDiffFunc) Call(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	m.count++
 	return m.err
+}
+
+func TestInterceptedImportHandler(t *testing.T) {
+	t.Parallel()
+
+	client := mockClient{
+		accountID: "123456789012",
+		region:    "us-west-2", //lintignore:AWSAT003
+	}
+
+	contextFunc := func(ctx context.Context, _ getAttributeFunc, meta any) (context.Context, error) {
+		return ctx, nil
+	}
+
+	testcases := map[string]struct {
+		firstInterceptorErrors  map[when]error
+		secondInterceptorErrors map[when]error
+		innerFuncError          error
+		expectedFirstCalls      []when
+		expectedSecondCalls     []when
+		expectedInnerCalls      int
+		expectedError           error
+	}{
+		"First has Before error": {
+			firstInterceptorErrors: map[when]error{
+				Before: errors.New("First interceptor Before error"),
+			},
+			expectedFirstCalls: []when{Before},
+			expectedInnerCalls: 0,
+			expectedError:      errors.New("First interceptor Before error"),
+		},
+
+		"Second has Before error": {
+			secondInterceptorErrors: map[when]error{
+				Before: errors.New("Second interceptor Before error"),
+			},
+			expectedFirstCalls:  []when{Before},
+			expectedSecondCalls: []when{Before},
+			expectedInnerCalls:  0,
+			expectedError:       errors.New("Second interceptor Before error"),
+		},
+
+		"Inner has error": {
+			innerFuncError:      errors.New("Inner function error"),
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedError: errors.Join(
+				errors.New("Inner function error"),
+			),
+		},
+
+		"All have errors": {
+			firstInterceptorErrors: map[when]error{
+				OnError: errors.New("First interceptor OnError error"),
+				Finally: errors.New("First interceptor Finally error"),
+			},
+			secondInterceptorErrors: map[when]error{
+				OnError: errors.New("Second interceptor OnError error"),
+				Finally: errors.New("Second interceptor Finally error"),
+			},
+			innerFuncError:      errors.New("Inner function error"),
+			expectedFirstCalls:  []when{Before, OnError, Finally},
+			expectedSecondCalls: []when{Before, OnError, Finally},
+			expectedInnerCalls:  1,
+			expectedError: errors.Join(
+				errors.New("Inner function error"),
+				errors.New("Second interceptor OnError error"),
+				errors.New("First interceptor OnError error"),
+				errors.New("Second interceptor Finally error"),
+				errors.New("First interceptor Finally error"),
+			),
+		},
+
+		"Handlers have errors": {
+			firstInterceptorErrors: map[when]error{
+				After:   errors.New("First interceptor After error"),
+				Finally: errors.New("First interceptor Finally error"),
+			},
+			secondInterceptorErrors: map[when]error{
+				After:   errors.New("Second interceptor After error"),
+				Finally: errors.New("Second interceptor Finally error"),
+			},
+			expectedFirstCalls:  []when{Before, After, Finally},
+			expectedSecondCalls: []when{Before, After, Finally},
+			expectedInnerCalls:  1,
+			expectedError: errors.Join(
+				errors.New("Second interceptor After error"),
+				errors.New("First interceptor After error"),
+				errors.New("Second interceptor Finally error"),
+				errors.New("First interceptor Finally error"),
+			),
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			first := newMockImportInterceptor(tc.firstInterceptorErrors)
+			second := newMockImportInterceptor(tc.secondInterceptorErrors)
+			interceptors := append(
+				first.Invocations(),
+				second.Invocations()...,
+			)
+
+			f := newMockInnerImportFunc(tc.innerFuncError)
+
+			handler := interceptedImportHandler(contextFunc, interceptors, f.Call)
+
+			ctx := t.Context()
+			_, err := handler(ctx, nil, client)
+
+			if diff := cmp.Diff(err, tc.expectedError, cmp.Comparer(func(x, y error) bool {
+				return x.Error() == y.Error()
+			})); diff != "" {
+				t.Errorf("unexpected error difference: %s", diff)
+			}
+
+			if diff := cmp.Diff(first.called, tc.expectedFirstCalls); diff != "" {
+				t.Errorf("unexpected first interceptor calls difference: %s", diff)
+			}
+			if diff := cmp.Diff(second.called, tc.expectedSecondCalls); diff != "" {
+				t.Errorf("unexpected second interceptor calls difference: %s", diff)
+			}
+			if tc.expectedInnerCalls == 0 {
+				if f.count != 0 {
+					t.Errorf("expected inner function to not be called, got %d", f.count)
+				}
+			} else {
+				if f.count != tc.expectedInnerCalls {
+					t.Errorf("expected inner function to be called %d times, got %d", tc.expectedInnerCalls, f.count)
+				}
+			}
+		})
+	}
+}
+
+type mockImportInterceptor struct {
+	errors map[when]error
+	called []when
+}
+
+func newMockImportInterceptor(errors map[when]error) *mockImportInterceptor {
+	if errors == nil {
+		errors = make(map[when]error)
+	}
+	return &mockImportInterceptor{
+		errors: errors,
+	}
+}
+
+func (m *mockImportInterceptor) Invocations() interceptorInvocations {
+	return interceptorInvocations{
+		{
+			why:         Import,
+			when:        Before | After | OnError | Finally,
+			interceptor: m.interceptor(),
+		},
+	}
+}
+
+func (m *mockImportInterceptor) interceptor() importInterceptor {
+	return importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+		m.called = append(m.called, opts.when)
+		return nil, m.errors[opts.when]
+	})
+}
+
+type mockInnerImportFunc struct {
+	err   error
+	count int
+}
+
+func newMockInnerImportFunc(err error) mockInnerImportFunc {
+	return mockInnerImportFunc{
+		err: err,
+	}
+}
+
+func (m *mockInnerImportFunc) Call(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	m.count++
+	return nil, m.err
 }
