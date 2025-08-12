@@ -20,7 +20,7 @@ func TestAppliedToEach(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"three elements": {
-			input:    []string{"one", "two", "3", "a0"},
+			input:    []string{"one", "two", "3"},
 			expected: []string{"ONE", "TWO", "3"},
 		},
 		"one element": {
