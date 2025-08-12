@@ -1069,7 +1069,7 @@ func TestAccVPCNetworkInterface_instanceCustomPrimaryImport(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckInstanceExists(ctx, instanceResourceName, &instance),
-					testAccCheckInstanceNetworkInterfaceAttachment(ctx, &instance, &networkInterface, 0),
+					testAccCheckInstanceNetworkInterfaceAttachment(&instance, &networkInterface, 0),
 					resource.TestCheckResourceAttrPair(instanceResourceName, "primary_network_interface_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.#", "1"),
 					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.0.device_index", "0"),
@@ -1260,6 +1260,40 @@ func testAccCheckENIDifferent(iface1 *awstypes.NetworkInterface, iface2 *awstype
 		if aws.ToString(iface1.NetworkInterfaceId) == aws.ToString(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("interface %s should have been replaced, have %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
+		return nil
+	}
+}
+
+// testAccCheckInstanceNetworkInterfaceAttachment verifies that a network interface is attached to an instance at the specified device index
+func testAccCheckInstanceNetworkInterfaceAttachment(instance *awstypes.Instance, networkInterface *awstypes.NetworkInterface, expectedDeviceIndex int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if instance == nil {
+			return fmt.Errorf("instance is nil")
+		}
+		if networkInterface == nil {
+			return fmt.Errorf("network interface is nil")
+		}
+
+		// Find the network interface attachment on the instance
+		var foundAttachment *awstypes.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if *ni.NetworkInterfaceId == *networkInterface.NetworkInterfaceId {
+				foundAttachment = &ni
+				break
+			}
+		}
+
+		if foundAttachment == nil {
+			return fmt.Errorf("network interface %s not found attached to instance %s", *networkInterface.NetworkInterfaceId, *instance.InstanceId)
+		}
+
+		if *foundAttachment.Attachment.DeviceIndex != int32(expectedDeviceIndex) {
+			return fmt.Errorf("network interface %s attached at device index %d, expected %d",
+				*networkInterface.NetworkInterfaceId,
+				*foundAttachment.Attachment.DeviceIndex,
+				expectedDeviceIndex)
+		}
+
 		return nil
 	}
 }
@@ -1706,40 +1740,6 @@ resource "aws_network_interface" "test" {
   private_ip_list         = ["%[1]s"]
 }
 `, strings.Join(privateIPs, `", "`)))
-}
-
-// testAccCheckInstanceNetworkInterfaceAttachment verifies that a network interface is attached to an instance at the specified device index
-func testAccCheckInstanceNetworkInterfaceAttachment(ctx context.Context, instance *awstypes.Instance, networkInterface *awstypes.NetworkInterface, expectedDeviceIndex int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if instance == nil {
-			return fmt.Errorf("instance is nil")
-		}
-		if networkInterface == nil {
-			return fmt.Errorf("network interface is nil")
-		}
-
-		// Find the network interface attachment on the instance
-		var foundAttachment *awstypes.InstanceNetworkInterface
-		for _, ni := range instance.NetworkInterfaces {
-			if *ni.NetworkInterfaceId == *networkInterface.NetworkInterfaceId {
-				foundAttachment = &ni
-				break
-			}
-		}
-
-		if foundAttachment == nil {
-			return fmt.Errorf("network interface %s not found attached to instance %s", *networkInterface.NetworkInterfaceId, *instance.InstanceId)
-		}
-
-		if *foundAttachment.Attachment.DeviceIndex != int32(expectedDeviceIndex) {
-			return fmt.Errorf("network interface %s attached at device index %d, expected %d",
-				*networkInterface.NetworkInterfaceId,
-				*foundAttachment.Attachment.DeviceIndex,
-				expectedDeviceIndex)
-		}
-
-		return nil
-	}
 }
 
 // testAccVPCNetworkInterfaceConfig_instanceCustomPrimaryImport creates an instance with a custom primary network interface
