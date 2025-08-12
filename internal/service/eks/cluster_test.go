@@ -1454,7 +1454,7 @@ func TestAccEKSCluster_deletionProtection(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(true)),
 				},
 			},
 			{
@@ -1474,7 +1474,7 @@ func TestAccEKSCluster_deletionProtection(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(false)),
 				},
 			},
 		},

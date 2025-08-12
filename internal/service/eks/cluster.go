@@ -772,21 +772,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("deletion_protection") {
-		input := eks.UpdateClusterConfigInput{
-			DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-			Name:               aws.String(d.Id()),
-		}
-
-		output, err := conn.UpdateClusterConfig(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) deletion protection: %s", d.Id(), err)
-		}
-
-		updateID := aws.ToString(output.Update.Id)
-
-		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) deletion proctection update (%s): %s", d.Id(), updateID, err)
+		if err := updateClusterDeletionProtection(ctx, conn, d.Id(), d.Get("deletion_protection").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -859,7 +846,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			config.PublicAccessCidrs = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
-		if err := updateVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateClusterVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -870,7 +857,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			SubnetIds: flex.ExpandStringValueSet(d.Get("vpc_config.0.subnet_ids").(*schema.Set)),
 		}
 
-		if err := updateVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateClusterVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -880,7 +867,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			SecurityGroupIds: flex.ExpandStringValueSet(d.Get("vpc_config.0.security_group_ids").(*schema.Set)),
 		}
 
-		if err := updateVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateClusterVPCConfig(ctx, conn, d.Id(), &config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -993,7 +980,28 @@ func findCluster(ctx context.Context, conn *eks.Client, input *eks.DescribeClust
 	return output.Cluster, nil
 }
 
-func updateVPCConfig(ctx context.Context, conn *eks.Client, name string, vpcConfig *types.VpcConfigRequest, timeout time.Duration) error {
+func updateClusterDeletionProtection(ctx context.Context, conn *eks.Client, name string, deletionProtection bool, timeout time.Duration) error {
+	input := eks.UpdateClusterConfigInput{
+		DeletionProtection: aws.Bool(deletionProtection),
+		Name:               aws.String(name),
+	}
+
+	output, err := conn.UpdateClusterConfig(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("updating EKS Cluster (%s) deletion protection (%t): %s", name, deletionProtection, err)
+	}
+
+	updateID := aws.ToString(output.Update.Id)
+
+	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
+		return fmt.Errorf("waiting for EKS Cluster (%s) deletion protection update (%s): %s", name, updateID, err)
+	}
+
+	return nil
+}
+
+func updateClusterVPCConfig(ctx context.Context, conn *eks.Client, name string, vpcConfig *types.VpcConfigRequest, timeout time.Duration) error {
 	input := eks.UpdateClusterConfigInput{
 		Name:               aws.String(name),
 		ResourcesVpcConfig: vpcConfig,
