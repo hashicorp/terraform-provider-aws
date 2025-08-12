@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_rule: Add resource identity support ([#43758](https://github.com/hashicorp/terraform-provider-aws/issues/43758))
 * resource/aws_cloudwatch_metric_alarm: Add resource identity support ([#43759](https://github.com/hashicorp/terraform-provider-aws/issues/43759))
 * resource/aws_dynamodb_table: Add `replica.deletion_protection_enabled` argument ([#43240](https://github.com/hashicorp/terraform-provider-aws/issues/43240))
+* resource/aws_lambda_function: Add resource identity support ([#43821](https://github.com/hashicorp/terraform-provider-aws/issues/43821))
 
 BUG FIXES:
 
