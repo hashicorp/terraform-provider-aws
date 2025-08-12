@@ -145,7 +145,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iot v1.68.0
 	github.com/aws/aws-sdk-go-v2/service/ivs v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.20.0
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.41.0
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.58.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.21.0
