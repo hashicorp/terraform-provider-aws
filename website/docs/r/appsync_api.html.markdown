@@ -1,31 +1,40 @@
 ---
 subcategory: "AppSync"
 layout: "aws"
-page_title: "AWS: aws_appsync_event_api"
+page_title: "AWS: aws_appsync_api"
 description: |-
   Manages an AWS AppSync Event API.
 ---
 
-# Resource: aws_appsync_event_api
+# Resource: aws_appsync_api
 
-Manages an AWS AppSync Event API. Event APIs enable real-time subscriptions and event-driven communication in AppSync applications.
+Manages an [AWS AppSync Event API](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-concepts.html#API). Event APIs enable real-time subscriptions and event-driven communication in AppSync applications.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_appsync_event_api" "example" {
+resource "aws_appsync_api" "example" {
   name = "example-event-api"
-}
-```
 
-### With Owner Contact
+  event_config {
+    auth_provider {
+      auth_type = "API_KEY"
+    }
 
-```terraform
-resource "aws_appsync_event_api" "example" {
-  name          = "example-event-api"
-  owner_contact = "admin@example.com"
+    connection_auth_mode {
+      auth_type = "API_KEY"
+    }
+
+    default_publish_auth_mode {
+      auth_type = "API_KEY"
+    }
+
+    default_subscribe_auth_mode {
+      auth_type = "API_KEY"
+    }
+  }
 }
 ```
 
@@ -36,7 +45,7 @@ resource "aws_cognito_user_pool" "example" {
   name = "example-user-pool"
 }
 
-resource "aws_appsync_event_api" "example" {
+resource "aws_appsync_api" "example" {
   name = "example-event-api"
 
   event_config {
@@ -47,6 +56,18 @@ resource "aws_appsync_event_api" "example" {
         aws_region   = data.aws_region.current.name
       }
     }
+
+    connection_auth_mode {
+      auth_type = "AMAZON_COGNITO_USER_POOLS"
+    }
+
+    default_publish_auth_mode {
+      auth_type = "AMAZON_COGNITO_USER_POOLS"
+    }
+
+    default_subscribe_auth_mode {
+      auth_type = "AMAZON_COGNITO_USER_POOLS"
+    }
   }
 }
 
@@ -56,32 +77,7 @@ data "aws_region" "current" {}
 ### With Lambda Authorizer
 
 ```terraform
-resource "aws_iam_role" "lambda" {
-  name = "example-lambda-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_lambda_function" "example" {
-  filename      = "lambda_authorizer.zip"
-  function_name = "example-authorizer"
-  role          = aws_iam_role.lambda.arn
-  handler       = "index.handler"
-  runtime       = "nodejs18.x"
-}
-
-resource "aws_appsync_event_api" "example" {
+resource "aws_appsync_api" "example" {
   name = "example-event-api"
 
   event_config {
@@ -92,80 +88,17 @@ resource "aws_appsync_event_api" "example" {
         authorizer_result_ttl_in_seconds = 300
       }
     }
-  }
-}
-```
 
-### With OpenID Connect
-
-```terraform
-resource "aws_appsync_event_api" "example" {
-  name = "example-event-api"
-
-  event_config {
-    auth_provider {
-      auth_type = "OPENID_CONNECT"
-      openid_connect_config {
-        issuer    = "https://example.com"
-        client_id = "example-client-id"
-      }
-    }
-  }
-}
-```
-
-### With Authentication Modes
-
-```terraform
-resource "aws_appsync_event_api" "example" {
-  name = "example-event-api"
-
-  event_config {
     connection_auth_mode {
-      auth_type = "API_KEY"
+      auth_type = "AWS_LAMBDA"
     }
+
     default_publish_auth_mode {
-      auth_type = "API_KEY"
+      auth_type = "AWS_LAMBDA"
     }
+
     default_subscribe_auth_mode {
-      auth_type = "API_KEY"
-    }
-  }
-}
-```
-
-### With CloudWatch Logging
-
-```terraform
-resource "aws_iam_role" "cloudwatch" {
-  name = "example-cloudwatch-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "appsync.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "cloudwatch" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AppSyncPushToCloudWatchLogs"
-  role       = aws_iam_role.cloudwatch.name
-}
-
-resource "aws_appsync_event_api" "example" {
-  name = "example-event-api"
-
-  event_config {
-    log_config {
-      cloudwatch_logs_role_arn = aws_iam_role.cloudwatch.arn
-      log_level                = "ERROR"
+      auth_type = "AWS_LAMBDA"
     }
   }
 }
@@ -188,10 +121,10 @@ The following arguments are optional:
 
 The `event_config` block supports the following:
 
-* `auth_provider` - (Optional) List of authentication providers. See [Auth Providers](#auth-providers) below.
-* `connection_auth_mode` - (Optional) List of authentication modes for connections. See [Auth Modes](#auth-modes) below.
-* `default_publish_auth_mode` - (Optional) List of default authentication modes for publishing. See [Auth Modes](#auth-modes) below.
-* `default_subscribe_auth_mode` - (Optional) List of default authentication modes for subscribing. See [Auth Modes](#auth-modes) below.
+* `auth_provider` - (Required) List of authentication providers. See [Auth Providers](#auth-providers) below.
+* `connection_auth_mode` - (Required) List of authentication modes for connections. See [Auth Modes](#auth-modes) below.
+* `default_publish_auth_mode` - (Required) List of default authentication modes for publishing. See [Auth Modes](#auth-modes) below.
+* `default_subscribe_auth_mode` - (Required) List of default authentication modes for subscribing. See [Auth Modes](#auth-modes) below.
 * `log_config` - (Optional) Logging configuration. See [Log Config](#log-config) below.
 
 ### Auth Providers
@@ -207,26 +140,26 @@ The `auth_provider` block supports the following:
 
 The `cognito_config` block supports the following:
 
-* `user_pool_id` - (Required) ID of the Cognito user pool.
-* `aws_region` - (Required) AWS region where the user pool is located.
 * `app_id_client_regex` - (Optional) Regular expression for matching the client ID.
+* `aws_region` - (Required) AWS region where the user pool is located.
+* `user_pool_id` - (Required) ID of the Cognito user pool.
 
 ### Lambda Authorizer Config
 
 The `lambda_authorizer_config` block supports the following:
 
-* `authorizer_uri` - (Required) URI of the Lambda function for authorization.
 * `authorizer_result_ttl_in_seconds` - (Optional) TTL in seconds for the authorization result cache.
+* `authorizer_uri` - (Required) URI of the Lambda function for authorization.
 * `identity_validation_expression` - (Optional) Regular expression for identity validation.
 
 ### OpenID Connect Config
 
 The `openid_connect_config` block supports the following:
 
-* `issuer` - (Required) Issuer URL for the OpenID Connect provider.
-* `client_id` - (Optional) Client ID for the OpenID Connect provider.
 * `auth_ttl` - (Optional) TTL in seconds for the authentication token.
+* `client_id` - (Optional) Client ID for the OpenID Connect provider.
 * `iat_ttl` - (Optional) TTL in seconds for the issued at time.
+* `issuer` - (Required) Issuer URL for the OpenID Connect provider.
 
 ### Auth Modes
 
@@ -257,7 +190,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_appsync_event_api.example
+  to = aws_appsync_api.example
   id = "example-api-id"
 }
 ```
@@ -265,5 +198,5 @@ import {
 Using `terraform import`, import AppSync Event API using the `api_id`. For example:
 
 ```console
-% terraform import aws_appsync_event_api.example example-api-id
+% terraform import aws_appsync_api.example example-api-id
 ```
