@@ -4128,15 +4128,18 @@ func parseInstanceImportID(importID string) (instanceID string, includeNetworkIn
 	if len(parts) == 1 {
 		// Standard import: just instance ID
 		return instanceID, false, nil
-	} else if len(parts) == 2 {
-		if parts[1] != networkInterfaceFlag {
-			return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
-		}
-		// Import with network interfaces
-		return instanceID, true, nil
-	} else {
+	}
+
+	if len(parts) != 2 {
 		return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
 	}
+
+	if parts[1] != networkInterfaceFlag {
+		return "", false, fmt.Errorf("unexpected format for ID (%s), expected instance-id or instance-id:with-network-interfaces", importID)
+	}
+
+	// Import with network interfaces
+	return instanceID, true, nil
 }
 
 // instanceType describes an EC2 instance type.
