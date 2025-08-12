@@ -193,7 +193,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.50.0
