@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_sns_topic_data_protection_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
 * resource/aws_sns_topic_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
 * resource/aws_sns_topic_subscription: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
+* resource/aws_subnet: Add resource identity support ([#43833](https://github.com/hashicorp/terraform-provider-aws/issues/43833))
 
 BUG FIXES:
 
