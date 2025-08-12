@@ -47,12 +47,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_sns_platform_application",
 			Name:     "Platform Application",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(
-				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
-			),
-			Import: inttypes.SDKv2Import{
-				WrappedImport: true,
-			},
 		},
 		{
 			Factory:  resourceSMSPreferences,
