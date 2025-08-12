@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	erschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -363,4 +364,21 @@ func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Contex
 // resourceImportRegionNoDefault sets the value of the top-level `region` attribute during import.
 func resourceImportRegionNoDefault() resourceImportStateInterceptor {
 	return &resourceImportRegionNoDefaultInterceptor{}
+}
+
+type listResourceInjectRegionAttributeInterceptor struct{}
+
+func (r listResourceInjectRegionAttributeInterceptor) schema(ctx context.Context, opts interceptorOptions[list.ListResourceSchemaRequest, list.ListResourceSchemaResponse]) {
+	switch response, when := opts.response, opts.when; when {
+	case After:
+		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
+			// Inject a top-level "region" attribute.
+			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+		}
+	}
+}
+
+// listResourceInjectRegionAttribute injects a "region" attribute into a resource's List schema.
+func listResourceInjectRegionAttribute() listResourceSchemaInterceptor {
+	return &listResourceInjectRegionAttributeInterceptor{}
 }
