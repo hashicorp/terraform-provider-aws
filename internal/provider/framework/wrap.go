@@ -5,7 +5,6 @@ package framework
 
 import (
 	"context"
-	"iter"
 
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -862,12 +861,8 @@ func (w *wrappedListResource) Configure(ctx context.Context, request resource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-func nullIter[E any]() iter.Seq[E] {
-	return func(yield func(E) bool) {}
-}
-
 func (w *wrappedListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	stream.Results = nullIter[list.ListResult]()
+	stream.Results = tfiter.Null[list.ListResult]()
 
 	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
 	if len(diags) > 0 {
