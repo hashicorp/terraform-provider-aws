@@ -10,6 +10,7 @@ BUG FIXES:
 
 * data-source/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
 * resource/aws_cognito_risk_configuration: Make `account_takeover_risk_configuration.notify_configuration` optional ([#33624](https://github.com/hashicorp/terraform-provider-aws/issues/33624))
+* resource/aws_ecs_service: Fix tagging failure after upgrading to v6 provider ([#43816](https://github.com/hashicorp/terraform-provider-aws/issues/43816))
 * resource/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
 * resource/aws_sagemaker_user_profile: Fix incomplete regex for `user_profile_name` ([#43807](https://github.com/hashicorp/terraform-provider-aws/issues/43807))
 * resource/aws_servicequotas_service_quota: Add validation, during `create`, to check if new value is less than current value of quota ([#43545](https://github.com/hashicorp/terraform-provider-aws/issues/43545))
