@@ -17,7 +17,7 @@ import (
 type (
 	crudInterceptorFunc          = interceptorFunc1[schemaResourceData, diag.Diagnostics]
 	customizeDiffInterceptorFunc = interceptorFunc1[*schema.ResourceDiff, error]
-	importInterceptorFunc        = interceptorFunc2[*schema.ResourceData, []*schema.ResourceData, error]
+	importInterceptorFunc        = interceptorFunc1[*schema.ResourceData, error]
 )
 
 func TestInterceptorsWhy(t *testing.T) {
@@ -714,9 +714,9 @@ func (m *mockImportInterceptor) Invocations() interceptorInvocations {
 }
 
 func (m *mockImportInterceptor) interceptor() importInterceptor {
-	return importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) ([]*schema.ResourceData, error) {
+	return importInterceptorFunc(func(ctx context.Context, opts importInterceptorOptions) error {
 		m.called = append(m.called, opts.when)
-		return nil, m.errors[opts.when]
+		return m.errors[opts.when]
 	})
 }
 

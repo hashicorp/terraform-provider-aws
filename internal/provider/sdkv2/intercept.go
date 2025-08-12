@@ -68,7 +68,7 @@ type (
 	// customizeDiffInterceptor is functionality invoked during a CustomizeDiff request lifecycle.
 	customizeDiffInterceptor = interceptor1[*schema.ResourceDiff, error]
 	// importInterceptor is functionality invoked during an Import request lifecycle.
-	importInterceptor = interceptor2[*schema.ResourceData, []*schema.ResourceData, error]
+	importInterceptor = interceptor1[*schema.ResourceData, error]
 )
 
 type interceptorFunc1[D, E any] func(context.Context, interceptorOptions[D]) E
@@ -105,7 +105,7 @@ type typedInterceptor2Invocation[D, R, E any] struct {
 type (
 	crudInterceptorInvocation          = typedInterceptorInvocation[schemaResourceData, diag.Diagnostics]
 	customizeDiffInterceptorInvocation = typedInterceptorInvocation[*schema.ResourceDiff, error]
-	importInterceptorInvocation        = typedInterceptor2Invocation[*schema.ResourceData, []*schema.ResourceData, error]
+	importInterceptorInvocation        = typedInterceptorInvocation[*schema.ResourceData, error]
 )
 
 // Only generate strings for use in tests
@@ -324,7 +324,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		for v := range slices.Values(interceptors) {
 			if v.when&opts.when != 0 {
 				// Short circuit if any Before interceptor errors.
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					return nil, err
 				}
 			}
@@ -343,7 +343,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		// All other interceptors are run last to first.
 		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&opts.when != 0 {
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}
@@ -352,7 +352,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		opts.when = Finally
 		for v := range tfslices.BackwardValues(interceptors) {
 			if v.when&opts.when != 0 {
-				if _, err := v.interceptor.run(ctx, opts); err != nil {
+				if err := v.interceptor.run(ctx, opts); err != nil {
 					errs = append(errs, err)
 				}
 			}
