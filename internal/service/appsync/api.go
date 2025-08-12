@@ -49,7 +49,6 @@ func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 
 type apiResource struct {
 	framework.ResourceWithModel[apiResourceModel]
-	framework.WithTimeouts
 }
 
 func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

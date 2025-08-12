@@ -8,6 +8,7 @@ var (
 	ResourceAPI                      = newAPIResource
 	ResourceAPICache                 = resourceAPICache
 	ResourceAPIKey                   = resourceAPIKey
+	ResourceChannelNamespace         = newChannelNamespaceResource
 	ResourceDataSource               = resourceDataSource
 	ResourceDomainName               = resourceDomainName
 	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
@@ -21,6 +22,7 @@ var (
 	FindAPIByID                          = findAPIByID
 	FindAPICacheByID                     = findAPICacheByID
 	FindAPIKeyByTwoPartKey               = findAPIKeyByTwoPartKey
+	FindChannelNamespaceByTwoPartKey     = findChannelNamespaceByTwoPartKey
 	FindDataSourceByTwoPartKey           = findDataSourceByTwoPartKey
 	FindDomainNameAPIAssociationByID     = findDomainNameAPIAssociationByID
 	FindDomainNameByID                   = findDomainNameByID
