@@ -509,23 +509,43 @@ func interceptedListHandler(interceptors []listInterceptorFunc[list.ListRequest,
 		stream.Results = nil
 
 		f(ctx, request, stream)
+		innerResultStream := stream.Results
 
-		stream.Results = tfiter.Concat(resultStream, stream.Results)
-
-		opts.when = After
-		for v := range tfslices.BackwardValues(interceptors) {
-			diags := v(ctx, opts)
-			if len(diags) > 0 {
-				stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+		stream.Results = tfiter.Concat(resultStream, func(yield func(list.ListResult) bool) {
+			var hasError bool
+			for v := range innerResultStream {
+				if v.Diagnostics.HasError() {
+					hasError = true
+				}
+				if !yield(v) {
+					return
+				}
 			}
-		}
 
-		opts.when = Finally
-		for v := range tfslices.BackwardValues(interceptors) {
-			diags := v(ctx, opts)
-			if len(diags) > 0 {
-				stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+			// All other interceptors are run last to first.
+			if hasError {
+				opts.when = OnError
+			} else {
+				opts.when = After
 			}
-		}
+			for v := range tfslices.BackwardValues(interceptors) {
+				diags := v(ctx, opts)
+				if len(diags) > 0 {
+					if !yield(list.ListResult{Diagnostics: diags}) {
+						return
+					}
+				}
+			}
+
+			opts.when = Finally
+			for v := range tfslices.BackwardValues(interceptors) {
+				diags := v(ctx, opts)
+				if len(diags) > 0 {
+					if !yield(list.ListResult{Diagnostics: diags}) {
+						return
+					}
+				}
+			}
+		})
 	}
 }
