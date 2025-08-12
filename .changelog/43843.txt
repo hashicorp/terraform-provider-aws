@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route_table_association: Add resource identity support
+```

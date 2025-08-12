@@ -23,15 +23,16 @@ import (
 )
 
 // @SDKResource("aws_route_table_association", name="Route Table Association")
+// @IdentityAttribute("id")
+// @MutableIdentity
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.RouteTableAssociation")
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceRouteTableAssociationRead,
 		UpdateWithoutTimeout: resourceRouteTableAssociationUpdate,
 		DeleteWithoutTimeout: resourceRouteTableAssociationDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRouteTableAssociationImport,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),

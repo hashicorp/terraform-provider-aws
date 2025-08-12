@@ -44,7 +44,6 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -111,7 +110,6 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccRouteTabAssocImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -225,22 +223,6 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *a
 		*v = *association
 
 		return nil
-	}
-}
-
-func testAccRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("not found: %s", resourceName)
-		}
-		var target string
-		if rs.Primary.Attributes[names.AttrSubnetID] != "" {
-			target = rs.Primary.Attributes[names.AttrSubnetID]
-		} else if rs.Primary.Attributes["gateway_id"] != "" {
-			target = rs.Primary.Attributes["gateway_id"]
-		}
-		return fmt.Sprintf("%s/%s", target, rs.Primary.Attributes["route_table_id"]), nil
 	}
 }
 
