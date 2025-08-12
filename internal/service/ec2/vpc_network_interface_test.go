@@ -1065,15 +1065,11 @@ func TestAccVPCNetworkInterface_instanceCustomPrimaryImport(t *testing.T) {
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Step 1: Create instance with custom primary network interface
-				// This configuration should work for both creation and import
 				Config: testAccVPCNetworkInterfaceConfig_instanceCustomPrimaryImport(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &networkInterface),
 					testAccCheckInstanceExists(ctx, instanceResourceName, &instance),
-					// Verify the custom network interface is attached as primary (device_index 0)
 					testAccCheckInstanceNetworkInterfaceAttachment(ctx, &instance, &networkInterface, 0),
-					// Verify instance configuration reflects the custom primary interface
 					resource.TestCheckResourceAttrPair(instanceResourceName, "primary_network_interface_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.#", "1"),
 					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.0.device_index", "0"),
@@ -1081,15 +1077,14 @@ func TestAccVPCNetworkInterface_instanceCustomPrimaryImport(t *testing.T) {
 				),
 			},
 			{
-				// Step 2: Import the instance using the same configuration
-				// This should work but currently fails because the provider doesn't
-				// properly handle custom primary interfaces during import
 				ResourceName:      instanceResourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceImportStateIDFunc(instanceResourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"user_data_replace_on_change",
 					"user_data_base64",
+					"force_destroy",
 				},
 			},
 		},
