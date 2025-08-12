@@ -93,6 +93,8 @@ func (r *apiResource) Schema(ctx context.Context, request resource.SchemaRequest
 			"event_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[eventConfigModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{

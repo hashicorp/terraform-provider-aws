@@ -108,11 +108,11 @@ resource "aws_appsync_api" "example" {
 
 The following arguments are required:
 
+* `event_config` - (Required) Configuration for the Event API. See [Event Config](#event-config) below.
 * `name` - (Required) Name of the Event API.
 
 The following arguments are optional:
 
-* `event_config` - (Optional) Configuration for the Event API. See [Event Config](#event-config) below.
 * `owner_contact` - (Optional) Contact information for the owner of the Event API.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

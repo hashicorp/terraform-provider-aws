@@ -21,10 +21,6 @@ import (
 
 func TestAccAppSyncAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var api awstypes.Api
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
@@ -74,10 +70,6 @@ func TestAccAppSyncAPI_basic(t *testing.T) {
 
 func TestAccAppSyncAPI_comprehensive(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var api awstypes.Api
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
@@ -148,10 +140,6 @@ func TestAccAppSyncAPI_comprehensive(t *testing.T) {
 
 func TestAccAppSyncAPI_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var api awstypes.Api
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -199,10 +187,6 @@ func TestAccAppSyncAPI_update(t *testing.T) {
 }
 func TestAccAppSyncAPI_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var api awstypes.Api
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_api.test"
