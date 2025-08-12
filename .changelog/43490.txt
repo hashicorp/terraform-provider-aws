@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kinesisanalyticsv2_application: Fix application_restore_type defaulting to unwanted values when toggling snapshots
+```
