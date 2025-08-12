@@ -318,7 +318,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		for _, v := range forward {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -345,7 +345,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
@@ -360,7 +360,7 @@ func interceptedImportHandler(bootstrapContext contextFunc, interceptorInvocatio
 		for _, v := range reverse {
 			if v.when&when != 0 {
 				opts := importInterceptorOptions{
-					c:    meta.(*conns.AWSClient),
+					c:    meta.(awsClient),
 					d:    d,
 					when: when,
 					why:  why,
