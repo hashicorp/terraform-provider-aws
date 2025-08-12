@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,6 +72,13 @@ type ServicePackageFrameworkResource struct {
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   FrameworkImport
+}
+
+type ServicePackageListResource struct {
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
