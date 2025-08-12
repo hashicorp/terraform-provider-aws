@@ -1,15 +1,16 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_lambda_function" "test" {
-{{- template "region" }}
   filename      = "test-fixtures/lambdatest.zip"
   function_name = var.rName
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
   runtime       = "nodejs20.x"
-
-{{- template "tags" . }}
 }
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+}
 
 resource "aws_iam_role" "test" {
   name = var.rName
@@ -83,3 +84,19 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.8.0"
+    }
+  }
+}
+
+provider "aws" {}
