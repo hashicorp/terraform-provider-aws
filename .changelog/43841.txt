@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_cluster: This fixes a validation issue related to minimum values for data_storage and ecpu_per_second. Issue # [41962](https://github.com/hashicorp/terraform-provider-aws/issues/41962).
+```
