@@ -8,8 +8,10 @@ var (
 	ResourceAgentRuntime             = newResourceAgentRuntime
 	ResourceOAuth2CredentialProvider = newResourceOAuth2CredentialProvider
 	ResourceGateway                  = newResourceGateway
+	ResourceGatewayTarget            = newResourceGatewayTarget
 
 	FindAgentRuntimeByID               = findAgentRuntimeByID
 	FindOAuth2CredentialProviderByName = findOAuth2CredentialProviderByName
 	FindGatewayByID                    = findGatewayByID
+	FindGatewayTargetByID              = findGatewayTargetByID
 )

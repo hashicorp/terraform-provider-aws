@@ -58,7 +58,7 @@ const (
 )
 
 type resourceOauth2CredentialProvider struct {
-	framework.ResourceWithModel[ResourceOauth2CredentialProviderModel]
+	framework.ResourceWithModel[resourceOauth2CredentialProviderModel]
 	framework.WithTimeouts
 }
 
@@ -247,7 +247,7 @@ func (r *resourceOauth2CredentialProvider) Schema(ctx context.Context, req resou
 
 func (r resourceOauth2CredentialProvider) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.Plan.Raw.IsNull() {
-		var plan ResourceOauth2CredentialProviderModel
+		var plan resourceOauth2CredentialProviderModel
 		smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 		if resp.Diagnostics.HasError() {
 			return
@@ -271,7 +271,7 @@ func (r resourceOauth2CredentialProvider) ModifyPlan(ctx context.Context, req re
 func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan ResourceOauth2CredentialProviderModel
+	var plan resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -279,7 +279,7 @@ func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, req resou
 
 	// Extract credentials from the raw configuration because write‑only
 	// attributes are not present in plan or state.
-	var configModel ResourceOauth2CredentialProviderModel
+	var configModel resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &configModel))
 	if resp.Diagnostics.HasError() {
 		return
@@ -337,7 +337,7 @@ func (r *resourceOauth2CredentialProvider) Create(ctx context.Context, req resou
 func (r *resourceOauth2CredentialProvider) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state ResourceOauth2CredentialProviderModel
+	var state resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -381,7 +381,7 @@ func (r *resourceOauth2CredentialProvider) Read(ctx context.Context, req resourc
 func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var plan, state ResourceOauth2CredentialProviderModel
+	var plan, state resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -390,7 +390,7 @@ func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, req resou
 
 	// Extract credentials from the raw configuration because write‑only
 	// attributes are not present in plan or state.
-	var configModel ResourceOauth2CredentialProviderModel
+	var configModel resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &configModel))
 	if resp.Diagnostics.HasError() {
 		return
@@ -453,7 +453,7 @@ func (r *resourceOauth2CredentialProvider) Update(ctx context.Context, req resou
 func (r *resourceOauth2CredentialProvider) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
-	var state ResourceOauth2CredentialProviderModel
+	var state resourceOauth2CredentialProviderModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -522,7 +522,7 @@ func oauth2CredsFrom(ctx context.Context) (oauth2Creds, bool) {
 	return c, ok
 }
 
-type ResourceOauth2CredentialProviderModel struct {
+type resourceOauth2CredentialProviderModel struct {
 	framework.WithRegionModel
 	ARN                  types.String                                                    `tfsdk:"arn"`
 	ClientSecretArn      types.String                                                    `tfsdk:"client_secret_arn" autoflex:"-"`
@@ -541,7 +541,7 @@ type oauth2ProviderConfigInputModel struct {
 	Slack      fwtypes.ListNestedObjectValueOf[oauth2ProviderConfigModel] `tfsdk:"slack"`
 }
 
-func (m *ResourceOauth2CredentialProviderModel) VendorValue(ctx context.Context) (string, diag.Diagnostics) {
+func (m *resourceOauth2CredentialProviderModel) VendorValue(ctx context.Context) (string, diag.Diagnostics) {
 	var vendor string
 
 	if m.Oauth2ProviderConfig.IsNull() || m.Oauth2ProviderConfig.IsUnknown() {
@@ -570,7 +570,7 @@ func (m *ResourceOauth2CredentialProviderModel) VendorValue(ctx context.Context)
 	return vendor, nil
 }
 
-func (m *ResourceOauth2CredentialProviderModel) CredsValue(ctx context.Context) (oauth2Creds, diag.Diagnostics) {
+func (m *resourceOauth2CredentialProviderModel) CredsValue(ctx context.Context) (oauth2Creds, diag.Diagnostics) {
 	if m.Oauth2ProviderConfig.IsNull() || m.Oauth2ProviderConfig.IsUnknown() {
 		return oauth2Creds{}, nil
 	}

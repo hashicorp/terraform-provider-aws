@@ -153,7 +153,7 @@ func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRe
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"custom_jwt_authorizer": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[CustomJWTAuthorizerConfigurationModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -163,14 +163,12 @@ func (r *resourceAgentRuntime) Schema(ctx context.Context, req resource.SchemaRe
 										Required: true,
 									},
 									"allowed_audience": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
 									},
 									"allowed_clients": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
 									},
 								},
 							},
@@ -306,13 +304,13 @@ func (r *resourceAgentRuntime) Update(ctx context.Context, req resource.UpdateRe
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitAgentRuntimeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitAgentRuntimeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
 	}
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
@@ -510,7 +508,7 @@ type ContainerConfigurationModel struct {
 }
 
 type authorizerConfigurationModel struct {
-	CustomJWTAuthorizer fwtypes.ListNestedObjectValueOf[CustomJWTAuthorizerConfigurationModel] `tfsdk:"custom_jwt_authorizer"`
+	CustomJWTAuthorizer fwtypes.ListNestedObjectValueOf[customJWTAuthorizerConfigurationModel] `tfsdk:"custom_jwt_authorizer"`
 }
 
 var (
@@ -521,7 +519,7 @@ var (
 func (m *authorizerConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
 	switch t := v.(type) {
 	case awstypes.AuthorizerConfigurationMemberCustomJWTAuthorizer:
-		var model CustomJWTAuthorizerConfigurationModel
+		var model customJWTAuthorizerConfigurationModel
 		d := flex.Flatten(ctx, t.Value, &model)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -553,7 +551,7 @@ func (m authorizerConfigurationModel) Expand(ctx context.Context) (result any, d
 	return nil, diags
 }
 
-type CustomJWTAuthorizerConfigurationModel struct {
+type customJWTAuthorizerConfigurationModel struct {
 	DiscoveryUrl    types.String        `tfsdk:"discovery_url"`
 	AllowedAudience fwtypes.SetOfString `tfsdk:"allowed_audience"`
 	AllowedClients  fwtypes.SetOfString `tfsdk:"allowed_clients"`
