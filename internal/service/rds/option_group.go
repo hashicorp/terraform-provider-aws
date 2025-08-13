@@ -229,7 +229,7 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.OptionsToRemove = optionsToRemove
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 				return conn.ModifyOptionGroup(ctx, input)
 			}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 

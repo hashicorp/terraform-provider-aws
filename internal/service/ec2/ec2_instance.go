@@ -3241,7 +3241,7 @@ func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool,
 	if retry {
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.StartInstances(ctx, &ec2.StartInstancesInput{
 					InstanceIds: []string{id},
 				})
