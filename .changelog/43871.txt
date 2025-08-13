@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Out-of-Band changes to `service_connect_configuration` are now detected in `terraform plan`
+```
