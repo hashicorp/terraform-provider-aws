@@ -85,7 +85,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -351,7 +351,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
-	d.Set("deletion_protection", cluster.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}

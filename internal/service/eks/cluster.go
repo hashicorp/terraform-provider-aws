@@ -168,7 +168,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -534,7 +534,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.ComputeConfig = expandComputeConfigRequest(v.([]any))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
@@ -652,7 +652,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
-	d.Set("deletion_protection", cluster.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, cluster.DeletionProtection)
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
@@ -771,8 +771,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if d.HasChange("deletion_protection") {
-		if err := updateClusterDeletionProtection(ctx, conn, d.Id(), d.Get("deletion_protection").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if d.HasChange(names.AttrDeletionProtection) {
+		if err := updateClusterDeletionProtection(ctx, conn, d.Id(), d.Get(names.AttrDeletionProtection).(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

@@ -62,7 +62,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "cluster_id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^https://`)),
@@ -1454,7 +1454,7 @@ func TestAccEKSCluster_deletionProtection(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDeletionProtection), knownvalue.Bool(true)),
 				},
 			},
 			{
@@ -1474,7 +1474,7 @@ func TestAccEKSCluster_deletionProtection(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDeletionProtection), knownvalue.Bool(false)),
 				},
 			},
 		},
