@@ -35,6 +35,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(dataSourceResourceName, "cluster_id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeletionProtection, dataSourceResourceName, names.AttrDeletionProtection),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(dataSourceResourceName, "enabled_cluster_log_types.*", "api"),
 					resource.TestCheckTypeSetElemAttr(dataSourceResourceName, "enabled_cluster_log_types.*", "audit"),

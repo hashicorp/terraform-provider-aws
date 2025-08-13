@@ -24,7 +24,6 @@ import (
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,13 +48,7 @@ func resourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID:          quicksightschema.AWSAccountIDSchema(),
 				"column_groups":                 quicksightschema.DataSetColumnGroupsSchema(),
 				"column_level_permission_rules": quicksightschema.DataSetColumnLevelPermissionRulesSchema(),
 				"data_set_id": {

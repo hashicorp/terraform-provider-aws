@@ -418,7 +418,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	*/
 
 	var validationException, internalServerException = &awstypes.ValidationException{}, &awstypes.InternalServerException{}
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEnvironment(ctx, input)
 	}, validationException.ErrorCode(), internalServerException.ErrorCode())
 

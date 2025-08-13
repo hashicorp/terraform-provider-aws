@@ -94,7 +94,6 @@ func resourceRegexPatternSet() *schema.Resource {
 				"regular_expression": {
 					Type:     schema.TypeSet,
 					Optional: true,
-					MaxItems: 10,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"regex_string": {
