@@ -284,6 +284,11 @@ func resourceTable() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"on_demand_throughput"},
 			},
+			"global_table_witness_region_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"replica": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -826,7 +831,11 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	if v := d.Get("replica").(*schema.Set); v.Len() > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), v.List(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		var global_table_witness_region_name = ""
+		if v, ok := d.GetOk("global_table_witness_region_name"); ok {
+			global_table_witness_region_name = v.(string)
+		}
+		if err := createReplicas(ctx, conn, d.Id(), v.List(), true, d.Timeout(schema.TimeoutCreate), global_table_witness_region_name); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
@@ -1288,7 +1297,11 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
-		if err := deleteReplicas(ctx, conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete)); err != nil {
+		var global_table_witness_region_name = ""
+		if v, ok := d.GetOk("global_table_witness_region_name"); ok {
+			global_table_witness_region_name = v.(string)
+		}
+		if err := deleteReplicas(ctx, conn, d.Id(), replicas, d.Timeout(schema.TimeoutDelete), global_table_witness_region_name); err != nil {
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
@@ -1366,7 +1379,7 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.Client, id string, s
 	return nil
 }
 
-func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, create bool, timeout time.Duration) error {
+func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, create bool, timeout time.Duration, gt_witness_reg_name string) error {
 	// Duplicating this for MRSC Adoption. If using MRSC and CreateReplicationGroupMemberAction list isn't initiated for at least 2 replicas
 	// then the update table action will fail with
 	// "Unsupported table replica count for global tables with MultiRegionConsistency set to STRONG"
@@ -1385,16 +1398,21 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 		}
 	}
+	fmt.Printf("[DEBUG] global table witness region: %v and numReplicas (%v) and numReplicasMRSC (%v)\n", gt_witness_reg_name, numReplicas, numReplicasMRSC)
 
 	if numReplicasMRSC > 0 {
+		MRSCErrorMsg := "creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas, or 1 replica and 1 witness region."
 		if numReplicasMRSC > 0 && numReplicasMRSC != numReplicas {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires all replicas to use 'consistency_mode' set to 'STRONG' ")
+			return fmt.Errorf("%s", MRSCErrorMsg)
 		}
-		if numReplicasMRSC == 1 {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas. ")
+		if numReplicasMRSC == 1 && gt_witness_reg_name == "" {
+			return fmt.Errorf("%s Only MRSC Replica count of 1 was provided but no Witness region was provided.", MRSCErrorMsg)
+		}
+		if numReplicasMRSC == 2 && numReplicasMRSC == numReplicas && gt_witness_reg_name != "" {
+			return fmt.Errorf("%s MRSC Replica count of 2 was provided and a Witness region was also provided.", MRSCErrorMsg)
 		}
 		if numReplicasMRSC > 2 {
-			return fmt.Errorf("creating replicas: Using MultiRegionStrongConsistency supports at most 2 replicas. ")
+			return fmt.Errorf("%s Too many Replicas were provided %v", MRSCErrorMsg, numReplicasMRSC)
 		}
 
 		mrscInput = awstypes.MultiRegionConsistencyStrong
@@ -1425,10 +1443,21 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			})
 		}
 
+		var witnessCreate []awstypes.GlobalTableWitnessGroupUpdate
+		if gt_witness_reg_name != "" {
+			var witnessInput = &awstypes.CreateGlobalTableWitnessGroupMemberAction{
+				RegionName: aws.String(gt_witness_reg_name),
+			}
+			witnessCreate = append(witnessCreate, awstypes.GlobalTableWitnessGroupUpdate{
+				Create: witnessInput,
+			})
+		}
+
 		input := &dynamodb.UpdateTableInput{
-			TableName:              aws.String(tableName),
-			ReplicaUpdates:         replicaCreates,
-			MultiRegionConsistency: mrscInput,
+			TableName:                 aws.String(tableName),
+			ReplicaUpdates:            replicaCreates,
+			GlobalTableWitnessUpdates: witnessCreate,
+			MultiRegionConsistency:    mrscInput,
 		}
 
 		err := retry.RetryContext(ctx, max(replicaUpdateTimeout, timeout), func() *retry.RetryError {
@@ -1558,7 +1587,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
 
 			if create && tfawserr.ErrMessageContains(err, errCodeValidationException, "already exist") {
-				return createReplicas(ctx, conn, tableName, tfList, false, timeout)
+				return createReplicas(ctx, conn, tableName, tfList, false, timeout, gt_witness_reg_name)
 			}
 
 			if err != nil && !tfawserr.ErrMessageContains(err, errCodeValidationException, "no actions specified") {
@@ -1772,19 +1801,19 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 	}
 
 	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
-		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate), ""); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toRemove) > 0 {
-		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate), ""); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate), ""); err != nil {
 			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
@@ -1965,10 +1994,11 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 	return err
 }
 
-func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, timeout time.Duration) error {
+func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, timeout time.Duration, gt_witness_reg_name string) error {
 	var g multierror.Group
 
 	var replicaDeletes []awstypes.ReplicationGroupUpdate
+	var witnessDeletes []awstypes.GlobalTableWitnessGroupUpdate
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
 
@@ -1996,14 +2026,22 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 		}
 	}
-
+	if gt_witness_reg_name != "" {
+		witnessDeletes = append(witnessDeletes, awstypes.GlobalTableWitnessGroupUpdate{
+			Delete: &awstypes.DeleteGlobalTableWitnessGroupMemberAction{
+				RegionName: aws.String(gt_witness_reg_name),
+			},
+		})
+	}
 	// We built an array of MultiRegionStrongConsistency replicas that need deletion.
 	// These need to all happen concurrently
 	if len(replicaDeletes) > 0 {
 		input := &dynamodb.UpdateTableInput{
-			TableName:      aws.String(tableName),
-			ReplicaUpdates: replicaDeletes,
+			TableName:                 aws.String(tableName),
+			ReplicaUpdates:            replicaDeletes,
+			GlobalTableWitnessUpdates: witnessDeletes,
 		}
+		fmt.Printf("[DEBUG] Deleting Replicas: %+v", input)
 		err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			notFoundRetries := 0
