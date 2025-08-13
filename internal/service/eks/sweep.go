@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eks/types"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -92,7 +92,7 @@ func sweepAddons(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -148,7 +148,15 @@ func sweepClusters(region string) error {
 			const (
 				timeout = 15 * time.Minute
 			)
-			if err := updateClusterDeletionProtection(ctx, conn, v, false, timeout); err != nil {
+			err := updateClusterDeletionProtection(ctx, conn, v, false, timeout)
+
+			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
+			// ¯\_(ツ)_/¯
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				break
+			}
+
+			if err != nil {
 				log.Printf("[WARN] Setting EKS Cluster %s DeletionProtection=false: %s", v, err)
 			}
 
@@ -209,7 +217,7 @@ func sweepFargateProfiles(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -278,7 +286,7 @@ func sweepIdentityProvidersConfig(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
@@ -347,7 +355,7 @@ func sweepNodeGroups(region string) error {
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
-				if errs.IsA[*types.ResourceNotFoundException](err) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					break
 				}
 
