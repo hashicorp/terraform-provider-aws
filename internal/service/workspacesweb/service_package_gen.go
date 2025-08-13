@@ -112,6 +112,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newSessionLoggerAssociationResource,
+			TypeName: "aws_workspacesweb_session_logger_association",
+			Name:     "Session Logger Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTrustStoreResource,
 			TypeName: "aws_workspacesweb_trust_store",
 			Name:     "Trust Store",
