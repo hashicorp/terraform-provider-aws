@@ -989,13 +989,13 @@ func updateClusterDeletionProtection(ctx context.Context, conn *eks.Client, name
 	output, err := conn.UpdateClusterConfig(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating EKS Cluster (%s) deletion protection (%t): %s", name, deletionProtection, err)
+		return fmt.Errorf("updating EKS Cluster (%s) deletion protection (%t): %w", name, deletionProtection, err)
 	}
 
 	updateID := aws.ToString(output.Update.Id)
 
 	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
-		return fmt.Errorf("waiting for EKS Cluster (%s) deletion protection update (%s): %s", name, updateID, err)
+		return fmt.Errorf("waiting for EKS Cluster (%s) deletion protection update (%s): %w", name, updateID, err)
 	}
 
 	return nil
@@ -1010,13 +1010,13 @@ func updateClusterVPCConfig(ctx context.Context, conn *eks.Client, name string, 
 	output, err := conn.UpdateClusterConfig(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating EKS Cluster (%s) VPC configuration: %s", name, err)
+		return fmt.Errorf("updating EKS Cluster (%s) VPC configuration: %w", name, err)
 	}
 
 	updateID := aws.ToString(output.Update.Id)
 
 	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
-		return fmt.Errorf("waiting for EKS Cluster (%s) VPC configuration update (%s): %s", name, updateID, err)
+		return fmt.Errorf("waiting for EKS Cluster (%s) VPC configuration update (%s): %w", name, updateID, err)
 	}
 
 	return nil

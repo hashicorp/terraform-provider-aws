@@ -153,7 +153,7 @@ func sweepClusters(region string) error {
 			// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 			// ¯\_(ツ)_/¯
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				break
+				continue
 			}
 
 			if err != nil {
