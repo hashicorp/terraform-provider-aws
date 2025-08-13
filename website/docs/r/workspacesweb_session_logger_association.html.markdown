@@ -76,12 +76,13 @@ The following arguments are required:
 * `portal_arn` - (Required) ARN of the web portal.
 * `session_logger_arn` - (Required) ARN of the session logger.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `portal_arn` - ARN of the web portal.
-* `session_logger_arn` - ARN of the session logger.
+This resource does not export any attributes in addition to the arguments above:
 
 ## Import
 
