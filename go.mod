@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.37.0
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.65.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.9.0
@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.242.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.243.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.0
@@ -187,7 +187,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/odb v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.42.0
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.22.0
@@ -225,7 +225,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.207.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.208.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.38.0
@@ -258,7 +258,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.17.0
