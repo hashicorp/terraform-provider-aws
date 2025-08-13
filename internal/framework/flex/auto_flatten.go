@@ -637,7 +637,7 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 					diags.Append(diagFlatteningUnmarshalSmithyDocument(reflect.TypeOf(doc), err))
 					return diags
 				}
-				stringValue = types.StringValue(strings.TrimSpace(s))
+				stringValue = types.StringValue(s)
 			}
 			v, d := tTo.ValueFromString(ctx, stringValue)
 			diags.Append(d...)

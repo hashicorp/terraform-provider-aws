@@ -4,6 +4,8 @@
 package smithy
 
 import (
+	"strings"
+
 	smithydocument "github.com/aws/smithy-go/document"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
@@ -30,7 +32,12 @@ func DocumentToJSONString(document smithydocument.Unmarshaler) (string, error) {
 		return "", err
 	}
 
-	return tfjson.EncodeToString(v)
+	s, err := tfjson.EncodeToString(v)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(s), nil
 }
 
 // JSONStringer interface is used to marshal and unmarshal JSON interface objects.
