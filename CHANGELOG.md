@@ -1,5 +1,10 @@
 ## 6.9.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_appsync_api` ([#43787](https://github.com/hashicorp/terraform-provider-aws/issues/43787))
+* **New Resource:** `aws_appsync_channel_namespace` ([#43787](https://github.com/hashicorp/terraform-provider-aws/issues/43787))
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_rule: Add resource identity support ([#43758](https://github.com/hashicorp/terraform-provider-aws/issues/43758))
@@ -14,6 +19,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
+* data-source/aws_networkfirewall_firewall_policy: Add missing schema definition for `firewall_policy.stateful_engine_options.flow_timeouts` ([#43852](https://github.com/hashicorp/terraform-provider-aws/issues/43852))
 * resource/aws_cognito_risk_configuration: Make `account_takeover_risk_configuration.notify_configuration` optional ([#33624](https://github.com/hashicorp/terraform-provider-aws/issues/33624))
 * resource/aws_ecs_service: Fix tagging failure after upgrading to v6 provider ([#43816](https://github.com/hashicorp/terraform-provider-aws/issues/43816))
 * resource/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
