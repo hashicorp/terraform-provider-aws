@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "allow_write_access" {
     ]
 
     resources = [
-      "${aws_s3_bucket.test.arn}",
+      aws_s3_bucket.test.arn,
       "${aws_s3_bucket.test.arn}/*"
     ]
   }

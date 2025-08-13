@@ -76,7 +76,7 @@ data "aws_iam_policy_document" "example" {
       "s3:PutObject"
     ]
     resources = [
-      "${aws_s3_bucket.example.arn}",
+      aws_s3_bucket.example.arn,
       "${aws_s3_bucket.example.arn}/*"
     ]
   }
@@ -87,13 +87,15 @@ resource "aws_s3_bucket_policy" "example" {
   policy = data.aws_iam_policy_document.example.json
 }
 
+data "aws_partition" "current" {}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "kms_key_policy" {
   statement {
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     actions   = ["kms:*"]
     resources = ["*"]

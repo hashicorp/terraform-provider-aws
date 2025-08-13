@@ -43,7 +43,7 @@ func TestAccWorkSpacesWebSessionLogger_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_configuration.0.s3.0.bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_configuration.0.s3.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.folder_structure", string(awstypes.FolderStructureFlat)),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.log_file_format", string(awstypes.LogFileFormatJson)),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.all.%", "0"),
@@ -84,7 +84,7 @@ func TestAccWorkSpacesWebSessionLogger_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_managed_key"),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.test", names.AttrValue),
 					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.s3.0.bucket_owner"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.key_prefix", "logs/"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.include.#", "1"),
@@ -160,7 +160,7 @@ func TestAccWorkSpacesWebSessionLogger_customerManagedKeyUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerExists(ctx, resourceName, &sessionLogger),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccWorkSpacesWebSessionLogger_customerManagedKeyUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerExists(ctx, resourceName, &sessionLogger),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_managed_key", "aws_kms_key.test2", names.AttrARN),
 				),
 			},
 		},
@@ -197,7 +197,7 @@ func TestAccWorkSpacesWebSessionLogger_additionalEncryptionContextUpdate(t *test
 					testAccCheckSessionLoggerExists(ctx, resourceName, &sessionLogger),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "additional_encryption_context.test", names.AttrValue),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ data "aws_iam_policy_document" "allow_write_access" {
     ]
 
     resources = [
-      "${aws_s3_bucket.test.arn}",
+      aws_s3_bucket.test.arn,
       "${aws_s3_bucket.test.arn}/*"
     ]
   }
@@ -322,11 +322,15 @@ resource "aws_s3_bucket_policy" "allow_write_access" {
 
 func testAccSessionLoggerConfig_kmsBase(rName string) string {
 	return testAccSessionLoggerConfig_s3Base(rName) + `
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "kms_key_policy" {
   statement {
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     actions   = ["kms:*"]
     resources = ["*"]
@@ -351,8 +355,6 @@ resource "aws_kms_key" "test" {
   description = "Test key for session logger"
   policy      = data.aws_iam_policy_document.kms_key_policy.json
 }
-
-data "aws_caller_identity" "current" {}
 `
 }
 
@@ -505,11 +507,15 @@ resource "aws_workspacesweb_session_logger" "test" {
 
 func testAccSessionLoggerConfig_customerManagedKeyUpdated(rName, folderStructureType, logFileFormat string) string {
 	return testAccSessionLoggerConfig_s3Base(rName) + `
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "kms_key_policy" {
   statement {
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     actions   = ["kms:*"]
     resources = ["*"]
@@ -539,8 +545,6 @@ resource "aws_kms_key" "test2" {
   description = "Test key 2 for session logger"
   policy      = data.aws_iam_policy_document.kms_key_policy.json
 }
-
-data "aws_caller_identity" "current" {}
 ` + fmt.Sprintf(`
 resource "aws_workspacesweb_session_logger" "test" {
   display_name         = %[1]q

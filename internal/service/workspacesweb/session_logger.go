@@ -48,7 +48,6 @@ type sessionLoggerResource struct {
 }
 
 func (r *sessionLoggerResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"additional_encryption_context": schema.MapAttribute{
@@ -105,7 +104,7 @@ func (r *sessionLoggerResource) Schema(ctx context.Context, request resource.Sch
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LogConfigurationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"bucket": schema.StringAttribute{
+									names.AttrBucket: schema.StringAttribute{
 										Required: true,
 									},
 									"bucket_owner": schema.StringAttribute{
@@ -242,7 +241,6 @@ func (r *sessionLoggerResource) Update(ctx context.Context, request resource.Upd
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, new)...)
-
 }
 
 func (r *sessionLoggerResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -325,6 +323,8 @@ var (
 )
 
 func (m eventFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if !m.All.IsNull() {
 		return &awstypes.EventFilterMemberAll{Value: awstypes.Unit{}}, nil
 	}
@@ -335,10 +335,12 @@ func (m eventFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 		}
 		return &awstypes.EventFilterMemberInclude{Value: events}, nil
 	}
-	return nil, nil
+	return nil, diags
 }
 
 func (m *eventFilterModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	switch val := v.(type) {
 	case awstypes.EventFilterMemberAll:
 		m.All = types.ObjectValueMust(map[string]attr.Type{}, map[string]attr.Value{})
@@ -355,7 +357,7 @@ func (m *eventFilterModel) Flatten(ctx context.Context, v any) diag.Diagnostics 
 		}
 		m.Include, _ = fwtypes.NewSetValueOf[types.String](ctx, elements)
 	}
-	return nil
+	return diags
 }
 
 type s3LogConfigurationModel struct {
