@@ -8,6 +8,11 @@ import (
 )
 
 // Null returns an empty iterator.
-func Null[E any]() iter.Seq[E] {
-	return func(yield func(E) bool) {}
+func Null[V any]() iter.Seq[V] {
+	return func(yield func(V) bool) {}
+}
+
+// Null2 returns an empty value pair iterator.
+func Null2[K, V any]() iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {}
 }
