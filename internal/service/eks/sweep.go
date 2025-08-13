@@ -6,6 +6,7 @@ package eks
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
@@ -144,6 +145,13 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.Clusters {
+			const (
+				timeout = 15 * time.Minute
+			)
+			if err := updateClusterDeletionProtection(ctx, conn, v, false, timeout); err != nil {
+				log.Printf("[WARN] Setting EKS Cluster %s DeletionProtection=false: %s", v, err)
+			}
+
 			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(v)
