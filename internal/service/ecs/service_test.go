@@ -2619,6 +2619,59 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 	})
 }
 
+func TestAccECSService_AvailabilityZoneRebalancing_UpgradeV6_8_0_configured(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.8.0",
+					},
+				},
+				Config: testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_availabilityZoneRebalancing(rName, awstypes.AvailabilityZoneRebalancingEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("availability_zone_rebalancing"), tfknownvalue.StringExact(awstypes.AvailabilityZoneRebalancingEnabled)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
