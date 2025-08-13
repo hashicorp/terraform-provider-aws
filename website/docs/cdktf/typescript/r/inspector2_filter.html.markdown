@@ -191,10 +191,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import Inspector Filter using the `example_id_arg`. For example:
+Using `terraform import`, import Inspector Filter using the `arn`. For example:
 
 ```console
 % terraform import aws_inspector2_filter.example "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0663a3bb89eb683ced7257da8922b60e7ceec29eeb2b53da25849067b1e3974 -->
+<!-- cache-key: cdktf-0.20.8 input-8931d6ebeb6fc5a42c0e0673c61437a6bb8b0d5b80625beec92e0ec3c179cecf -->

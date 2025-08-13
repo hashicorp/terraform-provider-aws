@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params rolesanywhere.En
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up rolesanywhere endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up rolesanywhere endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {
