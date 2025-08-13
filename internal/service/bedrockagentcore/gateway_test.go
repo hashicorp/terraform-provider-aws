@@ -436,23 +436,20 @@ func testAccCheckGatewayNotRecreated(before, after *bedrockagentcorecontrol.GetG
 
 func testAccGatewayConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_iam_policy_document" "test_assume" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+}
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "bedrock.${data.aws_partition.current.dns_suffix}"
-        }
-      }
-    ]
-  })
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume.json
 }
 `, rName)
 }
