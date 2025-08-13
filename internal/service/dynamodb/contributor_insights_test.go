@@ -55,6 +55,78 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBContributorInsights_ModeAccessedAndThrottled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.DescribeContributorInsightsOutput
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	indexName := fmt.Sprintf("%s-index", rName)
+	resourceName := "aws_dynamodb_contributor_insights.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, indexName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBContributorInsights_ModeThrottledOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.DescribeContributorInsightsOutput
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	indexName := fmt.Sprintf("%s-index", rName)
+	resourceName := "aws_dynamodb_contributor_insights.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContributorInsightsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContributorInsightsConfig_ThrottledKeys(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccContributorInsightsConfig_ThrottledKeys(rName, indexName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "index_name", indexName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.DescribeContributorInsightsOutput
@@ -81,26 +153,26 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 
 func testAccContributorInsightsBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "test" {
-  name           = %[1]q
-  read_capacity  = 2
-  write_capacity = 2
-  hash_key       = %[1]q
+  resource "aws_dynamodb_table" "test" {
+    name           = %[1]q
+    read_capacity  = 2
+    write_capacity = 2
+    hash_key       = %[1]q
 
-  attribute {
-    name = %[1]q
-    type = "S"
-  }
+    attribute {
+      name = %[1]q
+      type = "S"
+    }
 
-  global_secondary_index {
-    name            = "%[1]s-index"
-    hash_key        = %[1]q
-    projection_type = "ALL"
-    read_capacity   = 1
-    write_capacity  = 1
+    global_secondary_index {
+      name            = "%[1]s-index"
+      hash_key        = %[1]q
+      projection_type = "ALL"
+      read_capacity   = 1
+      write_capacity  = 1
+    }
   }
-}
-`, rName)
+  `, rName)
 }
 
 func testAccContributorInsightsConfig_basic(rName, indexName string) string {
@@ -108,6 +180,28 @@ func testAccContributorInsightsConfig_basic(rName, indexName string) string {
 resource "aws_dynamodb_contributor_insights" "test" {
   table_name = aws_dynamodb_table.test.name
   index_name = %[2]q
+}
+`, rName, indexName))
+}
+
+func testAccContributorInsightsConfig_AccessedAndThrottledKeys(rName, indexName string) string {
+	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_dynamodb_contributor_insights" "test" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
+
+  mode = "ACCESSED_AND_THROTTLED_KEYS"
+}
+`, rName, indexName))
+}
+
+func testAccContributorInsightsConfig_ThrottledKeys(rName, indexName string) string {
+	return acctest.ConfigCompose(testAccContributorInsightsBaseConfig(rName), fmt.Sprintf(`
+resource "aws_dynamodb_contributor_insights" "test" {
+  table_name = aws_dynamodb_table.test.name
+  index_name = %[2]q
+
+  mode = "THROTTLED_KEYS"
 }
 `, rName, indexName))
 }
