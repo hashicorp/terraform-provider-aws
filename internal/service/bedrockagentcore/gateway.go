@@ -129,7 +129,7 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"custom_jwt_authorizer": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[CustomJWTAuthorizerConfigurationModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[customJWTAuthorizerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -139,14 +139,12 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 										Required: true,
 									},
 									"allowed_audience": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
 									},
 									"allowed_clients": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
 									},
 								},
 							},
@@ -176,9 +174,8 @@ func (r *resourceGateway) Schema(ctx context.Context, req resource.SchemaRequest
 										CustomType: searchType,
 									},
 									"supported_versions": schema.SetAttribute{
-										CustomType:  fwtypes.SetOfStringType,
-										ElementType: types.StringType,
-										Optional:    true,
+										CustomType: fwtypes.SetOfStringType,
+										Optional:   true,
 									},
 								},
 							},
@@ -300,13 +297,13 @@ func (r *resourceGateway) Update(ctx context.Context, req resource.UpdateRequest
 		if resp.Diagnostics.HasError() {
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitGatewayUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		_, err = waitGatewayUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			return
+		}
 	}
 
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
