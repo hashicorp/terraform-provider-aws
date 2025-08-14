@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params billing.Endpoint
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up billing endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up billing endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

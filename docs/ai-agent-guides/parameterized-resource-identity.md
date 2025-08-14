@@ -124,6 +124,7 @@ Relates #42988
 ### Import Test Failures
 
 - If identity tests are failing because they expect an update during import but get a no-op, add an `// @Testing(plannableImportAction="NoOp")` annotation and re-generate the test files.
+- If identity tests are failing import verification due to missing attribute values, check the `_basic` test implementation for the presence of an `ImportStateVerifyIgnore` field in the import test step. If present, add an `// @Testing(importIgnore="arg1")` annotation where `arg1` is replaced with the argument name(s) from the verify ignore slice. If mutiple fields are ignored, separate field names with a `;`, e.g. `arg1;arg2`.
 - If a region override test is failing and a custom import fuction is configured, ensure the appropriate helper function from the `importer` package is used.
     - `RegionalSingleParameterized` - regional resources whose identity is made up of a single parameter.
     - `GlobalSingleParameterized` - global resources whose identity is made up of a single parameter.

@@ -405,11 +405,11 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap[names.AttrSecurityGroups] = aws.StringSlice(v)
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {
