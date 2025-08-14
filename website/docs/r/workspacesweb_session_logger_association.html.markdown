@@ -82,7 +82,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource does not export any attributes in addition to the arguments above:
+This resource exports no additional attributes.
 
 ## Import
 
