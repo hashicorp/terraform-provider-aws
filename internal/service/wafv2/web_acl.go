@@ -384,7 +384,27 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// HasChangesExcept can perform _very_ slowly when presented with a large number of unchanged (or ignored)
+	// attributes e.g. rule blocks in this case
+	if d.HasChanges(
+		"application_integration_url",
+		"association_config",
+		"capacity",
+		"captcha_config",
+		"challenge_config",
+		"custom_response_body",
+		"data_protection_config",
+		names.AttrDefaultAction,
+		names.AttrDescription,
+		"lock_token",
+		names.AttrName,
+		names.AttrNamePrefix,
+		"rule_json",
+		names.AttrRule,
+		names.AttrScope,
+		"token_domains",
+		"visibility_config",
+	) {
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)
