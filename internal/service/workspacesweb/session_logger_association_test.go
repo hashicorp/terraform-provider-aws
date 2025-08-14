@@ -39,7 +39,7 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSessionLoggerAssociationConfig_basic(rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
+				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
 					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName, "session_logger_arn"),
@@ -52,6 +52,17 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    testAccSessionLoggerAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "session_logger_arn",
+			},
+			{
+				// The test case below updates the SessionLogger resource (thereby forcing a refresh of that resource) so that we can test if associated_portal_arns are populated after the association was created in the first testcase above
+				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName+"-updated", string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
+					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName, "session_logger_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttr(sessionLoggerResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(sessionLoggerResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+				),
 			},
 		},
 	})
@@ -74,7 +85,7 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_update(t *testing.T) {
 		CheckDestroy:             testAccCheckSessionLoggerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSessionLoggerAssociationConfig_basic(rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
+				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger1),
 				),
@@ -193,7 +204,7 @@ resource "aws_s3_bucket_policy" "allow_write_access" {
 `, rName)
 }
 
-func testAccSessionLoggerAssociationConfig_basic(rName, folderStructureType, logFileFormat string) string {
+func testAccSessionLoggerAssociationConfig_basic(rName, sessionLoggerName, folderStructureType, logFileFormat string) string {
 	return testAccSessionLoggerAssociationConfig_base(rName) + fmt.Sprintf(`
 resource "aws_workspacesweb_session_logger" "test" {
   display_name = %[1]q
@@ -217,7 +228,7 @@ resource "aws_workspacesweb_session_logger_association" "test" {
   portal_arn         = aws_workspacesweb_portal.test.portal_arn
   session_logger_arn = aws_workspacesweb_session_logger.test.session_logger_arn
 }
-`, rName, folderStructureType, logFileFormat)
+`, sessionLoggerName, folderStructureType, logFileFormat)
 }
 
 func testAccSessionLoggerAssociationConfig_updated(rName, folderStructureType, logFileFormat string) string {
