@@ -1,3 +1,2 @@
 ```release-note:bug
-resource/aws_ecs_service: Out-of-Band changes to `service_connect_configuration` are now detected in `terraform plan`
-```
+resource/aws_ecs_service: Fix refreshing `service_connect_configuration` when deleted outside of Terraform
