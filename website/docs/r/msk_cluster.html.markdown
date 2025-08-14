@@ -312,7 +312,13 @@ This resource supports the following arguments:
 
 #### logging_info Argument Reference
 
-* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See below.
+* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [logging_info broker_logs Argument Reference](#logging_info-broker_logs-argument-reference) below.
+
+#### logging_info broker_logs Argument Reference
+
+* `cloudwatch_logs` - (Optional) Configuration block for Cloudwatch Logs settings. See [logging_info broker_logs cloudwatch_logs Argument Reference](#logging_info-broker_logs-cloudwatch_logs-argument-reference) below.
+* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [logging_info broker_logs firehose Argument Reference](#logging_info-broker_logs-firehose-argument-reference) below.
+* `s3` - (Optional) Configuration block for S3 settings. See [logging_info broker_logs s3 Argument Reference](#logging_info-broker_logs-s3-argument-reference) below.
 
 #### logging_info broker_logs cloudwatch_logs Argument Reference
 
