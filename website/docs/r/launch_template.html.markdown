@@ -186,7 +186,7 @@ The `ebs` block supports the following:
 
 The `capacity_reservation_specification` block supports the following:
 
-* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. (Default `none`). If `capacity_reservation_id` or `capacity_reservation_resource_group_arn` is specified in `capacity_reservation_target` block, either omit `capacity_reservation_preference` or set it to `capacity-reservations-only`.
 * `capacity_reservation_target` - Used to target a specific Capacity Reservation:
 
 The `capacity_reservation_target` block supports the following:
