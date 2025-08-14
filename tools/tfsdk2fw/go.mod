@@ -102,7 +102,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.53.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.34.0 // indirect
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fis v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fms v1.43.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.58.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.59.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.33.0 // indirect
@@ -242,7 +242,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.208.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.209.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.38.0 // indirect
@@ -318,7 +318,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.23.0 // indirect
-	github.com/hashicorp/terraform-json v0.25.0 // indirect
+	github.com/hashicorp/terraform-json v0.26.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework v1.15.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
