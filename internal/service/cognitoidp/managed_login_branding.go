@@ -29,6 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -202,7 +204,25 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 		return
 	}
 
-	_, err := conn.UpdateManagedLoginBranding(ctx, &input)
+	// Updated settings work in a PATCH model: https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-brandingeditor.html#branding-designer-api.
+	oldSettings, newSettings := fwflex.StringValueFromFramework(ctx, old.Settings), fwflex.StringValueFromFramework(ctx, new.Settings)
+	patch, err := tfjson.CreateMergePatchFromStrings(oldSettings, newSettings)
+
+	if err != nil {
+		response.Diagnostics.AddError("creating JSON merge patch", err.Error())
+
+		return
+	}
+
+	input.Settings, err = tfsmithy.DocumentFromJSONString(patch, document.NewLazyDocument)
+
+	if err != nil {
+		response.Diagnostics.AddError("creating Smithy document", err.Error())
+
+		return
+	}
+
+	_, err = conn.UpdateManagedLoginBranding(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito Managed Login Branding (%s)", new.ManagedLoginBrandingID.ValueString()), err.Error())
