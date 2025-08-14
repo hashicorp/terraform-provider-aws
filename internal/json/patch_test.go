@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
-	"github.com/mattbaird/jsonpatch"
+	mattbairdjsonpatch "github.com/mattbaird/jsonpatch"
 )
 
 func TestCreatePatchFromStrings(t *testing.T) {
@@ -17,7 +18,7 @@ func TestCreatePatchFromStrings(t *testing.T) {
 	testCases := []struct {
 		testName  string
 		a, b      string
-		wantPatch []jsonpatch.JsonPatchOperation
+		wantPatch []mattbairdjsonpatch.JsonPatchOperation
 		wantErr   bool
 	}{
 		{
@@ -30,19 +31,19 @@ func TestCreatePatchFromStrings(t *testing.T) {
 			testName:  "empty patch, empty JSON",
 			a:         `{}`,
 			b:         `{}`,
-			wantPatch: []jsonpatch.JsonPatchOperation{},
+			wantPatch: []mattbairdjsonpatch.JsonPatchOperation{},
 		},
 		{
 			testName:  "empty patch, non-empty JSON",
 			a:         `{"A": "test1", "B": 42}`,
 			b:         `{"B": 42, "A": "test1"}`,
-			wantPatch: []jsonpatch.JsonPatchOperation{},
+			wantPatch: []mattbairdjsonpatch.JsonPatchOperation{},
 		},
 		{
 			testName: "from empty JSON",
 			a:        `{}`,
 			b:        `{"A": "test1", "B": 42}`,
-			wantPatch: []jsonpatch.JsonPatchOperation{
+			wantPatch: []mattbairdjsonpatch.JsonPatchOperation{
 				{Operation: "add", Path: "/A", Value: "test1"},
 				{Operation: "add", Path: "/B", Value: float64(42)},
 			},
@@ -51,7 +52,7 @@ func TestCreatePatchFromStrings(t *testing.T) {
 			testName: "to empty JSON",
 			a:        `{"A": "test1", "B": 42}`,
 			b:        `{}`,
-			wantPatch: []jsonpatch.JsonPatchOperation{
+			wantPatch: []mattbairdjsonpatch.JsonPatchOperation{
 				{Operation: "remove", Path: "/A"},
 				{Operation: "remove", Path: "/B"},
 			},
@@ -60,7 +61,7 @@ func TestCreatePatchFromStrings(t *testing.T) {
 			testName: "change values",
 			a:        `{"A": "test1", "B": 42}`,
 			b:        `{"A": ["test2"], "B": false}`,
-			wantPatch: []jsonpatch.JsonPatchOperation{
+			wantPatch: []mattbairdjsonpatch.JsonPatchOperation{
 				{Operation: "replace", Path: "/A", Value: []any{"test2"}},
 				{Operation: "replace", Path: "/B", Value: false},
 			},
@@ -77,6 +78,70 @@ func TestCreatePatchFromStrings(t *testing.T) {
 			}
 			if err == nil {
 				if diff := cmp.Diff(got, testCase.wantPatch); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
+
+func TestCreateMergePatchFromStrings(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		testName  string
+		a, b      string
+		wantPatch string
+		wantErr   bool
+	}{
+		{
+			testName: "invalid JSON",
+			a:        `test`,
+			b:        `{}`,
+			wantErr:  true,
+		},
+		{
+			testName:  "empty patch, empty JSON",
+			a:         `{}`,
+			b:         `{}`,
+			wantPatch: `{}`,
+		},
+		{
+			testName:  "empty patch, non-empty JSON",
+			a:         `{"A": "test1", "B": 42}`,
+			b:         `{"B": 42, "A": "test1"}`,
+			wantPatch: `{}`,
+		},
+		{
+			testName:  "from empty JSON",
+			a:         `{}`,
+			b:         `{"A": "test1", "B": 42}`,
+			wantPatch: `{"A":"test1", "B":42}`,
+		},
+		{
+			testName:  "to empty JSON",
+			a:         `{"A": "test1", "B": 42}`,
+			b:         `{}`,
+			wantPatch: `{"A":null, "B":null}`,
+		},
+		{
+			testName:  "change values",
+			a:         `{"A": "test1", "B": 42}`,
+			b:         `{"A": ["test2"], "B": 42}`,
+			wantPatch: `{"A": ["test2"]}`,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfjson.CreateMergePatchFromStrings(testCase.a, testCase.b)
+			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("CreateMergePatchFromStrings(%s, %s) err %t, want %t", testCase.a, testCase.b, got, want)
+			}
+			if err == nil {
+				if diff := jsoncmp.Diff(got, testCase.wantPatch); diff != "" {
 					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
 			}
