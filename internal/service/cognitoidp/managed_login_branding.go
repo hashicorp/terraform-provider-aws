@@ -12,12 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -32,6 +34,7 @@ import (
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,10 +75,6 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 					boolvalidator.ExactlyOneOf(
 						path.MatchRoot("settings"),
 					),
-					boolvalidator.ConflictsWith(
-						path.MatchRoot("asset"),
-						path.MatchRoot("settings"),
-					),
 				},
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
@@ -89,30 +88,54 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"asset": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[assetTypeModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeBetween(0, 40),
+			"asset": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[assetTypeModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeBetween(0, 40),
+				},
+				PlanModifiers: []planmodifier.Set{
+					// The update API allows updating an asset.
+					// However, if the (`category`, `color`) pair differs from existing ones,
+					// the API treats the asset as new and adds it accordingly.
+					// This can result in a mismatch between the Terraform plan and the actual state
+					// (e.g., the plan contains one asset, but the state contains two or more).
+					// To preserve declarative behavior, the resource is replaced whenever the `asset` is modified.
+					setplanmodifier.RequiresReplace(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"bytes": schema.StringAttribute{
 							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"category": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AssetCategoryType](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"color_mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ColorSchemeModeType](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"extension": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.AssetExtensionType](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						names.AttrResourceID: schema.StringAttribute{
 							Optional: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -308,12 +331,12 @@ func findManagedLoginBrandingByTwoPartKey(ctx context.Context, conn *cognitoiden
 
 type managedLoginBrandingResourceModel struct {
 	framework.WithRegionModel
-	Asset                    fwtypes.ListNestedObjectValueOf[assetTypeModel] `tfsdk:"asset"`
-	ClientID                 types.String                                    `tfsdk:"client_id"`
-	ManagedLoginBrandingID   types.String                                    `tfsdk:"managed_login_branding_id"`
-	Settings                 fwtypes.SmithyJSON[document.Interface]          `tfsdk:"settings"`
-	UseCognitoProvidedValues types.Bool                                      `tfsdk:"use_cognito_provided_values"`
-	UserPoolID               types.String                                    `tfsdk:"user_pool_id"`
+	Asset                    fwtypes.SetNestedObjectValueOf[assetTypeModel] `tfsdk:"asset"`
+	ClientID                 types.String                                   `tfsdk:"client_id"`
+	ManagedLoginBrandingID   types.String                                   `tfsdk:"managed_login_branding_id"`
+	Settings                 fwtypes.SmithyJSON[document.Interface]         `tfsdk:"settings"`
+	UseCognitoProvidedValues types.Bool                                     `tfsdk:"use_cognito_provided_values"`
+	UserPoolID               types.String                                   `tfsdk:"user_pool_id"`
 }
 
 type assetTypeModel struct {
@@ -322,4 +345,48 @@ type assetTypeModel struct {
 	ColorMode  fwtypes.StringEnum[awstypes.ColorSchemeModeType] `tfsdk:"color_mode"`
 	Extension  fwtypes.StringEnum[awstypes.AssetExtensionType]  `tfsdk:"extension"`
 	ResourceID types.String                                     `tfsdk:"resource_id"`
+}
+
+var (
+	_ fwflex.Expander  = assetTypeModel{}
+	_ fwflex.Flattener = &assetTypeModel{}
+)
+
+func (m assetTypeModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	r := awstypes.AssetType{
+		Category:   m.Category.ValueEnum(),
+		ColorMode:  m.ColorMode.ValueEnum(),
+		Extension:  m.Extension.ValueEnum(),
+		ResourceId: fwflex.StringFromFramework(ctx, m.ResourceID),
+	}
+
+	if v, err := inttypes.Base64Decode(m.Bytes.ValueString()); err == nil {
+		r.Bytes = v
+	} else {
+		diags.AddError(
+			"decoding asset bytes",
+			err.Error(),
+		)
+
+		return nil, diags
+	}
+
+	return &r, diags
+}
+
+func (m *assetTypeModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch v := v.(type) {
+	case awstypes.AssetType:
+		m.Bytes = fwflex.StringValueToFramework(ctx, inttypes.Base64Encode(v.Bytes))
+		m.Category = fwtypes.StringEnumValue(v.Category)
+		m.ColorMode = fwtypes.StringEnumValue(v.ColorMode)
+		m.Extension = fwtypes.StringEnumValue(v.Extension)
+		m.ResourceID = fwflex.StringToFramework(ctx, v.ResourceId)
+	default:
+	}
+
+	return diags
 }
