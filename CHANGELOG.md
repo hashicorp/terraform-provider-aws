@@ -1,5 +1,11 @@
 ## 6.10.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_secretsmanager_secret: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+* resource/aws_secretsmanager_secret_policy: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+* resource/aws_secretsmanager_secret_rotation: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+
 ## 6.9.0 (August 14, 2025)
 
 FEATURES:
