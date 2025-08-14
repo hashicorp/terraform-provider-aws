@@ -58,6 +58,19 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccBrowserSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "browser_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccBrowserSettingsAssociationConfig_basic(browserPolicy1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the BrowserSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(browserSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(browserSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "browser_settings_arn", browserSettingsResourceName, "browser_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -66,6 +79,9 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var browserSettings1, browserSettings2 awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings_association.test"
+	browserSettingsResourceName1 := "aws_workspacesweb_browser_settings.test"
+	browserSettingsResourceName2 := "aws_workspacesweb_browser_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 	browserPolicy1 := `{
 		"chromePolicies":
 		{
@@ -96,12 +112,16 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_update(t *testing.T) {
 				Config: testAccBrowserSettingsAssociationConfig_basic(browserPolicy1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "browser_settings_arn", browserSettingsResourceName1, "browser_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccBrowserSettingsAssociationConfig_updated(browserPolicy1, browserPolicy2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "browser_settings_arn", browserSettingsResourceName2, "browser_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
