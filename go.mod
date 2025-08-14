@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.53.0
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/detective v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.34.0
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/fms v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.58.0
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.33.0
@@ -225,7 +225,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.208.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.209.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.38.0

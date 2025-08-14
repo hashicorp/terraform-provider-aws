@@ -191,8 +191,8 @@ github.com/aws/aws-sdk-go-v2/service/datapipeline v1.29.0 h1:5a76AMaI1x9YHhL6qcl
 github.com/aws/aws-sdk-go-v2/service/datapipeline v1.29.0/go.mod h1:iXVvFT/t6B96iXExuxVp4QMKfU2XUIGazYkptjmF+AQ=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.53.0 h1:6e3BS+A00UPLzkgtWj5Sakvom0G5qAn/dEk8U7QG/n4=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.53.0/go.mod h1:4gU+dv/Prdb8CB3TaRbrSFLO2tSqPNRnDqIX9IPuQHQ=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.36.0 h1:YEZFj4KUY0do1SEFytmxyrRXbB92blueDxRecGqqdTc=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.36.0/go.mod h1:TG25xNgljNX2+CjQ0gkXiOjJG6BTyM7gRJdfC6jGIBw=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.37.0 h1:2gorOSV7BNgRqmV6z9u+dhZ1kkPcaaAF8XMnK3ZUfKw=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.37.0/go.mod h1:TG25xNgljNX2+CjQ0gkXiOjJG6BTyM7gRJdfC6jGIBw=
 github.com/aws/aws-sdk-go-v2/service/dax v1.27.0 h1:wDyL0EZw99zVGuzf4E/AZMiHVp/V6j9+Z8VkP2Xr55M=
 github.com/aws/aws-sdk-go-v2/service/dax v1.27.0/go.mod h1:SG2yNQjCwUNkjUxW7YCsUiIKQgoWUZpblEHpmf6Az3E=
 github.com/aws/aws-sdk-go-v2/service/detective v1.36.0 h1:0av6yvy0lYUtlgDnZoinqIsYbjM8D4JkEnXzh0WKWwM=
@@ -261,8 +261,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.36.0 h1:zsDCgJ6lWocX4wArsCQre2A92JzB
 github.com/aws/aws-sdk-go-v2/service/fis v1.36.0/go.mod h1:OOOhb7pKoJhZKCVzheRRd+aPKv9Ep+zNUPQtfcoxP5M=
 github.com/aws/aws-sdk-go-v2/service/fms v1.43.0 h1:tTeH6402fy5Z8JHuUO6aL2yn5WFzWSKF6epxYvIPAMs=
 github.com/aws/aws-sdk-go-v2/service/fms v1.43.0/go.mod h1:YtgJpTqlpa7n71B9snaa05vHND7UbQyOHjU4zouPpUM=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.58.0 h1:PsSyOQi3cGH9SVAOIKKQzRN30eNP3ZwkMJal4SZBofk=
-github.com/aws/aws-sdk-go-v2/service/fsx v1.58.0/go.mod h1:tUva+sOgmPwfMu02pXdg+zKO02Zcu812xG8doKd7ogA=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.59.0 h1:+EESGw/7+Sxr1ISwKdbwlEBDY+w9TZSkpe+jhZnGDTk=
+github.com/aws/aws-sdk-go-v2/service/fsx v1.59.0/go.mod h1:tUva+sOgmPwfMu02pXdg+zKO02Zcu812xG8doKd7ogA=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0 h1:JdlVzc51kIkdne4ilxnHAfKfXyhzkJ3eYrfZwk38j/k=
 github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0/go.mod h1:j6XU2uooS9YUEfpviJM3f/TFtGlBh/yYHUMhO82XT3o=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0 h1:GILchKM1cgGoIjYEYh3oV2o4Xy4v745NtPCo5WIhLFk=
@@ -471,8 +471,8 @@ github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0 h1:b+DS5OdH3yZCVMHLs/8aA9Nu
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0/go.mod h1:jVLVoLsG7vN8XEO7OQ7Bqw6qqHXMqWbSBMZ7tmY8R9Q=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0 h1:9xIfi7XPNyqbrZBCVsAnxlajEsNLP4qZ/T+rw6NYtZ0=
 github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0/go.mod h1:1ByJ/xRNkPDVddSxcpou91CiBIose3JWIWwFw/QjzD8=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.208.0 h1:S0ilMJd8zK7/YGzRl4OZRnkYc7MocYwI1PYQFMn2MIs=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.208.0/go.mod h1:sawKpnbUfWJb/Q/i2P3rXiM+vXUosAqJ1KOsuKxPRxU=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.209.0 h1:d4f7/eKImxS52878zZOgRsi3mg7LAQNl9uyIN6hfuQ8=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.209.0/go.mod h1:sawKpnbUfWJb/Q/i2P3rXiM+vXUosAqJ1KOsuKxPRxU=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0 h1:vlmeLcOZ1PtqEpgRIZOOw49DABG9EWYkHHmC96IBgBM=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0/go.mod h1:2XG5FGAj7Ao8KR3scdaU76/YEsdUG304Qt1dIUfHIGM=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.32.0 h1:37TFUN36cFLnIj32FFanXqD+uuXwASxCEEckhdBjCnE=
