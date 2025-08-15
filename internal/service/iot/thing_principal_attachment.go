@@ -31,6 +31,10 @@ func resourceThingPrincipalAttachment() *schema.Resource {
 		ReadWithoutTimeout:   resourceThingPrincipalAttachmentRead,
 		DeleteWithoutTimeout: resourceThingPrincipalAttachmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrPrincipal: {
 				Type:     schema.TypeString,
