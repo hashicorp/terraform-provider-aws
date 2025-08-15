@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_thing_principal_attachment: Add `thing_principal_type` argument
+```
