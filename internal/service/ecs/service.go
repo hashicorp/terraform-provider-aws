@@ -562,7 +562,7 @@ func resourceService() *schema.Resource {
 			"availability_zone_rebalancing": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
 				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
 			},
 			names.AttrCapacityProviderStrategy: {
@@ -1557,6 +1557,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 				if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(v)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
 				}
+			} else {
+				d.Set("service_connect_configuration", nil)
 			}
 			if v := deployment.VolumeConfigurations; len(v) > 0 {
 				if err := d.Set("volume_configuration", flattenServiceVolumeConfigurations(ctx, v)); err != nil {
