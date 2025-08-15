@@ -51,6 +51,19 @@ func TestAccWorkSpacesWebTrustStoreAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccTrustStoreAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "trust_store_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccTrustStoreAssociationConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the TrustStore Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(trustStoreResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(trustStoreResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "trust_store_arn", trustStoreResourceName, "trust_store_arn"),
+				),
+			},
 		},
 	})
 }
@@ -59,6 +72,9 @@ func TestAccWorkSpacesWebTrustStoreAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trustStore1, trustStore2 awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store_association.test"
+	trustStoreResourceName1 := "aws_workspacesweb_trust_store.test"
+	trustStoreResourceName2 := "aws_workspacesweb_trust_store.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,12 +90,16 @@ func TestAccWorkSpacesWebTrustStoreAssociation_update(t *testing.T) {
 				Config: testAccTrustStoreAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore1),
+					resource.TestCheckResourceAttrPair(resourceName, "trust_store_arn", trustStoreResourceName1, "trust_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccTrustStoreAssociationConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore2),
+					resource.TestCheckResourceAttrPair(resourceName, "trust_store_arn", trustStoreResourceName2, "trust_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
