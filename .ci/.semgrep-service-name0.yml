@@ -1343,6 +1343,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppSync"
     severity: WARNING
+  - id: arcregionswitch-in-func-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in func name inside arcregionswitch package
+    paths:
+      include:
+        - internal/service/arcregionswitch
+      exclude:
+        - internal/service/arcregionswitch/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: arcregionswitch-in-test-name
+    languages:
+      - go
+    message: Include "ARCRegionSwitch" in test name
+    paths:
+      include:
+        - internal/service/arcregionswitch/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccARCRegionSwitch"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: arcregionswitch-in-const-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in const name inside arcregionswitch package
+    paths:
+      include:
+        - internal/service/arcregionswitch
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+    severity: WARNING
+  - id: arcregionswitch-in-var-name
+    languages:
+      - go
+    message: Do not use "ARCRegionSwitch" in var name inside arcregionswitch package
+    paths:
+      include:
+        - internal/service/arcregionswitch
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ARCRegionSwitch"
+    severity: WARNING
   - id: athena-in-func-name
     languages:
       - go
@@ -4374,47 +4435,4 @@ rules:
             - pattern-regex: "(?i)ConfigService"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
     severity: WARNING
