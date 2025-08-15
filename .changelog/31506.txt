@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssm_document: Add `requires` attribute
+```
+
+```release-note:enhancement
+resource/aws_ssm_document: Add `force_delete` attribute
+```
