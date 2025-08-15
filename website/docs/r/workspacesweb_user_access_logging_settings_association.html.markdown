@@ -47,9 +47,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `region` - AWS region where the resource is located.
+This resource exports no additional attributes.
 
 ## Import
 

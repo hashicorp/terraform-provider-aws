@@ -53,6 +53,19 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_basic(t *testing.T
 				ImportStateIdFunc:                    testAccUserAccessLoggingSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "user_access_logging_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccUserAccessLoggingSettingsAssociationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the UserAccessLoggingSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(userAccessLoggingSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(userAccessLoggingSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "user_access_logging_settings_arn", userAccessLoggingSettingsResourceName, "user_access_logging_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -61,6 +74,9 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_update(t *testing.
 	ctx := acctest.Context(t)
 	var userAccessLoggingSettings1, userAccessLoggingSettings2 awstypes.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings_association.test"
+	userAccessLoggingSettingsResourceName1 := "aws_workspacesweb_user_access_logging_settings.test"
+	userAccessLoggingSettingsResourceName2 := "aws_workspacesweb_user_access_logging_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,12 +93,16 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_update(t *testing.
 				Config: testAccUserAccessLoggingSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "user_access_logging_settings_arn", userAccessLoggingSettingsResourceName1, "user_access_logging_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccUserAccessLoggingSettingsAssociationConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "user_access_logging_settings_arn", userAccessLoggingSettingsResourceName2, "user_access_logging_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
