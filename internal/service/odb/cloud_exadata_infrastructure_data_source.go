@@ -207,49 +207,6 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
 			},
 		},
-		/*Blocks: map[string]schema.Block{
-			"maintenance_window": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
-				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"custom_action_timeout_in_mins": schema.Int32Attribute{
-							Computed: true,
-						},
-						"days_of_week": schema.SetAttribute{
-							ElementType: fwtypes.NewObjectTypeOf[dayOfWeekExaInfraMaintenanceWindowDataSourceModel](ctx),
-							Computed:    true,
-						},
-						"hours_of_day": schema.SetAttribute{
-							ElementType: types.Int32Type,
-							Computed:    true,
-						},
-						"is_custom_action_timeout_enabled": schema.BoolAttribute{
-							Computed: true,
-						},
-						"lead_time_in_weeks": schema.Int32Attribute{
-							Computed: true,
-						},
-						"months": schema.SetAttribute{
-							ElementType: fwtypes.NewObjectTypeOf[monthExaInfraMaintenanceWindowDataSourceModel](ctx),
-							Computed:    true,
-						},
-						"patching_mode": schema.StringAttribute{
-							Computed:   true,
-							CustomType: fwtypes.StringEnumType[odbtypes.PatchingModeType](),
-						},
-						"preference": schema.StringAttribute{
-							Computed:   true,
-							CustomType: fwtypes.StringEnumType[odbtypes.PreferenceType](),
-						},
-						"weeks_of_month": schema.SetAttribute{
-							ElementType: types.Int32Type,
-							Computed:    true,
-						},
-					},
-				},
-			},
-		},*/
 	}
 }
 
