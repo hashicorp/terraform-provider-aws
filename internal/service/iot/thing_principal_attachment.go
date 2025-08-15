@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
@@ -83,8 +84,13 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	principal := d.Get(names.AttrPrincipal).(string)
-	thing := d.Get("thing").(string)
+	id := d.Id()
+	parts := strings.Split(id, "|")
+	if len(parts) != 2 {
+		return sdkdiag.AppendErrorf(diags, "unexpected format for ID (%s), expected thing|principal", id)
+	}
+	thing := parts[0]
+	principal := parts[1]
 
 	_, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
 
