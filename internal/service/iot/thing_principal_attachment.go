@@ -118,8 +118,8 @@ func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Client, thing, principal string) (*string, error) {
-	input := &iot.ListThingPrincipalsInput{
+func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Client, thing, principal string) (*awstypes.ThingPrincipalObject, error) {
+	input := &iot.ListThingPrincipalsV2Input{
 		ThingName: aws.String(thing),
 	}
 
@@ -128,7 +128,7 @@ func findThingPrincipalAttachmentByTwoPartKey(ctx context.Context, conn *iot.Cli
 	})
 }
 
-func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsInput, filter tfslices.Predicate[string]) (*string, error) {
+func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsV2Input, filter tfslices.Predicate[string]) (*awstypes.ThingPrincipalObject, error) {
 	output, err := findThingPrincipals(ctx, conn, input, filter)
 
 	if err != nil {
@@ -138,10 +138,10 @@ func findThingPrincipal(ctx context.Context, conn *iot.Client, input *iot.ListTh
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsInput, filter tfslices.Predicate[string]) ([]string, error) {
-	var output []string
+func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListThingPrincipalsV2Input, filter tfslices.Predicate[string]) ([]awstypes.ThingPrincipalObject, error) {
+	var output []awstypes.ThingPrincipalObject
 
-	pages := iot.NewListThingPrincipalsPaginator(conn, input)
+	pages := iot.NewListThingPrincipalsV2Paginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -156,8 +156,8 @@ func findThingPrincipals(ctx context.Context, conn *iot.Client, input *iot.ListT
 			return nil, err
 		}
 
-		for _, v := range page.Principals {
-			if filter(v) {
+		for _, v := range page.ThingPrincipalObjects {
+			if filter(aws.ToString(v.Principal)) {
 				output = append(output, v)
 			}
 		}
