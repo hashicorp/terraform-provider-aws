@@ -153,25 +153,25 @@ func TestAccDynamoDBContributorInsights_disappears(t *testing.T) {
 
 func testAccContributorInsightsBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-  resource "aws_dynamodb_table" "test" {
-    name           = %[1]q
-    read_capacity  = 2
-    write_capacity = 2
-    hash_key       = %[1]q
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = %[1]q
 
-    attribute {
-      name = %[1]q
-      type = "S"
-    }
-
-    global_secondary_index {
-      name            = "%[1]s-index"
-      hash_key        = %[1]q
-      projection_type = "ALL"
-      read_capacity   = 1
-      write_capacity  = 1
-    }
+  attribute {
+    name = %[1]q
+    type = "S"
   }
+
+  global_secondary_index {
+    name            = "%[1]s-index"
+    hash_key        = %[1]q
+    projection_type = "ALL"
+    read_capacity   = 1
+    write_capacity  = 1
+  }
+}
   `, rName)
 }
 

@@ -3245,68 +3245,6 @@ func TestAccDynamoDBTable_Replica_MRSC_Create(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_Replica_MRSC_Create_witness(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var conf, replica1 awstypes.TableDescription
-	resourceName := "aws_dynamodb_table.test_mrsc"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 3)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTableConfig_MRSC_replica_witness(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replica"), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"region_name":      knownvalue.StringExact(acctest.AlternateRegion()),
-							"consistency_mode": knownvalue.StringExact((string(awstypes.MultiRegionConsistencyStrong))),
-						}),
-					})),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_table_witness_region_name"), knownvalue.StringExact(acctest.ThirdRegion())),
-				},
-			},
-		},
-	})
-}
-
-func TestAccDynamoDBTable_Replica_MRSC_Create_witness_too_many_replicas(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 3)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccTableConfig_MRSC_replica_witness_too_many_replicas(rName),
-				ExpectError: regexache.MustCompile(`MRSC Replica count of 2 was provided and a Witness region was also provided`),
-			},
-		},
-	})
-}
-
 func TestAccDynamoDBTable_Replica_MRSC_doubleAddCMK(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4139,7 +4077,7 @@ func TestAccDynamoDBTable_Replica_MRSC_TooManyReplicas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_MRSC_replica_count3(rName),
-				ExpectError: regexache.MustCompile(`Too many Replicas were provided 3`),
+				ExpectError: regexache.MustCompile(`Using MultiRegionStrongConsistency supports at most 2 replicas`),
 			},
 		},
 	})
@@ -5956,79 +5894,6 @@ resource "aws_dynamodb_table" "test_mrsc" {
     region_name      = data.aws_region.third.name
     consistency_mode = "STRONG"
   }
-}
-`, rName))
-}
-
-func testAccTableConfig_MRSC_replica_witness(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_region" "third" {
-  provider = "awsthird"
-}
-
-resource "aws_dynamodb_table" "test_mrsc" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name      = data.aws_region.alternate.name
-    consistency_mode = "STRONG"
-  }
-
-  global_table_witness_region_name = data.aws_region.third.name
-}
-`, rName))
-}
-
-func testAccTableConfig_MRSC_replica_witness_too_many_replicas(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_region" "third" {
-  provider = "awsthird"
-}
-
-resource "aws_dynamodb_table" "test_mrsc" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name      = data.aws_region.alternate.name
-    consistency_mode = "STRONG"
-  }
-
-  replica {
-    region_name      = data.aws_region.third.name
-    consistency_mode = "STRONG"
-  }
-
-  global_table_witness_region_name = data.aws_region.third.name
 }
 `, rName))
 }
