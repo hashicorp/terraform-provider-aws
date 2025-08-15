@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -3305,7 +3306,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_performanceInsightsEnabled(t *tes
 	})
 }
 
-func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
+func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3315,6 +3316,8 @@ func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
+	kmsKeyIDExpectNoChange := statecheck.CompareValue(compare.ValuesSame())
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
@@ -3322,7 +3325,7 @@ func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true, "465"),
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "advanced", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -3334,11 +3337,13 @@ func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue("data.aws_kms_key.rds", tfjsonpath.New(names.AttrARN)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
 				},
 			},
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "standard", false, "null"),
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "standard", false, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -3350,6 +3355,7 @@ func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(0)),
 				},
 			},
@@ -3357,7 +3363,121 @@ func TestAccRDSCluster_databaseInsightsMode_create(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_databaseInsightsMode_update(t *testing.T) {
+func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_Disable_PerformanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	kmsKeyIDExpectNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue("data.aws_kms_key.rds", tfjsonpath.New(names.AttrARN)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+			{
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "standard", true, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_Enable_OnUpdate_FromPerformanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	kmsKeyIDExpectNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "null", true, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue("data.aws_kms_key.rds", tfjsonpath.New(names.AttrARN)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(0)),
+				},
+			},
+			{
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "advanced", true, "465"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					kmsKeyIDExpectNoChange.AddStateValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_databaseInsightsMode_defaultKMSKey_Enable_OnUpdate_FromPerformanceInsightsDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3374,7 +3494,7 @@ func TestAccRDSCluster_databaseInsightsMode_update(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "null", true, "null"),
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "null", false, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -3385,12 +3505,13 @@ func TestAccRDSCluster_databaseInsightsMode_update(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("standard")),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_kms_key_id"), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(0)),
 				},
 			},
 			{
-				Config: testAccClusterConfig_databaseInsightsMode(rName, "advanced", true, "465"),
+				Config: testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, "advanced", true, "465"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
@@ -3402,6 +3523,7 @@ func TestAccRDSCluster_databaseInsightsMode_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("database_insights_mode"), knownvalue.StringExact("advanced")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_enabled"), knownvalue.Bool(true)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("performance_insights_kms_key_id"), "data.aws_kms_key.rds", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("performance_insights_retention_period"), knownvalue.Int64Exact(465)),
 				},
 			},
@@ -6841,7 +6963,7 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriod string) string {
+func testAccClusterConfig_databaseInsightsMode_defaultKMSKey(rName, databaseInsightsMode string, performanceInsightsEnabled bool, performanceInsightsRetentionPeriod string) string {
 	if databaseInsightsMode != "null" {
 		databaseInsightsMode = strconv.Quote(databaseInsightsMode)
 	}
