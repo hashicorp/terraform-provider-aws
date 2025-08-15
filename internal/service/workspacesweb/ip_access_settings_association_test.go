@@ -51,6 +51,19 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccIPAccessSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "ip_access_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccIPAccessSettingsAssociationConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the IPAccessSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(ipAccessSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(ipAccessSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "ip_access_settings_arn", ipAccessSettingsResourceName, "ip_access_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -59,6 +72,9 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipAccessSettings1, ipAccessSettings2 awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings_association.test"
+	ipAccessSettingsResourceName1 := "aws_workspacesweb_ip_access_settings.test"
+	ipAccessSettingsResourceName2 := "aws_workspacesweb_ip_access_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,12 +90,16 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_update(t *testing.T) {
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "ip_access_settings_arn", ipAccessSettingsResourceName1, "ip_access_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccIPAccessSettingsAssociationConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "ip_access_settings_arn", ipAccessSettingsResourceName2, "ip_access_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
