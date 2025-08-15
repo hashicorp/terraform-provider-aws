@@ -430,17 +430,17 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *guardrailResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-    var plan guardrailResourceModel
-    resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	var plan guardrailResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    resp.Diagnostics.Append(validateClassicTopicDefinitionLength(ctx, plan)...)
+	resp.Diagnostics.Append(validateClassicTopicDefinitionLength(ctx, plan)...)
 }
 
 func validateClassicTopicDefinitionLength(ctx context.Context, plan guardrailResourceModel) (diags diag.Diagnostics) {
-	if !plan.TopicPolicy.IsNull() {
+	if !!plan.TopicPolicy.IsUnknown() && plan.TopicPolicy.IsNull() {
 		var topicPolicies []guardrailTopicPolicyConfigModel
 		diags.Append(plan.TopicPolicy.ElementsAs(ctx, &topicPolicies, false)...)
 		if diags.HasError() {
@@ -450,7 +450,7 @@ func validateClassicTopicDefinitionLength(ctx context.Context, plan guardrailRes
 		if len(topicPolicies) > 0 {
 			tp := topicPolicies[0]
 
-			if !tp.TierConfig.IsNull() {
+			if !tp.TierConfig.IsUnknown() && !tp.TierConfig.IsNull() {
 				var tierConfigs []guardrailTopicsTierConfigModel
 				diags.Append(tp.TierConfig.ElementsAs(ctx, &tierConfigs, false)...)
 				if diags.HasError() {
@@ -460,7 +460,7 @@ func validateClassicTopicDefinitionLength(ctx context.Context, plan guardrailRes
 				if len(tierConfigs) > 0 &&
 					tierConfigs[0].TierName.ValueString() == string(awstypes.GuardrailTopicsTierNameClassic) {
 
-					if !tp.Topics.IsNull() {
+					if !tp.Topics.IsUnknown() && !tp.Topics.IsNull() {
 						var topics []guardrailTopicConfigModel
 						diags.Append(tp.Topics.ElementsAs(ctx, &topics, false)...)
 						if diags.HasError() {
