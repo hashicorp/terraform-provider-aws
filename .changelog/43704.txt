@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_ivs_channel: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ivs_playback_key_pair: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_ivs_recording_configuration: Add resource identity support
+```

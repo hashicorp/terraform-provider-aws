@@ -12,6 +12,7 @@ var (
 	ResourceResourcePolicy                           = resourceResourcePolicy
 	ResourceRuleGroup                                = resourceRuleGroup
 	ResourceTLSInspectionConfiguration               = newTLSInspectionConfigurationResource
+	ResourceVPCEndpointAssociation                   = newVPCEndpointAssociationResource
 
 	FindFirewallByARN                   = findFirewallByARN
 	FindFirewallPolicyByARN             = findFirewallPolicyByARN
@@ -19,4 +20,5 @@ var (
 	FindResourcePolicyByARN             = findResourcePolicyByARN
 	FindRuleGroupByARN                  = findRuleGroupByARN
 	FindTLSInspectionConfigurationByARN = findTLSInspectionConfigurationByARN
+	FindVPCEndpointAssociationByARN     = findVPCEndpointAssociationByARN
 )
