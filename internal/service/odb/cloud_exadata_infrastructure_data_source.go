@@ -227,8 +227,6 @@ func (d *dataSourceCloudExadataInfrastructure) Read(ctx context.Context, req dat
 		)
 		return
 	}
-
-	//data.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
