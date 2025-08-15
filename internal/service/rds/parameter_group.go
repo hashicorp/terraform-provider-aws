@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfiters "github.com/hashicorp/terraform-provider-aws/internal/iters"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -466,5 +466,5 @@ parameterLoop:
 	chunks = append(chunks, slices.Chunk(immediate, maxChunkSize))
 	chunks = append(chunks, slices.Chunk(pendingReboot, maxChunkSize))
 
-	return tfiters.Concat(chunks...)
+	return tfiter.Concat(chunks...)
 }

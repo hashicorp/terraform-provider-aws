@@ -91,7 +91,7 @@ func (t SmithyJSONType[T]) ValueFromString(ctx context.Context, in basetypes.Str
 		return SmithyJSONUnknown[T](), diags
 	}
 
-	return SmithyJSONValue[T](in.ValueString(), t.f), diags
+	return SmithyJSONValue(in.ValueString(), t.f), diags
 }
 
 var (

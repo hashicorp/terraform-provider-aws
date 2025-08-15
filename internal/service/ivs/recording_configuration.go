@@ -28,15 +28,14 @@ import (
 
 // @SDKResource("aws_ivs_recording_configuration", name="Recording Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.RecordingConfiguration")
+// @Testing(preIdentityVersion="v6.7.0")
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,
 		ReadWithoutTimeout:   resourceRecordingConfigurationRead,
 		DeleteWithoutTimeout: resourceRecordingConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),

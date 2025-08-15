@@ -87,6 +87,18 @@ func dataSourceFirewallPolicy() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"flow_timeouts": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"tcp_idle_timeout_seconds": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+												},
+											},
+										},
 										"rule_order": {
 											Type:     schema.TypeString,
 											Computed: true,

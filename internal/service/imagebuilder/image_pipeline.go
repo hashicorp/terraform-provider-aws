@@ -590,7 +590,7 @@ func flattenECRConfiguration(apiObject *awstypes.EcrConfiguration) map[string]an
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringSlice(v)
+		tfMap["container_tags"] = v
 	}
 
 	return tfMap

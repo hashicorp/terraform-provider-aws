@@ -273,6 +273,13 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
 				),
 			},
+			{
+				Config: testAccFunctionConfig_concurrencyPublished(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
+				),
+			},
 		},
 	})
 }
@@ -2832,6 +2839,22 @@ resource "aws_lambda_function" "test" {
   function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
+  runtime                        = "nodejs20.x"
+  reserved_concurrent_executions = 222
+}
+`, rName))
+}
+
+func testAccFunctionConfig_concurrencyPublished(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = %[1]q
+  role                           = aws_iam_role.iam_for_lambda.arn
+  handler                        = "exports.example"
+  publish                        = true
   runtime                        = "nodejs20.x"
   reserved_concurrent_executions = 222
 }
