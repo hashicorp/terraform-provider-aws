@@ -184,7 +184,9 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 
 	conn := r.Meta().CognitoIDPClient(ctx)
 
-	mlb, err := findManagedLoginBrandingByTwoPartKey(ctx, conn, data.UserPoolID.ValueString(), data.ManagedLoginBrandingID.ValueString())
+	userPoolID, managedLoginBrandingID := fwflex.StringValueFromFramework(ctx, data.UserPoolID), fwflex.StringValueFromFramework(ctx, data.ManagedLoginBrandingID)
+	// Return only customized values.
+	mlb, err := findManagedLoginBrandingByThreePartKey(ctx, conn, userPoolID, managedLoginBrandingID, false)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -194,7 +196,7 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", data.ManagedLoginBrandingID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
 
 		return
 	}
@@ -221,6 +223,7 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 
 	conn := r.Meta().CognitoIDPClient(ctx)
 
+	userPoolID, managedLoginBrandingID := fwflex.StringValueFromFramework(ctx, new.UserPoolID), fwflex.StringValueFromFramework(ctx, new.ManagedLoginBrandingID)
 	var input cognitoidentityprovider.UpdateManagedLoginBrandingInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 	if response.Diagnostics.HasError() {
@@ -248,7 +251,7 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 	_, err = conn.UpdateManagedLoginBranding(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito Managed Login Branding (%s)", new.ManagedLoginBrandingID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
 
 		return
 	}
@@ -265,13 +268,14 @@ func (r *managedLoginBrandingResource) Delete(ctx context.Context, request resou
 
 	conn := r.Meta().CognitoIDPClient(ctx)
 
+	userPoolID, managedLoginBrandingID := fwflex.StringValueFromFramework(ctx, data.UserPoolID), fwflex.StringValueFromFramework(ctx, data.ManagedLoginBrandingID)
 	tflog.Debug(ctx, "deleting Cognito Managed Login Branding", map[string]any{
-		"managed_login_branding_id": data.ManagedLoginBrandingID.ValueString(),
-		names.AttrUserPoolID:        data.UserPoolID.ValueString(),
+		"managed_login_branding_id": managedLoginBrandingID,
+		names.AttrUserPoolID:        userPoolID,
 	})
 	input := cognitoidentityprovider.DeleteManagedLoginBrandingInput{
-		ManagedLoginBrandingId: fwflex.StringFromFramework(ctx, data.ManagedLoginBrandingID),
-		UserPoolId:             fwflex.StringFromFramework(ctx, data.UserPoolID),
+		ManagedLoginBrandingId: aws.String(managedLoginBrandingID),
+		UserPoolId:             aws.String(userPoolID),
 	}
 	_, err := conn.DeleteManagedLoginBranding(ctx, &input)
 
@@ -280,7 +284,7 @@ func (r *managedLoginBrandingResource) Delete(ctx context.Context, request resou
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Cognito Managed Login Branding (%s)", data.ManagedLoginBrandingID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
 
 		return
 	}
@@ -302,14 +306,18 @@ func (r *managedLoginBrandingResource) ImportState(ctx context.Context, request 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("managed_login_branding_id"), parts[1])...)
 }
 
-func findManagedLoginBrandingByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, managedLoginBrandingID string) (*awstypes.ManagedLoginBrandingType, error) {
+func findManagedLoginBrandingByThreePartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, managedLoginBrandingID string, returnMergedResources bool) (*awstypes.ManagedLoginBrandingType, error) {
 	input := cognitoidentityprovider.DescribeManagedLoginBrandingInput{
 		ManagedLoginBrandingId: aws.String(managedLoginBrandingID),
-		ReturnMergedResources:  false, // Return only customized values.
+		ReturnMergedResources:  returnMergedResources,
 		UserPoolId:             aws.String(userPoolID),
 	}
 
-	output, err := conn.DescribeManagedLoginBranding(ctx, &input)
+	return findManagedLoginBranding(ctx, conn, &input)
+}
+
+func findManagedLoginBranding(ctx context.Context, conn *cognitoidentityprovider.Client, input *cognitoidentityprovider.DescribeManagedLoginBrandingInput) (*awstypes.ManagedLoginBrandingType, error) {
+	output, err := conn.DescribeManagedLoginBranding(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
