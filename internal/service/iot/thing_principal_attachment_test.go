@@ -104,8 +104,8 @@ func TestAccIoTThingPrincipalAttachment_thingPrincipalType(t *testing.T) {
 					testAccCheckThingPrincipalAttachmentExists(ctx, "aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentStatus(ctx, thingName, true, []string{"aws_iot_certificate.cert"}),
 					resource.TestCheckResourceAttr(resourceName, "thing_principal_type", string(awstypes.ThingPrincipalTypeExclusiveThing)),
-					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", resourceCertName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceCertName, names.AttrARN),
 				),
 			},
 			{
@@ -127,8 +127,8 @@ func TestAccIoTThingPrincipalAttachment_thingPrincipalType(t *testing.T) {
 					testAccCheckThingPrincipalAttachmentExists(ctx, "aws_iot_thing_principal_attachment.att"),
 					testAccCheckThingPrincipalAttachmentStatus(ctx, thingName, true, []string{"aws_iot_certificate.cert"}),
 					resource.TestCheckResourceAttr(resourceName, "thing_principal_type", string(awstypes.ThingPrincipalTypeNonExclusiveThing)),
-					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", resourceCertName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "thing", resourceThingName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceCertName, names.AttrARN),
 				),
 			},
 			{
