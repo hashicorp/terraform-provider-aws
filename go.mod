@@ -95,15 +95,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/drs v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.47.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.243.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.48.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.244.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.0
@@ -125,15 +125,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/fms v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.60.0
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.124.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.125.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.31.0
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.80.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.79.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.38.0
@@ -192,7 +192,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.14.0
-	github.com/aws/aws-sdk-go-v2/service/pcs v1.10.0
+	github.com/aws/aws-sdk-go-v2/service/pcs v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.22.0
@@ -234,7 +234,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/ses v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.51.0
@@ -266,7 +266,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.66.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.34.0
 	github.com/aws/smithy-go v1.22.5
