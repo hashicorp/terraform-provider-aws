@@ -80,6 +80,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_directory_name", resourceName, "workspace_directory_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_security_group_id", resourceName, "workspace_security_group_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workspace_type", resourceName, "workspace_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tenancy", resourceName, "tenancy"),
 				),
 			},
 		},
@@ -139,6 +140,8 @@ resource "aws_workspaces_directory" "test" {
     enable_maintenance_mode             = false
     user_enabled_as_local_administrator = false
   }
+
+  tenancy = "DEDICATED"
 
   tags = {
     Name = "tf-testacc-workspaces-directory-%[1]s"
