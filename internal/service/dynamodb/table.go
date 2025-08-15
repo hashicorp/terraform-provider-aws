@@ -917,6 +917,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrStreamARN, table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
+	if err := d.Set("global_table_witness_region_name", flattenGlobalTableWitnesses(table.GlobalTableWitnesses)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_table_witness_region_name", err)
+	}
+
 	sse := flattenTableServerSideEncryption(table.SSEDescription)
 	sse = clearSSEDefaultKey(ctx, c, sse)
 
@@ -1173,6 +1177,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("%s GSI (%s): %w", create.ErrActionWaitingForCreation, idxName, err))
 		}
 	}
+	global_table_witness_region_name := ""
+	if v, ok := d.GetOk("global_table_witness_region_name"); ok {
+		global_table_witness_region_name = v.(string)
+	}
 
 	if d.HasChange("server_side_encryption") {
 		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]any)); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
@@ -1265,7 +1273,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange("replica") {
 		replicaTagsChange = true
 
-		if err := updateReplica(ctx, conn, d); err != nil {
+		if err := updateReplica(ctx, conn, d, global_table_witness_region_name); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1305,7 +1313,8 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 			// ValidationException: Replica specified in the Replica Update or Replica Delete action of the request was not found.
 			// ValidationException: Cannot add, delete, or update the local region through ReplicaUpdates. Use CreateTable, DeleteTable, or UpdateTable as required.
 			if !tfawserr.ErrMessageContains(err, errCodeValidationException, "request was not found") &&
-				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") {
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "Cannot add, delete, or update the local region through ReplicaUpdates") &&
+				!tfawserr.ErrMessageContains(err, errCodeValidationException, "MultiRegionConsistency must be set as STRONG when GlobalTableWitnessUpdates parameter is present") {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTable, d.Id(), err)
 			}
 		}
@@ -1398,7 +1407,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			}
 		}
 	}
-	fmt.Printf("[DEBUG] global table witness region: %v and numReplicas (%v) and numReplicasMRSC (%v)\n", gt_witness_reg_name, numReplicas, numReplicasMRSC)
+	log.Printf("[DEBUG] global table witness region: %v and numReplicas (%v) and numReplicasMRSC (%v)\n", gt_witness_reg_name, numReplicas, numReplicasMRSC)
 
 	if numReplicasMRSC > 0 {
 		MRSCErrorMsg := "creating replicas: Using MultiRegionStrongConsistency requires exactly 2 replicas, or 1 replica and 1 witness region."
@@ -1406,10 +1415,10 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			return fmt.Errorf("%s", MRSCErrorMsg)
 		}
 		if numReplicasMRSC == 1 && gt_witness_reg_name == "" {
-			return fmt.Errorf("%s Only MRSC Replica count of 1 was provided but no Witness region was provided.", MRSCErrorMsg)
+			return fmt.Errorf("%s Only MRSC Replica count of 1 was provided but no Witness region was provided", MRSCErrorMsg)
 		}
-		if numReplicasMRSC == 2 && numReplicasMRSC == numReplicas && gt_witness_reg_name != "" {
-			return fmt.Errorf("%s MRSC Replica count of 2 was provided and a Witness region was also provided.", MRSCErrorMsg)
+		if numReplicasMRSC == 2 && (numReplicasMRSC == numReplicas && gt_witness_reg_name != "") {
+			return fmt.Errorf("%s MRSC Replica count of 2 was provided and a Witness region was also provided", MRSCErrorMsg)
 		}
 		if numReplicasMRSC > 2 {
 			return fmt.Errorf("%s Too many Replicas were provided %v", MRSCErrorMsg, numReplicasMRSC)
@@ -1712,7 +1721,7 @@ func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, en
 	return nil
 }
 
-func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData) error {
+func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData, gt_witness_reg_name string) error {
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
@@ -1801,19 +1810,19 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 	}
 
 	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
-		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate), ""); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate), gt_witness_reg_name); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toRemove) > 0 {
-		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate), ""); err != nil {
+		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate), gt_witness_reg_name); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
 	if len(toAdd) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate), ""); err != nil {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, true, d.Timeout(schema.TimeoutCreate), gt_witness_reg_name); err != nil {
 			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
@@ -2041,11 +2050,12 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			ReplicaUpdates:            replicaDeletes,
 			GlobalTableWitnessUpdates: witnessDeletes,
 		}
-		fmt.Printf("[DEBUG] Deleting Replicas: %+v", input)
+		log.Printf("[DEBUG] Deleting Replicas: %+v\n, tablename: %+v", input, aws.String(tableName))
 		err := retry.RetryContext(ctx, updateTableTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateTable(ctx, input)
 			notFoundRetries := 0
 			if err != nil {
+				log.Printf("[DEBUG] UpdateTable Error: %+v\n", err)
 				if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
 					return retry.RetryableError(err)
 				}
@@ -2479,6 +2489,24 @@ func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []any {
 	}
 
 	return []any{m}
+}
+
+func flattenGlobalTableWitnesses(apiObjects []awstypes.GlobalTableWitnessDescription) string {
+	if apiObjects == nil {
+		return ""
+	}
+
+	if len(apiObjects) > 1 {
+		return ""
+	}
+
+	for _, apiObject := range apiObjects {
+		if apiObject.RegionName != nil {
+			return aws.ToString(apiObject.RegionName)
+		}
+	}
+
+	return ""
 }
 
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]any {
