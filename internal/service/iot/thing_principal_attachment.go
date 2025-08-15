@@ -92,7 +92,7 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	thing := parts[0]
 	principal := parts[1]
 
-	_, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
+	out, err := findThingPrincipalAttachmentByTwoPartKey(ctx, conn, thing, principal)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Principal Attachment (%s) not found, removing from state", d.Id())
@@ -103,6 +103,10 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Principal Attachment (%s): %s", d.Id(), err)
 	}
+
+	d.Set(names.AttrPrincipal, out.Principal)
+	d.Set("thing", thing)
+	d.Set("thing_principal_type", out.ThingPrincipalType)
 
 	return diags
 }
