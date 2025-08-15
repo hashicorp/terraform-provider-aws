@@ -51,6 +51,19 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccDataProtectionSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "data_protection_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the DataProtectionSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(dataProtectionSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(dataProtectionSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName, "data_protection_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -59,6 +72,9 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_update(t *testing.T) 
 	ctx := acctest.Context(t)
 	var dataProtectionSettings1, dataProtectionSettings2 awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings_association.test"
+	dataProtectionSettingsResourceName1 := "aws_workspacesweb_data_protection_settings.test"
+	dataProtectionSettingsResourceName2 := "aws_workspacesweb_data_protection_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,12 +90,16 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_update(t *testing.T) 
 				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName1, "data_protection_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccDataProtectionSettingsAssociationConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName2, "data_protection_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
