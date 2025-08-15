@@ -12,7 +12,6 @@ on:
       - .teamcity/**
       - .release/**
       - infrastructure/repository/labels-service.tf
-      - .goreleaser.yml
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
