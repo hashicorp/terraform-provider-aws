@@ -54,14 +54,16 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "session_logger_arn",
 			},
 			{
-				// The test case below updates the SessionLogger resource (thereby forcing a refresh of that resource) so that we can test if associated_portal_arns are populated after the association was created in the first testcase above
-				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName+"-updated", string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
-					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName, "session_logger_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					//The following checks are for the SessionLogger Resource and the PortalResource (and not for the association resource).
 					resource.TestCheckResourceAttr(sessionLoggerResourceName, "associated_portal_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(sessionLoggerResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "session_logger_arn", sessionLoggerResourceName, "session_logger_arn"),
 				),
 			},
 		},
@@ -73,6 +75,9 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_update(t *testing.T) {
 	var sessionLogger1, sessionLogger2 awstypes.SessionLogger
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspacesweb_session_logger_association.test"
+	sessionLoggerResourceName1 := "aws_workspacesweb_session_logger.test"
+	sessionLoggerResourceName2 := "aws_workspacesweb_session_logger.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -88,12 +93,16 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_update(t *testing.T) {
 				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger1),
+					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName1, "session_logger_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccSessionLoggerAssociationConfig_updated(rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger2),
+					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName2, "session_logger_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
