@@ -6521,62 +6521,74 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier           = %[1]q
-  engine                       = %[3]q
-  db_cluster_instance_class    = "db.m6gd.large"
-  storage_type                 = "io1"
-  allocated_storage            = 100
-  iops                         = 1000
-  master_username              = "tfacctest"
-  master_password              = "avoid-plaintext-passwords"
-  skip_final_snapshot          = true
+  cluster_identifier        = %[1]q
+  engine                    = %[3]q
+  db_cluster_instance_class = "db.m6gd.large"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+
   performance_insights_enabled = %[2]t
 }
-`, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL)
+`, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL))
 }
 
 func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  db_cluster_instance_class = "db.m6gd.large"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = aws_kms_key.test.arn
+}
+
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
   enable_key_rotation     = true
 }
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  engine                          = %[2]q
-  db_cluster_instance_class       = "db.m6gd.large"
-  storage_type                    = "io1"
-  allocated_storage               = 100
-  iops                            = 1000
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  skip_final_snapshot             = true
-  performance_insights_enabled    = true
-  performance_insights_kms_key_id = aws_kms_key.test.arn
-}
-`, rName, tfrds.ClusterEngineMySQL)
+`, rName, tfrds.ClusterEngineMySQL))
 }
 
-func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string) string {
-	return fmt.Sprintf(`
+func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string, period int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier                    = %[1]q
-  engine                                = %[2]q
-  db_cluster_instance_class             = "db.m6gd.large"
-  storage_type                          = "io1"
-  allocated_storage                     = 100
-  iops                                  = 1000
-  master_username                       = "tfacctest"
-  master_password                       = "avoid-plaintext-passwords"
-  skip_final_snapshot                   = true
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  db_cluster_instance_class = "db.m6gd.large"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+
   performance_insights_enabled          = true
-  performance_insights_retention_period = 62
+  performance_insights_retention_period = %d
 }
-`, rName, tfrds.ClusterEngineMySQL)
+`, rName, tfrds.ClusterEngineMySQL, period))
 }
 
 func testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
