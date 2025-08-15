@@ -26,6 +26,7 @@ This resource supports the following arguments:
 * `table_name` - (Required) The name of the table to enable contributor insights
 * `index_name` - (Optional) The global secondary index name
 * `mode` - (Optional) argument to specify the [CloudWatch contributor insights mode](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/contributorinsights_HowItWorks.html#contributorinsights_HowItWorks.Modes)
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
