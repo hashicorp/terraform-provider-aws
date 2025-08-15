@@ -9462,9 +9462,6 @@ service "odb" {
     v1_package = ""
     v2_package = "odb"
   }
-  client{
-    skip_client_generate = true
-  }
   resource_prefix{
     correct = "aws_odb_"
   }

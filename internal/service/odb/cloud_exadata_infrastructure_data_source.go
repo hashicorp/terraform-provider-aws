@@ -1,32 +1,31 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_cloud_exadata_infrastructure", name="Cloud Exadata Infrastructure")
+// @Tags(identifierAttribute="arn")
 func newDataSourceCloudExadataInfrastructure(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudExadataInfrastructure{}, nil
 }
@@ -185,6 +184,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The time when the Exadata infrastructure was created.",
 			},
 			"database_server_type": schema.StringAttribute{
@@ -195,45 +195,61 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				Computed:    true,
 				Description: "The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.",
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"maintenance_window": schema.ObjectAttribute{
+			"customer_contacts_to_send_to_oci": schema.SetAttribute{
+				CustomType:  fwtypes.NewSetNestedObjectTypeOf[customerContactExaInfraDataSourceModel](ctx),
 				Computed:    true,
-				CustomType:  fwtypes.NewObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
-				Description: "The maintenance window for the Exadata infrastructure.",
-				AttributeTypes: map[string]attr.Type{
-					"custom_action_timeout_in_mins": types.Int32Type,
-					"days_of_week": types.SetType{
-						ElemType: fwtypes.StringEnumType[odbtypes.DayOfWeekName](),
-					},
-					"hours_of_day": types.SetType{
-						ElemType: types.Int32Type,
-					},
-					"is_custom_action_timeout_enabled": types.BoolType,
-					"lead_time_in_weeks":               types.Int32Type,
-					"months": types.SetType{
-						ElemType: fwtypes.StringEnumType[odbtypes.MonthName](),
-					},
-					"patching_mode": fwtypes.StringEnumType[odbtypes.PatchingModeType](),
-					"preference":    fwtypes.StringEnumType[odbtypes.PreferenceType](),
-					"weeks_of_month": types.SetType{
-						ElemType: types.Int32Type,
-					},
-				},
+				Description: "The email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure.",
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"maintenance_window": schema.ListAttribute{
+				Computed:    true,
+				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"customer_contacts_to_send_to_oci": schema.SetNestedBlock{
-				Description: "Customer contact emails to send to OCI.",
-				CustomType:  fwtypes.NewSetNestedObjectTypeOf[customerContactDataSourceModel](ctx),
+		/*Blocks: map[string]schema.Block{
+			"maintenance_window": schema.ListNestedBlock{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx),
+				Description: " The scheduling details for the maintenance window. Patching and system updates take place during the maintenance window ",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"email": schema.StringAttribute{
+						"custom_action_timeout_in_mins": schema.Int32Attribute{
 							Computed: true,
+						},
+						"days_of_week": schema.SetAttribute{
+							ElementType: fwtypes.NewObjectTypeOf[dayOfWeekExaInfraMaintenanceWindowDataSourceModel](ctx),
+							Computed:    true,
+						},
+						"hours_of_day": schema.SetAttribute{
+							ElementType: types.Int32Type,
+							Computed:    true,
+						},
+						"is_custom_action_timeout_enabled": schema.BoolAttribute{
+							Computed: true,
+						},
+						"lead_time_in_weeks": schema.Int32Attribute{
+							Computed: true,
+						},
+						"months": schema.SetAttribute{
+							ElementType: fwtypes.NewObjectTypeOf[monthExaInfraMaintenanceWindowDataSourceModel](ctx),
+							Computed:    true,
+						},
+						"patching_mode": schema.StringAttribute{
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[odbtypes.PatchingModeType](),
+						},
+						"preference": schema.StringAttribute{
+							Computed:   true,
+							CustomType: fwtypes.StringEnumType[odbtypes.PreferenceType](),
+						},
+						"weeks_of_month": schema.SetAttribute{
+							ElementType: types.Int32Type,
+							Computed:    true,
 						},
 					},
 				},
 			},
-		},
+		},*/
 	}
 }
 
@@ -254,19 +270,8 @@ func (d *dataSourceCloudExadataInfrastructure) Read(ctx context.Context, req dat
 		)
 		return
 	}
-	tagsRead, err := listTags(ctx, conn, *out.CloudExadataInfrastructureArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameCloudExadataInfrastructure, data.CloudExadataInfrastructureId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if tagsRead != nil {
-		data.Tags = tftags.FlattenStringValueMap(ctx, tagsRead.Map())
-	}
-	data.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
-	data.MaintenanceWindow = d.flattenMaintenanceWindow(ctx, out.MaintenanceWindow)
+
+	//data.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -299,127 +304,69 @@ func FindOdbExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client,
 	return out.CloudExadataInfrastructure, nil
 }
 
-func (d *dataSourceCloudExadataInfrastructure) flattenMaintenanceWindow(ctx context.Context, obdExaInfraMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudExadataInfraMaintenanceWindowDataSourceModel] {
-	//days of week
-	daysOfWeek := make([]attr.Value, 0, len(obdExaInfraMW.DaysOfWeek))
-	for _, dayOfWeek := range obdExaInfraMW.DaysOfWeek {
-		dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
-		daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
-	}
-	setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
-	daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
-		SetValue: setValueOfDaysOfWeek,
-	}
-	//hours of the day
-	hoursOfTheDay := make([]attr.Value, 0, len(obdExaInfraMW.HoursOfDay))
-	for _, hourOfTheDay := range obdExaInfraMW.HoursOfDay {
-		daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
-		hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
-	}
-	setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
-	hoursOfTheDayRead := fwtypes.SetValueOf[types.Int64]{
-		SetValue: setValuesOfHoursOfTheDay,
-	}
-	//months
-	months := make([]attr.Value, 0, len(obdExaInfraMW.Months))
-	for _, month := range obdExaInfraMW.Months {
-		monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
-		months = append(months, monthStringValue)
-	}
-	setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
-	monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
-		SetValue: setValuesOfMonth,
-	}
-	//weeks of month
-	weeksOfMonth := make([]attr.Value, 0, len(obdExaInfraMW.WeeksOfMonth))
-	for _, weekOfMonth := range obdExaInfraMW.WeeksOfMonth {
-		weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
-		weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
-	}
-	setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
-	weeksOfMonthRead := fwtypes.SetValueOf[types.Int64]{
-		SetValue: setValuesOfWeekOfMonth,
-	}
-
-	flattenMW := cloudExadataInfraMaintenanceWindowDataSourceModel{
-		CustomActionTimeoutInMins:    types.Int32PointerValue(obdExaInfraMW.CustomActionTimeoutInMins),
-		DaysOfWeek:                   daysOfWeekRead,
-		HoursOfDay:                   hoursOfTheDayRead,
-		IsCustomActionTimeoutEnabled: types.BoolPointerValue(obdExaInfraMW.IsCustomActionTimeoutEnabled),
-		LeadTimeInWeeks:              types.Int32PointerValue(obdExaInfraMW.LeadTimeInWeeks),
-		Months:                       monthsRead,
-		PatchingMode:                 fwtypes.StringEnumValue(obdExaInfraMW.PatchingMode),
-		Preference:                   fwtypes.StringEnumValue(obdExaInfraMW.Preference),
-		WeeksOfMonth:                 weeksOfMonthRead,
-	}
-	if obdExaInfraMW.LeadTimeInWeeks == nil {
-		flattenMW.LeadTimeInWeeks = types.Int32Value(0)
-	}
-	if obdExaInfraMW.CustomActionTimeoutInMins == nil {
-		flattenMW.CustomActionTimeoutInMins = types.Int32Value(0)
-	}
-	if obdExaInfraMW.IsCustomActionTimeoutEnabled == nil {
-		flattenMW.IsCustomActionTimeoutEnabled = types.BoolValue(false)
-	}
-
-	result, _ := fwtypes.NewObjectValueOf[cloudExadataInfraMaintenanceWindowDataSourceModel](ctx, &flattenMW)
-	return result
-}
-
 type cloudExadataInfrastructureDataSourceModel struct {
 	framework.WithRegionModel
-	ActivatedStorageCount         types.Int32                                                              `tfsdk:"activated_storage_count"`
-	AdditionalStorageCount        types.Int32                                                              `tfsdk:"additional_storage_count"`
-	AvailabilityZone              types.String                                                             `tfsdk:"availability_zone"`
-	AvailabilityZoneId            types.String                                                             `tfsdk:"availability_zone_id"`
-	AvailableStorageSizeInGBs     types.Int32                                                              `tfsdk:"available_storage_size_in_gbs"`
-	CloudExadataInfrastructureArn types.String                                                             `tfsdk:"arn"`
-	CloudExadataInfrastructureId  types.String                                                             `tfsdk:"id"`
-	ComputeCount                  types.Int32                                                              `tfsdk:"compute_count"`
-	CpuCount                      types.Int32                                                              `tfsdk:"cpu_count"`
-	DataStorageSizeInTBs          types.Float64                                                            `tfsdk:"data_storage_size_in_tbs"`
-	DbNodeStorageSizeInGBs        types.Int32                                                              `tfsdk:"db_node_storage_size_in_gbs"`
-	DbServerVersion               types.String                                                             `tfsdk:"db_server_version"`
-	DisplayName                   types.String                                                             `tfsdk:"display_name"`
-	LastMaintenanceRunId          types.String                                                             `tfsdk:"last_maintenance_run_id"`
-	MaxCpuCount                   types.Int32                                                              `tfsdk:"max_cpu_count"`
-	MaxDataStorageInTBs           types.Float64                                                            `tfsdk:"max_data_storage_in_tbs"`
-	MaxDbNodeStorageSizeInGBs     types.Int32                                                              `tfsdk:"max_db_node_storage_size_in_gbs"`
-	MaxMemoryInGBs                types.Int32                                                              `tfsdk:"max_memory_in_gbs"`
-	MemorySizeInGBs               types.Int32                                                              `tfsdk:"memory_size_in_gbs"`
-	MonthlyDbServerVersion        types.String                                                             `tfsdk:"monthly_db_server_version"`
-	MonthlyStorageServerVersion   types.String                                                             `tfsdk:"monthly_storage_server_version"`
-	NextMaintenanceRunId          types.String                                                             `tfsdk:"next_maintenance_run_id"`
-	OciResourceAnchorName         types.String                                                             `tfsdk:"oci_resource_anchor_name"`
-	OciUrl                        types.String                                                             `tfsdk:"oci_url"`
-	Ocid                          types.String                                                             `tfsdk:"ocid"`
-	PercentProgress               types.Float64                                                            `tfsdk:"percent_progress"`
-	Shape                         types.String                                                             `tfsdk:"shape"`
-	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                              `tfsdk:"status"`
-	StatusReason                  types.String                                                             `tfsdk:"status_reason"`
-	StorageCount                  types.Int32                                                              `tfsdk:"storage_count"`
-	StorageServerVersion          types.String                                                             `tfsdk:"storage_server_version"`
-	TotalStorageSizeInGBs         types.Int32                                                              `tfsdk:"total_storage_size_in_gbs"`
-	CustomerContactsToSendToOCI   fwtypes.SetNestedObjectValueOf[customerContactDataSourceModel]           `tfsdk:"customer_contacts_to_send_to_oci"`
-	ComputeModel                  fwtypes.StringEnum[odbtypes.ComputeModel]                                `tfsdk:"compute_model"`
-	CreatedAt                     types.String                                                             `tfsdk:"created_at" autoflex:",noflatten"`
-	DatabaseServerType            types.String                                                             `tfsdk:"database_server_type"`
-	StorageServerType             types.String                                                             `tfsdk:"storage_server_type"`
-	MaintenanceWindow             fwtypes.ObjectValueOf[cloudExadataInfraMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" autoflex:",noflatten"`
-	Tags                          tftags.Map                                                               `tfsdk:"tags"`
+	ActivatedStorageCount         types.Int32                                                                        `tfsdk:"activated_storage_count"`
+	AdditionalStorageCount        types.Int32                                                                        `tfsdk:"additional_storage_count"`
+	AvailabilityZone              types.String                                                                       `tfsdk:"availability_zone"`
+	AvailabilityZoneId            types.String                                                                       `tfsdk:"availability_zone_id"`
+	AvailableStorageSizeInGBs     types.Int32                                                                        `tfsdk:"available_storage_size_in_gbs"`
+	CloudExadataInfrastructureArn types.String                                                                       `tfsdk:"arn"`
+	CloudExadataInfrastructureId  types.String                                                                       `tfsdk:"id"`
+	ComputeCount                  types.Int32                                                                        `tfsdk:"compute_count"`
+	CpuCount                      types.Int32                                                                        `tfsdk:"cpu_count"`
+	DataStorageSizeInTBs          types.Float64                                                                      `tfsdk:"data_storage_size_in_tbs"`
+	DbNodeStorageSizeInGBs        types.Int32                                                                        `tfsdk:"db_node_storage_size_in_gbs"`
+	DbServerVersion               types.String                                                                       `tfsdk:"db_server_version"`
+	DisplayName                   types.String                                                                       `tfsdk:"display_name"`
+	LastMaintenanceRunId          types.String                                                                       `tfsdk:"last_maintenance_run_id"`
+	MaxCpuCount                   types.Int32                                                                        `tfsdk:"max_cpu_count"`
+	MaxDataStorageInTBs           types.Float64                                                                      `tfsdk:"max_data_storage_in_tbs"`
+	MaxDbNodeStorageSizeInGBs     types.Int32                                                                        `tfsdk:"max_db_node_storage_size_in_gbs"`
+	MaxMemoryInGBs                types.Int32                                                                        `tfsdk:"max_memory_in_gbs"`
+	MemorySizeInGBs               types.Int32                                                                        `tfsdk:"memory_size_in_gbs"`
+	MonthlyDbServerVersion        types.String                                                                       `tfsdk:"monthly_db_server_version"`
+	MonthlyStorageServerVersion   types.String                                                                       `tfsdk:"monthly_storage_server_version"`
+	NextMaintenanceRunId          types.String                                                                       `tfsdk:"next_maintenance_run_id"`
+	OciResourceAnchorName         types.String                                                                       `tfsdk:"oci_resource_anchor_name"`
+	OciUrl                        types.String                                                                       `tfsdk:"oci_url"`
+	Ocid                          types.String                                                                       `tfsdk:"ocid"`
+	PercentProgress               types.Float64                                                                      `tfsdk:"percent_progress"`
+	Shape                         types.String                                                                       `tfsdk:"shape"`
+	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                                        `tfsdk:"status"`
+	StatusReason                  types.String                                                                       `tfsdk:"status_reason"`
+	StorageCount                  types.Int32                                                                        `tfsdk:"storage_count"`
+	StorageServerVersion          types.String                                                                       `tfsdk:"storage_server_version"`
+	TotalStorageSizeInGBs         types.Int32                                                                        `tfsdk:"total_storage_size_in_gbs"`
+	CustomerContactsToSendToOCI   fwtypes.SetNestedObjectValueOf[customerContactExaInfraDataSourceModel]             `tfsdk:"customer_contacts_to_send_to_oci"`
+	ComputeModel                  fwtypes.StringEnum[odbtypes.ComputeModel]                                          `tfsdk:"compute_model"`
+	CreatedAt                     timetypes.RFC3339                                                                  `tfsdk:"created_at" `
+	DatabaseServerType            types.String                                                                       `tfsdk:"database_server_type"`
+	StorageServerType             types.String                                                                       `tfsdk:"storage_server_type"`
+	MaintenanceWindow             fwtypes.ListNestedObjectValueOf[cloudExadataInfraMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" `
+	Tags                          tftags.Map                                                                         `tfsdk:"tags"`
 }
 
 type cloudExadataInfraMaintenanceWindowDataSourceModel struct {
-	CustomActionTimeoutInMins    types.Int32                                                    `tfsdk:"custom_action_timeout_in_mins"`
-	DaysOfWeek                   fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]] `tfsdk:"days_of_week"`
-	HoursOfDay                   fwtypes.SetValueOf[types.Int64]                                `tfsdk:"hours_of_day"`
-	IsCustomActionTimeoutEnabled types.Bool                                                     `tfsdk:"is_custom_action_timeout_enabled"`
-	LeadTimeInWeeks              types.Int32                                                    `tfsdk:"lead_time_in_weeks"`
-	Months                       fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]     `tfsdk:"months"`
-	PatchingMode                 fwtypes.StringEnum[odbtypes.PatchingModeType]                  `tfsdk:"patching_mode"`
-	Preference                   fwtypes.StringEnum[odbtypes.PreferenceType]                    `tfsdk:"preference"`
-	WeeksOfMonth                 fwtypes.SetValueOf[types.Int64]                                `tfsdk:"weeks_of_month"`
+	CustomActionTimeoutInMins    types.Int32                                                                       `tfsdk:"custom_action_timeout_in_mins"`
+	DaysOfWeek                   fwtypes.SetNestedObjectValueOf[dayOfWeekExaInfraMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week" `
+	HoursOfDay                   fwtypes.SetValueOf[types.Int64]                                                   `tfsdk:"hours_of_day"`
+	IsCustomActionTimeoutEnabled types.Bool                                                                        `tfsdk:"is_custom_action_timeout_enabled"`
+	LeadTimeInWeeks              types.Int32                                                                       `tfsdk:"lead_time_in_weeks"`
+	Months                       fwtypes.SetNestedObjectValueOf[monthExaInfraMaintenanceWindowDataSourceModel]     `tfsdk:"months" `
+	PatchingMode                 fwtypes.StringEnum[odbtypes.PatchingModeType]                                     `tfsdk:"patching_mode"`
+	Preference                   fwtypes.StringEnum[odbtypes.PreferenceType]                                       `tfsdk:"preference"`
+	WeeksOfMonth                 fwtypes.SetValueOf[types.Int64]                                                   `tfsdk:"weeks_of_month"`
 }
-type customerContactDataSourceModel struct {
+
+type dayOfWeekExaInfraMaintenanceWindowDataSourceModel struct {
+	Name fwtypes.StringEnum[odbtypes.DayOfWeekName] `tfsdk:"name"`
+}
+
+type monthExaInfraMaintenanceWindowDataSourceModel struct {
+	Name fwtypes.StringEnum[odbtypes.MonthName] `tfsdk:"name"`
+}
+
+type customerContactExaInfraDataSourceModel struct {
 	Email types.String `tfsdk:"email"`
 }

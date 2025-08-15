@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,19 +6,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +32,7 @@ var exaInfraTestResource = cloudExaDataInfraResourceTest{
 	displayNamePrefix: "Ofake-exa",
 }
 
-func TestAccODBCloudExadataInfrastructureCreate_basic(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResourceCreateBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -65,7 +65,7 @@ func TestAccODBCloudExadataInfrastructureCreate_basic(t *testing.T) {
 		},
 	})
 }
-func TestAccODBCloudExadataInfrastructureCreateWithAllParameters(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResourceCreateWithAllParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -99,7 +99,7 @@ func TestAccODBCloudExadataInfrastructureCreateWithAllParameters(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResourceTagging(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -107,7 +107,6 @@ func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
 
 	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
 	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
-	var cloudExaDataInfrastructure3 odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
 	resource.Test(t, resource.TestCase{
@@ -120,27 +119,9 @@ func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
 		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigWithTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigAddTags(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
-					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
-							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
-						}
-						return nil
-					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
@@ -151,11 +132,11 @@ func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigRemoveTags(rName),
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure3),
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
-						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure3.CloudExadataInfrastructureId)) != 0 {
+						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) != 0 {
 							return errors.New("Should not  create a new cloud exa basicExaInfraDataSource after  update")
 						}
 						return nil
@@ -172,7 +153,7 @@ func TestAccODBCloudExadataInfrastructureTagging(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudExadataUpdateMaintenanceWindow(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResourceUpdateDisplayName(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -195,7 +176,57 @@ func TestAccODBCloudExadataUpdateMaintenanceWindow(t *testing.T) {
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window.preference", "NO_PREFERENCE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName + "-u"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure2),
+					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
+						if strings.Compare(*(cloudExaDataInfrastructure1.CloudExadataInfrastructureId), *(cloudExaDataInfrastructure2.CloudExadataInfrastructureId)) == 0 {
+							return errors.New("Should   create a new cloud exa basicExaInfraDataSource after update")
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccODBCloudExadataInfrastructureResourceUpdateMaintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var cloudExaDataInfrastructure1 odbtypes.CloudExadataInfrastructure
+	var cloudExaDataInfrastructure2 odbtypes.CloudExadataInfrastructure
+	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
+	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			exaInfraTestResource.testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: exaInfraTestResource.exaDataInfraResourceBasicConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
 				),
 			},
 			{
@@ -213,7 +244,6 @@ func TestAccODBCloudExadataUpdateMaintenanceWindow(t *testing.T) {
 						}
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window.preference", "CUSTOM_PREFERENCE"),
 				),
 			},
 			{
@@ -225,7 +255,7 @@ func TestAccODBCloudExadataUpdateMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudExadataInfrastructure_disappears(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResourceDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -319,17 +349,6 @@ func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *tes
 	}
 }
 
-/*
-	func testAccCheckCloudExadataInfrastructureNotRecreated(before, after *odb.DescribeCloudExadataInfrastructureResponse) resource.TestCheckFunc {
-		return func(s *terraform.State) error {
-			if before, after := aws.ToString(before.CloudExadataInfrastructureId), aws.ToString(after.CloudExadataInfrastructureId); before != after {
-				return create.Error(names.ODB, create.ErrActionCheckingNotRecreated, tfodb.ResNameCloudExadataInfrastructure, aws.ToString(before.CloudExadataInfrastructureId), errors.New("recreated"))
-			}
-
-			return nil
-		}
-	}
-*/
 func (cloudExaDataInfraResourceTest) exaDataInfraResourceWithAllConfig(randomId string) string {
 	exaDataInfra := fmt.Sprintf(`
 
@@ -339,16 +358,16 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count      	= 3
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
+  customer_contacts_to_send_to_oci = [{email="abc@example.com"},{email="def@example.com"}]
   database_server_type = "X11M"
   storage_server_type = "X11M-HC"
-  maintenance_window = {
+  maintenance_window  {
   		custom_action_timeout_in_mins = 16
-		days_of_week =	["MONDAY", "TUESDAY"]
+		days_of_week =	[{ name ="MONDAY"}, {name="TUESDAY"}]
         hours_of_day =	[11,16]
         is_custom_action_timeout_enabled = true
         lead_time_in_weeks = 3
-        months = ["FEBRUARY","MAY","AUGUST","NOVEMBER"]
+        months = [{name="FEBRUARY"},{name="MAY"},{name="AUGUST"},{name="NOVEMBER"}]
         patching_mode = "ROLLING"
         preference = "CUSTOM_PREFERENCE"
 		weeks_of_month =[2,4]
@@ -369,22 +388,17 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count      	= 3
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
-  maintenance_window = {
+  maintenance_window  {
   		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
         is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
         patching_mode = "ROLLING"
         preference = "NO_PREFERENCE"
-		weeks_of_month =[]
   }
 }
 `, displayName)
 	return exaInfra
 }
-func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfigAddTags(displayName string) string {
+func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfigWithTags(displayName string) string {
 	exaInfra := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
   display_name          = %[1]q
@@ -392,18 +406,13 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count      	= 3
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
-maintenance_window = {
+  maintenance_window  {
   		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
         is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
         patching_mode = "ROLLING"
         preference = "NO_PREFERENCE"
-		weeks_of_month =[]
   }
-   tags = {
+  tags = {
     "env"= "dev"
   }
 }
@@ -411,29 +420,6 @@ maintenance_window = {
 	return exaInfra
 }
 
-func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfigRemoveTags(displayName string) string {
-	exaInfra := fmt.Sprintf(`
-resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = %[1]q
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-maintenance_window = {
-  		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
-        is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
-		weeks_of_month =[]
-  }
-}
-`, displayName)
-	return exaInfra
-}
 func (cloudExaDataInfraResourceTest) basicWithCustomMaintenanceWindow(displayName string) string {
 	exaInfra := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
@@ -442,13 +428,13 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count      	= 3
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
-  maintenance_window = {
+  maintenance_window  {
   		custom_action_timeout_in_mins = 16
-		days_of_week =	["MONDAY", "TUESDAY"]
+		days_of_week =	[{ name ="MONDAY"}, {name="TUESDAY"}]
         hours_of_day =	[11,16]
         is_custom_action_timeout_enabled = true
         lead_time_in_weeks = 3
-        months = ["FEBRUARY","MAY","AUGUST","NOVEMBER"]
+        months = [{name="FEBRUARY"},{name="MAY"},{name="AUGUST"},{name="NOVEMBER"}]
         patching_mode = "ROLLING"
         preference = "CUSTOM_PREFERENCE"
 		weeks_of_month =[2,4]

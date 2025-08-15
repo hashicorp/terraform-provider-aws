@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -7,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,10 +17,17 @@ import (
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 // Acceptance test access AWS and cost money to run.
+type cloudExaDataInfraDataSourceTest struct {
+	displayNamePrefix string
+}
+
+var exaInfraDataSourceTestEntity = cloudExaDataInfraDataSourceTest{
+	displayNamePrefix: "Ofake-exa",
+}
+
 func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -27,7 +35,7 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	}
 	exaInfraResource := "aws_odb_cloud_exadata_infrastructure.test"
 	exaInfraDataSource := "data.aws_odb_cloud_exadata_infrastructure.test"
-	displayNameSuffix := sdkacctest.RandomWithPrefix("tf_")
+	displayNameSuffix := sdkacctest.RandomWithPrefix(exaInfraDataSourceTestEntity.displayNamePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -35,10 +43,10 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCloudExadataInfrastructureDestroy(ctx),
+		CheckDestroy:             exaInfraDataSourceTestEntity.testAccCheckCloudExadataInfrastructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: basicExaInfraDataSource(displayNameSuffix),
+				Config: exaInfraDataSourceTestEntity.basicExaInfraDataSource(displayNameSuffix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(exaInfraResource, "id", exaInfraDataSource, "id"),
 					resource.TestCheckResourceAttr(exaInfraDataSource, "shape", "Exadata.X9M"),
@@ -51,7 +59,7 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudExadataInfrastructureDestroy(ctx context.Context) resource.TestCheckFunc {
+func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
@@ -74,28 +82,23 @@ func testAccCheckCloudExadataInfrastructureDestroy(ctx context.Context) resource
 	}
 }
 
-func basicExaInfraDataSource(displayNameSuffix string) string {
+func (cloudExaDataInfraDataSourceTest) basicExaInfraDataSource(displayNameSuffix string) string {
 
 	testData := fmt.Sprintf(`
 
 
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = "Ofake_exa_%[1]s"
+  display_name          = %[1]q
   shape             	= "Exadata.X9M"
   storage_count      	= 3
   compute_count         = 2
   availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
-maintenance_window = {
+  customer_contacts_to_send_to_oci = [{email="abc@example.com"},{email="def@example.com"}]
+  maintenance_window  {
   		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
         is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
         patching_mode = "ROLLING"
         preference = "NO_PREFERENCE"
-		weeks_of_month =[]
   }
 }
 
