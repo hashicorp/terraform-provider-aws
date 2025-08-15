@@ -297,6 +297,12 @@ func resourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"worker_replacement_strategy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerReplacementStrategy](),
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -465,6 +471,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
+	d.Set("worker_replacement_strategy", environment.LastUpdate.WorkerReplacementStrategy)
 	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
@@ -593,6 +600,10 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("weekly_maintenance_window_start") {
 			input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
+		}
+
+		if d.HasChange("worker_replacement_strategy") {
+			input.WorkerReplacementStrategy = awstypes.WorkerReplacementStrategy(d.Get("worker_replacement_strategy").(string))
 		}
 
 		_, err := conn.UpdateEnvironment(ctx, input)
