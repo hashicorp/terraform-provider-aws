@@ -79,6 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `portal_endpoint` - Endpoint URL of the portal.
 * `portal_status` - Status of the portal.
 * `renderer_type` - Renderer type of the portal.
+* `session_logger_arn` - ARN of the session logger associated with the portal.
 * `status_reason` - Reason for the current status of the portal.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `trust_store_arn` - ARN of the trust store associated with the portal.

@@ -162,6 +162,12 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"session_logger_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrStatusReason: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -476,6 +482,7 @@ type portalResourceModel struct {
 	PortalEndpoint               types.String                                    `tfsdk:"portal_endpoint"`
 	PortalStatus                 fwtypes.StringEnum[awstypes.PortalStatus]       `tfsdk:"portal_status"`
 	RendererType                 fwtypes.StringEnum[awstypes.RendererType]       `tfsdk:"renderer_type"`
+	SessionLoggerARN             types.String                                    `tfsdk:"session_logger_arn"`
 	StatusReason                 types.String                                    `tfsdk:"status_reason"`
 	Tags                         tftags.Map                                      `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                      `tfsdk:"tags_all"`
