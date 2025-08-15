@@ -51,6 +51,19 @@ func TestAccWorkSpacesWebUserSettingsAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccUserSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "user_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccUserSettingsAssociationConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the UserSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(userSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(userSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "user_settings_arn", userSettingsResourceName, "user_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -59,6 +72,9 @@ func TestAccWorkSpacesWebUserSettingsAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var userSettings1, userSettings2 awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings_association.test"
+	userSettingsResourceName1 := "aws_workspacesweb_user_settings.test"
+	userSettingsResourceName2 := "aws_workspacesweb_user_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -74,12 +90,16 @@ func TestAccWorkSpacesWebUserSettingsAssociation_update(t *testing.T) {
 				Config: testAccUserSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings_arn", userSettingsResourceName1, "user_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccUserSettingsAssociationConfig_updated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings_arn", userSettingsResourceName2, "user_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
