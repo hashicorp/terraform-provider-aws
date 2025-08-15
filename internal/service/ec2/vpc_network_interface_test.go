@@ -1050,6 +1050,47 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInterface_instanceCustomPrimaryImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	var networkInterface awstypes.NetworkInterface
+	var instance awstypes.Instance
+	resourceName := "aws_network_interface.test"
+	instanceResourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_instanceCustomPrimaryImport(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckInstanceExists(ctx, instanceResourceName, &instance),
+					testAccCheckInstanceNetworkInterfaceAttachment(&instance, &networkInterface, 0),
+					resource.TestCheckResourceAttrPair(instanceResourceName, "primary_network_interface_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.#", "1"),
+					resource.TestCheckResourceAttr(instanceResourceName, "network_interface.0.device_index", "0"),
+					resource.TestCheckResourceAttrPair(instanceResourceName, "network_interface.0.network_interface_id", resourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      instanceResourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceImportStateIDFunc(instanceResourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"user_data_replace_on_change",
+					"user_data_base64",
+					names.AttrForceDestroy,
+				},
+			},
+		},
+	})
+}
+
 // checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
 //
 // For example: ip-172-16-10-100.us-west-2.compute.internal
@@ -1219,6 +1260,40 @@ func testAccCheckENIDifferent(iface1 *awstypes.NetworkInterface, iface2 *awstype
 		if aws.ToString(iface1.NetworkInterfaceId) == aws.ToString(iface2.NetworkInterfaceId) {
 			return fmt.Errorf("interface %s should have been replaced, have %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
+		return nil
+	}
+}
+
+// testAccCheckInstanceNetworkInterfaceAttachment verifies that a network interface is attached to an instance at the specified device index
+func testAccCheckInstanceNetworkInterfaceAttachment(instance *awstypes.Instance, networkInterface *awstypes.NetworkInterface, expectedDeviceIndex int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if instance == nil {
+			return fmt.Errorf("instance is nil")
+		}
+		if networkInterface == nil {
+			return fmt.Errorf("network interface is nil")
+		}
+
+		// Find the network interface attachment on the instance
+		var foundAttachment *awstypes.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if *ni.NetworkInterfaceId == *networkInterface.NetworkInterfaceId {
+				foundAttachment = &ni
+				break
+			}
+		}
+
+		if foundAttachment == nil {
+			return fmt.Errorf("network interface %s not found attached to instance %s", *networkInterface.NetworkInterfaceId, *instance.InstanceId)
+		}
+
+		if *foundAttachment.Attachment.DeviceIndex != int32(expectedDeviceIndex) {
+			return fmt.Errorf("network interface %s attached at device index %d, expected %d",
+				*networkInterface.NetworkInterfaceId,
+				*foundAttachment.Attachment.DeviceIndex,
+				expectedDeviceIndex)
+		}
+
 		return nil
 	}
 }
@@ -1665,4 +1740,60 @@ resource "aws_network_interface" "test" {
   private_ip_list         = ["%[1]s"]
 }
 `, strings.Join(privateIPs, `", "`)))
+}
+
+// testAccVPCNetworkInterfaceConfig_instanceCustomPrimaryImport creates an instance with a custom primary network interface
+// This configuration should work for both creation and import
+func testAccVPCNetworkInterfaceConfig_instanceCustomPrimaryImport(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["10.1.1.100"]
+  security_groups = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+
+  network_interface {
+    device_index         = 0
+    network_interface_id = aws_network_interface.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }

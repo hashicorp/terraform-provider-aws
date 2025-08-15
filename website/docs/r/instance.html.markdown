@@ -482,8 +482,23 @@ import {
 }
 ```
 
+Import with network interfaces using the enhanced import ID format:
+
+```terraform
+import {
+  to = aws_instance.web
+  id = "i-12345678:with-network-interfaces"
+}
+```
+
 Using `terraform import`, import instances using the `id`. For example:
 
 ```console
 % terraform import aws_instance.web i-12345678
+```
+
+Import with network interfaces using the enhanced import ID format:
+
+```console
+% terraform import aws_instance.web i-12345678:with-network-interfaces
 ```
