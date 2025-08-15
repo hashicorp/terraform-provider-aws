@@ -6866,5 +6866,9 @@ resource "aws_rds_cluster" "test" {
   performance_insights_enabled          = %[4]t
   performance_insights_retention_period = %[5]s
 }
+
+data "aws_kms_key" "rds" {
+  key_id = "alias/aws/rds"
+}
 `, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
 }
