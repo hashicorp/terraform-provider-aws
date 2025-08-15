@@ -24,24 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type ContributorInsightsMode string
-
-const (
-	AccessedAndThrottledKeys ContributorInsightsMode = "ACCESS_AND_THROTTLED_KEYS"
-	ThrottledKeys            ContributorInsightsMode = "THROTTLED_KEYS"
-)
-
-// Values returns all known values for AttributeAction. Note that this can be
-// expanded in the future, and so it is only as up to date as the client.
-//
-// The ordering of this slice is not guaranteed to be stable across updates.
-func (ContributorInsightsMode) Values() []ContributorInsightsMode {
-	return []ContributorInsightsMode{
-		"ACCESS_AND_THROTTLED_KEYS",
-		"THROTTLED_KEYS",
-	}
-}
-
 // @SDKResource("aws_dynamodb_contributor_insights", name="Contributor Insights")
 func resourceContributorInsights() *schema.Resource {
 	return &schema.Resource{
@@ -73,7 +55,7 @@ func resourceContributorInsights() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[ContributorInsightsMode](),
+				ValidateDiagFunc: enum.Validate[awstypes.ContributorInsightsMode](),
 			},
 		},
 	}
@@ -96,7 +78,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("mode"); ok {
-		input.mode = ContributorInsightsMode(v.(string))
+		input.ContributorInsightsMode = awstypes.ContributorInsightsMode(v.(string))
 	}
 
 	_, err := conn.UpdateContributorInsights(ctx, input)
@@ -137,7 +119,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTableName, output.TableName)
-	d.Set("mode", output.ContributorInsightsStatus)
+	d.Set("mode", output.ContributorInsightsMode)
 
 	return diags
 }
