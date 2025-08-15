@@ -8331,11 +8331,12 @@ func testAccTableConfig_replica_MRSC_TagsUpdate5_witness(rName, region1 string, 
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
+  name                             = %[1]q
+  hash_key                         = "TestTableHashKey"
+  billing_mode                     = "PAY_PER_REQUEST"
+  stream_enabled                   = true
+  stream_view_type                 = "NEW_AND_OLD_IMAGES"
+  global_table_witness_region_name = %[3]q
 
   attribute {
     name = "TestTableHashKey"
@@ -8348,8 +8349,6 @@ resource "aws_dynamodb_table" "test" {
     consistency_mode = "STRONG"
   }
 
-  global_table_witness_region_name = %[3]q
-  
   tags = {
     Name = %[1]q
   }
