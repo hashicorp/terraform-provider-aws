@@ -64,6 +64,10 @@ func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.Resou
 		ThingName: aws.String(thing),
 	}
 
+	if v, ok := d.Get("thing_principal_type").(string); ok {
+		input.ThingPrincipalType = awstypes.ThingPrincipalType(v)
+	}
+
 	_, err := conn.AttachThingPrincipal(ctx, input)
 
 	if err != nil {
