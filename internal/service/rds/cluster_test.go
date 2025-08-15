@@ -3123,7 +3123,7 @@ func TestAccRDSCluster_engineLifecycleSupport_disabled(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
+func TestAccRDSCluster_performanceInsights_Enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3140,24 +3140,28 @@ func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_performanceInsightsEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_performanceInsights_Enabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_performanceInsightsEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_performanceInsights_Enabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
+func TestAccRDSCluster_performanceInsights_KMSKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3175,9 +3179,10 @@ func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_performanceInsightsKMSKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_performanceInsights_KMSKeyID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -3185,7 +3190,7 @@ func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
+func TestAccRDSCluster_performanceInsights_RetentionPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3202,10 +3207,58 @@ func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_performanceInsightsRetentionPeriod(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_performanceInsights_RetentionPeriod(rName, 62),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "62"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsights_RetentionPeriod(rName, 124),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "124"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsights_KMSKey_RetentionPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsights_KMSKey_RetentionPeriod(rName, 62),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "62"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsights_KMSKey_RetentionPeriod(rName, 124),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "124"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -3226,7 +3279,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_performanceInsightsEnabled(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
 				),
@@ -3243,7 +3296,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_performanceInsightsEnabled(t *tes
 			},
 			{
 				Config: testAccClusterConfig_GlobalClusterID_performanceInsightsEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
 				),
@@ -6520,7 +6573,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraPostgreSQL)
 }
 
-func testAccClusterConfig_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
+func testAccClusterConfig_performanceInsights_Enabled(rName string, performanceInsightsEnabled bool) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -6538,10 +6591,14 @@ resource "aws_rds_cluster" "test" {
 
   performance_insights_enabled = %[2]t
 }
+
+data "aws_kms_key" "rds" {
+  key_id = "alias/aws/rds"
+}
 `, rName, performanceInsightsEnabled, tfrds.ClusterEngineMySQL))
 }
 
-func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
+func testAccClusterConfig_performanceInsights_KMSKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -6569,7 +6626,7 @@ resource "aws_kms_key" "test" {
 `, rName, tfrds.ClusterEngineMySQL))
 }
 
-func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string, period int) string {
+func testAccClusterConfig_performanceInsights_RetentionPeriod(rName string, period int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -6587,6 +6644,35 @@ resource "aws_rds_cluster" "test" {
 
   performance_insights_enabled          = true
   performance_insights_retention_period = %d
+}
+`, rName, tfrds.ClusterEngineMySQL, period))
+}
+
+func testAccClusterConfig_performanceInsights_KMSKey_RetentionPeriod(rName string, period int) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  db_cluster_instance_class = "db.m6gd.large"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+
+  performance_insights_enabled          = true
+  performance_insights_kms_key_id       = aws_kms_key.test.arn
+  performance_insights_retention_period = %d
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName, tfrds.ClusterEngineMySQL, period))
 }
