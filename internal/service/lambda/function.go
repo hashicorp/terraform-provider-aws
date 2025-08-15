@@ -386,6 +386,12 @@ func resourceFunction() *schema.Resource {
 				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
+			"source_code_hash_sha256": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -727,6 +733,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
 	d.Set("source_code_hash", d.Get("source_code_hash"))
+	d.Set("source_code_hash_sha256", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
@@ -1486,6 +1493,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||
+		d.HasChange("source_code_hash_sha256") ||
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
