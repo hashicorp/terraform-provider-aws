@@ -51,7 +51,7 @@ func resourceContributorInsights() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -77,7 +77,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		input.IndexName = aws.String(indexName)
 	}
 
-	if v, ok := d.GetOk("mode"); ok {
+	if v, ok := d.GetOk(names.AttrMode); ok {
 		input.ContributorInsightsMode = awstypes.ContributorInsightsMode(v.(string))
 	}
 
@@ -119,7 +119,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTableName, output.TableName)
-	d.Set("mode", output.ContributorInsightsMode)
+	d.Set(names.AttrMode, output.ContributorInsightsMode)
 
 	return diags
 }
