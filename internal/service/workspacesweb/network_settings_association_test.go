@@ -53,6 +53,19 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_basic(t *testing.T) {
 				ImportStateIdFunc:                    testAccNetworkSettingsAssociationImportStateIdFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "network_settings_arn",
 			},
+			{
+				ResourceName: resourceName,
+				RefreshState: true,
+			},
+			{
+				Config: testAccNetworkSettingsAssociationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					//The following checks are for the NetworkSettings Resource and the PortalResource (and not for the association resource).
+					resource.TestCheckResourceAttr(networkSettingsResourceName, "associated_portal_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(networkSettingsResourceName, "associated_portal_arns.0", portalResourceName, "portal_arn"),
+					resource.TestCheckResourceAttrPair(portalResourceName, "network_settings_arn", networkSettingsResourceName, "network_settings_arn"),
+				),
+			},
 		},
 	})
 }
@@ -61,6 +74,9 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var networkSettings1, networkSettings2 awstypes.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings_association.test"
+	networkSettingsResourceName1 := "aws_workspacesweb_network_settings.test"
+	networkSettingsResourceName2 := "aws_workspacesweb_network_settings.test2"
+	portalResourceName := "aws_workspacesweb_portal.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,12 +93,16 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_update(t *testing.T) {
 				Config: testAccNetworkSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings1),
+					resource.TestCheckResourceAttrPair(resourceName, "network_settings_arn", networkSettingsResourceName1, "network_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 			{
 				Config: testAccNetworkSettingsAssociationConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings2),
+					resource.TestCheckResourceAttrPair(resourceName, "network_settings_arn", networkSettingsResourceName2, "network_settings_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
 				),
 			},
 		},
