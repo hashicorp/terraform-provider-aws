@@ -51,6 +51,12 @@ func resourceContributorInsights() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrMode: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ContributorInsightsMode](),
+			},
 		},
 	}
 }
@@ -69,6 +75,10 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("index_name"); ok {
 		indexName = v.(string)
 		input.IndexName = aws.String(indexName)
+	}
+
+	if v, ok := d.GetOk(names.AttrMode); ok {
+		input.ContributorInsightsMode = awstypes.ContributorInsightsMode(v.(string))
 	}
 
 	_, err := conn.UpdateContributorInsights(ctx, input)
@@ -109,6 +119,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("index_name", output.IndexName)
 	d.Set(names.AttrTableName, output.TableName)
+	d.Set(names.AttrMode, output.ContributorInsightsMode)
 
 	return diags
 }
