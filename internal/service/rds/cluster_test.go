@@ -3144,7 +3144,7 @@ func TestAccRDSCluster_performanceInsights_Enabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
 				),
 			},
@@ -3153,7 +3153,7 @@ func TestAccRDSCluster_performanceInsights_Enabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "data.aws_kms_key.rds", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
 				),
 			},
