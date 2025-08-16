@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,6 +75,25 @@ func dataSourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
+			"signing_material": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCertificateARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"signing_parameters": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -132,6 +152,18 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
+	}
+
+	if signingProfileOutput.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
+	}
+
+	if signingProfileOutput.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(signingProfileOutput.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
+		}
 	}
 
 	if err := d.Set(names.AttrStatus, signingProfileOutput.Status); err != nil {
