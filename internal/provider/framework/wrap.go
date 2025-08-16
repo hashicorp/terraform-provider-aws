@@ -804,7 +804,6 @@ func newWrappedListResource(spec *inttypes.ServicePackageListResource, servicePa
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
 		interceptors = append(interceptors, listResourceInjectRegionAttribute())
 		// TODO: validate region in partition, needs tweaked error message
-		interceptors = append(interceptors, listResourceDefaultRegion())
 	}
 
 	inner := spec.Factory()
