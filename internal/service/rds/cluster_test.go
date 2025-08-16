@@ -6846,21 +6846,25 @@ func testAccClusterConfig_databaseInsightsMode(rName, databaseInsightsMode strin
 		databaseInsightsMode = strconv.Quote(databaseInsightsMode)
 	}
 
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterConfig_clusterSubnetGroup(rName),
+		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier                    = %[1]q
-  engine                                = %[2]q
-  db_cluster_instance_class             = "db.m6gd.large"
-  storage_type                          = "io1"
-  allocated_storage                     = 100
-  iops                                  = 1000
-  master_username                       = "tfacctest"
-  master_password                       = "avoid-plaintext-passwords"
-  skip_final_snapshot                   = true
+  cluster_identifier        = %[1]q
+  engine                    = %[2]q
+  db_cluster_instance_class = "db.m6gd.large"
+  storage_type              = "io1"
+  allocated_storage         = 100
+  iops                      = 1000
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  skip_final_snapshot       = true
+  apply_immediately         = true
+  db_subnet_group_name      = aws_db_subnet_group.test.name
+
   database_insights_mode                = %[3]s
   performance_insights_enabled          = %[4]t
   performance_insights_retention_period = %[5]s
-  apply_immediately                     = true
 }
-`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod)
+`, rName, tfrds.ClusterEngineMySQL, databaseInsightsMode, performanceInsightsEnabled, performanceInsightsRetentionPeriod))
 }
