@@ -229,6 +229,93 @@ func TestAccRoute53Record_Identity_ChangeOnUpdate(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_TTLValidation_recordsWithoutTTL(t *testing.T) {
+	ctx := acctest.Context(t)
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRecordConfig_recordsWithoutTTL(zoneName.String(), recordName.String()),
+				ExpectError: regexache.MustCompile(`TTL is required when records are provided and alias is not used`),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_TTLValidation_recordsWithTTL(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_recordsWithTTL(zoneName.String(), recordName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "300"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_TTLValidation_aliasWithoutTTL(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasWithoutTTL(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "alias.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_TTLValidation_zeroTTLWithRecords(t *testing.T) {
+	ctx := acctest.Context(t)
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRecordConfig_zeroTTLWithRecords(zoneName.String(), recordName.String()),
+				ExpectError: regexache.MustCompile(`TTL is required when records are provided and alias is not used`),
+			},
+		},
+	})
+}
+
 func TestAccRoute53Record_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
@@ -3593,4 +3680,127 @@ resource "aws_route53_record" "test" {
   }
 }
 `, rName, zoneName))
+}
+
+// Test configurations for TTL validation
+
+func testAccRecordConfig_recordsWithoutTTL(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "TXT"
+  records = ["test"]
+  # TTL intentionally omitted to trigger validation error
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_recordsWithTTL(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "TXT"
+  ttl     = 300
+  records = ["test"]
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_aliasWithoutTTL(rName string) string {
+	return acctest.ConfigCompose(
+		testAccRecordConfig_aliasBase(rName),
+		fmt.Sprintf(`
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "alias-validation-test"
+  type    = "A"
+
+  alias {
+    name                   = aws_vpc_endpoint.test.dns_entry[0].dns_name
+    zone_id                = aws_vpc_endpoint.test.dns_entry[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+  # TTL intentionally omitted - should be valid for alias records
+}
+`))
+}
+
+func testAccRecordConfig_zeroTTLWithRecords(zoneName, recordName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "TXT"
+  ttl     = 0
+  records = ["test"]
+  # TTL = 0 should trigger validation error
+}
+`, zoneName, recordName)
+}
+
+func testAccRecordConfig_aliasBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.vpce.us-west-2.vpce-svc-0123456789abcdef0"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [aws_subnet.test.id]
+  private_dns_enabled = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  name = "example.com"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
