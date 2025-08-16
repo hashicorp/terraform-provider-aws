@@ -91,6 +91,7 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
 			},
@@ -231,6 +232,48 @@ func TestAccCodeBuildWebhook_scopeConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.scope", "GITHUB_GLOBAL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildWebhook_pullRequestBuildPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_gitHub_withPRPolicy(rName,
+					"FORK_PULL_REQUESTS",
+					`["GITHUB_WRITE", "GITHUB_MAINTAIN"]`,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", "FORK_PULL_REQUESTS"),
+
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", "GITHUB_WRITE"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", "GITHUB_MAINTAIN"),
 				),
 			},
 			{
@@ -663,4 +706,22 @@ resource "aws_codebuild_webhook" "test" {
   manual_creation = true
 }
 `)
+}
+
+func testAccWebhookConfig_gitHub_withPRPolicy(rName, requires, roles string) string {
+	rolesHCL := ""
+	if roles != "" {
+		rolesHCL = fmt.Sprintf(`approver_roles = %s`, roles)
+	}
+
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+resource "aws_codebuild_webhook" "test" {
+  project_name = aws_codebuild_project.test.name
+
+  pull_request_build_policy {
+    requires_comment_approval = %[1]q
+    %[2]s
+  }
+}
+`, requires, rolesHCL))
 }
