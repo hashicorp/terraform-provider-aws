@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -21,6 +22,7 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,6 +50,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
@@ -69,6 +72,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -98,6 +102,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", resourceKeyOne, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
@@ -121,6 +126,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.kms_key_arn", resourceKeyTwo, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.sse_algorithm", "aws:kms"),
@@ -144,6 +150,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -216,6 +223,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTableBucketConfig_maintenanceConfiguration(rName, awstypes.MaintenanceStatusEnabled, 15, 4),
@@ -240,6 +248,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTableBucketConfig_maintenanceConfiguration(rName, awstypes.MaintenanceStatusDisabled, 15, 4),
@@ -264,9 +273,101 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy},
 			},
 		},
 	})
+}
+
+func TestAccS3TablesTableBucket_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3tables_table_bucket.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableBucketConfig_forceDestroy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
+					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace1", "table1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3TablesTableBucket_forceDestroyMultipleNamespacesAndTables(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3tables_table_bucket.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableBucketConfig_forceDestroy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableBucketExists(ctx, resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
+					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace1", "table1"),
+					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace2", "table2", "table3"),
+					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace3", "table4", "table5", "table6"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckTableBucketAddTables(ctx context.Context, n string, namespace string, tableNames ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
+
+		// First, create the namespace if it doesn't exist
+		_, err := conn.CreateNamespace(ctx, &s3tables.CreateNamespaceInput{
+			TableBucketARN: aws.String(rs.Primary.Attributes[names.AttrARN]),
+			Namespace:      []string{namespace},
+		})
+		if err != nil {
+			// Ignore if namespace already exists
+			if !errs.IsA[*awstypes.ConflictException](err) {
+				return fmt.Errorf("CreateNamespace error: %w", err)
+			}
+		}
+
+		// Create each table
+		for _, tableName := range tableNames {
+			_, err := conn.CreateTable(ctx, &s3tables.CreateTableInput{
+				TableBucketARN: aws.String(rs.Primary.Attributes[names.AttrARN]),
+				Namespace:      aws.String(namespace),
+				Name:           aws.String(tableName),
+				Format:         awstypes.OpenTableFormatIceberg,
+			})
+			if err != nil {
+				// Ignore if table already exists
+				if !errs.IsA[*awstypes.ConflictException](err) {
+					return fmt.Errorf("CreateTable error for table %s: %w", tableName, err)
+				}
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckTableBucketDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -311,7 +412,9 @@ func testAccCheckTableBucketExists(ctx context.Context, name string, tablebucket
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucket, rs.Primary.ID, err)
 		}
 
-		*tablebucket = *resp
+		if tablebucket != nil {
+			*tablebucket = *resp
+		}
 
 		return nil
 	}
@@ -375,4 +478,13 @@ resource "aws_s3tables_table_bucket" "test" {
   }
 }
 `, rName, status, nonCurrentDays, unreferencedDays)
+}
+
+func testAccTableBucketConfig_forceDestroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table_bucket" "test" {
+  name          = %[1]q
+  force_destroy = true
+}
+`, rName)
 }

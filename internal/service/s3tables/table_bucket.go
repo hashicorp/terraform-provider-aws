@@ -6,6 +6,7 @@ package s3tables
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -60,6 +62,11 @@ func (r *tableBucketResource) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrEncryptionConfiguration: schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[encryptionConfigurationModel](ctx),
 				Optional:   true,
+			},
+			names.AttrForceDestroy: schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
 			// Validations needed:
@@ -397,6 +404,29 @@ func (r *tableBucketResource) Delete(ctx context.Context, req resource.DeleteReq
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return
 	}
+
+	// If deletion fails due to bucket not being empty and force_destroy is enabled
+	if err != nil && state.ForceDestroy.ValueBool() {
+		// Check if the error indicates the bucket is not empty
+		if errs.IsA[*awstypes.ConflictException](err) || errs.IsA[*awstypes.BadRequestException](err) {
+			tflog.Debug(ctx, "Table bucket not empty, attempting to empty it", map[string]any{
+				"table_bucket_arn": state.ARN.ValueString(),
+			})
+
+			// Empty the table bucket by deleting all tables
+			if emptyErr := emptyTableBucket(ctx, conn, state.ARN.ValueString()); emptyErr != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, resNameTableBucket, state.Name.String(), emptyErr),
+					fmt.Sprintf("Failed to empty table bucket before deletion: %s", emptyErr.Error()),
+				)
+				return
+			}
+
+			// Retry deletion after emptying
+			_, err = conn.DeleteTableBucket(ctx, input)
+		}
+	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, resNameTableBucket, state.Name.String(), err),
@@ -408,6 +438,9 @@ func (r *tableBucketResource) Delete(ctx context.Context, req resource.DeleteReq
 
 func (r *tableBucketResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
+
+	// Set force_destroy to false on import to prevent accidental deletion
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)
 }
 
 func findTableBucket(ctx context.Context, conn *s3tables.Client, arn string) (*s3tables.GetTableBucketOutput, error) {
@@ -479,6 +512,7 @@ type tableBucketResourceModel struct {
 	ARN                      types.String                                                    `tfsdk:"arn"`
 	CreatedAt                timetypes.RFC3339                                               `tfsdk:"created_at"`
 	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]             `tfsdk:"encryption_configuration"`
+	ForceDestroy             types.Bool                                                      `tfsdk:"force_destroy"`
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
 	Name                     types.String                                                    `tfsdk:"name"`
 	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
@@ -600,4 +634,83 @@ func flattenIcebergUnreferencedFileRemovalSettings(ctx context.Context, in awsty
 		tflog.Warn(ctx, "Unexpected nil tagged union value")
 	}
 	return result, diags
+}
+
+// emptyTableBucket deletes all tables in all namespaces within the specified table bucket.
+// This is used when force_destroy is enabled to allow deletion of non-empty table buckets.
+func emptyTableBucket(ctx context.Context, conn *s3tables.Client, tableBucketARN string) error {
+	tflog.Debug(ctx, "Starting to empty table bucket", map[string]any{
+		"table_bucket_arn": tableBucketARN,
+	})
+
+	// First, list all namespaces in the table bucket
+	namespaces := s3tables.NewListNamespacesPaginator(conn, &s3tables.ListNamespacesInput{
+		TableBucketARN: aws.String(tableBucketARN),
+	})
+
+	for namespaces.HasMorePages() {
+		namespacePage, err := namespaces.NextPage(ctx)
+		if err != nil {
+			return fmt.Errorf("listing namespaces in table bucket %s: %w", tableBucketARN, err)
+		}
+
+		// For each namespace, list and delete all tables
+		for _, namespace := range namespacePage.Namespaces {
+			namespaceName := namespace.Namespace[0]
+			tflog.Debug(ctx, "Processing namespace", map[string]any{
+				names.AttrNamespace: namespaceName,
+			})
+
+			tables := s3tables.NewListTablesPaginator(conn, &s3tables.ListTablesInput{
+				TableBucketARN: aws.String(tableBucketARN),
+				Namespace:      aws.String(namespaceName),
+			})
+
+			for tables.HasMorePages() {
+				tablePage, err := tables.NextPage(ctx)
+				if err != nil {
+					return fmt.Errorf("listing tables in namespace %s: %w", namespaceName, err)
+				}
+
+				// Delete each table
+				for _, table := range tablePage.Tables {
+					tableName := aws.ToString(table.Name)
+					tflog.Debug(ctx, "Deleting table", map[string]any{
+						names.AttrTableName: tableName,
+						names.AttrNamespace: namespaceName,
+					})
+
+					_, err := conn.DeleteTable(ctx, &s3tables.DeleteTableInput{
+						TableBucketARN: aws.String(tableBucketARN),
+						Namespace:      aws.String(namespaceName),
+						Name:           aws.String(tableName),
+					})
+
+					if err != nil && !errs.IsA[*awstypes.NotFoundException](err) {
+						return fmt.Errorf("deleting table %s in namespace %s: %w", tableName, namespaceName, err)
+					}
+				}
+			}
+
+			// After deleting all tables in the namespace, delete the namespace itself
+			tflog.Debug(ctx, "Deleting namespace", map[string]any{
+				names.AttrNamespace: namespaceName,
+			})
+
+			_, err = conn.DeleteNamespace(ctx, &s3tables.DeleteNamespaceInput{
+				TableBucketARN: aws.String(tableBucketARN),
+				Namespace:      aws.String(namespaceName),
+			})
+
+			if err != nil && !errs.IsA[*awstypes.NotFoundException](err) {
+				return fmt.Errorf("deleting namespace %s: %w", namespaceName, err)
+			}
+		}
+	}
+
+	tflog.Debug(ctx, "Successfully emptied table bucket", map[string]any{
+		"table_bucket_arn": tableBucketARN,
+	})
+
+	return nil
 }
