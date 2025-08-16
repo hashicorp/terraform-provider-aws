@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +43,7 @@ func (r dataSourceInjectRegionAttributeInterceptor) schema(ctx context.Context, 
 			response.Schema.Attributes[names.AttrRegion] = dsschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ResourceTopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -111,7 +112,7 @@ func (r ephemeralResourceInjectRegionAttributeInterceptor) schema(ctx context.Co
 			response.Schema.Attributes[names.AttrRegion] = erschema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: names.TopLevelRegionAttributeDescription,
+				Description: names.ResourceTopLevelRegionAttributeDescription,
 			}
 		}
 	}
@@ -415,7 +416,7 @@ func (r listResourceInjectRegionAttributeInterceptor) schema(ctx context.Context
 	case After:
 		if _, ok := response.Schema.Attributes[names.AttrRegion]; !ok {
 			// Inject a top-level "region" attribute.
-			response.Schema.Attributes[names.AttrRegion] = resourceattribute.Region()
+			response.Schema.Attributes[names.AttrRegion] = listresourceattribute.Region()
 		}
 	}
 }
