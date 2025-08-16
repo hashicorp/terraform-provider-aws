@@ -807,8 +807,16 @@ func newWrappedListResource(spec *inttypes.ServicePackageListResource, servicePa
 		interceptors = append(interceptors, listResourceDefaultRegion())
 	}
 
+	inner := spec.Factory()
+
+	// TODO: This should not just be on importable resource types.
+	// * Separate setting Identity spec and Import spec
+	if v, ok := inner.(framework.ImportByIdentityer); ok {
+		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
+	}
+
 	return &wrappedListResource{
-		inner:              spec.Factory(),
+		inner:              inner,
 		servicePackageName: servicePackageName,
 		spec:               spec,
 		interceptors:       interceptors,
