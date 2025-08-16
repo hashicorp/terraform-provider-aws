@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	smithydocument "github.com/aws/smithy-go/document"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -19,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/shopspring/decimal"
 )
 
@@ -619,27 +620,24 @@ func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Val
 		//
 		// JSONStringer -> types.String-ish.
 		//
-		if vFrom.Type().Implements(reflect.TypeFor[smithyjson.JSONStringer]()) {
-			tflog.SubsystemInfo(ctx, subsystemName, "Source implements json.JSONStringer")
+		if vFrom.Type().Implements(reflect.TypeFor[smithydocument.Unmarshaler]()) {
+			tflog.SubsystemInfo(ctx, subsystemName, "Source implements smithydocument.Unmarshaler")
 
 			stringValue := types.StringNull()
 
 			if vFrom.IsNil() {
 				tflog.SubsystemTrace(ctx, subsystemName, "Flattening null value")
 			} else {
-				doc := vFrom.Interface().(smithyjson.JSONStringer)
-				b, err := doc.MarshalSmithyDocument()
+				doc := vFrom.Interface().(smithydocument.Unmarshaler)
+				s, err := tfsmithy.DocumentToJSONString(doc)
 				if err != nil {
-					// An error here would be an upstream error in the AWS SDK, because errors in json.Marshal
-					// are caused by conditions such as cyclic structures
-					// See https://pkg.go.dev/encoding/json#Marshal
-					tflog.SubsystemError(ctx, subsystemName, "Marshalling JSON document", map[string]any{
+					tflog.SubsystemError(ctx, subsystemName, "Unmarshalling JSON document", map[string]any{
 						logAttrKeyError: err.Error(),
 					})
-					diags.Append(diagFlatteningMarshalSmithyDocument(reflect.TypeOf(doc), err))
+					diags.Append(diagFlatteningUnmarshalSmithyDocument(reflect.TypeOf(doc), err))
 					return diags
 				}
-				stringValue = types.StringValue(string(b))
+				stringValue = types.StringValue(s)
 			}
 			v, d := tTo.ValueFromString(ctx, stringValue)
 			diags.Append(d...)
@@ -1752,13 +1750,13 @@ func diagFlatteningNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
 	)
 }
 
-func diagFlatteningMarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
+func diagFlatteningUnmarshalSmithyDocument(sourceType reflect.Type, err error) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic(
 		"Incompatible Types",
 		"An unexpected error occurred while flattening configuration. "+
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
-			fmt.Sprintf("Marshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
+			fmt.Sprintf("Unmarshalling JSON document of type %q failed: %s", fullTypeName(sourceType), err.Error()),
 	)
 }
 

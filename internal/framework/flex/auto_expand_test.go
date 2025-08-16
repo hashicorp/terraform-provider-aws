@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
 func TestExpand(t *testing.T) {
@@ -546,7 +546,7 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		"JSONValue Source to json interface Target": {
-			Source: &tfJSONStringer{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Source: &tfJSONStringer{Field1: fwtypes.NewSmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
 			Target: &awsJSONStringer{},
 			WantTarget: &awsJSONStringer{
 				Field1: &testJSONDocument{
@@ -559,7 +559,7 @@ func TestExpand(t *testing.T) {
 				infoExpanding(reflect.TypeFor[*tfJSONStringer](), reflect.TypeFor[*awsJSONStringer]()),
 				infoConverting(reflect.TypeFor[tfJSONStringer](), reflect.TypeFor[*awsJSONStringer]()),
 				traceMatchedFields("Field1", reflect.TypeFor[tfJSONStringer](), "Field1", reflect.TypeFor[*awsJSONStringer]()),
-				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SmithyJSON[smithyjson.JSONStringer]](), "Field1", reflect.TypeFor[smithyjson.JSONStringer]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[fwtypes.SmithyJSON[tfsmithy.JSONStringer]](), "Field1", reflect.TypeFor[tfsmithy.JSONStringer]()),
 			},
 		},
 	}
