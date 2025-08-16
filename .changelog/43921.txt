@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_signer_signing_profile: Add `signing_parameters` argument
+```
+
+```release-note:enhancement
+data-source/aws_signer_signing_profile: Add `signing_material` and `signing_parameters` attributes
+```
