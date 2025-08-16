@@ -213,7 +213,6 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue"))...)
 	if response.Diagnostics.HasError() {
 		return
@@ -369,11 +368,11 @@ func (r *jobQueueResource) UpgradeState(ctx context.Context) map[int64]resource.
 }
 
 func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awstypes.JobQueueDetail, error) {
-	input := &batch.DescribeJobQueuesInput{
+	input := batch.DescribeJobQueuesInput{
 		JobQueues: []string{id},
 	}
 
-	output, err := findJobQueue(ctx, conn, input)
+	output, err := findJobQueue(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -381,8 +380,7 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 
 	if status := output.Status; status == awstypes.JQStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -390,30 +388,7 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 }
 
 func findJobQueue(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) (*awstypes.JobQueueDetail, error) {
-	output, err := findJobQueues(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) ([]awstypes.JobQueueDetail, error) {
-	var output []awstypes.JobQueueDetail
-
-	pages := batch.NewDescribeJobQueuesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.JobQueues...)
-	}
-
-	return output, nil
+	return tfresource.AssertSingleValueResultIterErr(listJobQueues(ctx, conn, input))
 }
 
 func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
@@ -524,4 +499,24 @@ type jobStateTimeLimitActionModel struct {
 	MaxTimeSeconds types.Int64                                                 `tfsdk:"max_time_seconds"`
 	Reason         types.String                                                `tfsdk:"reason"`
 	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
+}
+
+// DescribeJobQueues is an "All-Or-Some" call.
+func listJobQueues(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) iter.Seq2[awstypes.JobQueueDetail, error] {
+	return func(yield func(awstypes.JobQueueDetail, error) bool) {
+		pages := batch.NewDescribeJobQueuesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.JobQueueDetail{}, fmt.Errorf("listing Batch Job Queues: %w", err))
+				return
+			}
+
+			for _, jobQueue := range page.JobQueues {
+				if !yield(jobQueue, nil) {
+					return
+				}
+			}
+		}
+	}
 }
