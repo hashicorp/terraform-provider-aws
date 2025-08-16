@@ -79,6 +79,7 @@ type ServicePackageListResource struct {
 	TypeName string
 	Name     string
 	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
