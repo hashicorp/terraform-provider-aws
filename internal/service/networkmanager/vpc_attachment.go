@@ -71,6 +71,34 @@ func resourceVPCAttachment() *schema.Resource {
 				}
 				return nil
 			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.dns_support") {
+					return nil
+				}
+
+				if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.dns_support")
+				}
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				if !d.HasChange("options.0.security_group_referencing_support") {
+					return nil
+				}
+
+				if state := awstypes.AttachmentState(d.Get(names.AttrState).(string)); state == awstypes.AttachmentStatePendingAttachmentAcceptance {
+					return d.ForceNew("options.0.security_group_referencing_support")
+				}
+				return nil
+			},
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -115,7 +143,15 @@ func resourceVPCAttachment() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"dns_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"ipv6_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"security_group_referencing_support": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -485,8 +521,16 @@ func expandVpcOptions(tfMap map[string]any) *awstypes.VpcOptions { // nosemgrep:
 		apiObject.ApplianceModeSupport = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["dns_support"].(bool); ok {
+		apiObject.DnsSupport = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
 		apiObject.Ipv6Support = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
+		apiObject.SecurityGroupReferencingSupport = aws.Bool(v)
 	}
 
 	return apiObject
@@ -498,8 +542,10 @@ func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]any { // nosem
 	}
 
 	tfMap := map[string]any{
-		"appliance_mode_support": aws.ToBool(apiObject.ApplianceModeSupport),
-		"ipv6_support":           aws.ToBool(apiObject.Ipv6Support),
+		"appliance_mode_support":             aws.ToBool(apiObject.ApplianceModeSupport),
+		"dns_support":                        aws.ToBool(apiObject.DnsSupport),
+		"ipv6_support":                       aws.ToBool(apiObject.Ipv6Support),
+		"security_group_referencing_support": aws.ToBool(apiObject.SecurityGroupReferencingSupport),
 	}
 
 	return tfMap
