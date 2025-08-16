@@ -125,8 +125,8 @@ resource "aws_signer_signing_profile" "test_sp" {
     certificate_arn = aws_acm_certificate.test.arn
   }
   signing_parameters = {
-     "param1" = "value1"
-     "param2" = "value2"
+    "param1" = "value1"
+    "param2" = "value2"
   }
   depends_on = [aws_acm_certificate_validation.test]
 }
