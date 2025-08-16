@@ -129,13 +129,15 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
-	if err := d.Set("signature_validity_period", []any{
-		map[string]any{
-			names.AttrValue: signingProfileOutput.SignatureValidityPeriod.Value,
-			names.AttrType:  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if v := signingProfileOutput.SignatureValidityPeriod; v != nil {
+		if err := d.Set("signature_validity_period", []any{
+			map[string]any{
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
+		}
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
