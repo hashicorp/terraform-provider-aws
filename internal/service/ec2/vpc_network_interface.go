@@ -500,8 +500,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 			InstanceId:         aws.String(attachment["instance"].(string)),
 			DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
 		}
-		if v, ok := attachment["network_card_index"].(int); ok {
-			input.NetworkCardIndex = aws.Int32(int32(v))
+		if v, ok := attachment["network_card_index"]; ok {
+			if v, ok := v.(int); ok {
+				input.NetworkCardIndex = aws.Int32(int32(v))
+			}
 		}
 
 		_, err := attachNetworkInterface(ctx, conn, &input)
@@ -610,8 +612,10 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 				InstanceId:         aws.String(attachment["instance"].(string)),
 				DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
 			}
-			if v, ok := attachment["network_card_index"].(int); ok {
-				input.NetworkCardIndex = aws.Int32(int32(v))
+			if v, ok := attachment["network_card_index"]; ok {
+				if v, ok := v.(int); ok {
+					input.NetworkCardIndex = aws.Int32(int32(v))
+				}
 			}
 
 			if _, err := attachNetworkInterface(ctx, conn, &input); err != nil {

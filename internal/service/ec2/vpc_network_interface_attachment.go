@@ -70,8 +70,10 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 		InstanceId:         aws.String(d.Get(names.AttrInstanceID).(string)),
 		DeviceIndex:        aws.Int32(int32(d.Get("device_index").(int))),
 	}
-	if v, ok := d.Get("network_card_index").(int); ok {
-		input.NetworkCardIndex = aws.Int32(int32(v))
+	if v, ok := d.GetOk("network_card_index"); ok {
+		if v, ok := v.(int); ok {
+			input.NetworkCardIndex = aws.Int32(int32(v))
+		}
 	}
 
 	attachmentID, err := attachNetworkInterface(ctx, conn, &input)
