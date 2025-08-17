@@ -493,14 +493,17 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]any)
-		var networkCardIndex int
-		if attachment["network_card_index"] != nil {
-			networkCardIndex = attachment["network_card_index"].(int)
-		} else {
-			networkCardIndex = 0
+
+		input := ec2.AttachNetworkInterfaceInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			InstanceId:         aws.String(attachment["instance"].(string)),
+			DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
+		}
+		if v, ok := attachment["network_card_index"].(int); ok {
+			input.NetworkCardIndex = aws.Int32(int32(v))
 		}
 
-		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkCardIndex, networkInterfaceAttachedTimeout)
+		_, err := attachNetworkInterface(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -601,14 +604,16 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]any)
-			var networkCardIndex int
-			if attachment["network_card_index"] != nil {
-				networkCardIndex = attachment["network_card_index"].(int)
-			} else {
-				networkCardIndex = 0
+			input := ec2.AttachNetworkInterfaceInput{
+				NetworkInterfaceId: aws.String(d.Id()),
+				InstanceId:         aws.String(attachment["instance"].(string)),
+				DeviceIndex:        aws.Int32(int32(attachment["device_index"].(int))),
+			}
+			if v, ok := attachment["network_card_index"].(int); ok {
+				input.NetworkCardIndex = aws.Int32(int32(v))
 			}
 
-			if _, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkCardIndex, networkInterfaceAttachedTimeout); err != nil {
+			if _, err := attachNetworkInterface(ctx, conn, &input); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -1090,24 +1095,17 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, instanceID string, deviceIndex int, networkCardIndex int, timeout time.Duration) (string, error) {
-	input := &ec2.AttachNetworkInterfaceInput{
-		DeviceIndex:        aws.Int32(int32(deviceIndex)),
-		InstanceId:         aws.String(instanceID),
-		NetworkCardIndex:   aws.Int32(int32(networkCardIndex)),
-		NetworkInterfaceId: aws.String(networkInterfaceID),
-	}
-
+func attachNetworkInterface(ctx context.Context, conn *ec2.Client, input *ec2.AttachNetworkInterfaceInput) (string, error) {
 	output, err := conn.AttachNetworkInterface(ctx, input)
 
 	if err != nil {
-		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
+		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", input.NetworkInterfaceId, input.InstanceId, err)
 	}
 
 	attachmentID := aws.ToString(output.AttachmentId)
 
-	if _, err := waitNetworkInterfaceAttached(ctx, conn, attachmentID, timeout); err != nil {
-		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, instanceID, err)
+	if _, err := waitNetworkInterfaceAttached(ctx, conn, attachmentID, networkInterfaceAttachedTimeout); err != nil {
+		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", input.NetworkInterfaceId, input.InstanceId, err)
 	}
 
 	return attachmentID, nil

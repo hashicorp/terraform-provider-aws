@@ -7,6 +7,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,13 +64,16 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	attachmentID, err := attachNetworkInterface(ctx, conn,
-		d.Get(names.AttrNetworkInterfaceID).(string),
-		d.Get(names.AttrInstanceID).(string),
-		d.Get("device_index").(int),
-		d.Get("network_card_index").(int),
-		networkInterfaceAttachedTimeout,
-	)
+	input := ec2.AttachNetworkInterfaceInput{
+		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		InstanceId:         aws.String(d.Get(names.AttrInstanceID).(string)),
+		DeviceIndex:        aws.Int32(int32(d.Get("device_index").(int))),
+	}
+	if v, ok := d.Get("network_card_index").(int); ok {
+		input.NetworkCardIndex = aws.Int32(int32(v))
+	}
+
+	attachmentID, err := attachNetworkInterface(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
