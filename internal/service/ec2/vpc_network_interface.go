@@ -1099,13 +1099,13 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, input *ec2.At
 	output, err := conn.AttachNetworkInterface(ctx, input)
 
 	if err != nil {
-		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", input.NetworkInterfaceId, input.InstanceId, err)
+		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", aws.ToString(input.NetworkInterfaceId), aws.ToString(input.InstanceId), err)
 	}
 
 	attachmentID := aws.ToString(output.AttachmentId)
 
 	if _, err := waitNetworkInterfaceAttached(ctx, conn, attachmentID, networkInterfaceAttachedTimeout); err != nil {
-		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", input.NetworkInterfaceId, input.InstanceId, err)
+		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", aws.ToString(input.NetworkInterfaceId), aws.ToString(input.InstanceId), err)
 	}
 
 	return attachmentID, nil
