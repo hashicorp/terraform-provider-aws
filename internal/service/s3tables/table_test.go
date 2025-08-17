@@ -77,6 +77,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyAuto),
 								"target_file_size_mb": knownvalue.Int32Exact(512),
 							}),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
@@ -411,6 +412,7 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyAuto),
 								"target_file_size_mb": knownvalue.Int32Exact(64),
 							}),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
@@ -441,6 +443,7 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyAuto),
 								"target_file_size_mb": knownvalue.Int32Exact(128),
 							}),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
@@ -461,6 +464,107 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccS3TablesTable_compactionStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var table s3tables.GetTableOutput
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_compactionStrategyWithSortOrder(rName, namespace, bucketName, "sort"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategySort),
+								"target_file_size_mb": knownvalue.Int32Exact(256),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+						"iceberg_snapshot_management": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"max_snapshot_age_hours": knownvalue.Int32Exact(72),
+								"min_snapshots_to_keep":  knownvalue.Int32Exact(1),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccTableConfig_compactionStrategy(rName, namespace, bucketName, "binpack"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyBinpack),
+								"target_file_size_mb": knownvalue.Int32Exact(256),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+						"iceberg_snapshot_management": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"max_snapshot_age_hours": knownvalue.Int32Exact(72),
+								"min_snapshots_to_keep":  knownvalue.Int32Exact(1),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_compactionStrategyWithSortOrder(rName, namespace, bucketName, "z-order"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyZorder),
+								"target_file_size_mb": knownvalue.Int32Exact(256),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+						"iceberg_snapshot_management": knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"max_snapshot_age_hours": knownvalue.Int32Exact(72),
+								"min_snapshots_to_keep":  knownvalue.Int32Exact(1),
+							}),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -515,6 +619,7 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"iceberg_compaction": knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"settings": knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"strategy":            tfknownvalue.StringExact(awstypes.IcebergCompactionStrategyAuto),
 								"target_file_size_mb": knownvalue.Int32Exact(512),
 							}),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
@@ -693,6 +798,7 @@ resource "aws_s3tables_table" "test" {
   maintenance_configuration = {
     iceberg_compaction = {
       settings = {
+        strategy            = "auto"
         target_file_size_mb = %[4]d
       }
       status = "enabled"
@@ -720,6 +826,138 @@ resource "aws_s3tables_table_bucket" "test" {
   name = %[3]q
 }
 `, rName, namespace, bucketName, targetSize, maxSnapshotAge, minSnapshots)
+}
+
+func testAccTableConfig_compactionStrategy(rName, namespace, bucketName, strategy string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  maintenance_configuration = {
+    iceberg_compaction = {
+      settings = {
+        strategy            = %[4]q
+        target_file_size_mb = 256
+      }
+      status = "enabled"
+    }
+    iceberg_snapshot_management = {
+      settings = {
+        max_snapshot_age_hours = 72
+        min_snapshots_to_keep  = 1
+      }
+      status = "enabled"
+    }
+  }
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name = "name"
+          type = "string"
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = true
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[2]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[3]q
+}
+`, rName, namespace, bucketName, strategy)
+}
+
+func testAccTableConfig_compactionStrategyWithSortOrder(rName, namespace, bucketName, strategy string) string {
+	return fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  maintenance_configuration = {
+    iceberg_compaction = {
+      settings = {
+        strategy            = %[4]q
+        target_file_size_mb = 256
+      }
+      status = "enabled"
+    }
+    iceberg_snapshot_management = {
+      settings = {
+        max_snapshot_age_hours = 72
+        min_snapshots_to_keep  = 1
+      }
+      status = "enabled"
+    }
+  }
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name = "name"
+          type = "string"
+        }
+        field {
+          name     = "created_at"
+          type     = "timestamp"
+          required = true
+        }
+        field {
+          name = "category"
+          type = "string"
+        }
+        field {
+          name = "score"
+          type = "double"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "test" {
+  namespace        = %[2]q
+  table_bucket_arn = aws_s3tables_table_bucket.test.arn
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_s3tables_table_bucket" "test" {
+  name = %[3]q
+}
+`, rName, namespace, bucketName, strategy)
 }
 
 func testAccTableConfig_encryptionConfiguration(rName, namespace, bucketName string) string {

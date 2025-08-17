@@ -32,6 +32,43 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Compaction Strategy
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  maintenance_configuration = {
+    iceberg_compaction = {
+      settings = {
+        strategy            = "z-order"
+        target_file_size_mb = 256
+      }
+      status = "enabled"
+    }
+    iceberg_snapshot_management = {
+      settings = {
+        max_snapshot_age_hours = 72
+        min_snapshots_to_keep  = 1
+      }
+      status = "enabled"
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ### With Metadata Schema
 
 ```terraform
@@ -131,8 +168,9 @@ The `iceberg_compaction` object supports the following arguments:
 
 ### `iceberg_compaction.settings`
 
-The `iceberg_compaction.settings` object supports the following argument:
+The `iceberg_compaction.settings` object supports the following arguments:
 
+* `strategy` - (Optional) The compaction strategy to use for the table. This determines how files are selected and combined during compaction operations. Valid values are `auto`, `binpack`, `sort`, and `z-order`. Defaults to `auto`.
 * `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
   Must be between `64` and `512`.
 
