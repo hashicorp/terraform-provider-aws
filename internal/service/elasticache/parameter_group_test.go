@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -440,12 +441,12 @@ func TestAccElastiCacheParameterGroup_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 				),
@@ -468,12 +469,12 @@ func TestAccElastiCacheParameterGroup_nameGenerated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterGroupConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
