@@ -71,7 +71,6 @@ func resourceNetworkInterface() *schema.Resource {
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  0,
 						},
 					},
 				},

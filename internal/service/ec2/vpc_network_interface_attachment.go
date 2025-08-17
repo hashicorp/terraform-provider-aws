@@ -43,7 +43,6 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 			"network_card_index": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  0,
 				ForceNew: true,
 			},
 			names.AttrNetworkInterfaceID: {
