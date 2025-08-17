@@ -31,8 +31,8 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
-* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See supported fields below.
-* `attachment` - Attachment of the ENI. See supported fields below.
+* `association` - Association information for an Elastic IP address (IPv4) associated with the network interface. See [association](#association) below.
+* `attachment` - Attachment of the ENI. See [attachment](#attachment) below.
 * `availability_zone` - Availability Zone.
 * `description` - Description of the network interface.
 * `interface_type` - Type of interface.
@@ -61,11 +61,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `attachment`
 
-* `attachment_id` - The ID of the network interface attachment.
-* `device_index` - The device index of the network interface attachment on the instance.
-* `instance_id` - The ID of the instance.
-* `instance_owner_id` - The AWS account ID of the owner of the instance.
-* `network_card_index` - The index of the network card.
+* `attachment_id` - ID of the network interface attachment.
+* `device_index` - Device index of the network interface attachment on the instance.
+* `instance_id` - ID of the instance.
+* `instance_owner_id` - AWS account ID of the owner of the instance.
+* `network_card_index` - Index of the network card.
 
 ## Timeouts
 
