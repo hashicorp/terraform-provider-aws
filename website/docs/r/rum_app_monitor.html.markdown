@@ -52,7 +52,6 @@ This resource supports the following arguments:
 ### deobfuscation_configuration
 
 * `javascript_source_maps` - (Optional) Configuration for how an app monitor can unminify JavaScript error stack traces using source maps.
-
     * `status` - (Required) Whether JavaScript error stack traces should be unminified for this app monitor. Valid values are `DISABLED` and `ENABLED`.
     * `s3_uri` - (Optional) S3 URI of the bucket or folder that stores the source map files.
 
