@@ -131,7 +131,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 	})
 }
 
-func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAmisIsPublic(t *testing.T) {
+func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAMIsIsPublic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,7 +143,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAmisIsPublic(
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAmisIsPublic(rName),
+				Config: testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAMIsIsPublic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", "1"),
@@ -492,7 +492,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 `, rName))
 }
 
-func testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAmisIsPublic(rName string) string {
+func testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAMIsIsPublic(rName string) string {
 	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
@@ -509,7 +509,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     }
     exclusion_rules {
       amis {
-        regions   = [data.aws_region.current.region]
+        regions = [data.aws_region.current.region]
         last_launched {
           unit  = "WEEKS"
           value = 2
