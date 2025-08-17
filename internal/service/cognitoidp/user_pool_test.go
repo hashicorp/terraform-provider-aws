@@ -477,6 +477,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -490,6 +491,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -500,6 +502,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -529,6 +532,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -545,6 +549,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -553,6 +558,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -581,6 +587,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -595,6 +602,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -621,6 +629,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -634,6 +643,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -643,6 +653,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "email_mfa_configuration.#", "0"),
 				),
 			},
 		},
