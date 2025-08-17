@@ -437,16 +437,16 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 }
 
 // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
-// Only specialized (and expensive) instance types support multiple network cards (and hence network_card_index > 0).
-// This test verifies that the resource is not created when a non-zero network_card_index is specified on an instance that does not support multiple network cards.
-// This ensures that network_card_index is passed when calling the API.
+// This test requires an expensive instance type that supports multiple network cards, such as "c6in.32xlarge" or "c6in.metal".
+// Set the environment variable `VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS` to run this test.
 func TestAccVPCNetworkInterface_attachmentNetworkCardIndex(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS")
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	ctx := acctest.Context(t)
-	var conf types.NetworkInterface
+	var conf awstypes.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -457,22 +457,24 @@ func TestAccVPCNetworkInterface_attachmentNetworkCardIndex(t *testing.T) {
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 1),
-				ExpectError: regexache.MustCompile("NetworkCard index 1 exceeds the limit for"),
-			},
-			{
-				Config: testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 0),
+				Config: testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
 						"device_index":       "1",
-						"network_card_index": "0",
+						"network_card_index": "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
 			},
 		},
 	})
@@ -1492,7 +1494,7 @@ resource "aws_network_interface" "test" {
 func testAccVPCNetworkInterfaceConfig_attachmentNetworkCardIndex(rName string, networkCardIndex int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.32xlarge", "c6in.metal"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
 resource "aws_subnet" "test2" {

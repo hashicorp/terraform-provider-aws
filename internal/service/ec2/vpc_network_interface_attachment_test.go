@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -49,11 +48,13 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 }
 
 // https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards.
-// Only specialized (and expensive) instance types support multiple network cards (and hence network_card_index > 0).
-// This test verifies that the resource is not created when a non-zero network_card_index is specified on an instance that does not support multiple network cards.
-// This ensures that network_card_index is passed when calling the AttachNetworkInterface API.
+// This test requires an expensive instance type that supports multiple network cards, such as "c6in.32xlarge" or "c6in.metal".
+// Set the environment variable `VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS` to run this test.
 func TestAccVPCNetworkInterfaceAttachment_networkCardIndex(t *testing.T) {
+	acctest.SkipIfEnvVarNotSet(t, "VPC_NETWORK_INTERFACE_TEST_MULTIPLE_NETWORK_CARDS")
 	ctx := acctest.Context(t)
+	var conf awstypes.NetworkInterface
+	resourceName := "aws_network_interface_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,8 +64,21 @@ func TestAccVPCNetworkInterfaceAttachment_networkCardIndex(t *testing.T) {
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName),
-				ExpectError: regexache.MustCompile("NetworkCard index 1 exceeds the limit for"),
+				Config: testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, "network_card_index", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -134,10 +148,10 @@ resource "aws_network_interface_attachment" "test" {
 `, rName))
 }
 
-func testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName string) string {
+func testAccVPCNetworkInterfaceAttachmentConfig_networkCardIndex(rName string, networkCardIndex int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForRegion("c6in.32xlarge", "c6in.metal"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -192,9 +206,9 @@ resource "aws_instance" "test" {
 
 resource "aws_network_interface_attachment" "test" {
   device_index         = 1
-  network_card_index   = 1
+  network_card_index   = %[2]d
   instance_id          = aws_instance.test.id
   network_interface_id = aws_network_interface.test.id
 }
-`, rName))
+`, rName, networkCardIndex))
 }
