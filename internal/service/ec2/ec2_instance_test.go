@@ -3526,6 +3526,93 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 	})
 }
 
+func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after awstypes.Instance
+	var eniPrimary awstypes.NetworkInterface
+	var eniSecondary awstypes.NetworkInterface
+	resourceName := "aws_instance.test"
+	eniPrimaryResourceName := "aws_network_interface.primary"
+	eniSecondaryResourceName := "aws_network_interface.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_addSecondaryNetworkInterface(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
+					testAccCheckENIExists(ctx, eniSecondaryResourceName, &eniSecondary),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "2"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(0),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(false),
+							"device_index":                knownvalue.Int64Exact(1),
+							"network_card_index":          knownvalue.Int64Exact(0),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface_id"), eniPrimaryResourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform/issues/3205
 func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -8716,6 +8803,89 @@ resource "aws_network_interface_attachment" "secondary" {
   instance_id          = aws_instance.test.id
   network_interface_id = aws_network_interface.secondary.id
   device_index         = 1
+}
+`, rName))
+}
+
+func testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_addSecondaryNetworkInterface(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = aws_network_interface.primary.id
+    device_index         = 0
+  }
+  
+  network_interface {
+    network_interface_id = aws_network_interface.secondary.id
+    device_index         = 1
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "primary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.42"]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "secondary" {
+  subnet_id   = aws_subnet.test.id
+  private_ips = ["10.1.1.43"]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
