@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfiters "github.com/hashicorp/terraform-provider-aws/internal/iters"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -308,7 +308,7 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	input := rds.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDBParameterGroup(ctx, &input)
 	})
 
@@ -466,5 +466,5 @@ parameterLoop:
 	chunks = append(chunks, slices.Chunk(immediate, maxChunkSize))
 	chunks = append(chunks, slices.Chunk(pendingReboot, maxChunkSize))
 
-	return tfiters.Concat(chunks...)
+	return tfiter.Concat(chunks...)
 }

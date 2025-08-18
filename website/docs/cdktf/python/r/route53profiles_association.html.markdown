@@ -96,10 +96,10 @@ class MyConvertedCode(TerraformStack):
         Route53ProfilesAssociation.generate_config_for_import(self, "example", "rpa-id-12345678")
 ```
 
-Using `terraform import`, import Route 53 Profiles Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a3bcef927a0a822cb93e01a37dfada6d58f2a33ab41ed153ed7700d3cd4b5e63 -->
+<!-- cache-key: cdktf-0.20.8 input-fbe43cc27bc49b25d456c583668f0dd08441004a7cb7f8c9e5f7ce5982cb509a -->
