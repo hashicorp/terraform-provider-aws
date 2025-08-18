@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/amp v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/amp v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.31.0
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.44.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.48.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.36.0
@@ -129,7 +129,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/glue v1.125.0
+	github.com/aws/aws-sdk-go-v2/service/glue v1.126.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.36.0
