@@ -93,7 +93,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				Computed:    true,
 				Description: "The amount of available storage, in gigabytes (GB), for the Exadata infrastructure",
 			},
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -135,7 +135,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				Computed:    true,
 				Description: "The software version of the database servers (dom0) in the Exadata infrastructure",
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -201,12 +201,12 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 				},
 				Description: "The model name of the Exadata infrastructure. Changing this will force terraform to create new resource",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
 				Computed:    true,
 				Description: "The current status of the Exadata infrastructure",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the status of the Exadata infrastructure",
 			},
@@ -228,7 +228,7 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 			"total_storage_size_in_gbs": schema.Int32Attribute{
 				Computed: true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The time when the Exadata infrastructure was created.",
@@ -483,7 +483,7 @@ func (r *resourceCloudExadataInfrastructure) Delete(ctx context.Context, req res
 }
 
 func (r *resourceCloudExadataInfrastructure) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {

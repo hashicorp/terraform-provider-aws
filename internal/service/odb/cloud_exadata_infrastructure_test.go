@@ -122,7 +122,7 @@ func TestAccODBCloudExadataInfrastructureResource_tagging(t *testing.T) {
 				Config: exaInfraTestResource.exaDataInfraResourceBasicConfigWithTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
@@ -141,7 +141,7 @@ func TestAccODBCloudExadataInfrastructureResource_tagging(t *testing.T) {
 						}
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

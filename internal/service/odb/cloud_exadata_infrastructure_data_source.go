@@ -55,7 +55,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				Computed:    true,
 				Description: "The amount of available storage, in gigabytes (GB), for the Exadata infrastructure.",
 			},
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
 				Description: "he name of the Availability Zone (AZ) where the Exadata infrastructure is located.",
 			},
@@ -92,7 +92,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				Computed:    true,
 				Description: "The version of the Exadata infrastructure.",
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Computed:    true,
 				Description: "The display name of the Exadata infrastructure.",
 			},
@@ -152,12 +152,12 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 				Computed:    true,
 				Description: "The model name of the Exadata infrastructure.",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
 				Computed:    true,
 				Description: "The status of the Exadata infrastructure.",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the status of the Exadata infrastructure.",
 			},
@@ -182,7 +182,7 @@ func (d *dataSourceCloudExadataInfrastructure) Schema(ctx context.Context, req d
 					"servers. An OCPU is a legacy physical measure of compute resources. OCPUs are\n" +
 					"based on the physical core of a processor with hyper-threading enabled.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The time when the Exadata infrastructure was created.",

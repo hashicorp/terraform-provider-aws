@@ -48,9 +48,9 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 			{
 				Config: exaInfraDataSourceTestEntity.basicExaInfraDataSource(displayNameSuffix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(exaInfraResource, "id", exaInfraDataSource, "id"),
+					resource.TestCheckResourceAttrPair(exaInfraResource, names.AttrID, exaInfraDataSource, names.AttrID),
 					resource.TestCheckResourceAttr(exaInfraDataSource, "shape", "Exadata.X9M"),
-					resource.TestCheckResourceAttr(exaInfraDataSource, "status", "AVAILABLE"),
+					resource.TestCheckResourceAttr(exaInfraDataSource, names.AttrStatus, "AVAILABLE"),
 					resource.TestCheckResourceAttr(exaInfraDataSource, "storage_count", "3"),
 					resource.TestCheckResourceAttr(exaInfraDataSource, "compute_count", "2"),
 				),
