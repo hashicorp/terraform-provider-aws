@@ -78,6 +78,7 @@ type ServicePackageFrameworkListResource struct {
 	Factory  func() list.ListResourceWithConfigure
 	TypeName string
 	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 }
