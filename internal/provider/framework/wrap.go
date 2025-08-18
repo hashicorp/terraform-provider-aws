@@ -31,9 +31,6 @@ import (
 // Implemented by (Config|Plan|State).GetAttribute().
 type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
 
-// contextFunc represents a function that creates a context with metadata.
-type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
-
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
 	inner              datasource.DataSourceWithConfigure
@@ -359,18 +356,13 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 	}
 }
 
-type wrappedActionOptions struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorInvocations
-	typeName         string
-}
-
 // wrappedAction represents an interceptor dispatcher for a Plugin Framework action.
 type wrappedAction struct {
-	inner action.ActionWithConfigure
-	meta  *conns.AWSClient
-	opts  wrappedActionOptions
+	inner              action.ActionWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageAction
+	interceptors       interceptorInvocations
 }
 
 func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
@@ -392,47 +384,51 @@ func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName st
 
 	inner, _ := spec.Factory(context.TODO())
 
-	opts := wrappedActionOptions{
-		// bootstrapContext is run on all wrapped methods before any interceptors.
-		bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
-			var diags diag.Diagnostics
-			var overrideRegion string
-
-			if isRegionOverrideEnabled && getAttribute != nil {
-				var target types.String
-				diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
-				if diags.HasError() {
-					return ctx, diags
-				}
-
-				overrideRegion = target.ValueString()
-			}
-
-			ctx = conns.NewResourceContext(ctx, servicePackageName, spec.Name, overrideRegion)
-			if c != nil {
-				ctx = c.RegisterLogger(ctx)
-				ctx = fwflex.RegisterLogger(ctx)
-				ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
-			}
-			return ctx, diags
-		},
-		interceptors: interceptors,
-		typeName:     spec.TypeName,
-	}
-
 	return &wrappedAction{
-		inner: inner,
-		opts:  opts,
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
 	}
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedAction) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		overrideRegion = target.ValueString()
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+		ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+	}
+
+	return ctx, diags
 }
 
 func (w *wrappedAction) Metadata(ctx context.Context, request action.MetadataRequest, response *action.MetadataResponse) {
 	// This method does not call down to the inner action.
-	response.TypeName = w.opts.typeName
+	response.TypeName = w.spec.TypeName
 }
 
 func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.context(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -441,26 +437,26 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 	f := func(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
 		w.inner.Schema(ctx, request, response)
 	}
-	interceptedHandler(w.opts.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
 
 	// Validate the action's model against the schema.
 	if v, ok := w.inner.(framework.ActionValidateModel); ok {
 		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
 			response.Diagnostics.Append(v.ValidateModel(ctx, &schema)...)
 			if response.Diagnostics.HasError() {
-				response.Diagnostics.AddError("action model validation error", w.opts.typeName)
+				response.Diagnostics.AddError("action model validation error", w.spec.TypeName)
 				return
 			}
 		} else {
-			response.Diagnostics.AddError("unsupported action schema type", w.opts.typeName)
+			response.Diagnostics.AddError("unsupported action schema type", w.spec.TypeName)
 		}
 	} else {
-		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.opts.typeName)
+		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.spec.TypeName)
 	}
 }
 
 func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
-	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -469,7 +465,7 @@ func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest
 	f := func(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
 		w.inner.Invoke(ctx, request, response)
 	}
-	interceptedHandler(w.opts.interceptors.actionInvoke(), f, actionInvokeHasError, w.meta)(ctx, request, response)
+	interceptedHandler(w.interceptors.actionInvoke(), f, actionInvokeHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureRequest, response *action.ConfigureResponse) {
@@ -477,7 +473,7 @@ func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureR
 		w.meta = v
 	}
 
-	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	ctx, diags := w.context(ctx, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -488,10 +484,10 @@ func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureR
 
 func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigValidator {
 	if v, ok := w.inner.(action.ActionWithConfigValidators); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
-				"action":                 w.opts.typeName,
+				"action":                 w.spec.TypeName,
 				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
 			})
 
@@ -506,7 +502,7 @@ func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigVal
 
 func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.ValidateConfigRequest, response *action.ValidateConfigResponse) {
 	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
-		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -514,14 +510,6 @@ func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.Valid
 
 		v.ValidateConfig(ctx, request, response)
 	}
-}
-
-type wrappedResourceOptions struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	interceptors     interceptorInvocations
-	typeName         string
-	identity         inttypes.Identity
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
