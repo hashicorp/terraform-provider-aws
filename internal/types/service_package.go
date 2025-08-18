@@ -74,7 +74,7 @@ type ServicePackageFrameworkResource struct {
 	Import   FrameworkImport
 }
 
-type ServicePackageListResource struct {
+type ServicePackageFrameworkListResource struct {
 	Factory  func() list.ListResourceWithConfigure
 	TypeName string
 	Name     string
