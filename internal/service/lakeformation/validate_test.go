@@ -73,42 +73,42 @@ func TestValidCatalogID(t *testing.T) {
 	t.Parallel()
 
 	validCatalogIDs := []string{
-		"123456789012", // Standard AWS account ID
-		"111122223333", // Another valid account ID
-		"123456789012:s3tablescatalog/my-table-bucket",   // S3 Tables catalog ID
-		"111122223333:s3tablescatalog/test-bucket",       // Another S3 Tables catalog ID
-		"123456789012:s3tablescatalog/bucket.with.dots",  // S3 Tables catalog ID with dots
-		"123456789012:s3tablescatalog/bucket-with-dash",  // S3 Tables catalog ID with dashes
-		"123456789012:s3tablescatalog/bucket_with_under", // S3 Tables catalog ID with underscores
+		acctest.Ct12Digit, // Standard AWS account ID
+		"111122223333",    // Another valid account ID
+		acctest.Ct12Digit + ":s3tablescatalog/my-table-bucket",   // S3 Tables catalog ID
+		"111122223333:s3tablescatalog/test-bucket",               // Another S3 Tables catalog ID
+		acctest.Ct12Digit + ":s3tablescatalog/bucket.with.dots",  // S3 Tables catalog ID with dots
+		acctest.Ct12Digit + ":s3tablescatalog/bucket-with-dash",  // S3 Tables catalog ID with dashes
+		acctest.Ct12Digit + ":s3tablescatalog/bucket_with_under", // S3 Tables catalog ID with underscores
 	}
 
 	for _, v := range validCatalogIDs {
-		_, errors := tflf.ValidCatalogID(v, "catalog_id")
+		_, errors := tflf.ValidCatalogID(v, names.AttrCatalogID)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid catalog ID: %q", v, errors)
 		}
 	}
 
 	invalidCatalogIDs := []string{
-		"",                                          // Empty string
-		"12345678901",                               // Too short account ID
-		"1234567890123",                             // Too long account ID
-		"12345678901a",                              // Invalid account ID with letter
-		"123456789012:invalid/format",               // Invalid format
-		"123456789012:s3tablescatalog/",             // Missing bucket name
-		"123456789012:s3tablescatalog/-invalid",     // Bucket name starts with dash
-		"123456789012:s3tablescatalog/invalid-",     // Bucket name ends with dash
-		"123456789012:s3tablescatalog/.invalid",     // Bucket name starts with dot
-		"123456789012:s3tablescatalog/invalid.",     // Bucket name ends with dot
-		"123456789012:s3tablescatalog/_invalid",     // Bucket name starts with underscore
-		"123456789012:s3tablescatalog/invalid_",     // Bucket name ends with underscore
-		"12345678901a:s3tablescatalog/valid-bucket", // Invalid account ID in S3 Tables format
-		"123456789012:notstables/bucket",            // Wrong service type
-		"not-account:s3tablescatalog/bucket",        // Invalid account format
+		"",                                      // Empty string
+		"12345678901",                           // Too short account ID
+		"1234567890123",                         // Too long account ID
+		"12345678901a",                          // Invalid account ID with letter
+		acctest.Ct12Digit + ":invalid/format",   // Invalid format
+		acctest.Ct12Digit + ":s3tablescatalog/", // Missing bucket name
+		acctest.Ct12Digit + ":s3tablescatalog/-invalid", // Bucket name starts with dash
+		acctest.Ct12Digit + ":s3tablescatalog/invalid-", // Bucket name ends with dash
+		acctest.Ct12Digit + ":s3tablescatalog/.invalid", // Bucket name starts with dot
+		acctest.Ct12Digit + ":s3tablescatalog/invalid.", // Bucket name ends with dot
+		acctest.Ct12Digit + ":s3tablescatalog/_invalid", // Bucket name starts with underscore
+		acctest.Ct12Digit + ":s3tablescatalog/invalid_", // Bucket name ends with underscore
+		"12345678901a:s3tablescatalog/valid-bucket",     // Invalid account ID in S3 Tables format
+		acctest.Ct12Digit + ":notstables/bucket",        // Wrong service type
+		"not-account:s3tablescatalog/bucket",            // Invalid account format
 	}
 
 	for _, v := range invalidCatalogIDs {
-		_, errors := tflf.ValidCatalogID(v, "catalog_id")
+		_, errors := tflf.ValidCatalogID(v, names.AttrCatalogID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid catalog ID", v)
 		}
