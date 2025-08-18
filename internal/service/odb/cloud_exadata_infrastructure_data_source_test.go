@@ -83,7 +83,6 @@ func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDes
 }
 
 func (cloudExaDataInfraDataSourceTest) basicExaInfraDataSource(displayNameSuffix string) string {
-
 	testData := fmt.Sprintf(`
 
 

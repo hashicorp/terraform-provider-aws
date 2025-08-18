@@ -5,7 +5,6 @@ package odb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -32,8 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -240,13 +236,13 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 			"compute_model": schema.StringAttribute{
 				CustomType: computeModelType,
 				Computed:   true,
-				Description: fmt.Sprint("The OCI model compute model used when you create or clone an\n " +
+				Description: "The OCI model compute model used when you create or clone an\n " +
 					" instance: ECPU or OCPU. An ECPU is an abstracted measure of\n " +
 					"compute resources. ECPUs are based on the number of cores\n " +
 					"elastically allocated from a pool of compute and storage servers.\n " +
 					" An OCPU is a legacy physical measure of compute resources. OCPUs\n " +
 					"are based on the physical core of a processor with\n " +
-					" hyper-threading enabled."),
+					" hyper-threading enabled.",
 			},
 			"customer_contacts_to_send_to_oci": schema.SetAttribute{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[customerContactExaInfraResourceModel](ctx),
@@ -403,7 +399,6 @@ func (r *resourceCloudExadataInfrastructure) Read(ctx context.Context, req resou
 }
 
 func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	var plan, state cloudExadataInfrastructureResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -436,9 +431,7 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 			)
 			return
 		}
-
 	}
-
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	updatedExaInfra, err := waitCloudExadataInfrastructureUpdated(ctx, conn, state.CloudExadataInfrastructureId.ValueString(), updateTimeout)
 	if err != nil {
@@ -450,7 +443,6 @@ func (r *resourceCloudExadataInfrastructure) Update(ctx context.Context, req res
 	}
 	resp.Diagnostics.Append(flex.Flatten(ctx, updatedExaInfra, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *resourceCloudExadataInfrastructure) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -649,26 +641,4 @@ type monthExaInfraMaintenanceWindowResourceModel struct {
 
 type customerContactExaInfraResourceModel struct {
 	Email types.String `tfsdk:"email"`
-}
-
-func sweepCloudExadataInfrastructures(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := odb.ListCloudExadataInfrastructuresInput{}
-	conn := client.ODBClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := odb.NewListCloudExadataInfrastructuresPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.CloudExadataInfrastructures {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceCloudExadataInfrastructure, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.CloudExadataInfrastructureId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

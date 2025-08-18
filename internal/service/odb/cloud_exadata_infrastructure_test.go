@@ -32,7 +32,7 @@ var exaInfraTestResource = cloudExaDataInfraResourceTest{
 	displayNamePrefix: "Ofake-exa",
 }
 
-func TestAccODBCloudExadataInfrastructureResourceCreateBasic(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -65,7 +65,7 @@ func TestAccODBCloudExadataInfrastructureResourceCreateBasic(t *testing.T) {
 		},
 	})
 }
-func TestAccODBCloudExadataInfrastructureResourceCreateWithAllParameters(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -99,7 +99,7 @@ func TestAccODBCloudExadataInfrastructureResourceCreateWithAllParameters(t *test
 	})
 }
 
-func TestAccODBCloudExadataInfrastructureResourceTagging(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_tagging(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -153,7 +153,7 @@ func TestAccODBCloudExadataInfrastructureResourceTagging(t *testing.T) {
 	})
 }
 
-func TestAccODBCloudExadataInfrastructureResourceUpdateDisplayName(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_updateDisplayName(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -204,7 +204,7 @@ func TestAccODBCloudExadataInfrastructureResourceUpdateDisplayName(t *testing.T)
 	})
 }
 
-func TestAccODBCloudExadataInfrastructureResourceUpdateMaintenanceWindow(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_updateMaintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -255,7 +255,7 @@ func TestAccODBCloudExadataInfrastructureResourceUpdateMaintenanceWindow(t *test
 	})
 }
 
-func TestAccODBCloudExadataInfrastructureResourceDisappears(t *testing.T) {
+func TestAccODBCloudExadataInfrastructureResource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
