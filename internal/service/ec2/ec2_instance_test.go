@@ -199,7 +199,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
 				},
 			},
@@ -3252,7 +3252,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
 					}),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3302,7 +3302,7 @@ func TestAccEC2Instance_NetworkInterface_networkCardIndex(t *testing.T) {
 					}),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3382,7 +3382,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3412,7 +3412,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3469,7 +3469,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3499,7 +3499,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3551,7 +3551,7 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
@@ -3579,7 +3579,7 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.ListExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDeleteOnTermination: knownvalue.Bool(false),
 							"device_index":                knownvalue.Int64Exact(0),
