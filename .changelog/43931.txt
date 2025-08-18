@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lakeformation_permissions: Fix validation to accept S3 Tables catalog IDs in the format `account-id:s3tablescatalog/table-bucket-name` for `catalog_id` arguments
+```
+
+```release-note:bug
+data-source/aws_lakeformation_permissions: Fix validation to accept S3 Tables catalog IDs in the format `account-id:s3tablescatalog/table-bucket-name` for `catalog_id` arguments
+```
