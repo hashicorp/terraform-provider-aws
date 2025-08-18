@@ -309,14 +309,16 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePublicOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "SAT:03:00"),
+					resource.TestCheckResourceAttr(resourceName, "worker_replacement_strategy", string(awstypes.WorkerReplacementStrategyGraceful)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"worker_replacement_strategy"},
 			},
 		},
 	})
@@ -904,6 +906,7 @@ resource "aws_mwaa_environment" "test" {
   startup_script_s3_path          = aws_s3_object.startup_script.key
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
+  worker_replacement_strategy     = "GRACEFUL"
 
   tags = {
     Name        = %[1]q

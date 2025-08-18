@@ -297,6 +297,12 @@ func resourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"worker_replacement_strategy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.WorkerReplacementStrategy](),
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -593,6 +599,10 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("weekly_maintenance_window_start") {
 			input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
+		}
+
+		if v, ok := d.GetOk("worker_replacement_strategy"); ok {
+			input.WorkerReplacementStrategy = awstypes.WorkerReplacementStrategy(v.(string))
 		}
 
 		_, err := conn.UpdateEnvironment(ctx, input)
