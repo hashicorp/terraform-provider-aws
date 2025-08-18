@@ -15,6 +15,8 @@ import (
 	"unique"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -42,11 +44,13 @@ var (
 
 var (
 	_ provider.Provider                       = &frameworkProvider{}
+	_ provider.ProviderWithActions            = &frameworkProvider{}
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
+	actions            []func() action.Action
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
 	primary            interface{ Meta() any }
@@ -60,6 +64,7 @@ func NewProvider(ctx context.Context, primary interface{ Meta() any }) (provider
 	log.Printf("Creating Terraform AWS Provider (Framework-style)...")
 
 	provider := &frameworkProvider{
+		actions:            make([]func() action.Action, 0),
 		dataSources:        make([]func() datasource.DataSource, 0),
 		ephemeralResources: make([]func() ephemeral.EphemeralResource, 0),
 		primary:            primary,
@@ -344,6 +349,7 @@ func (p *frameworkProvider) Configure(ctx context.Context, request provider.Conf
 	response.DataSourceData = v
 	response.ResourceData = v
 	response.EphemeralResourceData = v
+	response.ActionData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -368,6 +374,14 @@ func (p *frameworkProvider) Resources(ctx context.Context) []func() resource.Res
 // All ephemeral resources must have unique type names.
 func (p *frameworkProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
 	return slices.Clone(p.ephemeralResources)
+}
+
+// Actions returns a slice of functions to instantiate each Action
+// implementation.
+//
+// All actions must have unique type names.
+func (p *frameworkProvider) Actions(ctx context.Context) []func() action.Action {
+	return slices.Clone(p.actions)
 }
 
 // Functions returns a slice of functions to instantiate each Function
@@ -408,6 +422,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithActions); ok {
+			for _, actionSpec := range v.Actions(ctx) {
+				p.actions = append(p.actions, func() action.Action { //nolint:contextcheck // must be a func()
+					return newWrappedAction(actionSpec, servicePackageName)
+				})
+			}
 		}
 	}
 }
@@ -455,6 +477,26 @@ func (p *frameworkProvider) validateResourceSchemas(ctx context.Context) error {
 
 				if err := validateSchemaRegionForEphemeralResource(ephemeralResourceSpec.Region, schemaResponse.Schema); err != nil {
 					errs = append(errs, fmt.Errorf("ephemeral resource type %q: %w", typeName, err))
+					continue
+				}
+			}
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithActions); ok {
+			for _, actionSpec := range v.Actions(ctx) {
+				typeName := actionSpec.TypeName
+				inner, err := actionSpec.Factory(ctx)
+
+				if err != nil {
+					errs = append(errs, fmt.Errorf("creating action type (%s): %w", typeName, err))
+					continue
+				}
+
+				schemaResponse := action.SchemaResponse{}
+				inner.Schema(ctx, action.SchemaRequest{}, &schemaResponse)
+
+				if err := validateSchemaRegionForAction(actionSpec.Region, schemaResponse.Schema); err != nil {
+					errs = append(errs, fmt.Errorf("action type %q: %w", typeName, err))
 					continue
 				}
 			}
@@ -514,6 +556,17 @@ func validateSchemaRegionForEphemeralResource(regionSpec unique.Handle[inttypes.
 	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
 		if _, ok := schema.Attributes[names.AttrRegion]; ok {
 			return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+		}
+	}
+	return nil
+}
+
+func validateSchemaRegionForAction(regionSpec unique.Handle[inttypes.ServicePackageResourceRegion], schemaIface any) error {
+	if !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		if schema, ok := schemaIface.(aschema.UnlinkedSchema); ok {
+			if _, ok := schema.Attributes[names.AttrRegion]; ok {
+				return fmt.Errorf("configured for enhanced regions but defines `%s` attribute in schema", names.AttrRegion)
+			}
 		}
 	}
 	return nil
