@@ -32,7 +32,7 @@ func DataSourcePermissions() *schema.Resource {
 			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
+				ValidateFunc: validCatalogID,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -81,7 +81,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: validCatalogID,
 						},
 					},
 				},
@@ -97,7 +97,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: validCatalogID,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -146,7 +146,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: validCatalogID,
 						},
 						names.AttrExpression: {
 							Type:     schema.TypeSet,
@@ -209,7 +209,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: validCatalogID,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -239,7 +239,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: validCatalogID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
