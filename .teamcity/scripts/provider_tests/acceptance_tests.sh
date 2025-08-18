@@ -48,7 +48,7 @@ TF_ACC=1 go test \
     ./internal/function/... \
     ./internal/generate/... \
     ./internal/io/... \
-    ./internal/iters/... \
+    ./internal/iter/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
