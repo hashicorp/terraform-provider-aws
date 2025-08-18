@@ -41,8 +41,3 @@ resource "aws_odb_cloud_exadata_infrastructure" "exa_infra_basic" {
     preference = "NO_PREFERENCE"
   }
 }
-
-# data source for exa infra
-data "aws_odb_cloud_exadata_infrastructure" "get-exa-infra" {
-  id = "<my-exa-infra-id>"
-}

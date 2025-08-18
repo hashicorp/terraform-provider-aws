@@ -86,23 +86,25 @@ func (cloudExaDataInfraDataSourceTest) basicExaInfraDataSource(displayNameSuffix
 	testData := fmt.Sprintf(`
 
 
+
+
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = %[1]q
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = [{email="abc@example.com"},{email="def@example.com"}]
-  maintenance_window  {
-  		custom_action_timeout_in_mins = 16
-        is_custom_action_timeout_enabled = true
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
+  display_name                     = %[1]q
+  shape                            = "Exadata.X9M"
+  storage_count                    = 3
+  compute_count                    = 2
+  availability_zone_id             = "use1-az6"
+  customer_contacts_to_send_to_oci = [{ email = "abc@example.com" }, { email = "def@example.com" }]
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
   }
 }
 
 data "aws_odb_cloud_exadata_infrastructure" "test" {
-    id = aws_odb_cloud_exadata_infrastructure.test.id
+  id = aws_odb_cloud_exadata_infrastructure.test.id
 }
 `, displayNameSuffix)
 	return testData
