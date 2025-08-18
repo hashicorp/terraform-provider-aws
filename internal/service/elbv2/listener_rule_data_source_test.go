@@ -5,6 +5,7 @@ package elbv2_test
 
 import (
 	"fmt"
+	"github.com/YakDriver/regexache"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
@@ -220,9 +221,9 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndIsDefault(t *testing.T) {
 				Config: testAccListenerRuleDataSourceConfig_byListenerAndIsDefault(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/[0-9a-z]+/[0-9a-z]+/[0-9a-z]+`, rName))),
 					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "is_default", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "is_default", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(dataSourceName, "action.0.type", listenerName, "default_action.0.type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "action.0.forward.0.target_group.0.arn", listenerName, "default_action.0.target_group_arn"),
 				),
