@@ -128,8 +128,8 @@ The `grantee` configuration block supports the following arguments:
 
 The `target_object_key_format` configuration block supports the following arguments:
 
-* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects. [See below](#partitioned_prefix).
-* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects. To use, set `simple_prefix {}`.
+* `partitioned_prefix` - (Optional) Partitioned S3 key for log objects, in the form `[target_prefix][SourceAccountId]/[SourceRegion]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. Conflicts with `simple_prefix`. [See below](#partitioned_prefix).
+* `simple_prefix` - (Optional) Use the simple format for S3 keys for log objects, in the form `[target_prefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]`. To use, set `simple_prefix {}`. Conflicts with `partitioned_prefix`.
 
 ### partitioned_prefix
 
