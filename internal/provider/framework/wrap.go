@@ -794,11 +794,11 @@ type wrappedListResource struct {
 	inner              list.ListResourceWithConfigure
 	meta               *conns.AWSClient
 	servicePackageName string
-	spec               *inttypes.ServicePackageListResource
+	spec               *inttypes.ServicePackageFrameworkListResource
 	interceptors       interceptorInvocations
 }
 
-func newWrappedListResource(spec *inttypes.ServicePackageListResource, servicePackageName string) list.ListResourceWithConfigure {
+func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
 	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
