@@ -6,6 +6,8 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
+	aschema "github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -28,6 +30,9 @@ import (
 
 // Implemented by (Config|Plan|State).GetAttribute().
 type getAttributeFunc func(context.Context, path.Path, any) diag.Diagnostics
+
+// contextFunc represents a function that creates a context with metadata.
+type contextFunc func(context.Context, getAttributeFunc, *conns.AWSClient) (context.Context, diag.Diagnostics)
 
 // wrappedDataSource represents an interceptor dispatcher for a Plugin Framework data source.
 type wrappedDataSource struct {
@@ -352,6 +357,171 @@ func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request e
 
 		v.ValidateConfig(ctx, request, response)
 	}
+}
+
+type wrappedActionOptions struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	interceptors     interceptorInvocations
+	typeName         string
+}
+
+// wrappedAction represents an interceptor dispatcher for a Plugin Framework action.
+type wrappedAction struct {
+	inner action.ActionWithConfigure
+	meta  *conns.AWSClient
+	opts  wrappedActionOptions
+}
+
+func newWrappedAction(spec *inttypes.ServicePackageAction, servicePackageName string) action.ActionWithConfigure {
+	var isRegionOverrideEnabled bool
+	if regionSpec := spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	var interceptors interceptorInvocations
+
+	if isRegionOverrideEnabled {
+		v := spec.Region.Value()
+
+		interceptors = append(interceptors, actionInjectRegionAttribute())
+		if v.IsValidateOverrideInPartition {
+			interceptors = append(interceptors, actionValidateRegion())
+		}
+	}
+
+	inner, _ := spec.Factory(context.TODO())
+
+	opts := wrappedActionOptions{
+		// bootstrapContext is run on all wrapped methods before any interceptors.
+		bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+			var diags diag.Diagnostics
+			var overrideRegion string
+
+			if isRegionOverrideEnabled && getAttribute != nil {
+				var target types.String
+				diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				overrideRegion = target.ValueString()
+			}
+
+			ctx = conns.NewResourceContext(ctx, servicePackageName, spec.Name, overrideRegion)
+			if c != nil {
+				ctx = c.RegisterLogger(ctx)
+				ctx = fwflex.RegisterLogger(ctx)
+				ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+			}
+			return ctx, diags
+		},
+		interceptors: interceptors,
+		typeName:     spec.TypeName,
+	}
+
+	return &wrappedAction{
+		inner: inner,
+		opts:  opts,
+	}
+}
+
+func (w *wrappedAction) Metadata(ctx context.Context, request action.MetadataRequest, response *action.MetadataResponse) {
+	// This method does not call down to the inner action.
+	response.TypeName = w.opts.typeName
+}
+
+func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
+	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request action.SchemaRequest, response *action.SchemaResponse) {
+		w.inner.Schema(ctx, request, response)
+	}
+	interceptedHandler(w.opts.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
+
+	// Validate the action's model against the schema.
+	if v, ok := w.inner.(framework.ActionValidateModel); ok {
+		if schema, ok := response.Schema.(aschema.UnlinkedSchema); ok {
+			response.Diagnostics.Append(v.ValidateModel(ctx, &schema)...)
+			if response.Diagnostics.HasError() {
+				response.Diagnostics.AddError("action model validation error", w.opts.typeName)
+				return
+			}
+		} else {
+			response.Diagnostics.AddError("unsupported action schema type", w.opts.typeName)
+		}
+	} else {
+		response.Diagnostics.AddError("missing framework.ActionValidateModel", w.opts.typeName)
+	}
+}
+
+func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
+	ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	f := func(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
+		w.inner.Invoke(ctx, request, response)
+	}
+	interceptedHandler(w.opts.interceptors.actionInvoke(), f, actionInvokeHasError, w.meta)(ctx, request, response)
+}
+
+func (w *wrappedAction) Configure(ctx context.Context, request action.ConfigureRequest, response *action.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigValidator {
+	if v, ok := w.inner.(action.ActionWithConfigValidators); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping ConfigValidators", map[string]any{
+				"action":                 w.opts.typeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+
+			return nil
+		}
+
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.ValidateConfigRequest, response *action.ValidateConfigResponse) {
+	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
+		ctx, diags := w.opts.bootstrapContext(ctx, request.Config.GetAttribute, w.meta)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
+type wrappedResourceOptions struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	interceptors     interceptorInvocations
+	typeName         string
+	identity         inttypes.Identity
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.

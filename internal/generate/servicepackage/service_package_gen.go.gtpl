@@ -59,6 +59,31 @@ import (
 
 type servicePackage struct {}
 
+{{- if .Actions }}
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction {
+{{- range $key, $value := .Actions }}
+	{{- $regionOverrideEnabled := and (not $.IsGlobal) $value.RegionOverrideEnabled }}
+		{
+			Factory:  {{ $value.FactoryName }},
+			TypeName: "{{ $key }}",
+			Name:     "{{ $value.Name }}",
+	{{- if and $regionOverrideEnabled $value.ValidateRegionOverrideInPartition }}
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+	{{- else if not $regionOverrideEnabled }}
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+	{{- else }}
+			Region: unique.Make(inttypes.ServicePackageResourceRegion {
+				IsOverrideEnabled:             {{ $regionOverrideEnabled }},
+				IsValidateOverrideInPartition: {{ $value.ValidateRegionOverrideInPartition }},
+			}),
+	{{- end }}
+		},
+{{- end }}
+	}
+}
+{{- end }}
+
 {{- if .EphemeralResources }}
 func (p *servicePackage) EphemeralResources(ctx context.Context) []*inttypes.ServicePackageEphemeralResource {
 	return []*inttypes.ServicePackageEphemeralResource {
