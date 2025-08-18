@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront KeyValueStore Key using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront KeyValueStore Key using the `key_value_store_arn` and 'key' separated by `,`. For example:
 
 ```terraform
 import {
@@ -55,7 +55,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudFront KeyValueStore Key using the `id`. For example:
+Using `terraform import`, import CloudFront KeyValueStore Key using the `key_value_store_arn` and 'key' separated by `,`. For example:
 
 ```console
 % terraform import aws_cloudfrontkeyvaluestore_key.example arn:aws:cloudfront::111111111111:key-value-store/8562g61f-caba-2845-9d99-b97diwae5d3c,someKey

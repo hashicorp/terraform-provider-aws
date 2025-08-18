@@ -36,9 +36,9 @@ jobs:
           EOF
       - run: terraform init
       - run: |
-          datasources=$(terraform providers schema -json | jq '.provider_schemas[] .data_source_schemas | length')
-          resources=$(terraform providers schema -json | jq '.provider_schemas[] .resource_schemas | length')
-          sed -r -i "s/There are currently ([0-9]+) resources and ([0-9]+)(.*)/There are currently $resources resources and $datasources\3/" website/docs/index.html.markdown
+          datasources=$(terraform providers schema -json | jq '.provider_schemas[] .data_source_schemas | length' | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')
+          resources=$(terraform providers schema -json | jq '.provider_schemas[] .resource_schemas | length' | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')
+          sed -r -i "s/With ([0-9,]+) resources and ([0-9,]+) data sources,/With $resources resources and $datasources data sources,/" website/docs/index.html.markdown
       - run: |
           rm main.tf
           rm .terraform.lock.hcl

@@ -6,6 +6,7 @@ package ecr_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -151,6 +152,128 @@ func TestAccECRRepository_immutability(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECRRepository_immutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Repository
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_immutabilityWithExclusion(rName, "latest*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityImmutableWithExclusion)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "latest*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_immutabilityWithExclusion(rName, "dev-*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "dev-*"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECRRepository_mutabilityWithExclusion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Repository
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_repository.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_mutabilityWithExclusion(rName, "prod-*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", string(types.ImageTagMutabilityMutableWithExclusion)),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "prod-*"),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter_type", string(types.ImageTagMutabilityExclusionFilterTypeWildcard)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_mutabilityWithExclusion(rName, "release-*"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability_exclusion_filter.0.filter", "release-*"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECRRepository_immutabilityWithExclusion_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRepositoryConfig_immutabilityWithExclusion(rName, "invalid!@#$"),
+				ExpectError: regexache.MustCompile(`must contain only letters, numbers, and special characters`),
+			},
+			{
+				Config:      testAccRepositoryConfig_immutabilityWithExclusion(rName, "a*b*c*d"),
+				ExpectError: regexache.MustCompile(`Image tag mutability exclusion filter can contain a maximum of 2 wildcards`),
+			},
+			{
+				Config:      testAccRepositoryConfig_immutabilityWithExclusion(rName, strings.Repeat("a", 129)),
+				ExpectError: regexache.MustCompile(`expected length of.*to be in the range.*128`),
+			},
+		},
+	})
+}
+
+func TestAccECRRepository_immutabilityWithExclusion_crossValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRepositoryConfig_immutabilityWithExclusionInvalid(rName),
+				ExpectError: regexache.MustCompile(`image_tag_mutability_exclusion_filter can only be used when image_tag_mutability is set to IMMUTABLE_WITH_EXCLUSION`),
 			},
 		},
 	})
@@ -444,6 +567,48 @@ func testAccRepositoryConfig_immutability(rName string) string {
 resource "aws_ecr_repository" "test" {
   name                 = %[1]q
   image_tag_mutability = "IMMUTABLE"
+}
+`, rName)
+}
+
+func testAccRepositoryConfig_immutabilityWithExclusion(rName, filter string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "IMMUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+}
+`, rName, filter)
+}
+
+func testAccRepositoryConfig_mutabilityWithExclusion(rName, filter string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "MUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = %[2]q
+    filter_type = "WILDCARD"
+  }
+}
+`, rName, filter)
+}
+
+func testAccRepositoryConfig_immutabilityWithExclusionInvalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "MUTABLE"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = "latest*"
+    filter_type = "WILDCARD"
+  }
 }
 `, rName)
 }

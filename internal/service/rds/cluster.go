@@ -852,7 +852,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBClusterFromSnapshot(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -1361,7 +1361,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateDBCluster(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")

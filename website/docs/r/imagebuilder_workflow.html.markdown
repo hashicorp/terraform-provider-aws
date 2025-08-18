@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Image Builder Workflow using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Image Builder Workflow using the `arn`. For example:
 
 ```terraform
 import {
@@ -89,7 +89,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 Image Builder Workflow using the `example_id_arg`. For example:
+Using `terraform import`, import EC2 Image Builder Workflow using the `arn`. For example:
 
 ```console
 % terraform import aws_imagebuilder_workflow.example arn:aws:imagebuilder:us-east-1:aws:workflow/test/example/1.0.1/1
