@@ -67,7 +67,7 @@ func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDes
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-			_, err := tfodb.FindOdbExaDataInfraForDataSourceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfodb.FindExaDataInfraForDataSourceByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}

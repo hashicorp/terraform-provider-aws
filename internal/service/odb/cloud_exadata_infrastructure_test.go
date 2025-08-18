@@ -295,7 +295,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExaDataInfraDestroyed(ctx 
 			if rs.Type != "aws_odb_cloud_exadata_infrastructure" {
 				continue
 			}
-			_, err := tfodb.FindOdbExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfodb.FindExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -323,7 +323,7 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExist
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
-		resp, err := tfodb.FindOdbExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
+		resp, err := tfodb.FindExadataInfraResourceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameCloudExadataInfrastructure, rs.Primary.ID, err)
 		}

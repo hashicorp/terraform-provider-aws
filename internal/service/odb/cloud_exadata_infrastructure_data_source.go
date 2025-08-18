@@ -219,7 +219,7 @@ func (d *dataSourceCloudExadataInfrastructure) Read(ctx context.Context, req dat
 		return
 	}
 
-	out, err := FindOdbExaDataInfraForDataSourceByID(ctx, conn, data.CloudExadataInfrastructureId.ValueString())
+	out, err := FindExaDataInfraForDataSourceByID(ctx, conn, data.CloudExadataInfrastructureId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameCloudExadataInfrastructure, data.CloudExadataInfrastructureId.String(), err),
@@ -235,7 +235,7 @@ func (d *dataSourceCloudExadataInfrastructure) Read(ctx context.Context, req dat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func FindOdbExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
+func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.CloudExadataInfrastructure, error) {
 	input := odb.GetCloudExadataInfrastructureInput{
 		CloudExadataInfrastructureId: aws.String(id),
 	}
