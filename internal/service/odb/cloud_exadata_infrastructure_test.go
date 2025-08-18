@@ -75,6 +75,9 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 	var cloudExaDataInfrastructure odbtypes.CloudExadataInfrastructure
 	resourceName := "aws_odb_cloud_exadata_infrastructure.test"
 	rName := sdkacctest.RandomWithPrefix(exaInfraTestResource.displayNamePrefix)
+	domain := acctest.RandomDomainName()
+	emailAddress1 := acctest.RandomEmailAddress(domain)
+	emailAddress2 := acctest.RandomEmailAddress(domain)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -85,7 +88,7 @@ func TestAccODBCloudExadataInfrastructureResource_withAllParameters(t *testing.T
 		CheckDestroy:             exaInfraTestResource.testAccCheckCloudExaDataInfraDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: exaInfraTestResource.exaDataInfraResourceWithAllConfig(rName),
+				Config: exaInfraTestResource.exaDataInfraResourceWithAllConfig(rName, emailAddress1, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					exaInfraTestResource.testAccCheckCloudExadataInfrastructureExists(ctx, resourceName, &cloudExaDataInfrastructure),
 				),
@@ -337,9 +340,9 @@ func (cloudExaDataInfraResourceTest) testAccCheckCloudExadataInfrastructureExist
 func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
-	input := &odb.ListCloudExadataInfrastructuresInput{}
+	input := odb.ListCloudExadataInfrastructuresInput{}
 
-	_, err := conn.ListCloudExadataInfrastructures(ctx, input)
+	_, err := conn.ListCloudExadataInfrastructures(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -349,7 +352,8 @@ func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *tes
 	}
 }
 
-func (cloudExaDataInfraResourceTest) exaDataInfraResourceWithAllConfig(randomId string) string {
+func (cloudExaDataInfraResourceTest) exaDataInfraResourceWithAllConfig(randomId, emailAddress1, emailAddress2 string) string {
+
 	exaDataInfra := fmt.Sprintf(`
 
 
@@ -359,7 +363,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count                    = 3
   compute_count                    = 2
   availability_zone_id             = "use1-az6"
-  customer_contacts_to_send_to_oci = [{ email = "abc@example.com" }, { email = "def@example.com" }]
+  customer_contacts_to_send_to_oci = [{ email =%[2]q }, { email = %[3]q }]
   database_server_type             = "X11M"
   storage_server_type              = "X11M-HC"
   maintenance_window {
@@ -378,7 +382,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   }
 
 }
-`, randomId)
+`, randomId, emailAddress1, emailAddress2)
 	return exaDataInfra
 }
 func (cloudExaDataInfraResourceTest) exaDataInfraResourceBasicConfig(displayName string) string {

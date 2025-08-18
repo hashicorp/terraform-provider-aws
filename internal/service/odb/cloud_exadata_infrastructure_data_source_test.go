@@ -36,6 +36,9 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 	exaInfraResource := "aws_odb_cloud_exadata_infrastructure.test"
 	exaInfraDataSource := "data.aws_odb_cloud_exadata_infrastructure.test"
 	displayNameSuffix := sdkacctest.RandomWithPrefix(exaInfraDataSourceTestEntity.displayNamePrefix)
+	domain := acctest.RandomDomainName()
+	emailAddress1 := acctest.RandomEmailAddress(domain)
+	emailAddress2 := acctest.RandomEmailAddress(domain)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,7 +49,7 @@ func TestAccODBCloudExadataInfrastructureDataSource_basic(t *testing.T) {
 		CheckDestroy:             exaInfraDataSourceTestEntity.testAccCheckCloudExadataInfrastructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: exaInfraDataSourceTestEntity.basicExaInfraDataSource(displayNameSuffix),
+				Config: exaInfraDataSourceTestEntity.basicExaInfraDataSource(displayNameSuffix, emailAddress1, emailAddress2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(exaInfraResource, names.AttrID, exaInfraDataSource, names.AttrID),
 					resource.TestCheckResourceAttr(exaInfraDataSource, "shape", "Exadata.X9M"),
@@ -82,7 +85,7 @@ func (cloudExaDataInfraDataSourceTest) testAccCheckCloudExadataInfrastructureDes
 	}
 }
 
-func (cloudExaDataInfraDataSourceTest) basicExaInfraDataSource(displayNameSuffix string) string {
+func (cloudExaDataInfraDataSourceTest) basicExaInfraDataSource(displayNameSuffix, emailAddress1, emailAddress2 string) string {
 	testData := fmt.Sprintf(`
 
 
@@ -94,7 +97,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count                    = 3
   compute_count                    = 2
   availability_zone_id             = "use1-az6"
-  customer_contacts_to_send_to_oci = [{ email = "abc@example.com" }, { email = "def@example.com" }]
+  customer_contacts_to_send_to_oci = [{ email = %[2]q }, { email = %[3]q }]
   maintenance_window {
     custom_action_timeout_in_mins    = 16
     is_custom_action_timeout_enabled = true
@@ -106,6 +109,6 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
 data "aws_odb_cloud_exadata_infrastructure" "test" {
   id = aws_odb_cloud_exadata_infrastructure.test.id
 }
-`, displayNameSuffix)
+`, displayNameSuffix, emailAddress1, emailAddress2)
 	return testData
 }

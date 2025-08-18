@@ -57,6 +57,7 @@ var ResourceCloudExadataInfrastructure = newResourceCloudExadataInfrastructure
 type resourceCloudExadataInfrastructure struct {
 	framework.ResourceWithModel[cloudExadataInfrastructureResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -480,10 +481,6 @@ func (r *resourceCloudExadataInfrastructure) Delete(ctx context.Context, req res
 		)
 		return
 	}
-}
-
-func (r *resourceCloudExadataInfrastructure) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitCloudExadataInfrastructureCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudExadataInfrastructure, error) {
