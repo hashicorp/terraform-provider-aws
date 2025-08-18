@@ -288,7 +288,7 @@ require (
 	github.com/hashicorp/go-version v1.7.0
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-json v0.26.0
-	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1
+	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250813073447-f532c5b7f52a
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
