@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -199,7 +200,7 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	jobQueue, err := findJobQueueByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.EnrichAppend(ctx, &response.Diagnostics, frameworkdiag.Diagnostics{fwdiag.NewResourceNotFoundWarningDiagnostic(err)})
 		response.State.RemoveResource(ctx)
 
 		return
@@ -271,10 +272,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, new.SchedulingPolicyARN)
 			update = true
 		} else {
-			response.Diagnostics.AddError(
-				"cannot remove the fair share scheduling policy",
-				"cannot remove scheduling policy",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, errors.New("cannot remove the fair share scheduling policy"), smerr.ID, new.ID)
 			return
 		}
 	}

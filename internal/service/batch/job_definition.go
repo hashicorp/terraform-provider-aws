@@ -787,13 +787,13 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	case awstypes.JobDefinitionTypeMultinode:
 		if v, ok := d.GetOk("container_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No `container_properties` can be specified when `type` is %q", jobDefinitionType), smerr.ID, name)
 		}
 		if v, ok := d.GetOk("ecs_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `ecs_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No ecs_properties can be specified when type is %q", jobDefinitionType), smerr.ID, name)
 		}
 		if v, ok := d.GetOk("eks_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `eks_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No eks_properties can be specified when type is %q", jobDefinitionType), smerr.ID, name)
 		}
 
 		if v, ok := d.GetOk("node_properties"); ok {
