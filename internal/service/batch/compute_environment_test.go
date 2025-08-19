@@ -319,8 +319,8 @@ func TestAccBatchComputeEnvironment_upgradeV0ToV1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 			{
@@ -2257,7 +2257,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_upgradeV0ToV1Legacy(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -3365,7 +3365,7 @@ func testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceType
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
