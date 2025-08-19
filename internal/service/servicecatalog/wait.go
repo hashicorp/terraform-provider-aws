@@ -75,6 +75,24 @@ const (
 	organizationAccessStatusError = "ERROR"
 )
 
+// ProvisionedProductFailureError represents a provisioned product operation failure
+// that requires state refresh to recover from inconsistent state.
+type ProvisionedProductFailureError struct {
+	StatusMessage string
+	Status        string
+	NeedsRefresh  bool
+}
+
+func (e *ProvisionedProductFailureError) Error() string {
+	return e.StatusMessage
+}
+
+// IsStateInconsistent returns true if this error indicates state inconsistency
+// that requires a refresh to recover.
+func (e *ProvisionedProductFailureError) IsStateInconsistent() bool {
+	return e.NeedsRefresh
+}
+
 func waitProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating, statusNotFound, statusUnavailable),
@@ -485,7 +503,12 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
 				status := string(detail.Status)
 				if status == string(awstypes.ProvisionedProductStatusError) || status == string(awstypes.ProvisionedProductStatusTainted) {
-					return output, errors.New(aws.ToString(detail.StatusMessage))
+					// Create a custom error type that signals state refresh is needed
+					return output, &ProvisionedProductFailureError{
+						StatusMessage: aws.ToString(detail.StatusMessage),
+						Status:        status,
+						NeedsRefresh:  true,
+					}
 				}
 			}
 		}
