@@ -157,6 +157,43 @@ data "aws_arcregionswitch_plan" "test" {
 `, testAccPlanConfig_route53HealthChecks(rName))
 }
 
+func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_arcregionswitch_plan.test"
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlanDataSourceConfig_withoutWaitFlags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					// Verify no execution data is returned when not requested
+					resource.TestCheckNoResourceAttr(dataSourceName, "execution_id"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "execution_events"),
+					// Verify health checks exist but IDs may be empty without wait
+					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPlanDataSourceConfig_withoutWaitFlags(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+data "aws_arcregionswitch_plan" "test" {
+  arn = aws_arcregionswitch_plan.test.arn
+}
+`, testAccPlanConfig_route53HealthChecks(rName))
+}
+
 func testAccPlanDataSourceConfig_route53HealthChecks(rName string) string {
 	return fmt.Sprintf(`
 %s
