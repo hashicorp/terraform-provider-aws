@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_nat_gateway: Fix replacing while changing secondary_private_ip_address_count value
+```
