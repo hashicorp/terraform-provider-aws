@@ -172,6 +172,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_lambda_permission",
 			Name:     "Permission",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("function_name", true),
+				inttypes.StringIdentityAttribute("statement_id", true),
+				inttypes.StringIdentityAttribute("qualifier", false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      permissionImportID{},
+			},
 		},
 		{
 			Factory:  resourceProvisionedConcurrencyConfig,
