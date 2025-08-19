@@ -649,6 +649,7 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"primary_network_interface": {
+				// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,

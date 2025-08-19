@@ -85,6 +85,22 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			}
+			s["primary_network_interface"] = &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			}
 			s["spot_bid_status"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
@@ -350,6 +366,14 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
+
+				pni := map[string]any{
+					names.AttrNetworkInterfaceID:  aws.ToString(ni.NetworkInterfaceId),
+					names.AttrDeleteOnTermination: aws.ToBool(ni.Attachment.DeleteOnTermination),
+				}
+				if err := d.Set("primary_network_interface", []any{pni}); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Spot Instance (%s): %s", d.Id(), err)
+				}
 
 				for _, address := range ni.Ipv6Addresses {
 					ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
