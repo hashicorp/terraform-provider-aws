@@ -40,12 +40,8 @@ func newMonitorResource(context.Context) (resource.ResourceWithConfigure, error)
 }
 
 type monitorResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[monitorResourceModel]
 	framework.WithImportByID
-}
-
-func (*monitorResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_networkmonitor_monitor"
 }
 
 func (r *monitorResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -235,10 +231,6 @@ func (r *monitorResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-func (r *monitorResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) {
 	input := &networkmonitor.GetMonitorInput{
 		MonitorName: aws.String(name),
@@ -265,7 +257,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 }
 
 func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMonitorByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -323,6 +315,7 @@ func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, name s
 }
 
 type monitorResourceModel struct {
+	framework.WithRegionModel
 	AggregationPeriod types.Int64  `tfsdk:"aggregation_period"`
 	ID                types.String `tfsdk:"id"`
 	MonitorARN        types.String `tfsdk:"arn"`

@@ -127,6 +127,24 @@ resource "aws_cognito_user_pool" "pool" {
 }
 ```
 
+### Create a user pool client with refresh token rotation
+
+```terraform
+resource "aws_cognito_user_pool_client" "userpool_client" {
+  name                = "client"
+  user_pool_id        = aws_cognito_user_pool.pool.id
+  explicit_auth_flows = ["ADMIN_NO_SRP_AUTH"]
+  refresh_token_rotation {
+    feature                    = "ENABLED"
+    retry_grace_period_seconds = 10
+  }
+}
+
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -136,6 +154,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
@@ -146,12 +165,13 @@ The following arguments are optional:
 * `default_redirect_uri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
 * `enable_propagate_additional_user_context_data` - (Optional) Enables the propagation of additional user context data.
-* `explicit_auth_flows` - (Optional) List of authentication flows. The available options include ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, and ALLOW_REFRESH_TOKEN_AUTH.
+* `explicit_auth_flows` - (Optional) List of authentication flows. The available options include `ADMIN_NO_SRP_AUTH`, `CUSTOM_AUTH_FLOW_ONLY`, `USER_PASSWORD_AUTH`, `ALLOW_ADMIN_USER_PASSWORD_AUTH`, `ALLOW_CUSTOM_AUTH`, `ALLOW_USER_PASSWORD_AUTH`, `ALLOW_USER_SRP_AUTH`, `ALLOW_REFRESH_TOKEN_AUTH`, and `ALLOW_USER_AUTH`.
 * `generate_secret` - (Optional) Boolean flag indicating whether an application secret should be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
+* `refresh_token_rotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
@@ -166,6 +186,11 @@ Either `application_arn` or `application_id` is required.
 * `external_id` - (Optional) ID for the Analytics Configuration. Conflicts with `application_arn`.
 * `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
 * `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+
+### refresh_token_rotation
+
+* `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
+* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
 
 ### token_validity_units
 

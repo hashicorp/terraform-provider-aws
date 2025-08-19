@@ -41,7 +41,7 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", "SingleUse"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "index_arn", "geo", fmt.Sprintf("place-index/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "index_arn", "geo", fmt.Sprintf("place-index/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),

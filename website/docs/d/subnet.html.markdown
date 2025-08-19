@@ -50,10 +50,9 @@ data "aws_subnet" "selected" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available subnets in the current region. The given filters must match exactly one subnet whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability zone where the subnet must reside.
 * `availability_zone_id` - (Optional) ID of the Availability Zone for the subnet. This argument is not supported in all regions or partitions. If necessary, use `availability_zone` instead.
 * `cidr_block` - (Optional) CIDR block of the desired subnet.

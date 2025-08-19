@@ -118,30 +118,36 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
-
 The following arguments are required:
 
 * `integration_name` - (Required, Forces new resources) Name of the integration.
-
 * `source_arn` - (Required, Forces new resources) ARN of the database to use as the source for replication.
-
 * `target_arn` - (Required, Forces new resources) ARN of the Redshift data warehouse to use as the target for replication.
 
 The following arguments are optional:
 
-* `kms_key_id` - (Optional, Forces new resources) KMS key identifier for the key to use to encrypt the integration. If you don't specify an encryption key, RDS uses a default AWS owned key. If you use the default AWS owned key, you should ignore `kms_key_id` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
-
-* `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data. For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context). You can only include this parameter if you specify the `kms_key_id` parameter.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
+For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
+You can only include this parameter if you specify the `kms_key_id` parameter.
+* `data_filter` - (Optional, Forces new resources) Data filters for the integration.
+These filters determine which tables from the source database are sent to the target Amazon Redshift data warehouse.
+The value should match the syntax from the AWS CLI which includes an `include:` or `exclude:` prefix before a filter expression.
+Multiple expressions are separated by a comma.
+See the [Amazon RDS data filtering guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/zero-etl.filtering.html) for additional details.
+* `kms_key_id` - (Optional, Forces new resources) KMS key identifier for the key to use to encrypt the integration.
+If you don't specify an encryption key, RDS uses a default AWS owned key.
+If you use the default AWS owned key, you should ignore `kms_key_id` parameter by using [`lifecycle` parameter](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) to avoid unintended change after the first creation.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-integration.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Integration.
-* `id` - ID of the Integration.
+* `id` - (**Deprecated**, use `arn` instead) ARN of the Integration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -177,4 +183,4 @@ Using `terraform import`, import RDS (Relational Database) Integration using the
 % terraform import aws_rds_integration.example arn:aws:rds:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d881641e36f968c4be6df36fe5b0eed1da39b2dd6f94f45a69756d625982f58 -->
+<!-- cache-key: cdktf-0.20.8 input-e1d279db05e5935cabfde974497d8d4bde326c92e9257925cf70f61a7d11fbc9 -->

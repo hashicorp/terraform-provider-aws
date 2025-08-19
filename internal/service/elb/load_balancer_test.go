@@ -27,18 +27,18 @@ func TestLoadBalancerListenerHash(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		Left  map[string]interface{}
-		Right map[string]interface{}
+		Left  map[string]any
+		Right map[string]any
 		Match bool
 	}{
 		"protocols are case insensitive": {
-			map[string]interface{}{
+			map[string]any{
 				"instance_port":     80,
 				"instance_protocol": "TCP",
 				"lb_port":           80,
 				"lb_protocol":       "TCP",
 			},
-			map[string]interface{}{
+			map[string]any{
 				"instance_port":     80,
 				"instance_protocol": "Tcp",
 				"lb_port":           80,
@@ -75,7 +75,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "elasticloadbalancing", "loadbalancer/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
@@ -83,6 +83,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtFalse),

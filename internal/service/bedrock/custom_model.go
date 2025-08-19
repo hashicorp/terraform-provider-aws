@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -41,8 +42,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Model")
+// @FrameworkResource("aws_bedrock_custom_model", name="Custom Model")
 // @Tags(identifierAttribute="job_arn")
+// @ArnIdentity("job_arn", identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetModelCustomizationJobOutput")
+// @Testing(serialize=true)
+// @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
+// @Testing(preIdentityVersion="v5.100.0")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -52,13 +58,9 @@ func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type customModelResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[customModelResourceModel]
 	framework.WithTimeouts
-}
-
-func (r *customModelResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_custom_model"
+	framework.WithImportByIdentity
 }
 
 func (r *customModelResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -111,7 +113,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root("job_arn")),
 			"job_arn":    framework.ARNAttributeComputedOnly(),
 			"job_name": schema.StringAttribute{
 				Required: true,
@@ -137,8 +139,8 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			},
 			names.AttrTags:       tftags.TagsAttribute(),
 			names.AttrTagsAll:    tftags.TagsAttributeComputedOnly(),
-			"training_metrics":   framework.ResourceComputedListOfObjectAttribute[trainingMetricsModel](ctx),
-			"validation_metrics": framework.ResourceComputedListOfObjectAttribute[validatorMetricModel](ctx),
+			"training_metrics":   framework.ResourceComputedListOfObjectsAttribute[trainingMetricsModel](ctx),
+			"validation_metrics": framework.ResourceComputedListOfObjectsAttribute[validatorMetricModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
 			"output_data_config": schema.ListNestedBlock{
@@ -283,7 +285,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateModelCustomizationJob(ctx, input)
 	}, errCodeValidationException, "Could not assume provided IAM role")
 
@@ -318,12 +320,6 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 	var data customModelResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -456,9 +452,10 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 	}
 
 	if !data.CustomModelARN.IsNull() {
-		_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
+		input := bedrock.DeleteCustomModelInput{
 			ModelIdentifier: fwflex.StringFromFramework(ctx, data.CustomModelARN),
-		})
+		}
+		_, err := conn.DeleteCustomModel(ctx, &input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -470,10 +467,6 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 			return
 		}
 	}
-}
-
-func (r *customModelResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetCustomModelOutput, error) {
@@ -544,7 +537,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 }
 
 func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &bedrock.GetModelCustomizationJobInput{
 			JobIdentifier: aws.String(id),
 		}
@@ -601,6 +594,7 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 }
 
 type customModelResourceModel struct {
+	framework.WithRegionModel
 	BaseModelIdentifier  fwtypes.ARN                                                `tfsdk:"base_model_identifier"`
 	CustomModelARN       types.String                                               `tfsdk:"custom_model_arn"`
 	CustomModelKmsKeyID  fwtypes.ARN                                                `tfsdk:"custom_model_kms_key_id"`
@@ -621,12 +615,6 @@ type customModelResourceModel struct {
 	ValidationDataConfig fwtypes.ListNestedObjectValueOf[validationDataConfigModel] `tfsdk:"validation_data_config"`
 	ValidationMetrics    fwtypes.ListNestedObjectValueOf[validatorMetricModel]      `tfsdk:"validation_metrics"`
 	VPCConfig            fwtypes.ListNestedObjectValueOf[vpcConfigModel]            `tfsdk:"vpc_config"`
-}
-
-func (data *customModelResourceModel) InitFromID() error {
-	data.JobARN = data.ID
-
-	return nil
 }
 
 func (data *customModelResourceModel) setID() {

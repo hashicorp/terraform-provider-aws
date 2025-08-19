@@ -67,7 +67,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 				),
 			},
 			{

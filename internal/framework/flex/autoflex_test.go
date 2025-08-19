@@ -447,7 +447,7 @@ func newTestJSONDocument(v any) smithyjson.JSONStringer {
 	return &testJSONDocument{Value: v}
 }
 
-func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
+func (m *testJSONDocument) UnmarshalSmithyDocument(v any) error {
 	data, err := json.Marshal(m.Value)
 	if err != nil {
 		return err
@@ -463,7 +463,7 @@ var _ smithyjson.JSONStringer = &testJSONDocumentError{}
 
 type testJSONDocumentError struct{}
 
-func (m *testJSONDocumentError) UnmarshalSmithyDocument(v interface{}) error {
+func (m *testJSONDocumentError) UnmarshalSmithyDocument(v any) error {
 	return errUnmarshallSmithyDocument
 }
 

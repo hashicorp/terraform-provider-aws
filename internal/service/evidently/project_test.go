@@ -43,7 +43,7 @@ func TestAccEvidentlyProject_basic(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
@@ -66,7 +66,7 @@ func TestAccEvidentlyProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),

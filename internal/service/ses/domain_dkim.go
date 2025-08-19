@@ -45,7 +45,7 @@ func resourceDomainDKIM() *schema.Resource {
 	}
 }
 
-func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -65,7 +65,7 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDomainDKIMRead(ctx, d, meta)...)
 }
 
-func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

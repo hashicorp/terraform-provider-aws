@@ -64,12 +64,32 @@ resource "github_repository_webhook" "example" {
 }
 ```
 
+### For CodeBuild Runner Project
+
+To create a CodeBuild project as a Runner Project, the following `aws_codebuild_webhook` resource is required for the project.
+See thr [AWS Documentation](https://docs.aws.amazon.com/codebuild/latest/userguide/action-runner.html) for more information about CodeBuild Runner Projects.
+
+```terraform
+resource "aws_codebuild_webhook" "example" {
+  project_name = aws_codebuild_project.example.name
+  build_type   = "BUILD"
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "WORKFLOW_JOB_QUEUED"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `project_name` - (Required) The name of the build project.
 * `build_type` - (Optional) The type of build this webhook will trigger. Valid values for this parameter are: `BUILD`, `BUILD_BATCH`.
+* `manual_creation` - (Optional) If true, CodeBuild doesn't create a webhook in GitHub and instead returns `payload_url` and `secret` values for the webhook. The `payload_url` and `secret` values in the output can be used to manually create a webhook within GitHub.
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 * `scope_configuration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.

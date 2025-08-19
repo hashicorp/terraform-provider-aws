@@ -84,7 +84,7 @@ func dataSourceMountTarget() *schema.Resource {
 	}
 }
 
-func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -111,9 +111,9 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(mt.MountTargetId))
 	fsID := aws.ToString(mt.FileSystemId)
 	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()

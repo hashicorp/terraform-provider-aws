@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -788,6 +789,18 @@ func (d *mockChangesDiffer) Get(key string) any {
 
 func (d *mockChangesDiffer) GetOk(string) (any, bool) {
 	return nil, false
+}
+
+func (d *mockChangesDiffer) GetRawConfig() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawPlan() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+	return cty.NilVal
 }
 
 func (d *mockChangesDiffer) HasChange(key string) bool {

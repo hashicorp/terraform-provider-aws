@@ -24,7 +24,7 @@ import (
 
 // @SDKDataSource("aws_connect_user", name="User")
 // @Tags
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -55,6 +55,10 @@ func DataSourceUser() *schema.Resource {
 							Computed: true,
 						},
 						"last_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secondary_email": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -118,7 +122,7 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 

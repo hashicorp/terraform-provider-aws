@@ -39,12 +39,8 @@ func newStandardsControlAssociationResource(_ context.Context) (resource.Resourc
 }
 
 type standardsControlAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[standardsControlAssociationResourceModel]
 	framework.WithNoOpDelete
-}
-
-func (*standardsControlAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securityhub_standards_control_association"
 }
 
 func (r *standardsControlAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -214,6 +210,7 @@ func (r *standardsControlAssociationResource) ValidateConfig(ctx context.Context
 }
 
 type standardsControlAssociationResourceModel struct {
+	framework.WithRegionModel
 	AssociationStatus fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
 	ID                types.String                                   `tfsdk:"id"`
 	SecurityControlID types.String                                   `tfsdk:"security_control_id"`

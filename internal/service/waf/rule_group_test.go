@@ -51,7 +51,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 						names.AttrPriority: "50",
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -210,9 +210,9 @@ func computeActivatedRuleWithRuleId(rule *awstypes.Rule, actionType string, prio
 	return func(s *terraform.State) error {
 		ruleResource := tfwaf.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
-		m := map[string]interface{}{
-			names.AttrAction: []interface{}{
-				map[string]interface{}{
+		m := map[string]any{
+			names.AttrAction: []any{
+				map[string]any{
 					names.AttrType: actionType,
 				},
 			},

@@ -47,7 +47,7 @@ func TestPermissionUnmarshalling(t *testing.T) {
 	}
 
 	expectedPrincipal := "events.amazonaws.com"
-	service := stmt.Principal.(map[string]interface{})["Service"]
+	service := stmt.Principal.(map[string]any)["Service"]
 	if service != expectedPrincipal {
 		t.Fatalf("Expected Principal to match (%q != %q)", service, expectedPrincipal)
 	}

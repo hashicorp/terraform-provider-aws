@@ -275,9 +275,10 @@ func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+			input := cleanrooms.GetConfiguredTableInput{
 				ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetConfiguredTable(ctx, &input)
 
 			if err == nil {
 				return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, errors.New("not destroyed"))
@@ -300,9 +301,10 @@ func testAccCheckConfiguredTableExists(ctx context.Context, name string, configu
 		}
 
 		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := client.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+		input := cleanrooms.GetConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := client.GetConfiguredTable(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, err)

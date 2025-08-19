@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_workteam"
 description: |-
-  Provides a SageMaker Workteam resource.
+  Provides a SageMaker AI Workteam resource.
 ---
 
 # Resource: aws_sagemaker_workteam
 
-Provides a SageMaker Workteam resource.
+Provides a SageMaker AI Workteam resource.
 
 ## Example Usage
 
@@ -50,6 +50,7 @@ resource "aws_sagemaker_workteam" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description of the work team.
 * `workforce_name` - (Optional) The name of the workforce.
 * `workteam_name` - (Required) The name of the Workteam (must be unique).
@@ -101,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workteams using the `workteam_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```terraform
 import {
@@ -110,7 +111,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker Workteams using the `workteam_name`. For example:
+Using `terraform import`, import SageMaker AI Workteams using the `workteam_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_workteam.example example

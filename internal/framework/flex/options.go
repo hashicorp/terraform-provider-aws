@@ -3,6 +3,8 @@
 
 package flex
 
+import "slices"
+
 var (
 	DefaultIgnoredFieldNames = []string{
 		"Tags", // Resource tags are handled separately.
@@ -77,10 +79,5 @@ func WithNoIgnoredFieldNames() AutoFlexOptionsFunc {
 
 // isIgnoredField returns true if s is in the list of ignored field names
 func (o *AutoFlexOptions) isIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(o.ignoredFieldNames, s)
 }

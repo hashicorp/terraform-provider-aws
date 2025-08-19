@@ -272,11 +272,15 @@ func TestAccS3BucketNotification_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_notification" {
 				continue
+			}
+
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindBucketNotificationConfiguration(ctx, conn, rs.Primary.ID, "")
@@ -304,6 +308,9 @@ func testAccCheckBucketNotificationExists(ctx context.Context, n string, v *s3.G
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindBucketNotificationConfiguration(ctx, conn, rs.Primary.ID, "")
 
@@ -769,7 +776,7 @@ resource "aws_s3_bucket_notification" "test" {
 }
 
 func testAccBucketNotificationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

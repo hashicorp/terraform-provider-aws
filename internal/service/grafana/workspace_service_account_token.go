@@ -37,12 +37,8 @@ func newWorkspaceServiceAccountTokenResource(_ context.Context) (resource.Resour
 }
 
 type workspaceServiceAccountTokenResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceServiceAccountTokenResourceModel]
 	framework.WithNoUpdate
-}
-
-func (r *workspaceServiceAccountTokenResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_grafana_workspace_service_account_token"
 }
 
 func (r *workspaceServiceAccountTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -280,6 +276,7 @@ func findWorkspaceServiceAccountTokenByThreePartKey(ctx context.Context, conn *g
 }
 
 type workspaceServiceAccountTokenResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt        timetypes.RFC3339 `tfsdk:"created_at"`
 	ExpiresAt        timetypes.RFC3339 `tfsdk:"expires_at"`
 	ID               types.String      `tfsdk:"id"`

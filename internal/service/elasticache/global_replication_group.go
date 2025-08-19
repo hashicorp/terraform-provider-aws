@@ -20,12 +20,12 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -376,7 +376,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -475,8 +475,8 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			} else if newNodeGroupCount < oldNodeGroupCount {
-				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw interface{}) string {
-					tfMap := tfMapRaw.(map[string]interface{})
+				ids := tfslices.ApplyToAll(d.Get("global_node_groups").(*schema.Set).List(), func(tfMapRaw any) string {
+					tfMap := tfMapRaw.(map[string]any)
 					return tfMap["global_node_group_id"].(string)
 				})
 				if err := decreaseGlobalReplicationGroupNodeGroupCount(ctx, conn, d.Id(), newNodeGroupCount, ids, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -610,7 +610,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
 	})
 
@@ -658,8 +658,7 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 
 		if errs.IsA[*awstypes.GlobalReplicationGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -677,11 +676,11 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 	return output, nil
 }
 
-func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalReplicationGroup(conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -712,7 +711,7 @@ func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupStatusCreating, globalReplicationGroupStatusModifying},
 		Target:     []string{globalReplicationGroupStatusAvailable, globalReplicationGroupStatusPrimaryOnly},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -736,7 +735,7 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 			globalReplicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -773,11 +772,11 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -797,7 +796,7 @@ func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elastic
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID),
+		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -836,7 +835,7 @@ func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {
 }
 
 func flattenGlobalNodeGroup(nodeGroup awstypes.GlobalNodeGroup) map[string]any {
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := nodeGroup.GlobalNodeGroupId; v != nil {
 		m["global_node_group_id"] = aws.ToString(v)
@@ -870,7 +869,7 @@ func globalReplicationGroupNodeNumber(id string) int {
 }
 
 func diffHasChange(key ...string) customdiff.ResourceConditionFunc {
-	return func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+	return func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 		return diff.HasChanges(key...)
 	}
 }

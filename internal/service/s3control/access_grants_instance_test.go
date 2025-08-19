@@ -33,7 +33,7 @@ func testAccAccessGrantsInstance_basic(t *testing.T) {
 					testAccCheckAccessGrantsInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_instance_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_application_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "identity_center_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -167,7 +167,7 @@ func testAccCheckAccessGrantsInstanceDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+			_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -193,7 +193,7 @@ func testAccCheckAccessGrantsInstanceExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantsInstance(ctx, conn, rs.Primary.ID)
+		_, err := tfs3control.FindAccessGrantsInstanceByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

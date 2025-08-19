@@ -22,15 +22,15 @@ import (
 )
 
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
+// @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
 func resourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,
 		ReadWithoutTimeout:   resourceSourceCredentialRead,
 		DeleteWithoutTimeout: resourceSourceCredentialDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -64,7 +64,7 @@ func resourceSourceCredential() *schema.Resource {
 	}
 }
 
-func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -90,7 +90,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSourceCredentialRead(ctx, d, meta)...)
 }
 
-func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -113,14 +113,15 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Source Credential: %s", d.Id())
-	_, err := conn.DeleteSourceCredentials(ctx, &codebuild.DeleteSourceCredentialsInput{
+	input := codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSourceCredentials(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags

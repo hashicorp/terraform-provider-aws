@@ -57,8 +57,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
 * `destination_configuration` - (Required) Contains information about the destination of ingested data.
@@ -111,4 +112,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-50d4a17f9fb37a863009c764fd691e03b87e03ecfead784db0291660c7a5684b -->
+<!-- cache-key: cdktf-0.20.8 input-ec95e18452071a58a1f4a253f7386b94b99de6a8948dc872141865c2db32fdd5 -->

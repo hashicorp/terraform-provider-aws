@@ -38,8 +38,6 @@ func resourceStudio() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -59,6 +57,11 @@ func resourceStudio() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"encryption_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"engine_security_group_id": {
 				Type:     schema.TypeString,
@@ -119,7 +122,7 @@ func resourceStudio() *schema.Resource {
 	}
 }
 
-func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -140,6 +143,10 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("encryption_key_arn"); ok {
+		input.EncryptionKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("idp_auth_url"); ok {
 		input.IdpAuthUrl = aws.String(v.(string))
 	}
@@ -153,12 +160,13 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateStudio(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "entity does not have permissions to assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") {
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "'ServiceRole' does not have permission to access") {
 				return true, err
 			}
 
@@ -175,7 +183,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -195,6 +203,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("auth_mode", studio.AuthMode)
 	d.Set("default_s3_location", studio.DefaultS3Location)
 	d.Set(names.AttrDescription, studio.Description)
+	d.Set("encryption_key_arn", studio.EncryptionKeyArn)
 	d.Set("engine_security_group_id", studio.EngineSecurityGroupId)
 	d.Set("idp_auth_url", studio.IdpAuthUrl)
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
@@ -211,7 +220,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -226,6 +235,10 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("encryption_key_arn") {
+			input.EncryptionKeyArn = aws.String(d.Get("encryption_key_arn").(string))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -246,7 +259,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 

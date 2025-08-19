@@ -148,7 +148,7 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternArbitrary)),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{
@@ -388,7 +388,7 @@ resource "aws_shield_protection_group" "test" {
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
 }
 `, rName))
 }

@@ -34,7 +34,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_city_networks_to_monitor", "0"),

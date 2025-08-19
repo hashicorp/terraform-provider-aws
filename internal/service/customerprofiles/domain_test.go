@@ -321,6 +321,7 @@ resource "aws_sqs_queue" "test" {
 resource "aws_kms_key" "test" {
   description             = "test"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "example" {
@@ -448,6 +449,7 @@ resource "aws_sqs_queue" "test" {
 resource "aws_kms_key" "test" {
   description             = "test"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "example" {

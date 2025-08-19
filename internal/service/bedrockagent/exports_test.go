@@ -8,14 +8,20 @@ var (
 	ResourceAgent                         = newAgentResource
 	ResourceAgentActionGroup              = newAgentActionGroupResource
 	ResourceAgentAlias                    = newAgentAliasResource
+	ResourceAgentCollaborator             = newAgentCollaboratorResource
 	ResourceAgentKnowledgeBaseAssociation = newAgentKnowledgeBaseAssociationResource
 	ResourceDataSource                    = newDataSourceResource
+	ResourceFlow                          = newFlowResource
 	ResourceKnowledgeBase                 = newKnowledgeBaseResource
+	ResourcePrompt                        = newPromptResource
 
 	FindAgentByID                                  = findAgentByID
 	FindAgentActionGroupByThreePartKey             = findAgentActionGroupByThreePartKey
 	FindAgentAliasByTwoPartKey                     = findAgentAliasByTwoPartKey
+	FindAgentCollaboratorByThreePartKey            = findAgentCollaboratorByThreePartKey
 	FindAgentKnowledgeBaseAssociationByThreePartID = findAgentKnowledgeBaseAssociationByThreePartKey
 	FindDataSourceByTwoPartKey                     = findDataSourceByTwoPartKey
+	FindFlowByID                                   = findFlowByID
 	FindKnowledgeBaseByID                          = findKnowledgeBaseByID
+	FindPromptByID                                 = findPromptByID
 )

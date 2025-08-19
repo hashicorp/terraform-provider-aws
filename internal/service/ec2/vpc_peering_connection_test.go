@@ -138,12 +138,13 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
-		_, err := conn.ModifyVpcPeeringConnectionOptions(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
+		input := ec2.ModifyVpcPeeringConnectionOptionsInput{
 			VpcPeeringConnectionId: v.VpcPeeringConnectionId,
 			AccepterPeeringConnectionOptions: &awstypes.PeeringConnectionOptionsRequest{
 				AllowDnsResolutionFromRemoteVpc: aws.Bool(false),
 			},
-		})
+		}
+		_, err := conn.ModifyVpcPeeringConnectionOptions(ctx, &input)
 
 		return err
 	}

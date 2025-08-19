@@ -45,7 +45,7 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrID, "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -53,7 +53,6 @@ func TestAccECSCapacityProvider_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -113,7 +112,6 @@ func TestAccECSCapacityProvider_managedScaling(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -178,7 +176,6 @@ func TestAccECSCapacityProvider_managedScalingPartial(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -208,7 +205,6 @@ func TestAccECSCapacityProvider_tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

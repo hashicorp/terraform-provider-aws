@@ -39,7 +39,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -59,7 +59,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
@@ -110,6 +110,79 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRUMAppMonitor_domainList(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appMon awstypes.AppMonitor
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rum_app_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppMonitorConfig_domainList(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.0", "localhost"),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.1", "terraform.*"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Updating by removing the domain_list and adding the domain
+				Config: testAccAppMonitorConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+			{
+				// Updating by removing the domain and adding the domain list again
+				Config: testAccAppMonitorConfig_domainList(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
+					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.0", "localhost"),
+					resource.TestCheckResourceAttr(resourceName, "domain_list.1", "terraform.*"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 				),
 			},
 		},
@@ -291,4 +364,13 @@ resource "aws_rum_app_monitor" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccAppMonitorConfig_domainList(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name        = %[1]q
+  domain_list = ["localhost", "terraform.*"]
+}
+`, rName)
 }

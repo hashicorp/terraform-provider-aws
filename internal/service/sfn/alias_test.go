@@ -45,7 +45,7 @@ func TestAccSFNAlias_basic(t *testing.T) {
 					testAccCheckAliasAttributes(&alias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", functionArnResourcePart),
 				),
 			},
 			{
@@ -238,7 +238,7 @@ resource "aws_iam_role" "for_sfn" {
   "Statement": [{
     "Effect": "Allow",
     "Principal": {
-      "Service": "states.${data.aws_region.current.name}.amazonaws.com"
+      "Service": "states.${data.aws_region.current.region}.amazonaws.com"
     },
     "Action": "sts:AssumeRole"
   }]

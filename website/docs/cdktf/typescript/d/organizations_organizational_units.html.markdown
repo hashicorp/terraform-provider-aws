@@ -38,6 +38,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `parentId` - (Required) Parent ID of the organizational unit.
 
 ## Attribute Reference
@@ -50,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - ID of the organizational unit
 * `id` - Parent identifier of the organizational units.
 
-<!-- cache-key: cdktf-0.20.8 input-e8fba2e2a32deeaa9d34df7261c8bf4531104d7bb0b8f26e9a73581b276185d7 -->
+<!-- cache-key: cdktf-0.20.8 input-b9e5d258cc97d8b2d075b505d10b2df83b00cd6698e2f5fa689e04d48a4ad4ea -->

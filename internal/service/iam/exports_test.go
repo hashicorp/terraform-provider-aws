@@ -14,6 +14,7 @@ var (
 	ResourceGroupPolicyAttachment     = resourceGroupPolicyAttachment
 	ResourceInstanceProfile           = resourceInstanceProfile
 	ResourceOpenIDConnectProvider     = resourceOpenIDConnectProvider
+	ResourceOrganizationsFeatures     = newOrganizationsFeaturesResource
 	ResourcePolicy                    = resourcePolicy
 	ResourcePolicyAttachment          = resourcePolicyAttachment
 	ResourceRolePolicy                = resourceRolePolicy
@@ -45,7 +46,9 @@ var (
 	FindGroupPolicyAttachmentsByName    = findGroupPolicyAttachmentsByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
+	FindOrganizationsFeatures           = findOrganizationsFeatures
 	FindPolicyByARN                     = findPolicyByARN
+	FindRolePolicyByTwoPartKey          = findRolePolicyByTwoPartKey
 	FindRolePoliciesByName              = findRolePoliciesByName
 	FindRolePolicyAttachmentsByName     = findRolePolicyAttachmentsByName
 	FindSAMLProviderByARN               = findSAMLProviderByARN
@@ -56,4 +59,6 @@ var (
 	FindUserPolicyAttachmentsByName     = findUserPolicyAttachmentsByName
 	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
 	SESSMTPPasswordFromSecretKeySigV4   = sesSMTPPasswordFromSecretKeySigV4
+
+	RolePolicyParseID = rolePolicyParseID
 )

@@ -49,7 +49,7 @@ func testAccPlan_basic(t *testing.T) {
 					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"contact_id",
 						"ssm-contacts",
@@ -317,7 +317,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 						"stage.0.target.0.contact_target_info.0.is_essential",
 						acctest.CtFalse,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.contact_id",
 						"ssm-contacts",
@@ -341,7 +341,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 						"stage.0.target.0.contact_target_info.0.is_essential",
 						acctest.CtFalse,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.contact_id",
 						"ssm-contacts",
@@ -352,7 +352,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 						"stage.0.target.1.contact_target_info.0.is_essential",
 						acctest.CtTrue,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.1.contact_target_info.0.contact_id",
 						"ssm-contacts",
@@ -376,7 +376,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 						"stage.0.target.0.contact_target_info.0.is_essential",
 						acctest.CtFalse,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.contact_id",
 						"ssm-contacts",
@@ -425,7 +425,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 						"stage.0.target.0.contact_target_info.0.is_essential",
 						acctest.CtFalse,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.contact_id",
 						"ssm-contacts",
@@ -449,7 +449,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 						"stage.0.target.0.contact_target_info.0.is_essential",
 						acctest.CtTrue,
 					),
-					acctest.CheckResourceAttrRegionalARN(
+					acctest.CheckResourceAttrRegionalARN(ctx,
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.contact_id",
 						"ssm-contacts",

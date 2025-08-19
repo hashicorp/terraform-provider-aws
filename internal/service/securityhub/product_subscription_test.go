@@ -48,7 +48,7 @@ func testAccProductSubscription_basic(t *testing.T) {
 						Partition: acctest.Partition(),
 						Service:   "securityhub",
 						Region:    acctest.Region(),
-						AccountID: acctest.AccountID(),
+						AccountID: acctest.AccountID(ctx),
 						Resource:  "product-subscription/aws/guardduty",
 					}.String()
 					input := &securityhub.DisableImportFindingsForProductInput{
@@ -132,6 +132,6 @@ data "aws_partition" "current" {}
 
 resource "aws_securityhub_product_subscription" "example" {
   depends_on  = [aws_securityhub_account.example]
-  product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}::product/aws/guardduty"
+  product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}::product/aws/guardduty"
 }
 `)

@@ -35,7 +35,7 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cacert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "SNI_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
@@ -139,7 +139,7 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cacert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "DEFAULT"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
@@ -465,7 +465,7 @@ resource "aws_iot_ca_certificate" "test" {
     "policy": {
       "Type": "AWS::IoT::Policy",
       "Properties": {
-        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
+        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
       }
     }
   } 

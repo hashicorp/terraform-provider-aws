@@ -59,7 +59,7 @@ func resourceLinkAssociation() *schema.Resource {
 	}
 }
 
-func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -90,7 +90,7 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceLinkAssociationRead(ctx, d, meta)...)
 }
 
-func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -120,7 +120,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -226,7 +226,7 @@ func findLinkAssociationByThreePartKey(ctx context.Context, conn *networkmanager
 }
 
 func statusLinkAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, linkID, deviceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLinkAssociationByThreePartKey(ctx, conn, globalNetworkID, linkID, deviceID)
 
 		if tfresource.NotFound(err) {

@@ -85,7 +85,7 @@ func resourceAccountPasswordPolicy() *schema.Resource {
 	}
 }
 
-func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -132,7 +132,7 @@ func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceAccountPasswordPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -162,7 +162,7 @@ func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +29,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -43,7 +44,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -64,7 +65,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -94,7 +95,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -147,7 +148,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -162,7 +163,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 				Config: testAccReadinessCheckConfig_timeout(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},

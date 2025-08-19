@@ -7,13 +7,13 @@ import (
 	"github.com/mitchellh/copystructure"
 )
 
-func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+func stripCapacityAttributes(in map[string]any) (map[string]any, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
 		return nil, err
 	}
 
-	m := mapCopy.(map[string]interface{})
+	m := mapCopy.(map[string]any)
 
 	delete(m, "write_capacity")
 	delete(m, "read_capacity")
@@ -21,26 +21,26 @@ func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{},
 	return m, nil
 }
 
-func stripNonKeyAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+func stripNonKeyAttributes(in map[string]any) (map[string]any, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
 		return nil, err
 	}
 
-	m := mapCopy.(map[string]interface{})
+	m := mapCopy.(map[string]any)
 
 	delete(m, "non_key_attributes")
 
 	return m, nil
 }
 
-func stripOnDemandThroughputAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+func stripOnDemandThroughputAttributes(in map[string]any) (map[string]any, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
 		return nil, err
 	}
 
-	m := mapCopy.(map[string]interface{})
+	m := mapCopy.(map[string]any)
 
 	delete(m, "on_demand_throughput")
 

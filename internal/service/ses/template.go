@@ -63,7 +63,7 @@ func resourceTemplate() *schema.Resource {
 		},
 	}
 }
-func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -99,7 +99,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
-func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -118,8 +118,8 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("template/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -131,7 +131,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -164,7 +164,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
 }
 
-func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 

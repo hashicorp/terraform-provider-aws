@@ -35,6 +35,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_tiering", resourceName, "data_tiering"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_patch_version", resourceName, "engine_patch_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyARN, resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "maintenance_window", resourceName, "maintenance_window"),
@@ -72,7 +73,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
-		testAccClusterConfigBaseUserAndACL(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q
@@ -80,7 +81,10 @@ resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_memorydb_cluster" "test" {
   acl_name                   = aws_memorydb_acl.test.id

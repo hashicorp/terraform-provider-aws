@@ -34,6 +34,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new Inspector2OrganizationConfiguration(this, "example", {
       autoEnable: {
+        codeRepository: false,
         ec2: true,
         ecr: false,
         lambda: true,
@@ -47,14 +48,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoEnable` - (Required) Configuration block for auto enabling. See below.
 
 ### `autoEnable`
 
 * `ec2` - (Required) Whether Amazon EC2 scans are automatically enabled for new members of your Amazon Inspector organization.
 * `ecr` - (Required) Whether Amazon ECR scans are automatically enabled for new members of your Amazon Inspector organization.
+* `codeRepository` - (Optional) Whether code repository scans are automatically enabled for new members of your Amazon Inspector organization.
 * `lambda` - (Optional) Whether Lambda Function scans are automatically enabled for new members of your Amazon Inspector organization.
 * `lambdaCode` - (Optional) Whether AWS Lambda code scans are automatically enabled for new members of your Amazon Inspector organization. **Note:** Lambda code scanning requires Lambda standard scanning to be activated. Consequently, if you are setting this argument to `true`, you must also set the `lambda` argument to `true`. See [Scanning AWS Lambda functions with Amazon Inspector](https://docs.aws.amazon.com/inspector/latest/user/scanning-lambda.html#lambda-code-scans) for more information.
 
@@ -72,4 +75,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.20.8 input-2f7568ec1fd919b178cca6ea075dd866febcd9389f4b99da49a45417fd14c06f -->
+<!-- cache-key: cdktf-0.20.8 input-36a60d1b38d11a4d97252ae5b567b1c781494367c5102a6f09820ab3479cb37b -->

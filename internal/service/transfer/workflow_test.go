@@ -36,7 +36,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "1"),
@@ -76,7 +76,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 				Config: testAccWorkflowConfig_onExceptionSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.copy_step_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.custom_step_details.#", "0"),
@@ -221,7 +221,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 				Config: testAccWorkflowConfig_allSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.copy_step_details.#", "1"),

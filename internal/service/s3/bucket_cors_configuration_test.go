@@ -351,9 +351,9 @@ func TestAccS3BucketCORSConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketCORSConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_cors_configuration" {
 				continue
 			}
@@ -361,6 +361,10 @@ func testAccCheckBucketCORSConfigurationDestroy(ctx context.Context) resource.Te
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindCORSRules(ctx, conn, bucket, expectedBucketOwner)
@@ -393,6 +397,9 @@ func testAccCheckBucketCORSConfigurationExists(ctx context.Context, n string) re
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindCORSRules(ctx, conn, bucket, expectedBucketOwner)
 
@@ -499,7 +506,7 @@ resource "aws_s3_bucket_cors_configuration" "test" {
 }
 
 func testAccBucketCORSConfigurationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 
@@ -509,7 +516,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
 
   cors_rule {
     allowed_methods = ["PUT"]

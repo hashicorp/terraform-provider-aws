@@ -16,4 +16,6 @@ var (
 	FindBranchByTwoPartKey             = findBranchByTwoPartKey
 	FindDomainAssociationByTwoPartKey  = findDomainAssociationByTwoPartKey
 	FindWebhookByID                    = findWebhookByID
+
+	WaitDomainAssociationAvailable = waitDomainAssociationAvailable
 )

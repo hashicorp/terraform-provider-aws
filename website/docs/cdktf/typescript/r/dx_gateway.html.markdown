@@ -46,6 +46,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the gateway.
 * `id` - The ID of the gateway.
 * `ownerAccountId` - AWS Account ID of the gateway.
 
@@ -88,4 +89,4 @@ Using `terraform import`, import Direct Connect Gateways using the gateway `id`.
 % terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-db317b4e261abf2f1827c55dbc125b82d7d76ea9e8e48abeda0133e6d7d18e78 -->
+<!-- cache-key: cdktf-0.20.8 input-937a99996f75cdfad22e1dcd2f4e954143b19f0c74ea61e8a19bf19965acd50f -->

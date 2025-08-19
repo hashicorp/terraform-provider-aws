@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func planStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	var tfList []interface{}
-	if v, ok := rawState[names.AttrRule].([]interface{}); ok {
+func planStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	var tfList []any
+	if v, ok := rawState[names.AttrRule].([]any); ok {
 		for _, tfMapRaw := range v {
-			tfMap := tfMapRaw.(map[string]interface{})
+			tfMap := tfMapRaw.(map[string]any)
 			tfMap["schedule_expression_timezone"] = defaultPlanRuleScheduleExpressionTimezone
 			tfList = append(tfList, tfMap)
 		}

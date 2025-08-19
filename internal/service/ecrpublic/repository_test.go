@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +29,7 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -38,8 +39,8 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -58,7 +59,7 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -104,7 +105,7 @@ func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -141,7 +142,7 @@ func TestAccECRPublicRepository_CatalogData_architectures(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -178,7 +179,7 @@ func TestAccECRPublicRepository_CatalogData_description(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -215,7 +216,7 @@ func TestAccECRPublicRepository_CatalogData_operatingSystems(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -252,7 +253,7 @@ func TestAccECRPublicRepository_CatalogData_usageText(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -289,7 +290,7 @@ func TestAccECRPublicRepository_CatalogData_logoImageBlob(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -319,7 +320,7 @@ func TestAccECRPublicRepository_Basic_forceDestroy(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
@@ -329,8 +330,8 @@ func TestAccECRPublicRepository_Basic_forceDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
 			},
 			{
@@ -350,7 +351,7 @@ func TestAccECRPublicRepository_disappears(t *testing.T) {
 	resourceName := "aws_ecrpublic_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECRPublicServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),

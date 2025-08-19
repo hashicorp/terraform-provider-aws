@@ -43,7 +43,7 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/launch/%s", rName, rName3)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/launch/%s", rName, rName3)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					// not returned at create time
 					// resource.TestCheckResourceAttr(resourceName, "execution.#", "1"),

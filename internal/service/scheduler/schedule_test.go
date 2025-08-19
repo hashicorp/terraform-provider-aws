@@ -200,7 +200,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
@@ -1807,7 +1807,9 @@ func testAccScheduleConfig_kmsKeyARN(name string, index int) string {
 resource "aws_sqs_queue" "test" {}
 
 resource "aws_kms_key" "test" {
-  count = 2
+  count                   = 2
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_scheduler_schedule" "test" {
@@ -2510,7 +2512,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {
@@ -2541,7 +2543,7 @@ resource "aws_scheduler_schedule" "test" {
   schedule_expression = "rate(1 hour)"
 
   target {
-    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.name}:${data.aws_caller_identity.main.account_id}:pipeline/test"
+    arn      = "arn:${data.aws_partition.main.partition}:sagemaker:${data.aws_region.main.region}:${data.aws_caller_identity.main.account_id}:pipeline/test"
     role_arn = aws_iam_role.test.arn
 
     sagemaker_pipeline_parameters {

@@ -43,12 +43,12 @@ func customContentVisualSchema() *schema.Schema {
 	}
 }
 
-func expandCustomContentVisual(tfList []interface{}) *awstypes.CustomContentVisual {
+func expandCustomContentVisual(tfList []any) *awstypes.CustomContentVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -61,28 +61,28 @@ func expandCustomContentVisual(tfList []interface{}) *awstypes.CustomContentVisu
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandCustomContentConfiguration(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandCustomContentConfiguration(tfList []interface{}) *awstypes.CustomContentConfiguration {
+func expandCustomContentConfiguration(tfList []any) *awstypes.CustomContentConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -102,12 +102,12 @@ func expandCustomContentConfiguration(tfList []interface{}) *awstypes.CustomCont
 	return apiObject
 }
 
-func flattenCustomContentVisual(apiObject *awstypes.CustomContentVisual) []interface{} {
+func flattenCustomContentVisual(apiObject *awstypes.CustomContentVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
@@ -125,15 +125,15 @@ func flattenCustomContentVisual(apiObject *awstypes.CustomContentVisual) []inter
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomContentConfiguration(apiObject *awstypes.CustomContentConfiguration) []interface{} {
+func flattenCustomContentConfiguration(apiObject *awstypes.CustomContentConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap[names.AttrContentType] = apiObject.ContentType
 	if apiObject.ContentUrl != nil {
@@ -141,5 +141,5 @@ func flattenCustomContentConfiguration(apiObject *awstypes.CustomContentConfigur
 	}
 	tfMap["image_scaling"] = apiObject.ImageScaling
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

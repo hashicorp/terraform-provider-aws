@@ -38,7 +38,7 @@ func testAccOrganizationDelegatedAdminAccount_basic(t *testing.T) {
 				Config: testAccOrganizationDelegatedAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOrganizationDelegatedAdminAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need environment where this test can run
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEmail),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfcloudtrail.ServicePrincipal),

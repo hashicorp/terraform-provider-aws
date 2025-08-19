@@ -54,7 +54,7 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`playback-key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivs", regexache.MustCompile(`playback-key/.+`)),
 				),
 			},
 			{

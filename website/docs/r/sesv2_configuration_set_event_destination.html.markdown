@@ -129,8 +129,9 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_set_name` - (Required) The name of the configuration set.
 * `event_destination` - (Required) A name that identifies the event destination within the configuration set.
 * `event_destination_name` - (Required) An object that defines the event destination. See [`event_destination` Block](#event_destination-block) for details.

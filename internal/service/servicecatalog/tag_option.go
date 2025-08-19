@@ -61,7 +61,7 @@ func resourceTagOption() *schema.Resource {
 	}
 }
 
-func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -146,7 +146,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -190,7 +190,7 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

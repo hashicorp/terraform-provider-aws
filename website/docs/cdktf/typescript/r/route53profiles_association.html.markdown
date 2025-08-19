@@ -45,6 +45,9 @@ class MyConvertedCode extends TerraformStack {
         name: "example",
         profileId: example.id,
         resourceId: Token.asString(awsVpcExample.id),
+        tags: {
+          Environment: "dev",
+        },
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -56,19 +59,22 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Profile Association. Must match a regex of `(?!^[0-9]+$)([a-zA-Z0-9\\-_' ']+)`.
 * `profileId` - (Required) ID of the profile associated with the VPC.
 * `resourceId` - (Required) Resource ID of the VPC the profile to be associated with.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Profile Association.
-* `status` - Status of the Profile Association. See the [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html) for valid values.
+* `status` - Status of the Profile Association.
 * `statusMessage` - Status message of the Profile Association.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -104,10 +110,10 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-Using `terraform import`, import Route 53 Profiles Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-89a170c936fc2b05caed63eb9a258f6154bd81161307e28100d9b71c01d1750b -->
+<!-- cache-key: cdktf-0.20.8 input-fbe43cc27bc49b25d456c583668f0dd08441004a7cb7f8c9e5f7ce5982cb509a -->

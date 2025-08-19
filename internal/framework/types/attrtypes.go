@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
@@ -32,11 +33,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	}
 
 	attributeTypes := make(map[string]attr.Type)
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if field.PkgPath != "" {
-			continue // Skip unexported fields.
-		}
+	for field := range tfreflect.ExportedStructFields(typ) {
 		tag := field.Tag.Get(`tfsdk`)
 		if tag == "-" {
 			continue // Skip explicitly excluded fields.
@@ -46,7 +43,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 			return nil, diags
 		}
 
-		if v, ok := val.Field(i).Interface().(attr.Value); ok {
+		if v, ok := val.FieldByIndex(field.Index).Interface().(attr.Value); ok {
 			attributeTypes[tag] = v.Type(ctx)
 		}
 	}

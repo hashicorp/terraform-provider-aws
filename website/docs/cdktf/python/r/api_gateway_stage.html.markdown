@@ -120,6 +120,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the associated REST API
 * `stage_name` - (Required) Name of the stage
 * `deployment_id` - (Required) ID of the deployment that the stage points to
@@ -129,8 +130,8 @@ This resource supports the following arguments:
 * `canary_settings` - (Optional) Configuration settings of a canary deployment. See [Canary Settings](#canary-settings) below.
 * `client_certificate_id` - (Optional) Identifier of a client certificate for the stage.
 * `description` - (Optional) Description of the stage.
-* `documentation_version` - (Optional) Version of the associated API documentation
-* `variables` - (Optional) Map that defines the stage variables
+* `documentation_version` - (Optional) Version of the associated API documentation.
+* `variables` - (Optional) Map that defines the stage variables.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 
@@ -186,4 +187,4 @@ Using `terraform import`, import `aws_api_gateway_stage` using `REST-API-ID/STAG
 % terraform import aws_api_gateway_stage.example 12345abcde/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2be068207444953915267d90ec483b29ecc881a26f809840ff8476c37a9a0cf4 -->
+<!-- cache-key: cdktf-0.20.8 input-fa4379d86c0464f24d96fb63419de1f8c064269cd5073c28fa257d52e2c2f4e9 -->

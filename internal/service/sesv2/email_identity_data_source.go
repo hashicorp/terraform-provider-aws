@@ -92,7 +92,7 @@ const (
 	dsNameEmailIdentity = "Email Identity Data Source"
 )
 
-func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -113,7 +113,7 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
-		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dkim_signing_attributes", []any{tfMap}); err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameEmailIdentity, name, err)
 		}
 	} else {

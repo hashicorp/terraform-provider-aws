@@ -48,14 +48,9 @@ func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWit
 }
 
 type logicallyAirGappedVaultResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[logicallyAirGappedVaultResourceModel]
+	framework.ResourceWithModel[logicallyAirGappedVaultResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (*logicallyAirGappedVaultResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_backup_logically_air_gapped_vault"
 }
 
 func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -182,9 +177,10 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 
 	conn := r.Meta().BackupClient(ctx)
 
-	_, err := conn.DeleteBackupVault(ctx, &backup.DeleteBackupVaultInput{
+	input := backup.DeleteBackupVaultInput{
 		BackupVaultName: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteBackupVault(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return
@@ -197,11 +193,8 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 	}
 }
 
-func (r *logicallyAirGappedVaultResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type logicallyAirGappedVaultResourceModel struct {
+	framework.WithRegionModel
 	BackupVaultARN   types.String   `tfsdk:"arn"`
 	BackupVaultName  types.String   `tfsdk:"name"`
 	ID               types.String   `tfsdk:"id"`
@@ -227,7 +220,7 @@ func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.C
 }
 
 func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

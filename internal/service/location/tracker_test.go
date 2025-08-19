@@ -41,7 +41,7 @@ func TestAccLocationTracker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "position_filtering", "TimeBased"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tracker_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 				),
@@ -295,6 +295,7 @@ func testAccTrackerConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_location_tracker" "test" {

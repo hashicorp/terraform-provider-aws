@@ -83,6 +83,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The calculated unique identifier for the association.
 * `owningAccount` - The account ID of the account that created the hosted zone.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Hosted Zone Associations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
@@ -149,4 +156,4 @@ The VPC is _not_ in the same region where you have configured the Terraform AWS 
 % terraform import aws_route53_zone_association.example Z123456ABCDEFG:vpc-12345678:us-east-2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-062f0d7494a763d26f38527047af28c7a1a99d322901f96a55935e7336484f49 -->
+<!-- cache-key: cdktf-0.20.8 input-b06cff8dd42b5a1baf249351ceee38f0efea79ab1c2a34611f97cc1c6c74e99e -->

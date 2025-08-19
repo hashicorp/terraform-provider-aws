@@ -407,7 +407,7 @@ func resourceClusterResourceV0() *schema.Resource {
 	}
 }
 
-func clusterStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func clusterStateUpgradeV0(_ context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
 		return nil, nil
 	}

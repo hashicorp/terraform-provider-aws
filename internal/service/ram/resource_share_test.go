@@ -36,7 +36,7 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "0"),
@@ -68,7 +68,7 @@ func TestAccRAMResourceShare_permission(t *testing.T) {
 				Config: testAccResourceShareConfig_namePermission(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "1"),

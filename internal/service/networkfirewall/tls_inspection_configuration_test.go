@@ -38,7 +38,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -170,7 +170,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 				Config: testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -238,7 +238,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "REJECT", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -282,7 +282,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "DROP", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -458,7 +458,9 @@ resource "aws_acm_certificate" "test" {
 }
 
 func testAccTLSInspectionConfigurationConfig_basic(rName, commonName, certificateDomainName string) string {
-	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName),
+		fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name = %[1]q
 
@@ -537,6 +539,7 @@ func testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, comm
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {

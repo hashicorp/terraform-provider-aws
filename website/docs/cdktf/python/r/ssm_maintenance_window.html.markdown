@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the maintenance window.
 * `schedule` - (Required) The schedule of the Maintenance Window in the form of a [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `cutoff` - (Required) The number of hours before the end of the Maintenance Window that Systems Manager stops scheduling new tasks for execution.
@@ -47,7 +48,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether the maintenance window is enabled. Default: `true`.
 * `end_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
 * `schedule_timezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
-* `schedule_offset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window.
+* `schedule_offset` - (Optional) The number of days to wait after the date and time specified by a CRON expression before running the maintenance window. Valid range is `1` to `6`.
 * `start_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -83,4 +84,4 @@ Using `terraform import`, import SSM  Maintenance Windows using the maintenance 
 % terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-07f87819be5fb27d9bf208fabda5d907108534ce8f73af29e7515be2e194f293 -->
+<!-- cache-key: cdktf-0.20.8 input-c1bb7816649eef055c71400ccbe9ff2a89dda7794d07b422b38b899ab399d811 -->

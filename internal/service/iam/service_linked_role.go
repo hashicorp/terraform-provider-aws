@@ -26,22 +26,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_service_linked_role", name="Service Linked Role")
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
+// @ArnIdentity(arnAttribute="id")
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
 		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
 		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
 		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -88,11 +85,10 @@ func resourceServiceLinkedRole() *schema.Resource {
 				Computed: true,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -109,8 +105,9 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateServiceLinkedRole(ctx, input)
-
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (*iam.CreateServiceLinkedRoleOutput, error) {
+		return conn.CreateServiceLinkedRole(ctx, input)
+	}, "AccessDenied")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Service Linked Role (%s): %s", serviceName, err)
 	}
@@ -124,11 +121,11 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
+		err = roleUpdateTags(ctx, conn, roleName, nil, keyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
 		partition := meta.(*conns.AWSClient).Partition(ctx)
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 		}
 
@@ -140,7 +137,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -150,7 +147,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
@@ -163,8 +160,6 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)
@@ -180,7 +175,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -205,7 +200,7 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
 }
 
-func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -280,7 +275,7 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id stri
 }
 
 func statusServiceLinkedRoleDeletion(ctx context.Context, conn *iam.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findServiceLinkedRoleDeletionStatusByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

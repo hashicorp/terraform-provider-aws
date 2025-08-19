@@ -37,7 +37,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", acctest.CtTrue),
@@ -45,6 +45,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execution_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
@@ -80,7 +81,7 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
@@ -210,13 +211,13 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 2"),
+				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.engine_version.0.effective_engine_version", resourceName, "configuration.0.engine_version.0.selected_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 3"),
 				),
 			},
 			{
@@ -456,7 +457,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationRequesterPaysEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtTrue),
 				),
@@ -471,7 +472,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
 				),
@@ -953,6 +954,7 @@ func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryptio
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
 }
 
 resource "aws_athena_workgroup" "test" {

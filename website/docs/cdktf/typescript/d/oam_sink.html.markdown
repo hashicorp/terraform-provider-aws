@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sinkIdentifier` - (Required) ARN of the sink.
 
 ## Attribute Reference
@@ -48,9 +49,9 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sink.
-* `id` - ARN of the sink.
+* `id` - ARN of the sink. Use `arn` instead.
 * `name` - Name of the sink.
 * `sinkId` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.
 
-<!-- cache-key: cdktf-0.20.8 input-8e63be540533d9d78bac454b3d644795733c12ad84f0bb46cc6b5785db3cbc59 -->
+<!-- cache-key: cdktf-0.20.8 input-a44e236f8feff86bf1e30e7627b75d56c88114198605a5c683ecef64766fd0ce -->

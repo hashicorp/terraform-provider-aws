@@ -50,7 +50,7 @@ func resourceNotification() *schema.Resource {
 	}
 }
 
-func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -66,7 +66,7 @@ func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 

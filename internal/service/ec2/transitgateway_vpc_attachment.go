@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,14 +37,16 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.ApplianceModeSupportValueDisable,
 				ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"dns_support": {
 				Type:             schema.TypeString,
@@ -103,7 +104,7 @@ func resourceTransitGatewayVPCAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -167,9 +168,10 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceTransitGatewayVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	transitGatewayVPCAttachment, err := findTransitGatewayVPCAttachmentByID(ctx, conn, d.Id())
 
@@ -221,6 +223,8 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
+	vpcOwnerID := aws.ToString(transitGatewayVPCAttachment.VpcOwnerId)
+	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, vpcOwnerID, d.Id()))
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
 	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
@@ -229,14 +233,14 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
 	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
 	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
-	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
+	d.Set("vpc_owner_id", vpcOwnerID)
 
 	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -296,14 +300,15 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayVpcAttachment(ctx, &ec2.DeleteTransitGatewayVpcAttachmentInput{
+	input := ec2.DeleteTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayVpcAttachment(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
 		return diags
@@ -318,4 +323,8 @@ func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.Re
 	}
 
 	return diags
+}
+
+func transitGatewayAttachmentARN(ctx context.Context, c *conns.AWSClient, accountID, attachmentID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "transit-gateway-attachment/"+attachmentID)
 }

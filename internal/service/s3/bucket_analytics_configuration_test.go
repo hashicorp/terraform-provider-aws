@@ -483,9 +483,9 @@ func TestAccS3BucketAnalyticsConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_analytics_configuration" {
 				continue
 			}
@@ -493,6 +493,10 @@ func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resour
 			bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindAnalyticsConfiguration(ctx, conn, bucket, name)
@@ -525,6 +529,10 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindAnalyticsConfiguration(ctx, conn, bucket, name)
 
@@ -737,7 +745,7 @@ resource "aws_s3_bucket" "destination" {
 }
 
 func testAccBucketAnalyticsConfigurationConfig_directoryBucket(bucket, name string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucket), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destination_region` - (Optional) The Destination region to place snapshot copy.
 * `kms_key_id` - (Optional) KMS key ID.
@@ -122,4 +123,4 @@ Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot ident
 % terraform import aws_db_snapshot_copy.example my-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6f6547e303737706fa49af0edbb754214d4784da5b3aa4cd7c55df0c0282d271 -->
+<!-- cache-key: cdktf-0.20.8 input-dc9a17db42e29592482d865e5355dd4b8f08b76fe78bf099d139b40d9a2f0008 -->

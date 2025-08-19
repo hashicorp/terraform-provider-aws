@@ -5,6 +5,11 @@ package servicecatalogappregistry
 
 // Exports for use in tests only.
 var (
-	FindApplicationByID = findApplicationByID
-	ResourceApplication = newResourceApplication
+	FindApplicationByID                       = findApplicationByID
+	FindAttributeGroupByID                    = findAttributeGroupByID
+	FindAttributeGroupAssociationByTwoPartKey = findAttributeGroupAssociationByTwoPartKey
+
+	ResourceApplication               = newApplicationResource
+	ResourceAttributeGroup            = newAttributeGroupResource
+	ResourceAttributeGroupAssociation = newAttributeGroupAssociationResource
 )

@@ -10,9 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	tfcversion "github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
@@ -46,9 +48,10 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
@@ -79,9 +82,10 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
@@ -131,9 +135,10 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"has_secret_string_wo"},
 			},
 		},
 	})
@@ -271,6 +276,42 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretVersion_stringWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfcversion.Must(tfcversion.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccSecretVersionConfig_stringWriteOnly(rName, "test-secret2", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					testAccCheckSecretVersionWriteOnlyValueEqual(t, &version, "test-secret2"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
@@ -322,6 +363,15 @@ func testAccCheckSecretVersionExists(ctx context.Context, n string, v *secretsma
 	}
 }
 
+func testAccCheckSecretVersionWriteOnlyValueEqual(t *testing.T, param *secretsmanager.GetSecretValueOutput, writeOnlyValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToString(param.SecretString) != writeOnlyValue {
+			t.Fatalf("Expected SecretsManger SecretString to be %v, but got %v", writeOnlyValue, aws.ToString(param.SecretString))
+		}
+		return nil
+	}
+}
+
 func testAccSecretVersionConfig_string(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -333,6 +383,20 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_string = "test-string"
 }
 `, rName)
+}
+
+func testAccSecretVersionConfig_stringWriteOnly(rName, secret string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id                = aws_secretsmanager_secret.test.id
+  secret_string_wo         = %[2]q
+  secret_string_wo_version = %[3]d
+}
+`, rName, secret, version)
 }
 
 func testAccSecretVersionConfig_binary(rName string) string {

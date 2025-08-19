@@ -48,7 +48,7 @@ func TestAccIVSChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "playback_url"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
 				),
 			},
 			{

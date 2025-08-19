@@ -44,7 +44,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
@@ -162,12 +162,12 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				Config: testAccProductConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
-					acctest.MatchResourceAttrRegionalARN(
+					acctest.MatchResourceAttrRegionalARN(ctx,
 						resourceName,
 						"provisioning_artifact_parameters.0.template_physical_id",
 						"cloudformation",

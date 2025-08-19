@@ -79,7 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the monitor.
 * `monitorType` - (Required) The possible type values. Valid values: `DIMENSIONAL` | `CUSTOM`.
@@ -127,4 +127,4 @@ Using `terraform import`, import `aws_ce_anomaly_monitor` using the `id`. For ex
 % terraform import aws_ce_anomaly_monitor.example costAnomalyMonitorARN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1578f36961ed88a11a17f0c1c8745d16387472eae9e80de6c376da2f0ebcc68e -->
+<!-- cache-key: cdktf-0.20.8 input-fba337b98c8a976fb0697ff231ad81e424f25bc592fd1ebfa9050a36521da4be -->

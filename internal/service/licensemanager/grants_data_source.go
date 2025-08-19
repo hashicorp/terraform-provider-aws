@@ -36,7 +36,7 @@ func dataSourceGrants() *schema.Resource {
 	}
 }
 
-func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -52,7 +52,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading License Manager Distributed Grants: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(grants, func(v awstypes.Grant) string {
 		return aws.ToString(v.GrantArn)
 	}))

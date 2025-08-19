@@ -43,6 +43,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content_type` - (Optional) The upload's content type (for example, application/octet-stream).
 * `name` - (Required) The upload's file name. The name should not contain any forward slashes (/). If you are uploading an iOS app, the file name must end with the .ipa extension. If you are uploading an Android app, the file name must end with the .apk extension. For all others, the file name must end with the .zip file extension.
 * `project_arn` - (Required) The ARN of the project for the upload.
@@ -82,4 +85,4 @@ Using `terraform import`, import DeviceFarm Uploads using their ARN. For example
 % terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-157c6a3834c0d5903b438d5bff03780c3535132f31f3df5b70aed301ac010dfd -->
+<!-- cache-key: cdktf-0.20.8 input-5d30c96fc95ab8096c68e03a25340e34468c5d81db0c7274234f267ee4731bee -->

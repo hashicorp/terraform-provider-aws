@@ -39,7 +39,7 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5439"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAddress),
@@ -197,7 +197,6 @@ resource "aws_redshift_subnet_group" "test" {
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                   = %[1]q
-  availability_zone                    = data.aws_availability_zones.available.names[0]
   database_name                        = "mydb"
   master_username                      = "foo_test"
   master_password                      = "Mustbe8characters"

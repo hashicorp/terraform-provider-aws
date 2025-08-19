@@ -89,8 +89,6 @@ func resourceVirtualNode() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -975,14 +973,14 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 	}
 }
 
-func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
+		Spec:            expandVirtualNodeSpec(d.Get("spec").([]any)),
 		Tags:            getTagsIn(ctx),
 		VirtualNodeName: aws.String(name),
 	}
@@ -1002,11 +1000,11 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVirtualNodeRead(ctx, d, meta)...)
 }
 
-func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	vn, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.VirtualNodeData, error) {
 		return findVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -1019,8 +1017,6 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node (%s): %s", d.Id(), err)
 	}
-
-	vn := outputRaw.(*awstypes.VirtualNodeData)
 
 	d.Set(names.AttrARN, vn.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
@@ -1036,14 +1032,14 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateVirtualNodeInput{
 			MeshName:        aws.String(d.Get("mesh_name").(string)),
-			Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
+			Spec:            expandVirtualNodeSpec(d.Get("spec").([]any)),
 			VirtualNodeName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -1061,7 +1057,7 @@ func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceVirtualNodeRead(ctx, d, meta)...)
 }
 
-func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -1088,7 +1084,7 @@ func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-node-name'", d.Id())

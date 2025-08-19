@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ec2_local_gateway_route")
+// @SDKResource("aws_ec2_local_gateway_route", name="Local Gateway Route")
 func resourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteCreate,
@@ -54,7 +54,7 @@ func resourceLocalGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +78,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceLocalGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -90,7 +90,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	const (
 		timeout = 1 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func() (interface{}, error) {
+	localGatewayRoute, err := tfresource.RetryWhenNewResourceNotFound(ctx, timeout, func(ctx context.Context) (*awstypes.LocalGatewayRoute, error) {
 		return findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
@@ -104,8 +104,6 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	localGatewayRoute := outputRaw.(*awstypes.LocalGatewayRoute)
-
 	d.Set("destination_cidr_block", localGatewayRoute.DestinationCidrBlock)
 	d.Set("local_gateway_virtual_interface_group_id", localGatewayRoute.LocalGatewayVirtualInterfaceGroupId)
 	d.Set("local_gateway_route_table_id", localGatewayRoute.LocalGatewayRouteTableId)
@@ -113,7 +111,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -123,10 +121,11 @@ func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route: %s", d.Id())
-	_, err = conn.DeleteLocalGatewayRoute(ctx, &ec2.DeleteLocalGatewayRouteInput{
+	input := ec2.DeleteLocalGatewayRouteInput{
 		DestinationCidrBlock:     aws.String(destination),
 		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DeleteLocalGatewayRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidLocalGatewayRouteTableIDNotFound) {
 		return diags

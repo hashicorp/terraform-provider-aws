@@ -30,11 +30,11 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 
 	//lintignore:AWSAT002
 	testCases := []struct {
-		flattened []interface{}
+		flattened []any
 		expected  []awstypes.Ec2Configuration
 	}{
 		{
-			flattened: []interface{}{},
+			flattened: []any{},
 			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("default"),
@@ -42,8 +42,20 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
+					"image_kubernetes_version": "1.31",
+				},
+			},
+			expected: []awstypes.Ec2Configuration{
+				{
+					ImageKubernetesVersion: aws.String("1.31"),
+				},
+			},
+		},
+		{
+			flattened: []any{
+				map[string]any{
 					"image_type": "ECS_AL1",
 				},
 			},
@@ -54,8 +66,8 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"image_id_override": "ami-deadbeef",
 				},
 			},
@@ -66,16 +78,18 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
-					"image_id_override": "ami-deadbeef",
-					"image_type":        "ECS_AL1",
+			flattened: []any{
+				map[string]any{
+					"image_id_override":        "ami-deadbeef",
+					"image_kubernetes_version": "1.31",
+					"image_type":               "ECS_AL1",
 				},
 			},
 			expected: []awstypes.Ec2Configuration{
 				{
-					ImageIdOverride: aws.String("ami-deadbeef"),
-					ImageType:       aws.String("ECS_AL1"),
+					ImageIdOverride:        aws.String("ami-deadbeef"),
+					ImageKubernetesVersion: aws.String("1.31"),
+					ImageType:              aws.String("ECS_AL1"),
 				},
 			},
 		},
@@ -97,18 +111,18 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		flattened []interface{}
+		flattened []any
 		expected  *awstypes.LaunchTemplateSpecification
 	}{
 		{
-			flattened: []interface{}{},
+			flattened: []any{},
 			expected: &awstypes.LaunchTemplateSpecification{
 				LaunchTemplateId: aws.String(""),
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_id": "lt-123456",
 				},
 			},
@@ -118,8 +132,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_name": "my-launch-template",
 				},
 			},
@@ -129,8 +143,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_id": "lt-123456",
 					names.AttrVersion:    "$LATEST",
 				},
@@ -141,8 +155,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 			},
 		},
 		{
-			flattened: []interface{}{
-				map[string]interface{}{
+			flattened: []any{
+				map[string]any{
 					"launch_template_name": "my-launch-template",
 					names.AttrVersion:      "$LATEST",
 				},
@@ -183,9 +197,9 @@ func TestAccBatchComputeEnvironment_basic(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttr(resourceName, "eks_configuration.#", "0"),
@@ -241,8 +255,8 @@ func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "compute_environment_name"),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", "terraform-"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -270,14 +284,62 @@ func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironment_upgradeV0ToV1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccComputeEnvironmentConfig_upgradeV0ToV1Legacy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccComputeEnvironmentConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -335,9 +397,9 @@ func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -394,8 +456,8 @@ func TestAccBatchComputeEnvironment_updatePolicyCreate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 30, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
@@ -413,8 +475,8 @@ func TestAccBatchComputeEnvironment_updatePolicyCreate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 60, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
@@ -443,8 +505,8 @@ func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "0"),
@@ -459,8 +521,8 @@ func TestAccBatchComputeEnvironment_updatePolicyUpdate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName, 60, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "update_policy.#", "1"),
@@ -500,9 +562,9 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 				Config: testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -562,9 +624,9 @@ func TestAccBatchComputeEnvironment_createSpot(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_spot(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -623,9 +685,9 @@ func TestAccBatchComputeEnvironment_CreateSpotAllocationStrategy_bidPercentage(t
 				Config: testAccComputeEnvironmentConfig_spotAllocationStrategyAndBidPercentage(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "60"),
@@ -682,9 +744,9 @@ func TestAccBatchComputeEnvironment_createFargate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_fargate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -740,9 +802,9 @@ func TestAccBatchComputeEnvironment_createFargateSpot(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_fargateSpot(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -796,9 +858,9 @@ func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_state(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, serviceRoleResourceName, names.AttrARN),
@@ -813,9 +875,9 @@ func TestAccBatchComputeEnvironment_updateState(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_state(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, serviceRoleResourceName, names.AttrARN),
@@ -855,9 +917,9 @@ func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_fargate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -889,9 +951,9 @@ func TestAccBatchComputeEnvironment_updateServiceRole(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_fargateUpdatedServiceRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -950,9 +1012,9 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_fargateDefaultServiceRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -972,7 +1034,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/batch`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/batch`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusReason),
@@ -1009,9 +1071,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 4, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1044,9 +1106,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 4, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1079,9 +1141,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_minVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 4, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1139,9 +1201,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 4, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1174,9 +1236,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 8, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1209,9 +1271,9 @@ func TestAccBatchComputeEnvironment_ComputeResources_maxVCPUs(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName, 2, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1270,9 +1332,9 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_ec2Configuration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1284,6 +1346,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.1.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
@@ -1335,9 +1398,9 @@ func TestAccBatchComputeEnvironment_ec2ConfigurationPlacementGroup(t *testing.T)
 				Config: testAccComputeEnvironmentConfig_ec2ConfigurationPlacementGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1401,9 +1464,9 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_launchTemplate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1465,9 +1528,9 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_updateLaunchTemplateInExisting(rName, "$Default"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1503,9 +1566,9 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_updateLaunchTemplateInExisting(rName, "$Latest"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1546,6 +1609,46 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/39470.
+func TestAccBatchComputeEnvironment_updateLaunchTemplateID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, "foo"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Swap to version 2 of the launch template
+			{
+				Config: testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, "bar"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -1568,9 +1671,9 @@ func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *te
 				Config: testAccComputeEnvironmentConfig_fargate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1602,9 +1705,9 @@ func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *te
 				Config: testAccComputeEnvironmentConfig_fargateUpdatedSecurityGroupsAndSubnets(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1689,9 +1792,9 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 				Config: testAccComputeenvironmentConfig_ec2PreUpdate(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -1725,15 +1828,16 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 				Config: testAccComputeenvironmentConfig_ec2Update(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_CAPACITY_OPTIMIZED"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.ec2_key_pair", ec2KeyPairResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
@@ -1765,9 +1869,9 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 				Config: testAccComputeenvironmentConfig_ec2PreUpdate(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "batch", fmt.Sprintf("compute-environment/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "BEST_FIT_PROGRESSIVE"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.bid_percentage", "0"),
@@ -2117,7 +2221,7 @@ resource "aws_subnet" "test" {
 func testAccComputeEnvironmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -2139,7 +2243,21 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_namePrefix(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name_prefix = %[1]q
+  name_prefix = %[1]q
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
+}
+
+// testAccComputeEnvironmentConfig_legacyV0ToV1Legacy is a test for the legacy V0 to V1 upgrade path.
+// WARNING: This is legacy configuration and is no longer valid.
+func testAccComputeEnvironmentConfig_upgradeV0ToV1Legacy(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -2424,7 +2542,7 @@ EOF
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   eks_configuration {
     eks_cluster_arn      = aws_eks_cluster.test.arn
@@ -2462,7 +2580,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_ec2(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2489,7 +2607,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_ec2UpdatePolicyCreate(rName string, timeout int, terminate bool) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -2519,7 +2637,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_ec2UpdatePolicyOmitted(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -2544,7 +2662,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2585,7 +2703,7 @@ resource "aws_key_pair" "test" {
 func testAccComputeEnvironmentConfig_fargate(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     max_vcpus = 16
@@ -2608,7 +2726,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_fargateDefaultServiceRole(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     max_vcpus = 16
@@ -2629,7 +2747,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_fargateUpdatedServiceRole(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     max_vcpus = 16
@@ -2674,7 +2792,7 @@ resource "aws_iam_role_policy_attachment" "batch_service_2" {
 func testAccComputeEnvironmentConfig_fargateSpot(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     max_vcpus = 16
@@ -2697,7 +2815,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_spot(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2726,7 +2844,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_spotAllocationStrategyAndBidPercentage(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "Best_Fit"
@@ -2757,7 +2875,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
@@ -2770,7 +2888,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName string, maxVcpus int, minVcpus int) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2796,7 +2914,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_fargateUpdatedSecurityGroupsAndSubnets(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     max_vcpus = 16
@@ -2847,7 +2965,7 @@ resource "aws_subnet" "test_2" {
 func testAccComputeEnvironmentConfig_ec2NoResources(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   service_role = aws_iam_role.batch_service.arn
   type         = "MANAGED"
@@ -2859,7 +2977,7 @@ resource "aws_batch_compute_environment" "test" {
 func testAccComputeEnvironmentConfig_unmanagedResources(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2895,7 +3013,7 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2930,7 +3048,7 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -2962,18 +3080,78 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, version))
 }
 
+func testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, userDataSeed string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+locals {
+  user_data = <<-EOF
+Content-Type: multipart/mixed; boundary="//"
+MIME-Version: 1.0
+
+--//
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.txt"
+
+#!/bin/bash
+echo hello
+echo %[2]q
+--//--
+EOF
+}
+
+resource "aws_launch_template" "test" {
+  name      = %[1]q
+  user_data = base64encode(local.user_data)
+}
+
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = [
+      "c4.large",
+    ]
+
+    launch_template {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "SPOT"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName, userDataSeed))
+}
+
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
     instance_type = ["optimal"]
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
 
     ec2_configuration {
@@ -3009,7 +3187,7 @@ resource "aws_placement_group" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance.arn
@@ -3111,7 +3289,7 @@ func testAccComputeenvironmentConfig_ec2PreUpdate(rName string, publicKey string
 		testAccComputeEnvironmentConfig_baseForUpdates(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -3142,7 +3320,7 @@ func testAccComputeenvironmentConfig_ec2Update(rName string, publicKey string) s
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "SPOT_CAPACITY_OPTIMIZED"
@@ -3150,8 +3328,9 @@ resource "aws_batch_compute_environment" "test" {
     ec2_key_pair        = aws_key_pair.test.id
     instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
     launch_template {
       launch_template_id = aws_launch_template.test.id

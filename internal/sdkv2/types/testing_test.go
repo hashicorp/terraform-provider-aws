@@ -13,7 +13,7 @@ import (
 )
 
 type testCase struct {
-	val             interface{}
+	val             any
 	f               schema.SchemaValidateDiagFunc
 	expectedSummary *regexp.Regexp
 	expectedDetail  *regexp.Regexp

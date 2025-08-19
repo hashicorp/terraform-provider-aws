@@ -45,13 +45,9 @@ func newReplicationConfigurationTemplateResource(_ context.Context) (resource.Re
 }
 
 type replicationConfigurationTemplateResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[replicationConfigurationTemplateResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_drs_replication_configuration_template"
 }
 
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -94,6 +90,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				Required: true,
 			},
 			"replication_servers_security_groups_ids": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
 			},
@@ -104,7 +101,6 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 			"staging_area_tags": tftags.TagsAttributeRequired(),
 			names.AttrTags:      tftags.TagsAttribute(),
 			names.AttrTagsAll:   tftags.TagsAttributeComputedOnly(),
-
 			"use_dedicated_replication_server": schema.BoolAttribute{
 				Required: true,
 			},
@@ -278,7 +274,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 	conn := r.Meta().DRSClient(ctx)
 
-	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]interface{}{
+	tflog.Debug(ctx, "deleting DRS Replication Configuration Template", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -286,7 +282,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteReplicationConfigurationTemplate(ctx, input)
 	}, "DependencyViolation")
 
@@ -305,10 +301,6 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 
 		return
 	}
-}
-
-func (r *replicationConfigurationTemplateResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, input *drs.DescribeReplicationConfigurationTemplatesInput) (*awstypes.ReplicationConfigurationTemplate, error) {
@@ -358,7 +350,7 @@ const (
 )
 
 func statusReplicationConfigurationTemplate(ctx context.Context, conn *drs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findReplicationConfigurationTemplateByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -411,6 +403,7 @@ func waitReplicationConfigurationTemplateDeleted(ctx context.Context, conn *drs.
 }
 
 type replicationConfigurationTemplateResourceModel struct {
+	framework.WithRegionModel
 	ARN                                 types.String                                                                     `tfsdk:"arn"`
 	AssociateDefaultSecurityGroup       types.Bool                                                                       `tfsdk:"associate_default_security_group"`
 	AutoReplicateNewDisks               types.Bool                                                                       `tfsdk:"auto_replicate_new_disks"`
@@ -423,7 +416,7 @@ type replicationConfigurationTemplateResourceModel struct {
 	ID                                  types.String                                                                     `tfsdk:"id"`
 	PitPolicy                           fwtypes.ListNestedObjectValueOf[pitPolicy]                                       `tfsdk:"pit_policy"`
 	ReplicationServerInstanceType       types.String                                                                     `tfsdk:"replication_server_instance_type"`
-	ReplicationServersSecurityGroupsIDs types.List                                                                       `tfsdk:"replication_servers_security_groups_ids"`
+	ReplicationServersSecurityGroupsIDs fwtypes.ListOfString                                                             `tfsdk:"replication_servers_security_groups_ids"`
 	StagingAreaSubnetID                 types.String                                                                     `tfsdk:"staging_area_subnet_id"`
 	UseDedicatedReplicationServer       types.Bool                                                                       `tfsdk:"use_dedicated_replication_server"`
 	StagingAreaTags                     tftags.Map                                                                       `tfsdk:"staging_area_tags"`

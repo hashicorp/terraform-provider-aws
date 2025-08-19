@@ -10,17 +10,17 @@ import (
 )
 
 // NormalizeJsonStringSchemaStateFunc normalizes a JSON string value before storing it in state.
-func NormalizeJsonStringSchemaStateFunc(v interface{}) string { // nosemgrep:ci.caps2-in-func-name
+func NormalizeJsonStringSchemaStateFunc(v any) string { // nosemgrep:ci.caps2-in-func-name
 	json, _ := structure.NormalizeJsonString(v)
 	return json
 }
 
 // ToLowerSchemaStateFunc converts a string value to lowercase before storing it in state.
-func ToLowerSchemaStateFunc(v interface{}) string {
+func ToLowerSchemaStateFunc(v any) string {
 	return strings.ToLower(v.(string))
 }
 
 // ToUpperSchemaStateFunc converts a string value to uppercase before storing it in state.
-func ToUpperSchemaStateFunc(v interface{}) string {
+func ToUpperSchemaStateFunc(v any) string {
 	return strings.ToUpper(v.(string))
 }

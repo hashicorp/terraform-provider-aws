@@ -17,17 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Model")
+// @FrameworkDataSource("aws_bedrock_foundation_model", name="Foundation Model")
 func newFoundationModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelDataSource{}, nil
 }
 
 type foundationModelDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *foundationModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_model"
+	framework.DataSourceWithModel[foundationModelDataSourceModel]
 }
 
 func (d *foundationModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -106,6 +102,7 @@ func (d *foundationModelDataSource) Read(ctx context.Context, request datasource
 }
 
 type foundationModelDataSourceModel struct {
+	framework.WithRegionModel
 	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
 	ID                         types.String        `tfsdk:"id"`
 	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`

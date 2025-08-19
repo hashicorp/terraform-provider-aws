@@ -35,9 +35,9 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},
@@ -289,7 +289,9 @@ resource "aws_timestreamwrite_database" "test" {
 func testAccDatabaseConfig_kmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

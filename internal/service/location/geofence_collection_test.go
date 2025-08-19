@@ -38,7 +38,7 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "collection_arn", "geo", fmt.Sprintf("geofence-collection/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "collection_arn", "geo", fmt.Sprintf("geofence-collection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "collection_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -258,6 +258,7 @@ func testAccGeofenceCollectionConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_location_geofence_collection" "test" {

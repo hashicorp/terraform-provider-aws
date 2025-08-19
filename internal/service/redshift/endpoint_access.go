@@ -118,7 +118,7 @@ func resourceEndpointAccess() *schema.Resource {
 	}
 }
 
-func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -154,7 +154,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -185,7 +185,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -218,7 +218,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
@@ -248,12 +248,12 @@ func vpcSgsIdsToSlice(vpsSgsIds []awstypes.VpcSecurityGroupMembership) []string 
 	return VpcSgsSlice
 }
 
-func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []interface{} {
+func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.NetworkInterfaces; v != nil {
 		tfMap["network_interface"] = flattenNetworkInterfaces(v)
@@ -267,11 +267,11 @@ func flattenVPCEndpoint(apiObject *awstypes.VpcEndpoint) []interface{} {
 		tfMap[names.AttrVPCID] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
@@ -292,12 +292,12 @@ func flattenNetworkInterface(apiObject awstypes.NetworkInterface) map[string]int
 	return tfMap
 }
 
-func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []awstypes.NetworkInterface) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenNetworkInterface(apiObject))

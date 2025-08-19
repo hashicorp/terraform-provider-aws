@@ -40,7 +40,7 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "1"),
@@ -107,6 +107,40 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.country_code", "US"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightDataSet_columnDescriptionText(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet awstypes.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigColumnDescriptionText(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.0.column_description.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.0.column_description.0.text", "Column1 Description"),
 				),
 			},
 			{
@@ -465,7 +499,7 @@ func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "0"),
@@ -624,6 +658,49 @@ resource "aws_quicksight_data_set" "test" {
       columns      = ["Column1"]
       country_code = "US"
       name         = "test"
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigColumnDescriptionText(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      tag_column_operation {
+        column_name = "Column1"
+        tags {
+          column_description {
+            text = "Column1 Description"
+          }
+        }
+      }
     }
   }
 }

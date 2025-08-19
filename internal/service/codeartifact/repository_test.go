@@ -33,7 +33,7 @@ func testAccRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
@@ -113,7 +113,7 @@ func testAccRepository_owner(t *testing.T) {
 				Config: testAccRepositoryConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
@@ -327,6 +327,7 @@ func testAccRepositoryConfig_base(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {

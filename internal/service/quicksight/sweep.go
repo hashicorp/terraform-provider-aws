@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -70,7 +71,7 @@ func sweepDashboards(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDashboardsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -114,7 +115,7 @@ func sweepDataSets(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDataSetsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -158,7 +159,7 @@ func sweepDataSources(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDataSourcesInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -202,7 +203,7 @@ func sweepFolders(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &quicksight.ListFoldersInput{
 		AwsAccountId: aws.String(accountID),
 	}
@@ -246,10 +247,10 @@ func sweepGroups(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListGroupsInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(quicksightschema.DefaultNamespace),
 	}
 
 	pages := quicksight.NewListGroupsPaginator(conn, input)
@@ -275,7 +276,7 @@ func sweepGroups(region string) error {
 
 			r := resourceGroup()
 			d := r.Data(nil)
-			d.SetId(groupCreateResourceID(awsAccountID, defaultUserNamespace, groupName))
+			d.SetId(groupCreateResourceID(awsAccountID, quicksightschema.DefaultNamespace, groupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -298,7 +299,7 @@ func sweepTemplates(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListTemplatesInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -342,10 +343,10 @@ func sweepUsers(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(defaultUserNamespace),
+		Namespace:    aws.String(quicksightschema.DefaultNamespace),
 	}
 
 	pages := quicksight.NewListUsersPaginator(conn, input)
@@ -371,7 +372,7 @@ func sweepUsers(region string) error {
 
 			r := resourceUser()
 			d := r.Data(nil)
-			d.SetId(userCreateResourceID(awsAccountID, defaultUserNamespace, userName))
+			d.SetId(userCreateResourceID(awsAccountID, quicksightschema.DefaultNamespace, userName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -394,7 +395,7 @@ func sweepVPCConnections(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListVPCConnectionsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}

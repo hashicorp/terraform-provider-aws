@@ -52,13 +52,8 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeCallAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 				),
-			},
-			{
-				Config:             testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 			{
 				ResourceName:      resourceName,
@@ -125,11 +120,11 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeCallAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", "3"),
@@ -139,7 +134,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.1.keyword_match_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.2.type", "Sentiment"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.2.sentiment_configuration.0.%"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 				),
 			},
 			{
@@ -149,12 +144,12 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
 					resource.TestCheckNoResourceAttr(resourceName, "real_time_alert_configuration.0.%"),
 				),
 			},
@@ -165,8 +160,8 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "S3RecordingSink"),
 				),
@@ -178,15 +173,15 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "VoiceAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "LambdaFunctionSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.2.type", "SnsTopicSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.3.type", "SqsQueueSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.4.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.4.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.4.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
 				),
 			},
 			{
@@ -530,21 +525,21 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "tes
   elements {
     type = "LambdaFunctionSink"
     lambda_function_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
+      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
     }
   }
 
   elements {
     type = "SnsTopicSink"
     sns_topic_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
+      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
     }
   }
 
   elements {
     type = "SqsQueueSink"
     sqs_queue_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
+      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
     }
   }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,8 +50,6 @@ func resourceKey() *schema.Resource {
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -71,8 +70,8 @@ func resourceKey() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				Default:          awstypes.CustomerMasterKeySpecSymmetricDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.CustomerMasterKeySpec](),
+				Default:          awstypes.KeySpecSymmetricDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
 			},
 			"deletion_window_in_days": {
 				Type:         schema.TypeInt,
@@ -112,18 +111,7 @@ func resourceKey() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"rotation_period_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -144,13 +132,13 @@ func resourceKey() *schema.Resource {
 	}
 }
 
-func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	input := &kms.CreateKeyInput{
+	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		CustomerMasterKeySpec:          awstypes.CustomerMasterKeySpec(d.Get("customer_master_key_spec").(string)),
+		KeySpec:                        awstypes.KeySpec(d.Get("customer_master_key_spec").(string)),
 		KeyUsage:                       awstypes.KeyUsageType(d.Get("key_usage").(string)),
 		Tags:                           getTagsIn(ctx),
 	}
@@ -164,12 +152,12 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
-		p, err := structure.NormalizeJsonString(v.(string))
+		v, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.Policy = aws.String(p)
+		input.Policy = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("custom_key_store_id"); ok {
@@ -187,7 +175,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	output, err := waitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
-		return conn.CreateKey(ctx, input)
+		return conn.CreateKey(ctx, &input)
 	})
 
 	if err != nil {
@@ -217,7 +205,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -226,7 +214,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -250,33 +238,31 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set(names.AttrARN, key.metadata.Arn)
 	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
-	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
+	d.Set("customer_master_key_spec", key.metadata.KeySpec)
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
 	d.Set("is_enabled", key.metadata.Enabled)
 	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
-	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
-	if key.metadata.XksKeyConfiguration != nil {
-		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
-	} else {
-		d.Set("xks_key_id", nil)
-	}
-
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("rotation_period_in_days", key.rotationPeriodInDays)
+	if v := key.metadata.XksKeyConfiguration; v != nil {
+		d.Set("xks_key_id", v.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
 
 	setTagsOut(ctx, key.tags)
 
 	return diags
 }
 
-func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -319,22 +305,21 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	return append(diags, resourceKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	input := &kms.ScheduleKeyDeletionInput{
+	input := kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk("deletion_window_in_days"); ok {
 		input.PendingWindowInDays = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting KMS Key: %s", d.Id())
-	_, err := conn.ScheduleKeyDeletion(ctx, input)
+	_, err := conn.ScheduleKeyDeletion(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -365,7 +350,7 @@ type kmsKeyInfo struct {
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	return tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*kmsKeyInfo, error) {
 		var err error
 		var key kmsKeyInfo
 
@@ -405,24 +390,18 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 			return nil, fmt.Errorf("listing tags for KMS Key (%s): %w", keyID, err)
 		}
 
-		key.tags = Tags(tags)
+		key.tags = svcTags(tags)
 
 		return &key, nil
 	}, isNewResource)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return outputRaw.(*kmsKeyInfo), nil
 }
 
 func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {
-	input := &kms.DescribeKeyInput{
+	input := kms.DescribeKeyInput{
 		KeyId: aws.String(keyID),
 	}
 
-	output, err := findKey(ctx, conn, input, optFns...)
+	output, err := findKey(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -474,12 +453,12 @@ func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service,
 }
 
 func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, policyName string) (*string, error) {
-	input := &kms.GetKeyPolicyInput{
+	input := kms.GetKeyPolicyInput{
 		KeyId:      aws.String(keyID),
 		PolicyName: aws.String(policyName),
 	}
 
-	output, err := conn.GetKeyPolicy(ctx, input)
+	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -500,11 +479,11 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 }
 
 func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID string) (*bool, *int32, error) {
-	input := &kms.GetKeyRotationStatusInput{
+	input := kms.GetKeyRotationStatusInput{
 		KeyId: aws.String(keyID),
 	}
 
-	output, err := conn.GetKeyRotationStatus(ctx, input)
+	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, nil, &retry.NotFoundError{
@@ -525,12 +504,12 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 }
 
 func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, description string) error {
-	input := &kms.UpdateKeyDescriptionInput{
+	input := kms.UpdateKeyDescriptionInput{
 		Description: aws.String(description),
 		KeyId:       aws.String(keyID),
 	}
 
-	_, err := conn.UpdateKeyDescription(ctx, input)
+	_, err := conn.UpdateKeyDescription(ctx, &input)
 
 	if err != nil {
 		return fmt.Errorf("updating %s (%s) description: %w", resourceTypeName, keyID, err)
@@ -547,25 +526,29 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
 			action = "enabling"
-			_, err = conn.EnableKey(ctx, &kms.EnableKeyInput{
+			input := kms.EnableKeyInput{
 				KeyId: aws.String(keyID),
-			})
+			}
+
+			_, err = conn.EnableKey(ctx, &input)
 		} else {
 			action = "disabling"
-			_, err = conn.DisableKey(ctx, &kms.DisableKeyInput{
+			input := kms.DisableKeyInput{
 				KeyId: aws.String(keyID),
-			})
+			}
+
+			_, err = conn.DisableKey(ctx, &input)
 		}
 
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -580,25 +563,24 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, keyID, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
 	if err != nil {
-		return fmt.Errorf("policy contains invalid JSON: %w", err)
+		return err
 	}
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
-
-		input := &kms.PutKeyPolicyInput{
+		input := kms.PutKeyPolicyInput{
 			BypassPolicyLockoutSafetyCheck: bypassPolicyLockoutSafetyCheck,
 			KeyId:                          aws.String(keyID),
 			Policy:                         aws.String(policy),
 			PolicyName:                     aws.String(policyNameDefault),
 		}
 
-		_, err = conn.PutKeyPolicy(ctx, input)
+		_, err = conn.PutKeyPolicy(ctx, &input)
 
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("updating %s (%s) policy: %w", resourceTypeName, keyID, err)
 	}
 
@@ -613,7 +595,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool, rotationPeriod int) error {
 	var action string
 
-	updateFunc := func() (interface{}, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -624,18 +606,21 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 			if rotationPeriod > 0 {
 				input.RotationPeriodInDays = aws.Int32(int32(rotationPeriod))
 			}
+
 			_, err = conn.EnableKeyRotation(ctx, &input)
 		} else {
 			action = "disabling"
-			_, err = conn.DisableKeyRotation(ctx, &kms.DisableKeyRotationInput{
+			input := kms.DisableKeyRotationInput{
 				KeyId: aws.String(keyID),
-			})
+			}
+
+			_, err = conn.DisableKeyRotation(ctx, &input)
 		}
 
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s) rotation: %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -648,7 +633,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 }
 
 func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
@@ -664,7 +649,7 @@ func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.S
 }
 
 func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID string, description string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
@@ -709,7 +694,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 }
 
 func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, policy string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
 		if tfresource.NotFound(err) {
@@ -740,7 +725,7 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 }
 
 func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool, rotationPeriodWant int) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
@@ -766,7 +751,7 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 }
 
 func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {

@@ -62,7 +62,7 @@ func dataSourceBotAlias() *schema.Resource {
 	}
 }
 
-func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
@@ -80,9 +80,9 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())

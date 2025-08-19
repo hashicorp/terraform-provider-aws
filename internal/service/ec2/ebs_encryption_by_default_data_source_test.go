@@ -48,7 +48,8 @@ func testAccCheckEBSEncryptionByDefaultDataSource(ctx context.Context, n string)
 			return fmt.Errorf("No ID is set")
 		}
 
-		actual, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		input := ec2.GetEbsEncryptionByDefaultInput{}
+		actual, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("Error reading default EBS encryption toggle: %q", err)
 		}

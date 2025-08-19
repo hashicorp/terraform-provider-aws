@@ -43,7 +43,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T, semaphore tfsy
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", managedPrefixListResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "prefix_list_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "prefix_list_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),

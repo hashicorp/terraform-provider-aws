@@ -31,7 +31,7 @@ func testAccActionTarget_basic(t *testing.T) {
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "securityhub", "action/custom/testaction"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test custom action"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, "testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Test action"),

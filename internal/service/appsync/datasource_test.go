@@ -35,7 +35,7 @@ func testAccDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_typeNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(fmt.Sprintf("apis/.+/datasources/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),

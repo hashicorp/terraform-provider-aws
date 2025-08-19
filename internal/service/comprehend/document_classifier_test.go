@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,7 +50,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -67,6 +68,11 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -74,8 +80,15 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_Mode_singleLabel(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_Mode_singleLabel(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -143,7 +156,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName1))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName1))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue1),
 				),
@@ -161,7 +174,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName2))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue2),
 				),
@@ -203,7 +216,7 @@ func TestAccComprehendDocumentClassifier_versionNameEmpty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s$`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s$`, rName))),
 				),
 			},
 			{
@@ -242,7 +255,7 @@ func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
 			{
@@ -281,7 +294,7 @@ func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "version_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", "tf-acc-test-prefix-"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
 				),
 			},
 			{
@@ -319,7 +332,7 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -408,7 +421,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -423,6 +436,11 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -430,8 +448,15 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -466,6 +491,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexache.MustCompile(`s3://.+/outputs`)),
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexache.MustCompile(`s3://.+/outputs/[0-9A-Za-z-]+/output/output.tar.gz`)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -473,8 +503,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs/"),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs/"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -508,6 +545,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -515,8 +557,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -550,6 +599,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -557,8 +611,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -592,6 +653,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", names.AttrName),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -599,8 +665,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -634,6 +707,11 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -641,8 +719,15 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -818,7 +903,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -885,6 +970,11 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -892,8 +982,15 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_kmsKeyARNs(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_kmsKeyARNs(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -927,6 +1024,11 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -934,8 +1036,15 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccDocumentClassifierConfig_kmsKeyIds(rName),
-				PlanOnly: true,
+				Config: testAccDocumentClassifierConfig_kmsKeyIds(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1440,16 +1549,6 @@ func testAccCheckDocumentClassifierExists(ctx context.Context, name string, docu
 	}
 }
 
-// func testAccCheckDocumentClassifierRecreated(before, after *types.DocumentClassifierProperties) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if documentClassifierIdentity(before, after) {
-// 			return fmt.Errorf("Comprehend Document Classifier not recreated")
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckDocumentClassifierNotRecreated(before, after *types.DocumentClassifierProperties) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !documentClassifierIdentity(before, after) {
@@ -1520,7 +1619,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1546,7 +1645,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1576,7 +1675,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1602,7 +1701,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1627,7 +1726,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1653,7 +1752,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1678,8 +1777,8 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-    test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri      = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
+    test_s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1704,7 +1803,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1731,7 +1830,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_CLASS"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri          = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     label_delimiter = %q
   }
 
@@ -1758,7 +1857,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
   }
 
   depends_on = [
@@ -1788,7 +1887,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   mode          = "MULTI_LABEL"
   input_data_config {
-    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+    s3_uri          = "s3://${aws_s3_object.multilabel.bucket}/${aws_s3_object.multilabel.key}"
     label_delimiter = %[2]q
   }
 
@@ -1817,7 +1916,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1828,10 +1927,12 @@ resource "aws_comprehend_document_classifier" "test" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -1881,7 +1982,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1918,10 +2019,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1941,7 +2044,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -1969,7 +2072,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2006,10 +2109,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -2032,7 +2137,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2069,10 +2174,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -2094,7 +2201,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2123,7 +2230,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2153,7 +2260,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2179,7 +2286,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2210,7 +2317,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2227,6 +2334,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
 resource "aws_kms_key" "output" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2265,7 +2373,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2282,6 +2390,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
 resource "aws_kms_key" "output" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2320,7 +2429,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2342,6 +2451,7 @@ resource "aws_kms_alias" "output" {
 
 resource "aws_kms_key" "output" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2380,7 +2490,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2402,6 +2512,7 @@ resource "aws_kms_alias" "output" {
 
 resource "aws_kms_key" "output" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2440,7 +2551,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2457,6 +2568,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
 resource "aws_kms_key" "output" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2495,7 +2607,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2526,7 +2638,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   output_data_config {
@@ -2543,6 +2655,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
 resource "aws_kms_key" "output2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -2719,7 +2832,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2768,7 +2881,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {
@@ -2827,7 +2940,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [
@@ -2876,7 +2989,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {
@@ -2928,7 +3041,7 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
   }
 
   depends_on = [

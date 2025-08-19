@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_eks_addon: Fix crash when `pod_identity_association` is modified
+```
+```release-note:bug
+resource/aws_eks_addon: Fix to prevent persistent differences when `pod_identity_association` is changed
+```

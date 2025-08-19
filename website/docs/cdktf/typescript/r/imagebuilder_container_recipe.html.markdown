@@ -70,8 +70,9 @@ The following arguments are required:
 * `targetRepository` (Required) The destination repository for the container image. Detailed below.
 * `version` (Required) Version of the container recipe.
 
-The following attributes are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the container recipe.
 * `dockerfileTemplateData` - (Optional) The Dockerfile template used to build the image as an inline data blob.
 * `dockerfileTemplateUri` - (Optional) The Amazon S3 URI for the Dockerfile that will be used to build the container image.
@@ -106,6 +107,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blockDeviceMapping` - (Optional) Configuration block(s) with block device mappings for the container recipe. Detailed below.
 * `image` - (Optional) The AMI ID to use as the base image for a container build and test instance. If not specified, Image Builder will use the appropriate ECS-optimized AMI as a base image.
 
@@ -113,6 +115,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deviceName` - (Optional) Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
 * `ebs` - (Optional) Configuration block with Elastic Block Storage (EBS) block device mapping settings. Detailed below.
 * `noDevice` - (Optional) Set to `true` to remove a mapping from the parent image.
@@ -122,6 +125,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `deleteOnTermination` - (Optional) Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
 * `encrypted` - (Optional) Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
 * `iops` - (Optional) Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
@@ -174,4 +178,4 @@ Using `terraform import`, import `aws_imagebuilder_container_recipe` resources u
 % terraform import aws_imagebuilder_container_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:container-recipe/example/1.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b616803b9b163166c8ca8e3572b4ae2a3b7520be71fb4d2736f37a4c59c66771 -->
+<!-- cache-key: cdktf-0.20.8 input-9b52647416f6e8c875b6cdf1bdc3cd2356353c74ff101e6a8120d7202d8725e1 -->

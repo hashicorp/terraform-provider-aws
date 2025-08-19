@@ -157,6 +157,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
@@ -229,4 +230,4 @@ Using `terraform import`, import VPC Lattice Listener using the `listener_id` of
 % terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0ca5580988bfab04426823395a214bb0c694d578482a69ab5e89b8239757477e -->
+<!-- cache-key: cdktf-0.20.8 input-9057798d51220c999fb536bbfc000271439b84cc183ae0218f32b71feeebfe03 -->

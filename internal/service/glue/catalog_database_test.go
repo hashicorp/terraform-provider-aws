@@ -36,7 +36,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", ""),
@@ -212,10 +212,10 @@ func TestAccGlueCatalogDatabase_federatedDatabase(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "federated_database.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "federated_database.0.connection_name", "aws:redshift"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "federated_database.0.identifier", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "federated_database.0.identifier", "redshift", regexache.MustCompile(`datashare:+.`)),
 				),
 			},
 			{
@@ -400,7 +400,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -420,7 +420,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   data_share_arn = local.data_share_arn
   consumer_arn = format("arn:%s:glue:%s:%s:catalog",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
   )
 }

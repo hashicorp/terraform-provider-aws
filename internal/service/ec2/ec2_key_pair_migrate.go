@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func keyPairMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func keyPairMigrateState(v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Key Pair State v0; migrating to v1")

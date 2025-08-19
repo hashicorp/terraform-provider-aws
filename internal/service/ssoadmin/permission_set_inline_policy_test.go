@@ -144,7 +144,7 @@ func testAccCheckPermissionSetInlinePolicyDestroy(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfssoadmin.FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+			_, err = tfssoadmin.FindPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -175,7 +175,7 @@ func testAccCheckPermissionSetInlinePolicyExists(ctx context.Context, n string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
-		_, err = tfssoadmin.FindPermissionSetInlinePolicy(ctx, conn, permissionSetARN, instanceARN)
+		_, err = tfssoadmin.FindPermissionSetInlinePolicyByTwoPartKey(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}

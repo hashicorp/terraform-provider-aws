@@ -44,8 +44,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional) AWS account ID.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `identityStore` - (Optional) User identity directory type. Defaults to `QUICKSIGHT`, the only current valid value.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -97,4 +98,4 @@ Using `terraform import`, import QuickSight Namespace using the AWS account ID a
 % terraform import aws_quicksight_namespace.example 123456789012,example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-beca84265f5d628caa51b3d90e20696177b38adfc69e699a485ae67302774c9f -->
+<!-- cache-key: cdktf-0.20.8 input-0f40ad65bcb5274dac328a48365612ce535d4daf861d0254356d9ac853b439cf -->

@@ -44,7 +44,7 @@ func findChangeSetByTwoPartKey(ctx context.Context, conn *cloudformation.Client,
 }
 
 func statusChangeSet(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findChangeSetByTwoPartKey(ctx, conn, stackID, changeSetName)
 
 		if tfresource.NotFound(err) {

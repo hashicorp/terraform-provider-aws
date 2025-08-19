@@ -30,7 +30,7 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owning_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, "owning_account_id"),
 					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "0"),
 				),
 			},

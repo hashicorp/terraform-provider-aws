@@ -38,10 +38,10 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -244,7 +244,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 }
 `, rName)
@@ -307,7 +307,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 
   tags = {
@@ -328,7 +328,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 
   tags = {

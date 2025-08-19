@@ -43,8 +43,9 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -206,7 +207,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semap
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					// Test that the peer account ID != the primary (request) account ID
 					func(s *terraform.State) error {
-						if acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id") == nil {
+						if acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id") == nil {
 							return fmt.Errorf("peer_account_id attribute incorrectly to the requester's account ID")
 						}
 						return nil

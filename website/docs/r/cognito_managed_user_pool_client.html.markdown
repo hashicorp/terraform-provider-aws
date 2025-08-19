@@ -18,18 +18,26 @@ Use the [`aws_cognito_user_pool_client`](cognito_user_pool_client.html) resource
 
 ## Example Usage
 
+### Using Name Prefix
+
 ```terraform
 resource "aws_cognito_managed_user_pool_client" "example" {
-  name_prefix  = "AmazonOpenSearchService-example"
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_prefix  = "AmazonOpenSearchService-example-"
   user_pool_id = aws_cognito_user_pool.example.id
 
   depends_on = [
-    aws_opensearch_domain.example,
+    aws_opensearch_domain.example
   ]
 }
 
 resource "aws_cognito_user_pool" "example" {
   name = "example"
+}
+
+resource "aws_cognito_user_pool_domain" "example" {
+  domain       = "example"
+  user_pool_id = aws_cognito_user_pool.example.id
 }
 
 resource "aws_cognito_identity_pool" "example" {
@@ -57,7 +65,7 @@ resource "aws_opensearch_domain" "example" {
 
   depends_on = [
     aws_cognito_user_pool_domain.example,
-    aws_iam_role_policy_attachment.example,
+    aws_iam_role_policy_attachment.example
   ]
 }
 
@@ -76,7 +84,7 @@ data "aws_iam_policy_document" "example" {
     principals {
       type = "Service"
       identifiers = [
-        "es.${data.aws_partition.current.dns_suffix}",
+        "es.${data.aws_partition.current.dns_suffix}"
       ]
     }
   }
@@ -85,9 +93,25 @@ data "aws_iam_policy_document" "example" {
 resource "aws_iam_role_policy_attachment" "example" {
   role       = aws_iam_role.example.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
+
+  depends_on = [
+    aws_opensearch_domain.example
+  ]
 }
 
 data "aws_partition" "current" {}
+```
+
+### Using Name Pattern
+
+```terraform
+resource "aws_cognito_managed_user_pool_client" "example" {
+  # Generated client name example: AmazonOpenSearchService-example-abcde-us-east-1-2ni6nt4id5tg25yde3pztiqkd4
+  name_pattern = "^AmazonOpenSearchService-example-(\\w+)$"
+  user_pool_id = aws_cognito_user_pool.example.id
+}
+
+# ... other configuration ...
 ```
 
 ## Argument Reference
@@ -95,11 +119,12 @@ data "aws_partition" "current" {}
 The following arguments are required:
 
 * `user_pool_id` - (Required) User pool that the client belongs to.
-* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
-* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
+* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the existing User Pool Client to be managed. It must only match one User Pool Client.
+* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the  existing User Pool Client to be managed. It must match only one User Pool Client.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure the following arguments: `callback_urls`, `logout_urls`, `allowed_oauth_scopes` and `allowed_oauth_flows`.
 * `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
@@ -116,6 +141,7 @@ The following arguments are optional:
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers. `allowed_oauth_flows_user_pool_client` must be set to `true` before you can configure this option.
 * `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
+* `refresh_token_rotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
@@ -130,6 +156,11 @@ Either `application_arn` or `application_id` is required for this configuration 
 * `external_id` - (Optional) ID for the Analytics Configuration and conflicts with `application_arn`.
 * `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. It conflicts with `application_arn`.
 * `user_data_shared` - (Optional) If `user_data_shared` is set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+
+### refresh_token_rotation
+
+* `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
+* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
 
 ### token_validity_units
 

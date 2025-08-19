@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,17 +101,15 @@ func resourceTarget() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	resourceID := d.Get(names.AttrResourceID).(string)
-	input := &applicationautoscaling.RegisterScalableTargetInput{
+	input := applicationautoscaling.RegisterScalableTargetInput{
 		MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 		MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 		ResourceId:        aws.String(resourceID),
@@ -126,10 +123,10 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("suspended_state"); ok {
-		input.SuspendedState = expandSuspendedState(v.([]interface{}))
+		input.SuspendedState = expandSuspendedState(v.([]any))
 	}
 
-	err := registerScalableTarget(ctx, conn, input)
+	err := registerScalableTarget(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Application AutoScaling Target (%s): %s", resourceID, err)
@@ -140,13 +137,13 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
-		func() (interface{}, error) {
-			return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+	t, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
+		func(ctx context.Context) (*awstypes.ScalableTarget, error) {
+			return findTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 		},
 		d.IsNewResource(),
 	)
@@ -160,8 +157,6 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
-
-	t := outputRaw.(*awstypes.ScalableTarget)
 
 	d.Set(names.AttrARN, t.ScalableTargetARN)
 	d.Set(names.AttrMaxCapacity, t.MaxCapacity)
@@ -177,12 +172,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &applicationautoscaling.RegisterScalableTargetInput{
+		input := applicationautoscaling.RegisterScalableTargetInput{
 			MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 			MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 			ResourceId:        aws.String(d.Id()),
@@ -195,10 +190,10 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if v, ok := d.GetOk("suspended_state"); ok {
-			input.SuspendedState = expandSuspendedState(v.([]interface{}))
+			input.SuspendedState = expandSuspendedState(v.([]any))
 		}
 
-		err := registerScalableTarget(ctx, conn, input)
+		err := registerScalableTarget(ctx, conn, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Application AutoScaling Target (%s): %s", d.Id(), err)
@@ -208,18 +203,18 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	input := &applicationautoscaling.DeregisterScalableTargetInput{
+	input := applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	}
 
 	log.Printf("[INFO] Deleting Application AutoScaling Target: %s", d.Id())
-	_, err := conn.DeregisterScalableTarget(ctx, input)
+	_, err := conn.DeregisterScalableTarget(ctx, &input)
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags
@@ -229,8 +224,8 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
-		return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
+		return findTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
 
 	if err != nil {
@@ -240,15 +235,15 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.Client, resourceID, namespace, dimension string) (*awstypes.ScalableTarget, error) {
-	input := &applicationautoscaling.DescribeScalableTargetsInput{
+func findTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.Client, resourceID, namespace, dimension string) (*awstypes.ScalableTarget, error) {
+	input := applicationautoscaling.DescribeScalableTargetsInput{
 		ResourceIds:       []string{resourceID},
 		ScalableDimension: awstypes.ScalableDimension(dimension),
 		ServiceNamespace:  awstypes.ServiceNamespace(namespace),
 	}
 	var output []awstypes.ScalableTarget
 
-	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, input)
+	pages := applicationautoscaling.NewDescribeScalableTargetsPaginator(conn, &input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
@@ -268,14 +263,14 @@ func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 
 	if aws.ToString(target.ResourceId) != resourceID || string(target.ScalableDimension) != dimension || string(target.ServiceNamespace) != namespace {
 		return nil, &retry.NotFoundError{
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
 	return target, nil
 }
 
-func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 
 	if len(idParts) < 3 {
@@ -300,7 +295,7 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta inte
 
 func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.RegisterScalableTargetInput) error {
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.RegisterScalableTarget(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -319,13 +314,13 @@ func registerScalableTarget(ctx context.Context, conn *applicationautoscaling.Cl
 	return err
 }
 
-func expandSuspendedState(tfList []interface{}) *awstypes.SuspendedState {
+func expandSuspendedState(tfList []any) *awstypes.SuspendedState {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	apiObject := &awstypes.SuspendedState{}
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	if v, ok := tfMap["dynamic_scaling_in_suspended"]; ok {
 		apiObject.DynamicScalingInSuspended = aws.Bool(v.(bool))
@@ -340,12 +335,12 @@ func expandSuspendedState(tfList []interface{}) *awstypes.SuspendedState {
 	return apiObject
 }
 
-func flattenSuspendedState(apiObject *awstypes.SuspendedState) []interface{} {
+func flattenSuspendedState(apiObject *awstypes.SuspendedState) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if v := apiObject.DynamicScalingInSuspended; v != nil {
 		tfMap["dynamic_scaling_in_suspended"] = aws.ToBool(v)
@@ -357,5 +352,5 @@ func flattenSuspendedState(apiObject *awstypes.SuspendedState) []interface{} {
 		tfMap["scheduled_scaling_suspended"] = aws.ToBool(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

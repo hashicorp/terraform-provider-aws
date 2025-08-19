@@ -77,13 +77,13 @@ func resourceManagedScalingPolicy() *schema.Resource {
 	}
 }
 
-func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	if v := d.Get("compute_limits").(*schema.Set).List(); len(v) > 0 && v[0] != nil {
-		tfMap := v[0].(map[string]interface{})
+		tfMap := v[0].(map[string]any)
 		computeLimits := &awstypes.ComputeLimits{
 			UnitType:             awstypes.ComputeLimitsUnitType(tfMap["unit_type"].(string)),
 			MinimumCapacityUnits: aws.Int32(int32(tfMap["minimum_capacity_units"].(int))),
@@ -117,7 +117,7 @@ func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -194,12 +194,12 @@ func findManagedScalingPolicy(ctx context.Context, conn *emr.Client, input *emr.
 	return output.ManagedScalingPolicy, nil
 }
 
-func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []interface{} {
+func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["unit_type"] = string(apiObject.UnitType)
 
@@ -219,5 +219,5 @@ func flattenComputeLimits(apiObject *awstypes.ComputeLimits) []interface{} {
 		tfMap["minimum_capacity_units"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

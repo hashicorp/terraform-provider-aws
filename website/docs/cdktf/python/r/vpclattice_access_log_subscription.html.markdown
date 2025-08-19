@@ -38,8 +38,13 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `destination_arn` - (Required) Amazon Resource Name (ARN) of the log destination.
-* `resource_identifier` - (Required) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
+* `destination_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the log destination.
+* `resource_identifier` - (Required, Forces new resource) The ID or Amazon Resource Identifier (ARN) of the service network or service. You must use the ARN if the resources specified in the operation are in different accounts.
+
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `service_network_log_type` - (Optional, Forces new resource) Type of log that monitors your Amazon VPC Lattice service networks. Valid values are: `SERVICE`, `RESOURCE`. Defaults to `SERVICE`.
 
 ## Attribute Reference
 
@@ -74,4 +79,4 @@ Using `terraform import`, import VPC Lattice Access Log Subscription using the a
 % terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-071e5e00ee8c7257836217b64dd4601a37eae349f38d2cca190da1ad40bc2a7d -->
+<!-- cache-key: cdktf-0.20.8 input-7737d7cbf0c0d9c164911abb108046a6683e3664e7d996391270ae9c257a5ce2 -->

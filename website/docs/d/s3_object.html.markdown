@@ -23,6 +23,7 @@ _optionally_ (see below) content of an object stored inside S3 bucket.
 * `application/xml`
 * `application/atom+xml`
 * `application/x-sql`
+* `application/yaml`
 
 This is to prevent printing unsafe characters and potentially downloading large amount of data which would be thrown away in favor of metadata.
 
@@ -70,6 +71,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `checksum_mode` - (Optional) To retrieve the object's checksum, this argument must be `ENABLED`. If you enable `checksum_mode` and the object is encrypted with KMS, you must have permission to use the `kms:Decrypt` action. Valid values: `ENABLED`
 * `key` - (Required) Full path to the object inside the bucket
@@ -85,6 +87,7 @@ This data source exports the following attributes in addition to the arguments a
 * `cache_control` - Caching behavior along the request/reply chain.
 * `checksum_crc32` - The base64-encoded, 32-bit CRC32 checksum of the object.
 * `checksum_crc32c` - The base64-encoded, 32-bit CRC32C checksum of the object.
+* `checksum_crc64nvme` - The base64-encoded, 64-bit CRC64NVME checksum of the object.
 * `checksum_sha1` - The base64-encoded, 160-bit SHA-1 digest of the object.
 * `checksum_sha256` - The base64-encoded, 256-bit SHA-256 digest of the object.
 * `content_disposition` - Presentational information for the object.

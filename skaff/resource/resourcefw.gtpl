@@ -53,11 +53,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/YakDriver/smarterr"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -102,13 +108,10 @@ const (
 )
 
 type resource{{ .Resource }} struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[resource{{ .Resource }}Model]
 	framework.WithTimeouts
 }
 
-func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "{{ .ProviderResourceName }}"
-}
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
 // In the schema, add each of the attributes in snake case (e.g.,
@@ -155,12 +158,19 @@ func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.Metad
 func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			{{- if .IncludeComments }}
+			// TIP: ==== "ID" ATTRIBUTE ====
+			// When using the Terraform Plugin Framework, there is no required "id" attribute.
+			// This is different from the Terraform Plugin SDK. 
+			//
+			// Only include an "id" attribute if the AWS API has an "Id" field, such as "{{ .Resource }}Id"
+			{{- end }}
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				{{- if .IncludeComments }}
 				// TIP: ==== PLAN MODIFIERS ====
@@ -220,7 +230,7 @@ func (r *resource{{ .Resource }}) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -254,7 +264,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -266,7 +276,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
 	{{- end }}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}"))...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("{{ .Resource }}")))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -283,24 +293,18 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
 		// in error messages at this point.
 		{{- end }}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	if out == nil || out.{{ .Resource }} == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
 		return
 	}
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 5. Using the output from the create function, set attributes
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -311,16 +315,13 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = wait{{ .Resource }}Created(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForCreation, ResName{{ .Resource }}, plan.Name.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 7. Save the request plan to response state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -345,7 +346,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -358,27 +359,25 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 	// TIP: -- 4. Remove resource from state if it is not found
 	{{- end }}
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the arguments and attributes
 	{{- end }}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -413,21 +412,23 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
 	var plan, state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Populate a modify input structure and check for changes
+	// TIP: -- 3. Get the difference between the plan and state, if any
 	{{- end }}
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
-		!plan.Type.Equal(state.Type) {
+	diff, d := flex.Diff(ctx, plan, state)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	if diff.HasChanges() {
 		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test")))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -436,23 +437,17 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		{{- end }}
 		out, err := conn.Update{{ .Resource }}(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, plan.ID.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 			return
 		}
 		if out == nil || out.{{ .Resource }} == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
 			return
 		}
 		{{ if .IncludeComments }}
 		// TIP: Using the output from the update function, re-set any computed attributes
 		{{- end }}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -464,17 +459,14 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := wait{{ .Resource }}Updated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, plan.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
 		return
 	}
 
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Save the request plan to response state
 	{{- end }}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -504,7 +496,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	// TIP: -- 2. Fetch the state
 	{{- end }}
 	var state resource{{ .Resource }}Model
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -527,10 +519,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 	{{ if .IncludeComments }}
@@ -539,10 +528,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = wait{{ .Resource }}Deleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.{{ .Service }}, create.ErrActionWaitingForDeletion, ResName{{ .Resource }}, state.ID.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
 		return
 	}
 }
@@ -556,14 +542,8 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 // https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 {{- end }}
 func (r *resource{{ .Resource }}) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
-
-{{ if .IncludeTags -}}
-func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-{{- end }}
 
 {{ if .IncludeComments }}
 // TIP: ==== STATUS CONSTANTS ====
@@ -604,10 +584,10 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: It is easier to determine whether a resource is updated for some
@@ -627,10 +607,10 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
@@ -646,10 +626,10 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*{{ .ServiceLower }}.{{ .Resource }}); ok {
-		return out, err
+		return out, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 {{ if .IncludeComments }}
 // TIP: ==== STATUS ====
@@ -661,14 +641,14 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.C
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return out, aws.ToString(out.Status), nil
@@ -682,24 +662,24 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client
 // is good practice to define it separately.
 {{- end }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
-	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
+	input := {{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.Get{{ .Resource }}(ctx, in)
+	out, err := conn.Get{{ .Resource }}(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError:   err,
-				LastRequest: in,
-			}
+				LastRequest: &input,
+			})
 		}
 
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if out == nil || out.{{ .Resource }} == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
 	}
 
 	return out.{{ .Resource }}, nil
@@ -719,6 +699,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Clie
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
 type resource{{ .Resource }}Model struct {
+	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`
@@ -735,4 +716,45 @@ type resource{{ .Resource }}Model struct {
 type complexArgumentModel struct {
 	NestedRequired types.String `tfsdk:"nested_required"`
 	NestedOptional types.String `tfsdk:"nested_optional"`
+}
+
+{{ if .IncludeComments }}
+// TIP: ==== SWEEPERS ====
+// When acceptance testing resources, interrupted or failed tests may
+// leave behind orphaned resources in an account. To facilitate cleaning
+// up lingering resources, each resource implementation should include
+// a corresponding "sweeper" function.
+//
+// The sweeper function lists all resources of a given type and sets the
+// appropriate identifers required to delete the resource via the Delete
+// method implemented above.
+//
+// Once the sweeper function is implemented, register it in sweep.go
+// as follows:
+//
+//   awsv2.Register("{{ .ProviderResourceName }}", sweep{{ .Resource }}s)
+//
+// See more:
+// https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests/#acceptance-test-sweepers
+{{- end }}
+func sweep{{ .Resource }}s(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := {{ .ServiceLower }}.List{{ .Resource }}sInput{}
+	conn := client.{{ .Service }}Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := {{ .ServiceLower }}.NewList{{ .Resource }}sPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.{{ .Resource }}s {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResource{{ .Resource }}, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.{{ .Resource }}Id))),
+			)
+		}
+	}
+
+	return sweepResources, nil
 }

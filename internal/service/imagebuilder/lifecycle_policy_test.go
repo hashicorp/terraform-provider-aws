@@ -34,7 +34,7 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Used for setting lifecycle policies"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -424,7 +424,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     exclusion_rules {
       amis {
         is_public = true
-        regions   = [data.aws_region.current.name]
+        regions   = [data.aws_region.current.region]
         last_launched {
           unit  = "WEEKS"
           value = 2
@@ -463,7 +463,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -506,7 +506,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "2.0.0"
 }
 

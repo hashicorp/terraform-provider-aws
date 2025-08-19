@@ -40,15 +40,10 @@ func newCapacityBlockReservationResource(context.Context) (resource.ResourceWith
 }
 
 type capacityBlockReservationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[capacityBlockReservationReservationModel]
 	framework.WithTimeouts
 	framework.WithImportByID
-	framework.WithNoOpUpdate[capacityBlockReservationReservationModel]
 	framework.WithNoOpDelete
-}
-
-func (*capacityBlockReservationResource) Metadata(_ context.Context, _ resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_capacity_block_reservation"
 }
 
 func (r *capacityBlockReservationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -173,15 +168,15 @@ func (r *capacityBlockReservationResource) Create(ctx context.Context, request r
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.PurchaseCapacityBlockInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := ec2.PurchaseCapacityBlockInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeCapacityReservation)
 
-	output, err := conn.PurchaseCapacityBlock(ctx, input)
+	output, err := conn.PurchaseCapacityBlock(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("purchasing EC2 Capacity Block Reservation", err.Error())
@@ -242,11 +237,8 @@ func (r *capacityBlockReservationResource) Read(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *capacityBlockReservationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type capacityBlockReservationReservationModel struct {
+	framework.WithRegionModel
 	ARN                     types.String                                                     `tfsdk:"arn"`
 	AvailabilityZone        types.String                                                     `tfsdk:"availability_zone"`
 	CapacityBlockOfferingID types.String                                                     `tfsdk:"capacity_block_offering_id"`

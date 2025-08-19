@@ -48,7 +48,7 @@ func testAccAppSyncSourceAPIAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
 			},
 			{
@@ -87,7 +87,7 @@ func testAccAppSyncSourceAPIAssociation_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociation),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func testAccAppSyncSourceAPIAssociation_update(t *testing.T) {
 					testAccCheckSourceAPIAssociationExists(ctx, resourceName, &sourceapiassociationUpdated),
 					testAccCheckSourceAPIAssociationNotRecreated(&sourceapiassociation, &sourceapiassociationUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updateDesc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+/sourceApiAssociations/.+`)),
 				),
 			},
 			{
@@ -239,7 +239,7 @@ data "aws_iam_policy_document" "test" {
 
     condition {
       test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current.partition}:appsync:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}::apis/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:appsync:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}::apis/*"]
       variable = "aws:SourceArn"
     }
   }

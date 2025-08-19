@@ -56,7 +56,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceGatewayRouteSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 				"virtual_gateway_name": {
 					Type:     schema.TypeString,
@@ -67,7 +67,7 @@ func dataSourceGatewayRoute() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
@@ -98,7 +98,7 @@ func dataSourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, met
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {

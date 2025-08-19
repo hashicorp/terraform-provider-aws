@@ -36,7 +36,7 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", rName),

@@ -31,35 +31,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Lifecycle Policy")
-func newResourceLifecyclePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceLifecyclePolicy{}, nil
+// @FrameworkResource("aws_opensearchserverless_lifecycle_policy", name="Lifecycle Policy")
+func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &lifecyclePolicyResource{}, nil
 }
 
 const (
 	ResNameLifecyclePolicy = "Lifecycle Policy"
 )
 
-type resourceLifecyclePolicy struct {
-	framework.ResourceWithConfigure
+type lifecyclePolicyResource struct {
+	framework.ResourceWithModel[lifecyclePolicyResourceModel]
 }
 
-func (r *resourceLifecyclePolicy) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_opensearchserverless_lifecycle_policy"
-}
-
-func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *lifecyclePolicyResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the policy.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -68,18 +66,21 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-				Required:   true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
 				},
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
-				Required:   true,
+				Description: "Type of lifecycle policy. Must be `retention`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.LifecyclePolicyType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -88,10 +89,10 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, _ resource.SchemaR
 	}
 }
 
-func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *lifecyclePolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan resourceLifecyclePolicyData
+	var plan lifecyclePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,10 +133,10 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *lifecyclePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceLifecyclePolicyData
+	var state lifecyclePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -164,10 +165,10 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *lifecyclePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceLifecyclePolicyData
+	var plan, state lifecyclePolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -211,10 +212,10 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *lifecyclePolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceLifecyclePolicyData
+	var state lifecyclePolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -241,7 +242,7 @@ func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *lifecyclePolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected lifecycle-policy-name%[2]slifecycle-policy-type", req.ID, idSeparator)
@@ -249,7 +250,7 @@ func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.
 		return
 	}
 
-	state := resourceLifecyclePolicyData{
+	state := lifecyclePolicyResourceModel{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
 		Type: fwtypes.StringEnumValue(awstypes.LifecyclePolicyType(parts[1])),
@@ -262,7 +263,8 @@ func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.
 	}
 }
 
-type resourceLifecyclePolicyData struct {
+type lifecyclePolicyResourceModel struct {
+	framework.WithRegionModel
 	Description   types.String                                     `tfsdk:"description"`
 	ID            types.String                                     `tfsdk:"id"`
 	Name          types.String                                     `tfsdk:"name"`

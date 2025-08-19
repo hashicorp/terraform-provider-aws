@@ -5,11 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -147,7 +145,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
@@ -167,7 +165,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
@@ -185,21 +183,13 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.ToString(vpce.OwnerId),
-		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
-	}.String()
-	serviceName := aws.ToString(vpce.ServiceName)
-
-	d.Set(names.AttrARN, arn)
+	ownerID := aws.ToString(vpce.OwnerId)
+	d.Set(names.AttrARN, vpcEndpointARN(ctx, meta.(*conns.AWSClient), ownerID, d.Id()))
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
 	if vpce.DnsOptions != nil {
-		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
+		if err := d.Set("dns_options", []any{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
 		}
 	} else {
@@ -207,11 +197,12 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", vpce.NetworkInterfaceIds)
-	d.Set(names.AttrOwnerID, vpce.OwnerId)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
+	serviceName := aws.ToString(vpce.ServiceName)
 	d.Set(names.AttrServiceName, serviceName)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)

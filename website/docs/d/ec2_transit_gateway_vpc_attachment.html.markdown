@@ -35,6 +35,7 @@ data "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway VPC Attachment.
 
@@ -47,6 +48,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the attachment.
 * `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
 * `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.

@@ -138,12 +138,10 @@ func resourceProxy() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -188,7 +186,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceProxyRead(ctx, d, meta)...)
 }
 
-func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -219,7 +217,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -260,7 +258,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceProxyRead(ctx, d, meta)...)
 }
 
-func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -343,7 +341,7 @@ func findDBProxies(ctx context.Context, conn *rds.Client, input *rds.DescribeDBP
 }
 
 func statusDBProxy(ctx context.Context, conn *rds.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDBProxyByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
@@ -409,7 +407,7 @@ func waitDBProxyUpdated(ctx context.Context, conn *rds.Client, name string, time
 	return nil, err
 }
 
-func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
+func expandUserAuthConfigs(tfList []any) []types.UserAuthConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -417,7 +415,7 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 	apiObjects := make([]types.UserAuthConfig, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -454,8 +452,8 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 	return apiObjects
 }
 
-func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]interface{} {
-	tfMap := map[string]interface{}{
+func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]any {
+	tfMap := map[string]any{
 		"auth_scheme":               apiObject.AuthScheme,
 		"client_password_auth_type": apiObject.ClientPasswordAuthType,
 		"iam_auth":                  apiObject.IAMAuth,
@@ -476,8 +474,8 @@ func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]in
 	return tfMap
 }
 
-func flattenUserAuthConfigInfos(apiObjects []types.UserAuthConfigInfo) []interface{} {
-	tfList := []interface{}{}
+func flattenUserAuthConfigInfos(apiObjects []types.UserAuthConfigInfo) []any {
+	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenUserAuthConfigInfo(apiObject))

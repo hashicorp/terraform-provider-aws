@@ -52,11 +52,11 @@ func PermissionsDataSourceSchema() *schema.Schema {
 	}
 }
 
-func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermission {
+func ExpandResourcePermissions(tfList []any) []awstypes.ResourcePermission {
 	apiObjects := make([]awstypes.ResourcePermission, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := awstypes.ResourcePermission{
 			Actions:   flex.ExpandStringValueSet(tfMap[names.AttrActions].(*schema.Set)),
@@ -69,15 +69,15 @@ func ExpandResourcePermissions(tfList []interface{}) []awstypes.ResourcePermissi
 	return apiObjects
 }
 
-func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} {
+func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, 0)
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		if apiObject.Actions != nil {
 			tfMap[names.AttrActions] = apiObject.Actions
@@ -93,7 +93,7 @@ func FlattenPermissions(apiObjects []awstypes.ResourcePermission) []interface{} 
 	return tfList
 }
 
-func DiffPermissions(o, n []interface{}) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
+func DiffPermissions(o, n []any) ([]awstypes.ResourcePermission, []awstypes.ResourcePermission) {
 	old := ExpandResourcePermissions(o)
 	new := ExpandResourcePermissions(n)
 

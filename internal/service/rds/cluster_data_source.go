@@ -55,6 +55,14 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cluster_scalability_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"database_insights_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -137,6 +145,14 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"monitoring_interval": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"monitoring_role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -175,7 +191,7 @@ func dataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -197,6 +213,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return aws.ToString(v.DBInstanceIdentifier)
 	}))
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+	d.Set("cluster_scalability_type", dbc.ClusterScalabilityType)
+	d.Set("database_insights_mode", dbc.DatabaseInsightsMode)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
@@ -219,11 +237,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}))
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	if dbc.MasterUserSecret != nil {
-		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
+		if err := d.Set("master_user_secret", []any{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
 		}
 	}
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("monitoring_interval", dbc.MonitoringInterval)
+	d.Set("monitoring_role_arn", dbc.MonitoringRoleArn)
 	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)

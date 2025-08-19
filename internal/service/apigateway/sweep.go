@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -59,8 +60,8 @@ func RegisterSweepers() {
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	return []sweep.Sweepable{
-		framework.NewSweepResource(newResourceAccount, client,
-			framework.NewAttribute("reset_on_delete", true),
+		framework.NewSweepResource(newAccountResource, client,
+			framework.NewAttribute(names.AttrID, client.AccountID(ctx)),
 		),
 	}, nil
 }
@@ -71,11 +72,11 @@ func sweepRestAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	input := &apigateway.GetRestApisInput{}
+	input := apigateway.GetRestApisInput{}
 	conn := client.APIGatewayClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetRestApisPaginator(conn, input)
+	pages := apigateway.NewGetRestApisPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -113,10 +114,10 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayClient(ctx)
-	input := &apigateway.GetVpcLinksInput{}
+	input := apigateway.GetVpcLinksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetVpcLinksPaginator(conn, input)
+	pages := apigateway.NewGetVpcLinksPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -161,10 +162,10 @@ func sweepClientCertificates(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.APIGatewayClient(ctx)
-	input := &apigateway.GetClientCertificatesInput{}
+	input := apigateway.GetClientCertificatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetClientCertificatesPaginator(conn, input)
+	pages := apigateway.NewGetClientCertificatesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -202,10 +203,10 @@ func sweepUsagePlans(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.APIGatewayClient(ctx)
-	input := &apigateway.GetUsagePlansInput{}
+	input := apigateway.GetUsagePlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetUsagePlansPaginator(conn, input)
+	pages := apigateway.NewGetUsagePlansPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -244,10 +245,10 @@ func sweepAPIKeys(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.APIGatewayClient(ctx)
-	input := &apigateway.GetApiKeysInput{}
+	input := apigateway.GetApiKeysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetApiKeysPaginator(conn, input)
+	pages := apigateway.NewGetApiKeysPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -285,10 +286,10 @@ func sweepDomainNames(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.APIGatewayClient(ctx)
-	input := &apigateway.GetDomainNamesInput{}
+	input := apigateway.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetDomainNamesPaginator(conn, input)
+	pages := apigateway.NewGetDomainNamesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 

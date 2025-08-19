@@ -30,12 +30,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Security Policy")
-func newResourceSecurityPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSecurityPolicy{}, nil
+// @FrameworkResource("aws_opensearchserverless_security_policy", name="Security Policy")
+func newSecurityPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &securityPolicyResource{}, nil
 }
 
-type resourceSecurityPolicyData struct {
+type securityPolicyResourceModel struct {
+	framework.WithRegionModel
 	Description   types.String                                    `tfsdk:"description"`
 	ID            types.String                                    `tfsdk:"id"`
 	Name          types.String                                    `tfsdk:"name"`
@@ -48,26 +49,24 @@ const (
 	ResNameSecurityPolicy = "Security Policy"
 )
 
-type resourceSecurityPolicy struct {
-	framework.ResourceWithConfigure
+type securityPolicyResource struct {
+	framework.ResourceWithModel[securityPolicyResourceModel]
 }
 
-func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_security_policy"
-}
-
-func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *securityPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Description: "Description of the policy. Typically used to store information about the permissions defined in the policy.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the policy.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -76,18 +75,21 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			names.AttrPolicy: schema.StringAttribute{
-				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
-				Required:   true,
+				Description: "JSON policy document to use as the content for the new policy.",
+				CustomType:  fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
 				},
 			},
 			"policy_version": schema.StringAttribute{
-				Computed: true,
+				Description: "Version of the policy.",
+				Computed:    true,
 			},
 			names.AttrType: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
-				Required:   true,
+				Description: "Type of security policy. One of `encryption` or `network`.",
+				CustomType:  fwtypes.StringEnumType[awstypes.SecurityPolicyType](),
+				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -96,8 +98,8 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceSecurityPolicyData
+func (r *securityPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan securityPolicyResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -135,10 +137,10 @@ func (r *resourceSecurityPolicy) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *securityPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceSecurityPolicyData
+	var state securityPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,17 +169,17 @@ func (r *resourceSecurityPolicy) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *securityPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var plan, state resourceSecurityPolicyData
+	var plan, state securityPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, diags := flex.Calculate(ctx, plan, state)
+	diff, diags := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -209,10 +211,10 @@ func (r *resourceSecurityPolicy) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *securityPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	var state resourceSecurityPolicyData
+	var state securityPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -235,7 +237,7 @@ func (r *resourceSecurityPolicy) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *securityPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, idSeparator)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err := fmt.Errorf("unexpected format for ID (%[1]s), expected security-policy-name%[2]ssecurity-policy-type", req.ID, idSeparator)
@@ -243,7 +245,7 @@ func (r *resourceSecurityPolicy) ImportState(ctx context.Context, req resource.I
 		return
 	}
 
-	state := resourceSecurityPolicyData{
+	state := securityPolicyResourceModel{
 		ID:   types.StringValue(parts[0]),
 		Name: types.StringValue(parts[0]),
 		Type: fwtypes.StringEnumValue(awstypes.SecurityPolicyType(parts[1])),

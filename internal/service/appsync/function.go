@@ -152,7 +152,7 @@ func resourceFunction() *schema.Resource {
 	}
 }
 
-func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -186,12 +186,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
-		input.Runtime = expandRuntime(v.([]interface{}))
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]any)) > 0 {
+		input.Runtime = expandRuntime(v.([]any))
 	}
 
-	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandSyncConfig(v.([]interface{}))
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]any)) > 0 {
+		input.SyncConfig = expandSyncConfig(v.([]any))
 	}
 
 	output, err := conn.CreateFunction(ctx, input)
@@ -205,7 +205,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -247,7 +247,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -284,12 +284,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ResponseMappingTemplate = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("runtime"); ok && len(v.([]interface{})) > 0 {
-		input.Runtime = expandRuntime(v.([]interface{}))
+	if v, ok := d.GetOk("runtime"); ok && len(v.([]any)) > 0 {
+		input.Runtime = expandRuntime(v.([]any))
 	}
 
-	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
-		input.SyncConfig = expandSyncConfig(v.([]interface{}))
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]any)) > 0 {
+		input.SyncConfig = expandSyncConfig(v.([]any))
 	}
 
 	_, err = conn.UpdateFunction(ctx, input)
@@ -301,7 +301,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -311,10 +311,11 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[INFO] Deleting Appsync Function: %s", d.Id())
-	_, err = conn.DeleteFunction(ctx, &appsync.DeleteFunctionInput{
+	input := appsync.DeleteFunctionInput{
 		ApiId:      aws.String(apiID),
 		FunctionId: aws.String(functionID),
-	})
+	}
+	_, err = conn.DeleteFunction(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -372,12 +373,12 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID, 
 	return output.FunctionConfiguration, nil
 }
 
-func expandRuntime(tfList []interface{}) *awstypes.AppSyncRuntime {
+func expandRuntime(tfList []any) *awstypes.AppSyncRuntime {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.AppSyncRuntime{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok {
@@ -391,25 +392,25 @@ func expandRuntime(tfList []interface{}) *awstypes.AppSyncRuntime {
 	return apiObject
 }
 
-func flattenRuntime(apiObject *awstypes.AppSyncRuntime) []interface{} {
+func flattenRuntime(apiObject *awstypes.AppSyncRuntime) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrName:    apiObject.Name,
 		"runtime_version": aws.ToString(apiObject.RuntimeVersion),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandSyncConfig(tfList []interface{}) *awstypes.SyncConfig {
+func expandSyncConfig(tfList []any) *awstypes.SyncConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.SyncConfig{}
 
 	if v, ok := tfMap["conflict_detection"].(string); ok {
@@ -420,33 +421,33 @@ func expandSyncConfig(tfList []interface{}) *awstypes.SyncConfig {
 		apiObject.ConflictHandler = awstypes.ConflictHandlerType(v)
 	}
 
-	if v, ok := tfMap["lambda_conflict_handler_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["lambda_conflict_handler_config"].([]any); ok && len(v) > 0 {
 		apiObject.LambdaConflictHandlerConfig = expandLambdaConflictHandlerConfig(v)
 	}
 
 	return apiObject
 }
 
-func flattenSyncConfig(apiObject *awstypes.SyncConfig) []interface{} {
+func flattenSyncConfig(apiObject *awstypes.SyncConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"conflict_detection":             apiObject.ConflictDetection,
 		"conflict_handler":               apiObject.ConflictHandler,
 		"lambda_conflict_handler_config": flattenLambdaConflictHandlerConfig(apiObject.LambdaConflictHandlerConfig),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandLambdaConflictHandlerConfig(tfList []interface{}) *awstypes.LambdaConflictHandlerConfig {
+func expandLambdaConflictHandlerConfig(tfList []any) *awstypes.LambdaConflictHandlerConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.LambdaConflictHandlerConfig{}
 
 	if v, ok := tfMap["lambda_conflict_handler_arn"].(string); ok {
@@ -456,14 +457,14 @@ func expandLambdaConflictHandlerConfig(tfList []interface{}) *awstypes.LambdaCon
 	return apiObject
 }
 
-func flattenLambdaConflictHandlerConfig(apiObject *awstypes.LambdaConflictHandlerConfig) []interface{} {
+func flattenLambdaConflictHandlerConfig(apiObject *awstypes.LambdaConflictHandlerConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"lambda_conflict_handler_arn": aws.ToString(apiObject.LambdaConflictHandlerArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

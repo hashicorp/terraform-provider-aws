@@ -52,16 +52,17 @@ func resourceInvitationAccepter() *schema.Resource {
 	}
 }
 
-func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	adminAccountID := d.Get("administrator_account_id").(string)
-	var invitationID string
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		invitationID, err := findInvitationByAccount(ctx, conn, adminAccountID)
+	var invitationID string
+	var err error
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		invitationID, err = findInvitationByAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
@@ -101,7 +102,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceInvitationAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
@@ -132,7 +133,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).Macie2Client(ctx)

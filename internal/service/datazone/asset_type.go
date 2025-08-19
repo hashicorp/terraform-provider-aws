@@ -34,27 +34,23 @@ import (
 )
 
 // @FrameworkResource("aws_datazone_asset_type", name="Asset Type")
-func newResourceAssetType(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAssetType{}
+func newAssetTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &assetTypeResource{}
 	r.SetDefaultCreateTimeout(30 * time.Second)
-	return &resourceAssetType{}, nil
+	return &assetTypeResource{}, nil
 }
 
 const (
 	ResNameAssetType = "Asset Type"
 )
 
-type resourceAssetType struct {
-	framework.ResourceWithConfigure
+type assetTypeResource struct {
+	framework.ResourceWithModel[assetTypeResourceModel]
 	framework.WithTimeouts
 	framework.WithNoUpdate
 }
 
-func (r *resourceAssetType) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_asset_type"
-}
-
-func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *assetTypeResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -131,10 +127,10 @@ func (r *resourceAssetType) Schema(ctx context.Context, _ resource.SchemaRequest
 	}
 }
 
-func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan resourceAssetTypeData
+	var plan assetTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -169,7 +165,7 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetAssetTypeOutput, error) {
 		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
 	})
 	if err != nil {
@@ -180,7 +176,6 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output := outputRaw.(*datazone.GetAssetTypeOutput)
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, flex.WithIgnoredFieldNamesAppend("OwningProjectId"))...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,10 +184,10 @@ func (r *resourceAssetType) Create(ctx context.Context, req resource.CreateReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *assetTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceAssetTypeData
+	var state assetTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,10 +215,10 @@ func (r *resourceAssetType) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAssetType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *assetTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state resourceAssetTypeData
+	var state assetTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -248,7 +243,7 @@ func (r *resourceAssetType) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceAssetType) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *assetTypeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 2 {
@@ -285,7 +280,8 @@ func findAssetTypeByID(ctx context.Context, conn *datazone.Client, domainId, id 
 	return out, nil
 }
 
-type resourceAssetTypeData struct {
+type assetTypeResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt        timetypes.RFC3339                                          `tfsdk:"created_at"`
 	CreatedBy        types.String                                               `tfsdk:"created_by"`
 	Description      types.String                                               `tfsdk:"description"`

@@ -43,7 +43,7 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.7.0/24",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile("ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "waf-regional", regexache.MustCompile("ipset/.+$")),
 				),
 			},
 			{

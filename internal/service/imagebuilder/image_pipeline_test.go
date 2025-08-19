@@ -37,7 +37,7 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_last_run", ""),
 					resource.TestCheckResourceAttr(resourceName, "date_next_run", ""),
@@ -812,7 +812,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -876,7 +876,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   lifecycle {
@@ -903,7 +903,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   lifecycle {
@@ -939,7 +939,7 @@ resource "aws_imagebuilder_image_recipe" "test2" {
   }
 
   name         = "%[1]s-2"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -976,7 +976,7 @@ EOF
 
   name           = "%[1]s-2"
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
 
   target_repository {

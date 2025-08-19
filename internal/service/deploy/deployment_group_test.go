@@ -39,7 +39,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s`, rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
@@ -65,7 +65,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_modified(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s-updated`, rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codedeploy", fmt.Sprintf(`deploymentgroup:%s/%s-updated`, rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),

@@ -39,7 +39,8 @@ func TestAccTransferConnector_basic(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "connector/{id}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "connector_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.com"),
 				),
@@ -82,7 +83,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transfer", "connector/{id}"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
 				),

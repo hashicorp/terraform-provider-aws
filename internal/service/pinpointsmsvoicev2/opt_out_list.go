@@ -38,13 +38,8 @@ func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type optOutListResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[optOutListResourceModel]
+	framework.ResourceWithModel[optOutListResourceModel]
 	framework.WithImportByID
-}
-
-func (*optOutListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_pinpointsmsvoicev2_opt_out_list"
 }
 
 func (r *optOutListResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -161,11 +156,8 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *optOutListResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type optOutListResourceModel struct {
+	framework.WithRegionModel
 	ID             types.String `tfsdk:"id"`
 	OptOutListARN  types.String `tfsdk:"arn"`
 	OptOutListName types.String `tfsdk:"name"`

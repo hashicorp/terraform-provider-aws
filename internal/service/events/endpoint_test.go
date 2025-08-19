@@ -37,7 +37,7 @@ func TestAccEventsEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
@@ -106,7 +106,7 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 				Config: testAccEndpointConfig_roleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
@@ -150,7 +150,7 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 				Config: testAccEndpointConfig_description(rName, "description 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
@@ -177,7 +177,7 @@ func TestAccEventsEndpoint_description(t *testing.T) {
 				Config: testAccEndpointConfig_description(rName, "description 2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
@@ -216,7 +216,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),
@@ -238,7 +238,7 @@ func TestAccEventsEndpoint_updateRoutingConfig(t *testing.T) {
 				Config: testAccEndpointConfig_updateRoutingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus.#", "2"),

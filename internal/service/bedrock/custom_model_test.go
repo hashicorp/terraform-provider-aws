@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -47,12 +48,12 @@ func testAccCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "job_arn", "bedrock", regexache.MustCompile(`model-customization-job/amazon.titan-text-express-v1.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),
@@ -91,53 +92,6 @@ func testAccCustomModel_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceCustomModel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCustomModel_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_custom_model.test"
-	var v bedrock.GetModelCustomizationJobOutput
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomModelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_model_identifier"},
-			},
-			{
-				Config: testAccCustomModelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCustomModelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -376,13 +330,13 @@ resource "aws_s3_bucket" "output" {
 }
 
 resource "aws_s3_object" "training" {
-  bucket = aws_s3_bucket.training.id
+  bucket = aws_s3_bucket.training.bucket
   key    = "data/train.jsonl"
   source = "test-fixtures/train.jsonl"
 }
 
 resource "aws_s3_object" "validation" {
-  bucket = aws_s3_bucket.validation.id
+  bucket = aws_s3_bucket.validation.bucket
   key    = "data/validate.jsonl"
   source = "test-fixtures/validate.jsonl"
 }
@@ -405,7 +359,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnEquals": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
       }
     }
   }]
@@ -487,75 +441,14 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
-}
-
-func testAccCustomModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrock_custom_model" "test" {
-  custom_model_name     = %[1]q
-  job_name              = %[1]q
-  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
-  role_arn              = aws_iam_role.test.arn
-
-  hyperparameters = {
-    "epochCount"              = "1"
-    "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
-  }
-
-  output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
-  }
-
-  training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccCustomModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrock_custom_model" "test" {
-  custom_model_name     = %[1]q
-  job_name              = %[1]q
-  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
-  role_arn              = aws_iam_role.test.arn
-
-  hyperparameters = {
-    "epochCount"              = "1"
-    "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
-  }
-
-  output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
-  }
-
-  training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCustomModelConfig_kmsKey(rName string) string {
@@ -563,6 +456,7 @@ func testAccCustomModelConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_bedrock_custom_model" "test" {
@@ -582,11 +476,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 }
 `, rName))
@@ -608,16 +502,16 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   validation_data_config {
     validator {
-      s3_uri = "s3://${aws_s3_bucket.validation.id}/data/validate.jsonl"
+      s3_uri = "s3://${aws_s3_bucket.validation.bucket}/data/validate.jsonl"
     }
   }
 }
@@ -678,11 +572,11 @@ resource "aws_bedrock_custom_model" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+    s3_uri = "s3://${aws_s3_bucket.output.bucket}/data/"
   }
 
   training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+    s3_uri = "s3://${aws_s3_bucket.training.bucket}/data/train.jsonl"
   }
 
   vpc_config {

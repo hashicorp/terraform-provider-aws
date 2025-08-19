@@ -31,7 +31,7 @@ func resourceInboundConnectionAccepter() *schema.Resource {
 		DeleteWithoutTimeout: resourceInboundConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) (result []*schema.ResourceData, err error) {
 				d.Set(names.AttrConnectionID, d.Id())
 
 				return []*schema.ResourceData{d}, nil
@@ -57,7 +57,7 @@ func resourceInboundConnectionAccepter() *schema.Resource {
 	}
 }
 
-func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -81,7 +81,7 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceInboundConnectionRead(ctx, d, meta)...)
 }
 
-func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -102,7 +102,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -208,7 +208,7 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 }
 
 func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findInboundConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

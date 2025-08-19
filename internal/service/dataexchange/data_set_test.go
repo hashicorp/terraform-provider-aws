@@ -40,7 +40,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 		},
@@ -144,7 +144,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		resp, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
+		resp, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -168,7 +168,7 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Try to find the resource
-			_, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
+			_, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}

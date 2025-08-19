@@ -23,7 +23,7 @@ var (
 	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
 )
 
-func validGrantName(v interface{}, k string) (ws []string, es []error) {
+func validGrantName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if len(value) > 256 {
@@ -37,7 +37,7 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
+func validNameForDataSource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if !aliasNameRegex.MatchString(value) {
@@ -47,7 +47,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validNameForResource(v interface{}, k string) (ws []string, es []error) {
+func validNameForResource(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
 	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {

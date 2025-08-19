@@ -27,22 +27,22 @@ func TestDiffPortSettings(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		Old           []interface{}
-		New           []interface{}
+		Old           []any
+		New           []any
 		ExpectedAuths []awstypes.IpPermission
 		ExpectedRevs  []awstypes.IpPermission
 	}{
 		{ // No change
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -53,22 +53,22 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs:  nil,
 		},
 		{ // Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"from_port":        8888,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
@@ -86,15 +86,15 @@ func TestDiffPortSettings(t *testing.T) {
 			ExpectedRevs: nil,
 		},
 		{ // Removal
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New:           []interface{}{},
+			New:           []any{},
 			ExpectedAuths: nil,
 			ExpectedRevs: []awstypes.IpPermission{
 				{
@@ -106,16 +106,16 @@ func TestDiffPortSettings(t *testing.T) {
 			},
 		},
 		{ // Removal + Addition
-			Old: []interface{}{
-				map[string]interface{}{
+			Old: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "TCP",
 					"to_port":          8443,
 				},
 			},
-			New: []interface{}{
-				map[string]interface{}{
+			New: []any{
+				map[string]any{
 					"from_port":        8443,
 					"ip_range":         "192.168.0.0/24",
 					names.AttrProtocol: "UDP",
@@ -204,7 +204,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
@@ -232,7 +232,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
@@ -379,7 +379,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -431,7 +431,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc),
@@ -560,7 +560,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "t2.micro"),

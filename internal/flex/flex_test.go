@@ -15,19 +15,19 @@ func TestExpandStringList(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
-		configured []interface{}
+		configured []any
 		want       []*string
 	}{
 		{
-			configured: []interface{}{"abc", "xyz123"},
+			configured: []any{"abc", "xyz123"},
 			want:       []*string{aws.String("abc"), aws.String("xyz123")},
 		},
 		{
-			configured: []interface{}{"abc", 123, "xyz123"},
+			configured: []any{"abc", 123, "xyz123"},
 			want:       []*string{aws.String("abc"), aws.String("xyz123")},
 		},
 		{
-			configured: []interface{}{"foo", "bar", "", "baz"},
+			configured: []any{"foo", "bar", "", "baz"},
 			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String("baz")},
 		},
 	}
@@ -41,7 +41,7 @@ func TestExpandStringList(t *testing.T) {
 func TestExpandStringValueList(t *testing.T) {
 	t.Parallel()
 
-	configured := []interface{}{"abc", "xyz123"}
+	configured := []any{"abc", "xyz123"}
 	got := ExpandStringValueList(configured)
 	want := []string{"abc", "xyz123"}
 
@@ -53,7 +53,7 @@ func TestExpandStringValueList(t *testing.T) {
 func TestExpandStringValueListEmptyItems(t *testing.T) {
 	t.Parallel()
 
-	configured := []interface{}{"foo", "bar", "", "baz"}
+	configured := []any{"foo", "bar", "", "baz"}
 	got := ExpandStringValueList(configured)
 	want := []string{"foo", "bar", "baz"}
 
@@ -199,15 +199,15 @@ func TestDiffStringValueMaps(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Old, New                  map[string]interface{}
+		Old, New                  map[string]any
 		Create, Remove, Unchanged map[string]string
 	}{
 		// Add
 		{
-			Old: map[string]interface{}{
+			Old: map[string]any{
 				"foo": "bar",
 			},
-			New: map[string]interface{}{
+			New: map[string]any{
 				"foo": "bar",
 				"bar": "baz",
 			},
@@ -222,10 +222,10 @@ func TestDiffStringValueMaps(t *testing.T) {
 
 		// Modify
 		{
-			Old: map[string]interface{}{
+			Old: map[string]any{
 				"foo": "bar",
 			},
-			New: map[string]interface{}{
+			New: map[string]any{
 				"foo": "baz",
 			},
 			Create: map[string]string{
@@ -239,11 +239,11 @@ func TestDiffStringValueMaps(t *testing.T) {
 
 		// Overlap
 		{
-			Old: map[string]interface{}{
+			Old: map[string]any{
 				"foo":   "bar",
 				"hello": "world",
 			},
-			New: map[string]interface{}{
+			New: map[string]any{
 				"foo":   "baz",
 				"hello": "world",
 			},
@@ -260,11 +260,11 @@ func TestDiffStringValueMaps(t *testing.T) {
 
 		// Remove
 		{
-			Old: map[string]interface{}{
+			Old: map[string]any{
 				"foo": "bar",
 				"bar": "baz",
 			},
-			New: map[string]interface{}{
+			New: map[string]any{
 				"foo": "bar",
 			},
 			Create: map[string]string{},
@@ -350,6 +350,90 @@ func TestDiffSlices(t *testing.T) {
 	}
 }
 
+func TestDiffSlicesWithModify(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A string
+		B int
+	}
+
+	cases := []struct {
+		name                              string
+		Old, New                          []x
+		Create, Remove, Modify, Unchanged []x
+	}{
+		{
+			name:      "add",
+			Old:       []x{{A: "foo", B: 1}},
+			New:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []x{{A: "bar", B: 2}},
+			Remove:    []x{},
+			Modify:    []x{},
+			Unchanged: []x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "modify",
+			Old:       []x{{A: "foo", B: 1}},
+			New:       []x{{A: "foo", B: 2}},
+			Create:    []x{},
+			Remove:    []x{},
+			Modify:    []x{{A: "foo", B: 2}},
+			Unchanged: []x{},
+		},
+		{
+			name:      "overlap",
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}, {A: "baz", B: 3}},
+			New:       []x{{A: "foo", B: 3}, {A: "bar", B: 2}, {A: "qux", B: 4}},
+			Create:    []x{{A: "qux", B: 4}},
+			Remove:    []x{{A: "baz", B: 3}},
+			Modify:    []x{{A: "foo", B: 3}},
+			Unchanged: []x{{A: "bar", B: 2}},
+		},
+		{
+			name:      "remove",
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []x{{A: "foo", B: 1}},
+			Create:    []x{},
+			Remove:    []x{{A: "bar", B: 2}},
+			Modify:    []x{},
+			Unchanged: []x{{A: "foo", B: 1}},
+		},
+		{
+			name:      "unchanged",
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []x{},
+			Remove:    []x{},
+			Modify:    []x{},
+			Unchanged: []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			c, r, up, u := DiffSlicesWithModify(tc.Old, tc.New,
+				func(x1, x2 x) bool { return x1.A == x2.A && x1.B == x2.B },
+				func(x1, x2 x) bool { return x1.A == x2.A },
+			)
+			if diff := cmp.Diff(c, tc.Create); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(r, tc.Remove); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(up, tc.Modify); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+			if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenStringList(t *testing.T) {
 	t.Parallel()
 
@@ -359,13 +443,13 @@ func TestFlattenStringList(t *testing.T) {
 	tests := []struct {
 		name string
 		list []*string
-		want []interface{}
+		want []any
 	}{
-		{"nil", nil, []interface{}{}},
-		{"empty", []*string{}, []interface{}{}},
-		{"nil item", []*string{nil}, []interface{}{}},
-		{"single item", []*string{&foo}, []interface{}{foo}},
-		{"multiple items", []*string{&foo, &baz}, []interface{}{foo, baz}},
+		{"nil", nil, []any{}},
+		{"empty", []*string{}, []any{}},
+		{"nil item", []*string{nil}, []any{}},
+		{"single item", []*string{&foo}, []any{foo}},
+		{"multiple items", []*string{&foo, &baz}, []any{foo, baz}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

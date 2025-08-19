@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +32,7 @@ func testAccIngestionDestination_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -42,8 +43,8 @@ func testAccIngestionDestination_basic(t *testing.T) {
 				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttrSet(resourceName, "app_bundle_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", "aws_appfabric_app_bundle.test", names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need TFC Org for testing
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
@@ -51,7 +52,7 @@ func testAccIngestionDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
-					resource.TestCheckResourceAttrSet(resourceName, "ingestion_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ingestion_arn", "aws_appfabric_ingestion.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.format", names.AttrJSON),
@@ -80,7 +81,7 @@ func testAccIngestionDestination_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -111,7 +112,7 @@ func testAccIngestionDestination_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -164,7 +165,7 @@ func testAccIngestionDestination_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -218,7 +219,7 @@ func testAccIngestionDestination_firehose(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),

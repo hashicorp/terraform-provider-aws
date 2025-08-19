@@ -39,14 +39,10 @@ func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type deploymentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[deploymentResourceModel]
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
-}
-
-func (r *deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_deployment"
 }
 
 func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -200,7 +196,7 @@ func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunne
 }
 
 func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
 		if tfresource.NotFound(err) {
@@ -235,6 +231,7 @@ func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, servic
 }
 
 type deploymentResourceModel struct {
+	framework.WithRegionModel
 	ID          types.String   `tfsdk:"id"`
 	OperationID types.String   `tfsdk:"operation_id"`
 	ServiceARN  fwtypes.ARN    `tfsdk:"service_arn"`

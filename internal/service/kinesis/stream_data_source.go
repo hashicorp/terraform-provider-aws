@@ -17,8 +17,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_kinesis_stream")
-func DataSourceStream() *schema.Resource {
+// @SDKDataSource("aws_kinesis_stream", name="Stream")
+// @Tags(identifierAttribute="name", resourceType="Stream")
+func dataSourceStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStreamRead,
 
@@ -83,10 +84,9 @@ func DataSourceStream() *schema.Resource {
 	}
 }
 
-func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	stream, err := findStreamByName(ctx, conn, name)
@@ -95,12 +95,12 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream (%s): %s", name, err)
 	}
 
-	input := &kinesis.ListShardsInput{
+	input := kinesis.ListShardsInput{
 		StreamName: aws.String(name),
 	}
 	var shards []types.Shard
 
-	err = listShardsPages(ctx, conn, input, func(page *kinesis.ListShardsOutput, lastPage bool) bool {
+	err = listShardsPages(ctx, conn, &input, func(page *kinesis.ListShardsOutput, lastPage bool) bool {
 		shards = append(shards, page.Shards...)
 		return !lastPage
 	})
@@ -135,21 +135,11 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("shard_level_metrics", shardLevelMetrics)
 	d.Set(names.AttrStatus, stream.StreamStatus)
 	if details := stream.StreamModeDetails; details != nil {
-		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
+		if err := d.Set("stream_mode_details", []any{flattenStreamModeDetails(details)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
 		d.Set("stream_mode_details", nil)
-	}
-
-	tags, err := listTags(ctx, conn, name)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Stream (%s): %s", name, err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

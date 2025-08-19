@@ -96,7 +96,7 @@ func resourceGrant() *schema.Resource {
 	}
 }
 
-func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -105,7 +105,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
 		ClientToken:       aws.String(id.UniqueId()),
 		GrantName:         aws.String(name),
-		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
+		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
 		Principals:        []string{d.Get(names.AttrPrincipal).(string)},
 	}
@@ -121,7 +121,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
-func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -150,7 +150,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
@@ -176,7 +176,7 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
-func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 

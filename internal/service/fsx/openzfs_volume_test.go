@@ -37,7 +37,7 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "0"),
@@ -105,8 +105,8 @@ func TestAccFSxOpenZFSVolume_parentVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName2, &volume2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName2, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName2, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName2, "parent_volume_id", resourceName, names.AttrID),
 				),
 			},

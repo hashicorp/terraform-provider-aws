@@ -59,7 +59,7 @@ func resourcePackageAssociation() *schema.Resource {
 	}
 }
 
-func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -86,7 +86,7 @@ func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourcePackageAssociationRead(ctx, d, meta)...)
 }
 
-func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -111,7 +111,7 @@ func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -188,7 +188,7 @@ func findPackageAssociations(ctx context.Context, conn *opensearch.Client, input
 }
 
 func statusPackageAssociation(ctx context.Context, conn *opensearch.Client, domainName, packageID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
 		if tfresource.NotFound(err) {

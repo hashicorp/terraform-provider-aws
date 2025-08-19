@@ -253,7 +253,7 @@ func resourceTaskSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "10m",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+				ValidateFunc: func(v any, k string) (ws []string, errors []error) {
 					value := v.(string)
 					duration, err := time.ParseDuration(value)
 					if err != nil {
@@ -268,12 +268,10 @@ func resourceTaskSet() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -304,20 +302,20 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LoadBalancers = expandTaskSetLoadBalancers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("scale"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Scale = expandScale(v.([]interface{}))
+	if v, ok := d.GetOk("scale"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Scale = expandScale(v.([]any))
 	}
 
-	if v, ok := d.GetOk("service_registries"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ServiceRegistries = expandServiceRegistries(v.([]interface{}))
+	if v, ok := d.GetOk("service_registries"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ServiceRegistries = expandServiceRegistries(v.([]any))
 	}
 
 	output, err := retryTaskSetCreate(ctx, conn, input)
@@ -348,7 +346,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, aws.ToString(output.TaskSet.TaskSetArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 		}
 
@@ -360,7 +358,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 }
 
-func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -412,7 +410,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -424,7 +422,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		input := &ecs.UpdateTaskSetInput{
 			Cluster: aws.String(cluster),
-			Scale:   expandScale(d.Get("scale").([]interface{})),
+			Scale:   expandScale(d.Get("scale").([]any)),
 			Service: aws.String(service),
 			TaskSet: aws.String(taskSetID),
 		}
@@ -446,7 +444,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 }
 
-func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -503,7 +501,7 @@ func retryTaskSetCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + taskSetCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateTaskSet(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -588,7 +586,7 @@ func findTaskSetNoTagsByThreePartKey(ctx context.Context, conn *ecs.Client, task
 }
 
 func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if tfresource.NotFound(err) {
@@ -604,7 +602,7 @@ func statusTaskSetStability(ctx context.Context, conn *ecs.Client, taskSetID, se
 }
 
 func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTaskSetNoTagsByThreePartKey(ctx, conn, taskSetID, service, cluster)
 
 		if tfresource.NotFound(err) {

@@ -1,4 +1,4 @@
-# Roadmap:  Feb 2024 - Apr 2024
+# Roadmap:  July 2025 - September 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,79 +8,61 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning Nov to Jan 2024 the AWS Provider added support for the following (among many others):
+In the period spanning May to June 2025 the AWS Provider added support for the following (among many others):
 
-- Amazon S3 Express
-- Amazon S3 Access Controls
-- Amazon DocDB Elastic Cluster
-- Amazon EBS Fast Snapshot Restore
-- Amazon Bedrock
+- Major Release v6.0 - Multi Region Support
+- AWS Workspaces Web
+- AWS Notifications
 
-From Feb - April 2024, we will be prioritizing the following areas of work:
+From July - September 2025, we will be prioritizing the following areas of work:
 
-## New Services
+## New Services / Features
 
-### AWS Resource Explorer Search
+### DynamoDB Warm Throughput
 
-Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
+Issue: [#40141](https://github.com/hashicorp/terraform-provider-aws/issues/40141)
 
-[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables.
+[DynamoDB Warm Throughput](https://aws.amazon.com/blogs/database/pre-warming-amazon-dynamodb-tables-with-warm-throughput/) Amazon DynamoDB now supports a new warm throughput value and the ability to easily pre-warm DynamoDB tables and indexes. The warm throughput value provides visibility into the number of read and write operations your DynamoDB tables can readily handle, while pre-warming lets you proactively increase the value to meet future traffic demands.
 
-Support for additional Resource explorer resources may include:
+Support for DynamoDB Warm Throughput may include:
 
-New Resource(s):
+Affected Resource(s):
 
-- `aws_resourceexplorer2_search`
+- `aws_dynamodb_table`
 
-### Amazon Verified Permissions
+### Amazon Connect phone number and contact flow association support
 
-Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
+Issue: [#26015](https://github.com/hashicorp/terraform-provider-aws/issues/26015)
 
-[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
+[Amazon Connect phone number and contact flow association support](https://aws.amazon.com/about-aws/whats-new/2022/04/amazon-connect-api-claim-phone-numbers/) Amazon Connect launches API to claim new phone numbers and configure them programmatically. Using this API, you can programmatically search for and claim available phone numbers, associate phone numbers to your contact flows, or release phone numbers that are no longer needed.
 
-Support for Amazon Verified Permissions may include:
+Support for Amazon Connect resources may include:
 
-New Resource(s):
+Affected Resource(s):
 
-- `aws_verifiedpermissions_policy`
-- `aws_verifiedpermissions_identity_source`
+- `aws_connect_phone_number`
+- `aws_connect_phone_number_contact_flow_association`
 
-### Amazon Security Lake
+### AWS Control Tower APIs to register Organizational Units
 
-Issue: [#29376](https://github.com/hashicorp/terraform-provider-aws/issues/29376)
+Issue: [#35849](https://github.com/hashicorp/terraform-provider-aws/issues/35849)
 
-[Amazon Security Lake](https://aws.amazon.com/security-lake/) automatically centralizes security data from AWS environments, SaaS providers, on premises, and cloud sources into a purpose-built data lake stored in your account. With Security Lake, you can get a more complete understanding of your security data across your entire organization. You can also improve the protection of your workloads, applications, and data.
+[AWS Control Tower APIs to register Organizational Units](https://aws.amazon.com/about-aws/whats-new/2024/02/aws-control-tower-apis-register-organizational-units/) AWS Control Tower customers can now programmatically extend governance to organizational units (OUs) via APIs. These new APIs enable the AWS Control Tower baseline which contains best practice configurations, controls, and resources required for AWS Control Tower governance. For example, when you enable a baseline on an OU, member accounts within the OU will receive resources including AWS IAM roles, AWS CloudTrail, AWS Config, AWS Identity Center, and come under AWS Control Tower governance.
 
-Support for Amazon Security Lake may include:
+### WAFv2 update rules shared with Firewall Manager
 
-New Resource(s):
+Issue: [#36941](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
 
-- `aws_security_lake_aws_log_source`
-- `aws_security_lake_custom_log_source`
-- `aws_security_lake_subscriber`
-
-### Amazon DevOps Guru
-
-Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
-
-[Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
-
-Support for Amazon DevOps Guru may include:
-
-New Resource(s):
-
-- `aws_devopsguru_notification_channel`
-- `aws_devopsguru_resource_collection`
+[WAFv2 update rules shared with Firewall Manager](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-rule-groups) The Terraform AWS provider does use the UpdateWebACL API, but only for updating WAF ACLs that it manages and not quite in the way we need for dynamically managing shared Web ACLs within organizations using AWS Firewall Manager (FMS). This functionality is key as it allows different accounts to add their own rules to a shared Web ACL, promoting a flexible approach to security management.
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Add in Security Hub Automation Rules](https://github.com/hashicorp/terraform-provider-aws/issues/32210)
-- [aws rds modify-certificates](https://github.com/hashicorp/terraform-provider-aws/issues/33196)
-- [Add EKS cluster IAM access management API resources](https://github.com/hashicorp/terraform-provider-aws/issues/34982)
-- [Support for AWS Shield Advance Subscriptions](https://github.com/hashicorp/terraform-provider-aws/issues/21430)
-- [Add resources for ComputeOptimizer Recommendation Preferences](https://github.com/hashicorp/terraform-provider-aws/issues/23945)
+- [Fixes in-place UpdateService stabilization](https://github.com/hashicorp/terraform-provider-aws/pull/43502)
+- [Support for Cognito managed login branding](https://github.com/hashicorp/terraform-provider-aws/issues/42580)
+- [Updating capacity provider configuration for ECS services](https://github.com/hashicorp/terraform-provider-aws/issues/43004)
+- [aws_s3_bucket_lifecycle_configuration empty filter block produces a warning](https://github.com/hashicorp/terraform-provider-aws/issues/42714)
 
 ## Disclosures
 

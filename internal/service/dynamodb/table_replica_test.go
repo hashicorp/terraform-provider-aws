@@ -26,6 +26,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 	}
 
 	resourceName := "aws_dynamodb_table_replica.test"
+	tableResourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +39,8 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -280,6 +282,59 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
+				),
+			},
+			// disable deletion protection to allow acceptance test cleanup to complete
+			{
+				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
@@ -369,7 +424,6 @@ resource "aws_dynamodb_table_replica" "test" {
 
   tags = {
     Name = %[1]q
-    Pozo = "Amargo"
   }
 }
 `, rName))
@@ -411,6 +465,7 @@ func testAccTableReplicaConfig_pitrKMS(rName string, pitr bool) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -439,6 +494,7 @@ resource "aws_kms_key" "alternate" {
   provider                = awsalternate
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table_replica" "test" {
@@ -529,18 +585,21 @@ resource "aws_kms_key" "alternate" {
   description             = "Julie test KMS key A"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test1" {
   description             = "Julie test KMS key Z"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "Julie test KMS key Z"
   multi_region            = false
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dynamodb_table" "test" {
@@ -583,4 +642,38 @@ resource "aws_dynamodb_table_replica" "test" {
   point_in_time_recovery = true
 }
 `, rName, key))
+}
+
+func testAccTableReplicaConfig_deletionProtection(rName string, deletionProtection bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  provider         = "awsalternate"
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn = aws_dynamodb_table.test.arn
+
+  deletion_protection_enabled = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, deletionProtection))
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -67,7 +68,7 @@ func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier strin
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
 	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -149,7 +150,10 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 		DBInstanceIdentifier: aws.String(identifier),
 	}
 
-	needsModify := dbInstancePopulateModify(modifyInput, d)
+	needsModify, diags := dbInstancePopulateModify(modifyInput, d)
+	if diags.HasError() {
+		return fmt.Errorf("populating modify input: %s", sdkdiag.DiagnosticsString(diags))
+	}
 
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)

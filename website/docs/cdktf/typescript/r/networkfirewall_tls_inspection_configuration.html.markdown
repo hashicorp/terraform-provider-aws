@@ -401,6 +401,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the TLS inspection configuration.
 * `encryptionConfiguration` - (Optional) Encryption configuration block. Detailed below.
 
@@ -542,4 +543,4 @@ Using `terraform import`, import Network Firewall TLS Inspection Configuration u
 % terraform import aws_networkfirewall_tls_inspection_configuration.example arn:aws:network-firewall::<region>:<account_id>:tls-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a6cbd3c0919ebf7b4427b805db64d4ea8ed7025bb8d8161a1265dea1453f11dd -->
+<!-- cache-key: cdktf-0.20.8 input-a1bd2237382a1c1ba08ca127698231ceade0ac9951d00f2890396978279ad68c -->

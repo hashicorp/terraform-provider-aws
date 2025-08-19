@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `bootMode` - (Optional) Boot mode of the AMI. For more information, see [Boot modes](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-boot.html) in the Amazon Elastic Compute Cloud User Guide.
 * `deprecationTime` - (Optional) Date and time to deprecate the AMI. If you specified a value for seconds, Amazon EC2 rounds the seconds to the nearest minute. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
@@ -64,14 +65,16 @@ This resource supports the following arguments:
 * `virtualizationType` - (Optional) Keyword to choose what virtualization mode created instances
   will use. Can be either "paravirtual" (the default) or "hvm". The choice of virtualization type
   changes the set of further arguments that are required, as described below.
-* `architecture` - (Optional) Machine architecture for created instances. Defaults to "x86_64".
+* `architecture` - (Optional) Machine architecture for created instances. Defaults to `x86_64`.
 * `ebsBlockDevice` - (Optional) Nested block describing an EBS block device that should be
   attached to created instances. The structure of this block is described below.
 * `ephemeralBlockDevice` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
+* `lastLaunchedTime` - (Computed) Date and time, in ISO 8601 date-time format , when the AMI was last used to launch an EC2 instance. When the AMI is used to launch an instance, there is a 24-hour delay before that usage is reported. For more information, see the following [AWS document](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-last-launched-time.html).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tpmSupport` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 * `imdsSupport` - (Optional) If EC2 instances started from this image should require the use of the Instance Metadata Service V2 (IMDSv2), set this argument to `v2.0`. For more information, see [Configure instance metadata options for new instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration).
+* `uefiData` - (Optional) Base64 representation of the non-volatile UEFI variable store.
 
 When `virtualizationType` is "paravirtual" the following additional arguments apply:
 
@@ -166,4 +169,4 @@ Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->
+<!-- cache-key: cdktf-0.20.8 input-e5dc215f16b07f9482525b7061a44f8dcb80cfce4173c5bd8f248b888ed4248f -->

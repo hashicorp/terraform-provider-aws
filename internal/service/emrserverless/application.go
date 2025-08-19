@@ -42,8 +42,6 @@ func resourceApplication() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:             schema.TypeString,
@@ -237,7 +235,7 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				StateFunc: func(val interface{}) string {
+				StateFunc: func(val any) string {
 					return strings.ToLower(val.(string))
 				},
 			},
@@ -245,7 +243,7 @@ func resourceApplication() *schema.Resource {
 	}
 }
 
-func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
@@ -262,32 +260,32 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Architecture = types.Architecture(v.(string))
 	}
 
-	if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AutoStartConfiguration = expandAutoStartConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AutoStartConfiguration = expandAutoStartConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AutoStopConfiguration = expandAutoStopConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageConfiguration = expandImageConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
 		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateApplication(ctx, input)
@@ -305,7 +303,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
@@ -327,11 +325,11 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("release_label", application.ReleaseLabel)
 	d.Set(names.AttrType, strings.ToLower(aws.ToString(application.Type)))
 
-	if err := d.Set("auto_start_configuration", []interface{}{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
+	if err := d.Set("auto_start_configuration", []any{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_start_configuration: %s", err)
 	}
 
-	if err := d.Set("auto_stop_configuration", []interface{}{flattenAutoStopConfig(application.AutoStopConfiguration)}); err != nil {
+	if err := d.Set("auto_stop_configuration", []any{flattenAutoStopConfig(application.AutoStopConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_stop_configuration: %s", err)
 	}
 
@@ -343,15 +341,15 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting initial_capacity: %s", err)
 	}
 
-	if err := d.Set("interactive_configuration", []interface{}{flattenInteractiveConfiguration(application.InteractiveConfiguration)}); err != nil {
+	if err := d.Set("interactive_configuration", []any{flattenInteractiveConfiguration(application.InteractiveConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting interactive_configuration: %s", err)
 	}
 
-	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
+	if err := d.Set("maximum_capacity", []any{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set(names.AttrNetworkConfiguration, []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, []any{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -360,7 +358,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
@@ -374,32 +372,32 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.Architecture = types.Architecture(v.(string))
 		}
 
-		if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AutoStartConfiguration = expandAutoStartConfig(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("auto_start_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AutoStartConfiguration = expandAutoStartConfig(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AutoStopConfiguration = expandAutoStopConfig(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("auto_stop_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.AutoStopConfiguration = expandAutoStopConfig(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("image_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.ImageConfiguration = expandImageConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("image_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ImageConfiguration = expandImageConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("initial_capacity"); ok && v.(*schema.Set).Len() > 0 {
 			input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.MaximumCapacity = expandMaximumCapacity(v.([]any)[0].(map[string]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.NetworkConfiguration = expandNetworkConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("release_label"); ok {
@@ -416,7 +414,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
@@ -470,7 +468,7 @@ func findApplicationByID(ctx context.Context, conn *emrserverless.Client, id str
 }
 
 func statusApplication(ctx context.Context, conn *emrserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -541,7 +539,7 @@ func waitApplicationTerminated(ctx context.Context, conn *emrserverless.Client, 
 	return nil, err
 }
 
-func expandAutoStartConfig(tfMap map[string]interface{}) *types.AutoStartConfig {
+func expandAutoStartConfig(tfMap map[string]any) *types.AutoStartConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -555,12 +553,12 @@ func expandAutoStartConfig(tfMap map[string]interface{}) *types.AutoStartConfig 
 	return apiObject
 }
 
-func flattenAutoStartConfig(apiObject *types.AutoStartConfig) map[string]interface{} {
+func flattenAutoStartConfig(apiObject *types.AutoStartConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
@@ -569,7 +567,7 @@ func flattenAutoStartConfig(apiObject *types.AutoStartConfig) map[string]interfa
 	return tfMap
 }
 
-func expandAutoStopConfig(tfMap map[string]interface{}) *types.AutoStopConfig {
+func expandAutoStopConfig(tfMap map[string]any) *types.AutoStopConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -587,12 +585,12 @@ func expandAutoStopConfig(tfMap map[string]interface{}) *types.AutoStopConfig {
 	return apiObject
 }
 
-func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]interface{} {
+func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = aws.ToBool(v)
@@ -605,7 +603,7 @@ func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]interface
 	return tfMap
 }
 
-func expandInteractiveConfiguration(tfMap map[string]interface{}) *types.InteractiveConfiguration {
+func expandInteractiveConfiguration(tfMap map[string]any) *types.InteractiveConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -623,12 +621,12 @@ func expandInteractiveConfiguration(tfMap map[string]interface{}) *types.Interac
 	return apiObject
 }
 
-func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) map[string]interface{} {
+func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LivyEndpointEnabled; v != nil {
 		tfMap["livy_endpoint_enabled"] = aws.ToBool(v)
@@ -641,7 +639,7 @@ func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) 
 	return tfMap
 }
 
-func expandMaximumCapacity(tfMap map[string]interface{}) *types.MaximumAllowedResources {
+func expandMaximumCapacity(tfMap map[string]any) *types.MaximumAllowedResources {
 	if tfMap == nil {
 		return nil
 	}
@@ -663,12 +661,12 @@ func expandMaximumCapacity(tfMap map[string]interface{}) *types.MaximumAllowedRe
 	return apiObject
 }
 
-func flattenMaximumCapacity(apiObject *types.MaximumAllowedResources) map[string]interface{} {
+func flattenMaximumCapacity(apiObject *types.MaximumAllowedResources) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cpu; v != nil {
 		tfMap["cpu"] = aws.ToString(v)
@@ -685,7 +683,7 @@ func flattenMaximumCapacity(apiObject *types.MaximumAllowedResources) map[string
 	return tfMap
 }
 
-func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConfiguration {
+func expandNetworkConfiguration(tfMap map[string]any) *types.NetworkConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -703,12 +701,12 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 	return apiObject
 }
 
-func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[string]interface{} {
+func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
 		tfMap[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
@@ -721,7 +719,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	return tfMap
 }
 
-func expandImageConfiguration(tfMap map[string]interface{}) *types.ImageConfigurationInput {
+func expandImageConfiguration(tfMap map[string]any) *types.ImageConfigurationInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -735,15 +733,15 @@ func expandImageConfiguration(tfMap map[string]interface{}) *types.ImageConfigur
 	return apiObject
 }
 
-func flattenImageConfiguration(apiObject *types.ImageConfiguration) []interface{} {
+func flattenImageConfiguration(apiObject *types.ImageConfiguration) []any {
 	if apiObject == nil || apiObject.ImageUri == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	if v := apiObject.ImageUri; v != nil {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"image_uri": aws.ToString(v),
 		})
 	}
@@ -759,15 +757,15 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]types.InitialCapacityCo
 	configs := make(map[string]types.InitialCapacityConfig)
 
 	for _, tfMapRaw := range tfMap.List() {
-		config, ok := tfMapRaw.(map[string]interface{})
+		config, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
 		if v, ok := config["initial_capacity_type"].(string); ok && v != "" {
-			if conf, ok := config["initial_capacity_config"].([]interface{}); ok && len(conf) > 0 {
-				configs[v] = expandInitialCapacityConfig(conf[0].(map[string]interface{}))
+			if conf, ok := config["initial_capacity_config"].([]any); ok && len(conf) > 0 {
+				configs[v] = expandInitialCapacityConfig(conf[0].(map[string]any))
 			}
 		}
 	}
@@ -775,54 +773,54 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]types.InitialCapacityCo
 	return configs
 }
 
-func flattenInitialCapacity(apiObject map[string]types.InitialCapacityConfig) []interface{} {
+func flattenInitialCapacity(apiObject map[string]types.InitialCapacityConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for capacityType, config := range apiObject {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"initial_capacity_type":   capacityType,
-			"initial_capacity_config": []interface{}{flattenInitialCapacityConfig(&config)},
+			"initial_capacity_config": []any{flattenInitialCapacityConfig(&config)},
 		})
 	}
 
 	return tfList
 }
 
-func expandInitialCapacityConfig(tfMap map[string]interface{}) types.InitialCapacityConfig {
+func expandInitialCapacityConfig(tfMap map[string]any) types.InitialCapacityConfig {
 	apiObject := types.InitialCapacityConfig{}
 
 	if v, ok := tfMap["worker_count"].(int); ok {
 		apiObject.WorkerCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["worker_configuration"].([]interface{}); ok && v[0] != nil {
-		apiObject.WorkerConfiguration = expandWorkerResourceConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["worker_configuration"].([]any); ok && v[0] != nil {
+		apiObject.WorkerConfiguration = expandWorkerResourceConfig(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func flattenInitialCapacityConfig(apiObject *types.InitialCapacityConfig) map[string]interface{} {
+func flattenInitialCapacityConfig(apiObject *types.InitialCapacityConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"worker_count": apiObject.WorkerCount,
 	}
 
 	if v := apiObject.WorkerConfiguration; v != nil {
-		tfMap["worker_configuration"] = []interface{}{flattenWorkerResourceConfig(v)}
+		tfMap["worker_configuration"] = []any{flattenWorkerResourceConfig(v)}
 	}
 
 	return tfMap
 }
 
-func expandWorkerResourceConfig(tfMap map[string]interface{}) *types.WorkerResourceConfig {
+func expandWorkerResourceConfig(tfMap map[string]any) *types.WorkerResourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -844,12 +842,12 @@ func expandWorkerResourceConfig(tfMap map[string]interface{}) *types.WorkerResou
 	return apiObject
 }
 
-func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[string]interface{} {
+func flattenWorkerResourceConfig(apiObject *types.WorkerResourceConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Cpu; v != nil {
 		tfMap["cpu"] = aws.ToString(v)

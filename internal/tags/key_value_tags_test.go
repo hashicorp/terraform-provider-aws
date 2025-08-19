@@ -5,6 +5,7 @@ package tags
 
 import (
 	"context"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -1251,7 +1252,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 	}{
 		{
 			name: "empty_map_string_interface",
-			tags: New(ctx, map[string]interface{}{}),
+			tags: New(ctx, map[string]any{}),
 			want: []string{},
 		},
 		{
@@ -1266,7 +1267,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "empty_slice_interface",
-			tags: New(ctx, map[string]interface{}{}),
+			tags: New(ctx, map[string]any{}),
 			want: []string{},
 		},
 		{
@@ -1276,7 +1277,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_interface",
-			tags: New(ctx, map[string]interface{}{
+			tags: New(ctx, map[string]any{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -1315,7 +1316,7 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		},
 		{
 			name: "non_empty_slice_interface",
-			tags: New(ctx, []interface{}{
+			tags: New(ctx, []any{
 				"key1",
 				"key2",
 				"key3",
@@ -1363,7 +1364,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 	}{
 		{
 			name: "empty_map_string_interface",
-			tags: New(ctx, map[string]interface{}{}),
+			tags: New(ctx, map[string]any{}),
 			want: map[string]string{},
 		},
 		{
@@ -1378,7 +1379,7 @@ func TestKeyValueTagsMap(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_interface",
-			tags: New(ctx, map[string]interface{}{
+			tags: New(ctx, map[string]any{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
@@ -2390,7 +2391,7 @@ func TestNew(t *testing.T) {
 	ctx := context.Background()
 	testCases := []struct {
 		name   string
-		source interface{}
+		source any
 		want   map[string]string
 	}{
 		{
@@ -2405,7 +2406,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:   "empty_map_string_interface",
-			source: map[string]interface{}{},
+			source: map[string]any{},
 			want:   map[string]string{},
 		},
 		{
@@ -2420,7 +2421,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:   "empty_slice_interface",
-			source: []interface{}{},
+			source: []any{},
 			want:   map[string]string{},
 		},
 		{
@@ -2468,7 +2469,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "non_empty_map_string_interface",
-			source: map[string]interface{}{
+			source: map[string]any{
 				"key1": nil,
 				"key2": "",
 				"key3": "value3",
@@ -2505,7 +2506,7 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name: "non_empty_slice_interface",
-			source: []interface{}{
+			source: []any{
 				"key1",
 				"key2",
 			},
@@ -2804,14 +2805,7 @@ func TestKeyValueTagsString(t *testing.T) {
 
 func testKeyValueTagsVerifyKeys(t *testing.T, got []string, want []string) {
 	for _, g := range got {
-		found := false
-
-		for _, w := range want {
-			if w == g {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(want, g)
 
 		if !found {
 			t.Errorf("got extra key: %s", g)
@@ -2819,14 +2813,7 @@ func testKeyValueTagsVerifyKeys(t *testing.T, got []string, want []string) {
 	}
 
 	for _, w := range want {
-		found := false
-
-		for _, g := range got {
-			if g == w {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(got, w)
 
 		if !found {
 			t.Errorf("want missing key: %s", w)

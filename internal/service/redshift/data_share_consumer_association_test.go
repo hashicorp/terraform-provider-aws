@@ -42,8 +42,8 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "consumer_region", regionDataSourceName, names.AttrName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
 				),
 			},
 			{
@@ -100,8 +100,8 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "associate_entire_account", acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -222,7 +222,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   depends_on = [aws_redshift_data_share_authorization.test]
 
   data_share_arn  = local.data_share_arn
-  consumer_region = data.aws_region.current.name
+  consumer_region = data.aws_region.current.region
 }
 `)
 }

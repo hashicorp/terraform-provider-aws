@@ -39,7 +39,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
@@ -899,7 +899,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   name              = %[1]q
   source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  source_ami_region = data.aws_region.current.name
+  source_ami_region = data.aws_region.current.region
 }
 
 resource "aws_launch_configuration" "test" {

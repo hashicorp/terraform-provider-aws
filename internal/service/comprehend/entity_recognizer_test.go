@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,7 +50,7 @@ func TestAccComprehendEntityRecognizer_basic(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "0"),
@@ -140,7 +141,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue1),
 				),
@@ -158,7 +159,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue2),
 				),
@@ -200,7 +201,7 @@ func TestAccComprehendEntityRecognizer_versionNameEmpty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s$`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s$`, rName))),
 				),
 			},
 			{
@@ -239,7 +240,7 @@ func TestAccComprehendEntityRecognizer_versionNameGenerated(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
 			{
@@ -278,7 +279,7 @@ func TestAccComprehendEntityRecognizer_versionNamePrefix(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "version_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", "tf-acc-test-prefix-"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
 				),
 			},
 			{
@@ -316,7 +317,7 @@ func TestAccComprehendEntityRecognizer_documents_testDocuments(t *testing.T) {
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "0"),
@@ -371,7 +372,7 @@ func TestAccComprehendEntityRecognizer_annotations_basic(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
@@ -427,7 +428,7 @@ func TestAccComprehendEntityRecognizer_annotations_testDocuments(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.entity_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.annotations.#", "1"),
@@ -536,6 +537,11 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -543,8 +549,15 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccEntityRecognizerConfig_kmsKeyARNs(rName),
-				PlanOnly: true,
+				Config: testAccEntityRecognizerConfig_kmsKeyARNs(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -578,6 +591,11 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrARN),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -585,8 +603,15 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateARNs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccEntityRecognizerConfig_kmsKeyIds(rName),
-				PlanOnly: true,
+				Config: testAccEntityRecognizerConfig_kmsKeyIds(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -978,16 +1003,6 @@ func testAccCheckEntityRecognizerExists(ctx context.Context, name string, entity
 	}
 }
 
-// func testAccCheckEntityRecognizerRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if entityRecognizerIdentity(before, after) {
-// 			return fmt.Errorf("Comprehend Entity Recognizer not recreated")
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckEntityRecognizerNotRecreated(before, after *types.EntityRecognizerProperties) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !entityRecognizerIdentity(before, after) {
@@ -1066,11 +1081,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1109,11 +1124,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1148,11 +1163,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1186,11 +1201,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1225,11 +1240,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1263,12 +1278,12 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.key}"
+      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1302,11 +1317,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     annotations {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      s3_uri = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
     }
   }
 
@@ -1340,13 +1355,13 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri      = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
+      test_s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     annotations {
-      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
-      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      s3_uri      = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
+      test_s3_uri = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
     }
   }
 
@@ -1380,12 +1395,12 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     annotations {
-      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
-      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      s3_uri      = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
+      test_s3_uri = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
     }
   }
 
@@ -1419,12 +1434,12 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-      test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri      = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
+      test_s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     annotations {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.annotations.id}"
+      s3_uri = "s3://${aws_s3_object.annotations.bucket}/${aws_s3_object.annotations.key}"
     }
   }
 
@@ -1461,11 +1476,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1503,10 +1518,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1537,11 +1554,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1579,10 +1596,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1610,11 +1629,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1651,11 +1670,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1693,10 +1712,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1727,11 +1748,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1769,10 +1790,12 @@ data "aws_iam_policy_document" "kms_keys" {
 
 resource "aws_kms_key" "model2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "volume2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }
@@ -1802,11 +1825,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1844,11 +1867,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -1887,11 +1910,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -2040,11 +2063,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -2094,7 +2117,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {
@@ -2161,11 +2184,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -2215,7 +2238,7 @@ resource "aws_vpc_endpoint_route_table_association" "test" {
 
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 resource "aws_vpc_endpoint_policy" "s3" {
@@ -2275,11 +2298,11 @@ resource "aws_comprehend_entity_recognizer" "test" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_object.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_object.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 

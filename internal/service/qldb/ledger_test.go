@@ -36,7 +36,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -316,6 +316,7 @@ func testAccLedgerConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_qldb_ledger" "test" {
@@ -332,6 +333,7 @@ func testAccLedgerConfig_kmsKeyUpdated(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_qldb_ledger" "test" {

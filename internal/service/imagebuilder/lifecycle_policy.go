@@ -34,19 +34,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Lifecycle Policy")
-// @Tags(identifierAttribute="id")
+// @FrameworkResource("aws_imagebuilder_lifecycle_policy", name="Lifecycle Policy")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("lifecycle-policy/{name}")
+// @Testing(preIdentityVersion="v5.100.0")
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
 
 type lifecyclePolicyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*lifecyclePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_imagebuilder_lifecycle_policy"
+	framework.ResourceWithModel[lifecyclePolicyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -313,7 +312,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateLifecyclePolicy(ctx, input)
 	}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
@@ -415,7 +414,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateLifecyclePolicy(ctx, input)
 		}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
@@ -453,10 +452,6 @@ func (r *lifecyclePolicyResource) Delete(ctx context.Context, request resource.D
 	}
 }
 
-func (r *lifecyclePolicyResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.LifecyclePolicy, error) {
 	input := &imagebuilder.GetLifecyclePolicyInput{
 		LifecyclePolicyArn: aws.String(arn),
@@ -479,6 +474,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 }
 
 type lifecyclePolicyResourceModel struct {
+	framework.WithRegionModel
 	Description        types.String                                                           `tfsdk:"description"`
 	ExecutionRole      fwtypes.ARN                                                            `tfsdk:"execution_role"`
 	ID                 types.String                                                           `tfsdk:"id"`

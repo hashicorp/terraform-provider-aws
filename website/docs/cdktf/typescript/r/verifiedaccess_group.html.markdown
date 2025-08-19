@@ -77,10 +77,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the verified access group.
 * `policyDocument` - (Optional) The policy document that is associated with this resource.
 * `sseConfiguration` - (Optional) Configuration block to use KMS keys for server-side encryption.
-    * `cmk_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
+    * `customerManagedKeyEnabled` - (Optional) Boolean flag to indicate that the CMK should be used.
     * `kmsKeyArn` - (Optional) ARN of the KMS key to use.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -103,4 +104,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.8 input-71e48000f27958418ab0335e7c1048de8239c3ccd8a5d72f4275540ef3ae5ffe -->
+<!-- cache-key: cdktf-0.20.8 input-6cca9caf24900bae1f7d709bff4e2530b64243d8ea0e74804eafb0c1623e8955 -->

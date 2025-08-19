@@ -76,7 +76,7 @@ func dataSourcePortfolioConstraints() *schema.Resource {
 	}
 }
 
-func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -109,8 +109,8 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ConstraintId; v != nil {
 		tfMap["constraint_id"] = aws.ToString(v)
@@ -139,12 +139,12 @@ func flattenConstraintDetail(apiObject awstypes.ConstraintDetail) map[string]int
 	return tfMap
 }
 
-func flattenConstraintDetails(apiObjects []awstypes.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []awstypes.ConstraintDetail) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenConstraintDetail(apiObject))

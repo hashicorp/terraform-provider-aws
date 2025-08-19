@@ -36,7 +36,7 @@ func TestAccSageMakerModelPackageGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "model_package_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model-package-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -163,7 +163,7 @@ func testAccCheckModelPackageGroupDestroy(ctx context.Context) resource.TestChec
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Model Package Group (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Model Package Group (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Model Package Group %s still exists", rs.Primary.ID)

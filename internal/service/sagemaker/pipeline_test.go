@@ -39,7 +39,7 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -56,7 +56,7 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`pipeline/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -185,7 +185,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Pipeline %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Pipeline %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -200,7 +200,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, pipeline *sagemak
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Pipeline ID is set")
+			return fmt.Errorf("No SageMaker AI Pipeline ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)

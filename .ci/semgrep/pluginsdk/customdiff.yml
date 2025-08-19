@@ -1,0 +1,24 @@
+rules:
+  - id: simplify-customizediff-all-single
+    languages: [go]
+    message: Simplify CustomizeDiff All
+    paths:
+      include:
+        - "internal/service/*/*.go"
+      exclude:
+        - "internal/service/*/*_test.go"
+    patterns:
+      - pattern-regex: CustomizeDiff:\s+customdiff\.All\(\s*[a-zA-Z0-9]+,?\s*\)
+    severity: WARNING
+
+  - id: simplify-customizediff-sequence-single
+    languages: [go]
+    message: Simplify CustomizeDiff Sequence
+    paths:
+      include:
+        - "internal/service/*/*.go"
+      exclude:
+        - "internal/service/*/*_test.go"
+    patterns:
+      - pattern-regex: CustomizeDiff:\s+customdiff\.Sequence\(\s*[a-zA-Z0-9]+,?\s*\)
+    severity: WARNING

@@ -40,7 +40,7 @@ func testAccUserProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`user-profile/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`user-profile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
 				),
@@ -472,10 +472,10 @@ func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI User Profile (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SageMaker User Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI User Profile %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -36,12 +36,12 @@ func testAccMesh_basic(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 				),
 			},
@@ -112,10 +112,6 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
-			},
-			{
-				PlanOnly: true,
-				Config:   testAccMeshConfig_basic(rName),
 			},
 		},
 	})

@@ -53,7 +53,7 @@ func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -102,7 +102,7 @@ func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -151,7 +151,7 @@ func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -200,7 +200,7 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -226,7 +226,7 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 					// The stage's DeploymentId attribute will be set asynchronously as deployments are done automatically.
 					// resource.TestCheckResourceAttrSet(resourceName, "deployment_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -306,7 +306,7 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -380,7 +380,7 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test stage"),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -411,7 +411,7 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test stage updated"),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -454,7 +454,7 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "8888"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -479,7 +479,7 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "9999"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -550,7 +550,7 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "8888"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -575,7 +575,7 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "9999"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -647,7 +647,7 @@ func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deploymentResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -696,7 +696,7 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "2"),
@@ -736,7 +736,7 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "3"),
@@ -829,7 +829,7 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
@@ -861,7 +861,7 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
@@ -939,7 +939,7 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
@@ -971,7 +971,7 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "1"),
@@ -1027,7 +1027,7 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
+					testAccCheckStageExecutionARN(ctx, resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
@@ -1121,9 +1121,9 @@ func testAccCheckStageARN(resourceName, attributeName string, api *apigatewayv2.
 	}
 }
 
-func testAccCheckStageExecutionARN(resourceName, attributeName string, api *apigatewayv2.GetApiOutput, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageExecutionARN(ctx context.Context, resourceName, attributeName string, api *apigatewayv2.GetApiOutput, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARN(resourceName, attributeName, "execute-api", fmt.Sprintf("%s/%s", aws.ToString(api.ApiId), aws.ToString(v.StageName)))(s)
+		return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, attributeName, "execute-api", fmt.Sprintf("%s/%s", aws.ToString(api.ApiId), aws.ToString(v.StageName)))(s)
 	}
 }
 
@@ -1488,7 +1488,8 @@ resource "aws_apigatewayv2_stage" "test" {
 func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
+	input := apigateway.GetAccountInput{}
+	output, err := conn.GetAccount(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)

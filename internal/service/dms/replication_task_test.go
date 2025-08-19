@@ -49,7 +49,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 							resource.TestCheckResourceAttr(resourceName, "replication_task_id", rName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "replication_task_arn", "dms", regexache.MustCompile(`task:[A-Z0-9]{26}`)),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "replication_task_arn", "dms", regexache.MustCompile(`task:[A-Z0-9]{26}`)),
 							resource.TestCheckResourceAttr(resourceName, "cdc_start_position", ""),
 							resource.TestCheckNoResourceAttr(resourceName, "cdc_start_time"),
 							resource.TestCheckResourceAttr(resourceName, "migration_type", migrationType),
@@ -508,11 +508,11 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_s3ToRDS(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

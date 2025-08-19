@@ -41,7 +41,7 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),

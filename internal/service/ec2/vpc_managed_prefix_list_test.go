@@ -37,11 +37,11 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_entries", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
@@ -358,6 +358,41 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 	})
 }
 
+func TestAccVPCManagedPrefixList_descriptionOnlyChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ec2_managed_prefix_list.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "old description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+				),
+			},
+			{
+				// This reproduces the bug: change ONLY the description
+				// Before the fix, this would fail with "PrefixListVersionMismatch"
+				Config: testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName, "new description"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccManagedPrefixListExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
+						"cidr":                "1.0.0.0/8",
+						names.AttrDescription: "new description",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -555,4 +590,19 @@ resource "aws_ec2_managed_prefix_list" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVPCManagedPrefixListConfig_simpleDescriptionChange(rName string, description string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+
+  entry {
+    cidr        = "1.0.0.0/8"
+    description = %[2]q
+  }
+}
+`, rName, description)
 }

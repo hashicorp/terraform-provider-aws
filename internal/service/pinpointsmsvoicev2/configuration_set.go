@@ -39,12 +39,8 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type configurationSetResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[configurationSetResourceModel]
 	framework.WithImportByID
-}
-
-func (*configurationSetResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_pinpointsmsvoicev2_configuration_set"
 }
 
 func (r *configurationSetResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -230,11 +226,8 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *configurationSetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type configurationSetResourceModel struct {
+	framework.WithRegionModel
 	ID                   types.String                             `tfsdk:"id"`
 	ConfigurationSetARN  types.String                             `tfsdk:"arn"`
 	ConfigurationSetName types.String                             `tfsdk:"name"`

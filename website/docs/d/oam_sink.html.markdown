@@ -22,8 +22,9 @@ data "aws_oam_sink" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sink_identifier` - (Required) ARN of the sink.
 
 ## Attribute Reference
@@ -31,7 +32,7 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the sink.
-* `id` - ARN of the sink.
+* `id` - ARN of the sink. Use `arn` instead.
 * `name` - Name of the sink.
 * `sink_id` - Random ID string that AWS generated as part of the sink ARN.
 * `tags` - Tags assigned to the sink.

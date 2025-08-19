@@ -93,12 +93,10 @@ func resourceBuild() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -106,7 +104,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &gamelift.CreateBuildInput{
 		Name:            aws.String(name),
 		OperatingSystem: awstypes.OperatingSystem(d.Get("operating_system").(string)),
-		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
+		StorageLocation: expandStorageLocation(d.Get("storage_location").([]any)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -115,7 +113,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.CreateBuild(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -141,7 +139,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceBuildRead(ctx, d, meta)...)
 }
 
-func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -165,7 +163,7 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -189,7 +187,7 @@ func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceBuildRead(ctx, d, meta)...)
 }
 
-func resourceBuildDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBuildDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftClient(ctx)
 
@@ -231,7 +229,7 @@ func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 }
 
 func statusBuild(ctx context.Context, conn *gamelift.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findBuildByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -266,8 +264,8 @@ func waitBuildReady(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	return nil, err
 }
 
-func expandStorageLocation(tfList []interface{}) *awstypes.S3Location {
-	tfMap := tfList[0].(map[string]interface{})
+func expandStorageLocation(tfList []any) *awstypes.S3Location {
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.S3Location{
 		Bucket:  aws.String(tfMap[names.AttrBucket].(string)),

@@ -47,11 +47,7 @@ func newRestoreTestingSelectionResource(_ context.Context) (resource.ResourceWit
 }
 
 type restoreTestingSelectionResource struct {
-	framework.ResourceWithConfigure
-}
-
-func (*restoreTestingSelectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_backup_restore_testing_selection"
+	framework.ResourceWithModel[restoreTestingSelectionResourceModel]
 }
 
 func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -329,10 +325,11 @@ func (r *restoreTestingSelectionResource) Delete(ctx context.Context, request re
 
 	restoreTestingPlanName := data.RestoreTestingPlanName.ValueString()
 	name := data.RestoreTestingSelectionName.ValueString()
-	_, err := conn.DeleteRestoreTestingSelection(ctx, &backup.DeleteRestoreTestingSelectionInput{
+	input := backup.DeleteRestoreTestingSelectionInput{
 		RestoreTestingPlanName:      aws.String(restoreTestingPlanName),
 		RestoreTestingSelectionName: aws.String(name),
-	})
+	}
+	_, err := conn.DeleteRestoreTestingSelection(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -395,6 +392,7 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 }
 
 type restoreTestingSelectionResourceModel struct {
+	framework.WithRegionModel
 	IAMRoleARN                  fwtypes.ARN                                                       `tfsdk:"iam_role_arn"`
 	ProtectedResourceARNs       fwtypes.SetOfString                                               `tfsdk:"protected_resource_arns"`
 	ProtectedResourceConditions fwtypes.ListNestedObjectValueOf[protectedResourceConditionsModel] `tfsdk:"protected_resource_conditions"`

@@ -21,6 +21,9 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
+	dataSourceName := "data.aws_iam_server_certificate.test"
+	resourceName := "aws_iam_server_certificate.test_cert"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
@@ -30,14 +33,13 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServerCertificateDataSourceConfig_cert(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("aws_iam_server_certificate.test_cert", names.AttrARN),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrARN),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrID),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrName),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrPath),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
-					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", names.AttrCertificateChain, ""),
-					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(dataSourceName, "upload_date", resourceName, "upload_date"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrCertificateChain, ""),
+					resource.TestMatchResourceAttr(dataSourceName, "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 		},

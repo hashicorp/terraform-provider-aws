@@ -13,12 +13,12 @@ import (
 )
 
 type EmptyResultError struct {
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrEmptyResult = &EmptyResultError{}
 
-func NewEmptyResultError(lastRequest interface{}) error {
+func NewEmptyResultError(lastRequest any) error {
 	return &EmptyResultError{
 		LastRequest: lastRequest,
 	}
@@ -33,7 +33,7 @@ func (e *EmptyResultError) Is(err error) bool {
 	return ok
 }
 
-func (e *EmptyResultError) As(target interface{}) bool {
+func (e *EmptyResultError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
@@ -49,12 +49,12 @@ func (e *EmptyResultError) As(target interface{}) bool {
 
 type TooManyResultsError struct {
 	Count       int
-	LastRequest interface{}
+	LastRequest any
 }
 
 var ErrTooManyResults = &TooManyResultsError{}
 
-func NewTooManyResultsError(count int, lastRequest interface{}) error {
+func NewTooManyResultsError(count int, lastRequest any) error {
 	return &TooManyResultsError{
 		Count:       count,
 		LastRequest: lastRequest,
@@ -70,7 +70,7 @@ func (e *TooManyResultsError) Is(err error) bool {
 	return ok
 }
 
-func (e *TooManyResultsError) As(target interface{}) bool {
+func (e *TooManyResultsError) As(target any) bool {
 	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false

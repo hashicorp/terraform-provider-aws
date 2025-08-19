@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_mlflow_tracking_server"
 description: |-
-  Provides a SageMaker MLFlow Tracking Server resource.
+  Provides a SageMaker AI MLFlow Tracking Server resource.
 ---
 
 # Resource: aws_sagemaker_mlflow_tracking_server
 
-Provides a SageMaker MLFlow Tracking Server resource.
+Provides a SageMaker AI MLFlow Tracking Server resource.
 
 ## Example Usage
 
@@ -26,6 +26,7 @@ resource "aws_sagemaker_mlflow_tracking_server" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `artifact_store_uri` - (Required) The S3 URI for a general purpose bucket to use as the MLflow Tracking Server artifact store.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) for an IAM role in your account that the MLflow Tracking Server uses to access the artifact store in Amazon S3. The role should have AmazonS3FullAccess permissions. For more information on IAM permissions for tracking server creation, see [Set up IAM permissions for MLflow](https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow-create-tracking-server-iam.html).
 * `tracking_server_name` - (Required) A unique string identifying the tracking server name. This string is part of the tracking server ARN.
@@ -46,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker MLFlow Tracking Servers using the `workteam_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI MLFlow Tracking Servers using the `workteam_name`. For example:
 
 ```terraform
 import {
@@ -55,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SageMaker MLFlow Tracking Servers using the `workteam_name`. For example:
+Using `terraform import`, import SageMaker AI MLFlow Tracking Servers using the `workteam_name`. For example:
 
 ```console
 % terraform import aws_sagemaker_mlflow_tracking_server.example example

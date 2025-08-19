@@ -138,12 +138,10 @@ func resourceDefaultRouteTable() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -230,7 +228,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 	// Add new routes.
 	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
-			v := v.(map[string]interface{})
+			v := v.(map[string]any)
 
 			if err := routeTableAddRoute(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -245,7 +243,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceDefaultRouteTableRead(ctx, d, meta)...)
 }
 
-func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	d.Set("default_route_table_id", d.Id())
 
 	// Re-use regular AWS Route Table READ.
@@ -253,7 +251,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 	return resourceRouteTableRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
 }
 
-func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTable, err := findMainRouteTableByVPCID(ctx, conn, d.Id())

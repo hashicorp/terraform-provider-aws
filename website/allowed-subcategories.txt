@@ -16,6 +16,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
+Application Migration (Mgn)
 Application Signals
 Athena
 Audit Manager
@@ -25,7 +26,9 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
+Billing
 CE (Cost Explorer)
 Chatbot
 Chime
@@ -75,6 +78,7 @@ Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
+DSQL
 Data Exchange
 Data Pipeline
 DataSync
@@ -104,11 +108,13 @@ EMR Serverless
 ElastiCache
 Elastic Beanstalk
 Elastic Transcoder
+Elastic VMware
 Elasticsearch
 Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage VOD
 Elemental MediaPackage Version 2
 Elemental MediaStore
 End User Messaging SMS
@@ -133,9 +139,8 @@ IVS (Interactive Video)
 IVS (Interactive Video) Chat
 Inspector
 Inspector Classic
-IoT Analytics
+Invoicing
 IoT Core
-IoT Events
 IoT Greengrass
 KMS (Key Management)
 Kendra
@@ -161,7 +166,7 @@ Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
-MemoryDB for Redis
+MemoryDB
 Meta Data Sources
 Neptune
 Neptune Analytics
@@ -170,7 +175,7 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
-OpsWorks
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
@@ -203,8 +208,9 @@ Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
+S3 Tables
+S3 Vectors
 S3 on Outposts
-SDB (SimpleDB)
 SES (Simple Email)
 SESv2 (Simple Email V2)
 SFN (Step Functions)
@@ -218,7 +224,7 @@ SSO Admin
 SSO Identity Store
 STS (Security Token)
 SWF (Simple Workflow)
-SageMaker
+SageMaker AI
 Secrets Manager
 Security Hub
 Security Lake
@@ -231,11 +237,14 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Tax Settings
+Timestream Query
 Timestream Write
 Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
+User Notifications
+User Notifications Contacts
 VPC (Virtual Private Cloud)
 VPC IPAM (IP Address Manager)
 VPC Lattice
@@ -249,7 +258,6 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
-WorkLink
 WorkSpaces
 WorkSpaces Web
 X-Ray

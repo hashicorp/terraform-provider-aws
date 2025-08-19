@@ -60,7 +60,7 @@ func dataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,9 +78,9 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	d.SetId(tgwRouteTableID)
 
-	routes := []interface{}{}
+	routes := []any{}
 	for _, route := range output {
-		routes = append(routes, map[string]interface{}{
+		routes = append(routes, map[string]any{
 			"destination_cidr_block": aws.ToString(route.DestinationCidrBlock),
 			"prefix_list_id":         aws.ToString(route.PrefixListId),
 			names.AttrState:          route.State,

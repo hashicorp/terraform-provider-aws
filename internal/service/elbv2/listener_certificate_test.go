@@ -87,7 +87,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	keys := make([]string, 4)
 	certificates := make([]string, 4)
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		keys[i] = acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificates[i] = acctest.TLSRSAX509SelfSignedCertificatePEM(t, keys[i], "example.com")
 	}

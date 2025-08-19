@@ -51,7 +51,7 @@ func testAccServer_basic(t *testing.T) {
 				Config: testAccServerConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
@@ -91,7 +91,7 @@ func testAccServer_basic(t *testing.T) {
 				Config: testAccServerConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "S3"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
@@ -267,6 +267,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2025-03"),
+				),
+			},
+			{
 				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
@@ -285,6 +292,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2020-06"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-SshAuditCompliant-2025-02"),
 				),
 			},
 			/*
@@ -344,6 +358,13 @@ func testAccServer_securityPolicyFIPS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2024-05"),
+				),
+			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-FIPS-2025-03"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-FIPS-2025-03"),
 				),
 			},
 			{

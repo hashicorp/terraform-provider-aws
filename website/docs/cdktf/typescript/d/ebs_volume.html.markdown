@@ -49,30 +49,33 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `mostRecent` - (Optional) If more than one result is returned, use the most
-recent Volume.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-volumes in the AWS CLI reference][1].
+* `mostRecent` - (Optional) If more than one result is returned, use the most
+recent volume.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - Volume ID (e.g., vol-59fcb34e).
-* `volumeId` - Volume ID (e.g., vol-59fcb34e).
 * `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
-* `availabilityZone` - AZ where the EBS volume exists.
+* `availabilityZone` - Availability zone where the EBS volume exists.
+* `createTime` - Timestamp when volume creation was initiated.
 * `encrypted` - Whether the disk is encrypted.
+* `id` - Volume ID (e.g., vol-59fcb34e).
 * `iops` - Amount of IOPS for the disk.
+* `kmsKeyId` - ARN for the KMS encryption key.
 * `multiAttachEnabled` - (Optional) Specifies whether Amazon EBS Multi-Attach is enabled.
+* `outpostArn` - ARN of the Outpost.
 * `size` - Size of the drive in GiBs.
 * `snapshotId` - Snapshot_id the EBS volume is based off.
-* `outpostArn` - ARN of the Outpost.
-* `volumeType` - Type of EBS volume.
-* `kmsKeyId` - ARN for the KMS encryption key.
 * `tags` - Map of tags for the resource.
 * `throughput` - Throughput that the volume supports, in MiB/s.
+* `volumeId` - Volume ID (e.g., vol-59fcb34e).
+* `volumeType` - Type of EBS volume.
+* `volumeInitializationRate` - EBS provisioned rate for volume initialization, in MiB/s, at which to download the snapshot blocks from Amazon S3 to the volume.
 
 ## Timeouts
 
@@ -82,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
 
-<!-- cache-key: cdktf-0.20.8 input-2cc3adf3199d31ab8dfeb5f2ca1f4ae71de63c586d192b6a6e0c20980731d176 -->
+<!-- cache-key: cdktf-0.20.8 input-482e12664407431b2090499f23de9884c316239acea4040045270a2d863576e6 -->

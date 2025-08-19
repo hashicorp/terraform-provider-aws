@@ -41,8 +41,8 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -202,7 +202,8 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorTargets(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
+	input := ec2.DescribeTrafficMirrorTargetsInput{}
+	_, err := conn.DescribeTrafficMirrorTargets(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror target acceptance test: ", err)

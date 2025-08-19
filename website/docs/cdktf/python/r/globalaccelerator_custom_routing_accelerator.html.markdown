@@ -61,6 +61,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom accelerator.
+* `arn` - The Amazon Resource Name (ARN) of the custom accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
 * `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
   route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
@@ -107,4 +108,4 @@ Using `terraform import`, import Global Accelerator custom routing accelerators 
 % terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-765641ba0d03ea8679c57c2c3557a0495cf7d72f403588b6664a9e2b49f09bcd -->
+<!-- cache-key: cdktf-0.20.8 input-250d0674ab054d7c549628f88bad369f36f55cae32c8288d6d66cfc783bb0621 -->

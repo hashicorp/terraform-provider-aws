@@ -36,7 +36,7 @@ func TestAccGlueDataQualityRuleset_basic(t *testing.T) {
 				Config: testAccDataQualityRulesetConfig_basic(rName, ruleset),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("dataQualityRuleset/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_on"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),

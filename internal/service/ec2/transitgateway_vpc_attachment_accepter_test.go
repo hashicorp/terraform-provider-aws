@@ -116,7 +116,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T, semaphore tfs
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccTransitGatewayVPCAttachmentAccepter_transitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway awstypes.TransitGateway
 	var transitGatewayVpcAttachment awstypes.TransitGatewayVpcAttachment

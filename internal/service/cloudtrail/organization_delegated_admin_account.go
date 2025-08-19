@@ -27,18 +27,15 @@ import (
 )
 
 // @FrameworkResource("aws_cloudtrail_organization_delegated_admin_account", name="Organization Delegated Admin Account")
+// @Region(global=true)
 func newOrganizationDelegatedAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &organizationDelegatedAdminAccountResource{}, nil
 }
 
 type organizationDelegatedAdminAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationDelegatedAdminAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*organizationDelegatedAdminAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudtrail_organization_delegated_admin_account"
 }
 
 func (r *organizationDelegatedAdminAccountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -171,9 +168,10 @@ func (r *organizationDelegatedAdminAccountResource) Delete(ctx context.Context, 
 
 	conn := r.Meta().CloudTrailClient(ctx)
 
-	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &cloudtrail.DeregisterOrganizationDelegatedAdminInput{
+	input := cloudtrail.DeregisterOrganizationDelegatedAdminInput{
 		DelegatedAdminAccountId: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &input)
 
 	if errs.IsA[*awstypes.AccountNotRegisteredException](err) {
 		return

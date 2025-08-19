@@ -5,6 +5,7 @@ page_title: "AWS: aws_servicequotas_template"
 description: |-
   Terraform resource for managing an AWS Service Quotas Template.
 ---
+
 # Resource: aws_servicequotas_template
 
 Terraform resource for managing an AWS Service Quotas Template.
@@ -17,7 +18,7 @@ Terraform resource for managing an AWS Service Quotas Template.
 
 ```terraform
 resource "aws_servicequotas_template" "example" {
-  region       = "us-east-1"
+  aws_region   = "us-east-1"
   quota_code   = "L-2ACBD22F" # function and layer storage (default: 75 GB)
   service_code = "lambda"
   value        = "80"
@@ -26,9 +27,10 @@ resource "aws_servicequotas_template" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `region` - (Required) AWS Region to which the template applies.
+* `aws_region` - (Optional) AWS Region to which the template applies.
+* `region` - (Optional, **Deprecated**) AWS Region to which the template applies. Use `aws_region` instead.
 * `quota_code` - (Required) Quota identifier. To find the quota code for a specific quota, use the [aws_servicequotas_service_quota](../d/servicequotas_service_quota.html.markdown) data source.
 * `service_code` - (Required) Service identifier. To find the service code value for an AWS service, use the [aws_servicequotas_service](../d/servicequotas_service.html.markdown) data source.
 * `value` - (Required) The new, increased value for the quota.

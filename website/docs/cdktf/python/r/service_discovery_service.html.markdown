@@ -101,6 +101,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the service.
 * `description` - (Optional) The description of the service.
 * `dns_config` - (Optional) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance. See [`dns_config` Block](#dns_config-block) for details.
@@ -138,7 +139,7 @@ The `health_check_config` configuration block supports the following arguments:
 
 The `health_check_custom_config` configuration block supports the following arguments:
 
-* `failure_threshold` - (Optional, Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.
+* `failure_threshold` - (Optional, **Deprecated** Forces new resource) The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Value is always set to 1.
 
 ## Attribute Reference
 
@@ -146,7 +147,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -173,4 +173,4 @@ Using `terraform import`, import Service Discovery Service using the service ID.
 % terraform import aws_service_discovery_service.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-bae0abf761352b2967d57b6cd0d452ce01af3694a0b8e973fcbe2e8f6f7ce1fa -->
+<!-- cache-key: cdktf-0.20.8 input-66427af77d34b5b24a4556a4b7b68c0b466c8eeaa069f82b9524e7b4cd4eb71c -->

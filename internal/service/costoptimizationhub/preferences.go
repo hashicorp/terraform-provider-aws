@@ -26,9 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Preferences")
-func newResourcePreferences(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePreferences{}
+// @FrameworkResource("aws_costoptimizationhub_preferences", name="Preferences")
+func newPreferencesResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &preferencesResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -41,17 +41,13 @@ const (
 	resNamePreferences = "Preferences"
 )
 
-type resourcePreferences struct {
-	framework.ResourceWithConfigure
+type preferencesResource struct {
+	framework.ResourceWithModel[preferencesResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourcePreferences) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_costoptimizationhub_preferences"
-}
-
-func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *preferencesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -75,10 +71,10 @@ func (r *resourcePreferences) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *preferencesResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var plan resourcePreferencesData
+	var plan preferencesResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -111,17 +107,17 @@ func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	plan.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	plan.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *preferencesResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var state resourcePreferencesData
+	var state preferencesResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,17 +140,17 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	state.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	state.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *preferencesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var plan, state resourcePreferencesData
+	var plan, state preferencesResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -197,10 +193,10 @@ func (r *resourcePreferences) Update(ctx context.Context, req resource.UpdateReq
 }
 
 // For this "Preferences" resource, deletion is just resetting the preferences back to the default values.
-func (r *resourcePreferences) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *preferencesResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	var state resourcePreferencesData
+	var state preferencesResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -250,7 +246,7 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 	return output, nil
 }
 
-type resourcePreferencesData struct {
+type preferencesResourceModel struct {
 	ID                              types.String `tfsdk:"id"`
 	MemberAccountDiscountVisibility types.String `tfsdk:"member_account_discount_visibility"`
 	SavingsEstimationMode           types.String `tfsdk:"savings_estimation_mode"`

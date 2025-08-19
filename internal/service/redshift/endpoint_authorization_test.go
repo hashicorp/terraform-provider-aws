@@ -42,7 +42,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
-					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "grantor"),
 				),
 			},
 			{
@@ -220,7 +220,6 @@ resource "aws_redshift_subnet_group" "test" {
 
 resource "aws_redshift_cluster" "test" {
   cluster_identifier                   = %[1]q
-  availability_zone                    = data.aws_availability_zones.available.names[0]
   database_name                        = "mydb"
   master_username                      = "foo_test"
   master_password                      = "Mustbe8characters"

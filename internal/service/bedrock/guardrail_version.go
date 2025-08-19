@@ -41,13 +41,8 @@ func newGuardrailVersionResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type guardrailVersionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[guardrailVersionResourceModel]
+	framework.ResourceWithModel[guardrailVersionResourceModel]
 	framework.WithTimeouts
-}
-
-func (*guardrailVersionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_guardrail_version"
 }
 
 func (r *guardrailVersionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -165,10 +160,11 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 		return
 	}
 
-	_, err := conn.DeleteGuardrail(ctx, &bedrock.DeleteGuardrailInput{
+	input := bedrock.DeleteGuardrailInput{
 		GuardrailIdentifier: data.GuardrailARN.ValueStringPointer(),
 		GuardrailVersion:    data.Version.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteGuardrail(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -188,7 +184,10 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 }
 
 func (r *guardrailVersionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(request.ID, guardrailIDParts, false)
+	const (
+		guardrailVersionIDParts = 2
+	)
+	parts, err := flex.ExpandResourceId(request.ID, guardrailVersionIDParts, false)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Unexpected Import Identifier",
@@ -202,6 +201,7 @@ func (r *guardrailVersionResource) ImportState(ctx context.Context, request reso
 }
 
 type guardrailVersionResourceModel struct {
+	framework.WithRegionModel
 	Description  types.String   `tfsdk:"description"`
 	GuardrailARN fwtypes.ARN    `tfsdk:"guardrail_arn"`
 	SkipDestroy  types.Bool     `tfsdk:"skip_destroy"`

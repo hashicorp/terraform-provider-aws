@@ -41,7 +41,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -71,7 +71,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				Config: testAccStateMachineConfig_basic(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StateMachineStatusActive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -749,7 +749,7 @@ resource "aws_iam_role" "for_sfn" {
   "Statement": [{
     "Effect": "Allow",
     "Principal": {
-      "Service": "states.${data.aws_region.current.name}.amazonaws.com"
+      "Service": "states.${data.aws_region.current.region}.amazonaws.com"
     },
     "Action": "sts:AssumeRole"
   }]
@@ -757,8 +757,16 @@ resource "aws_iam_role" "for_sfn" {
 EOF
 }
 
-resource "aws_kms_key" "kms_key_for_sfn_1" {}
-resource "aws_kms_key" "kms_key_for_sfn_2" {}
+resource "aws_kms_key" "kms_key_for_sfn_1" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "kms_key_for_sfn_2" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
 
 `, rName)
 }

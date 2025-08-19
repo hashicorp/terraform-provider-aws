@@ -201,7 +201,7 @@ const (
 )
 
 func healthCheckProtocolEnumValues() []string {
-	return enum.Slice[awstypes.ProtocolEnum](
+	return enum.Slice(
 		awstypes.ProtocolEnumHttp,
 		awstypes.ProtocolEnumHttps,
 		awstypes.ProtocolEnumTcp,

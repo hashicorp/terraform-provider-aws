@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cacheNodeType` - (Required) Node type for the reserved cache node.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
   See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html).
@@ -55,10 +56,10 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the reservation. Same as `offeringId`.
 * `fixedPrice` - Fixed price charged for this reserved cache node.
 * `offeringId` - Unique identifier for the reservation.
 
-<!-- cache-key: cdktf-0.20.8 input-5295ba7c1a9cdc8e160feb33e78743925ce9e905a56917f4dc0ad1eb813e35c8 -->
+<!-- cache-key: cdktf-0.20.8 input-f324c501f17bfb1ee1cfaefb4a3e4b657c2dd4d1fec46aabf55bad082c17dd0a -->

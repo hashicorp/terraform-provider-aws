@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,6 +30,10 @@ func resourceAccountSubscription() *schema.Resource {
 		CreateWithoutTimeout: resourceAccountSubscriptionCreate,
 		ReadWithoutTimeout:   resourceAccountSubscriptionRead,
 		DeleteWithoutTimeout: resourceAccountSubscriptionDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -73,13 +77,7 @@ func resourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				"contact_number": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -138,11 +136,11 @@ func resourceAccountSubscription() *schema.Resource {
 	}
 }
 
-func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -159,16 +157,16 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		input.ActiveDirectoryName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("admin_group"); ok && len(v.([]interface{})) > 0 {
-		input.AdminGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("admin_group"); ok && len(v.([]any)) > 0 {
+		input.AdminGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("author_group"); ok && len(v.([]interface{})) > 0 {
-		input.AuthorGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("author_group"); ok && len(v.([]any)) > 0 {
+		input.AuthorGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("reader_group"); ok && len(v.([]interface{})) > 0 {
-		input.ReaderGroup = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("reader_group"); ok && len(v.([]any)) > 0 {
+		input.ReaderGroup = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("contact_number"); ok {
@@ -214,7 +212,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceAccountSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -239,7 +237,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -307,7 +305,7 @@ func waitAccountSubscriptionDeleted(ctx context.Context, conn *quicksight.Client
 }
 
 func statusAccountSubscription(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAccountSubscriptionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

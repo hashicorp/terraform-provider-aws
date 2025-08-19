@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmcontacts_contact")
+// @SDKDataSource("aws_ssmcontacts_contact", name="Contact")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 func DataSourceContact() *schema.Resource {
@@ -48,7 +48,7 @@ const (
 	DSNameContact = "Contact Data Source"
 )
 
-func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 

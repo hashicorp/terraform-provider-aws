@@ -36,7 +36,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
@@ -753,7 +753,7 @@ resource "aws_imagebuilder_container_recipe" "test_version1" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/hello-world-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -774,7 +774,7 @@ resource "aws_imagebuilder_container_recipe" "test_version2" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/hello-world-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/hello-world-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF

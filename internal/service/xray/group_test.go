@@ -36,7 +36,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
@@ -51,7 +51,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
@@ -133,10 +133,6 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) reso
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)

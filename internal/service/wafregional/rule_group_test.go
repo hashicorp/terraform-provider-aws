@@ -42,7 +42,7 @@ func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rulegroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rulegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
@@ -471,9 +471,9 @@ func computeActivatedRuleWithRuleId(rule *awstypes.Rule, actionType string, prio
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
-		m := map[string]interface{}{
-			names.AttrAction: []interface{}{
-				map[string]interface{}{
+		m := map[string]any{
+			names.AttrAction: []any{
+				map[string]any{
 					names.AttrType: actionType,
 				},
 			},

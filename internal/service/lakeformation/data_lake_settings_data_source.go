@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lakeformation_data_lake_settings")
+// @SDKDataSource("aws_lakeformation_data_lake_settings", name="Data Lake Settings")
 func DataSourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataLakeSettingsRead,
@@ -107,7 +107,7 @@ func DataSourceDataLakeSettings() *schema.Resource {
 	}
 }
 
-func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

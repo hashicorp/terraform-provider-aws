@@ -64,11 +64,11 @@ func testAccFileCache_basic(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-cache/fc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`fc-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key\/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key\/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.deployment_type", "CACHE_1"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.storage_capacity", "2400"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
@@ -631,6 +631,7 @@ func testAccFileCacheConfig_kmsKeyID1(rName string) string {
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {
@@ -658,6 +659,7 @@ func testAccFileCacheConfig_kmsKeyID2(rName string) string {
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_file_cache" "test" {

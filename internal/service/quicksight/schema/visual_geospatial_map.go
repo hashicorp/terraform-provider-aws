@@ -108,12 +108,12 @@ func geospatialMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandGeospatialMapVisual(tfList []interface{}) *awstypes.GeospatialMapVisual {
+func expandGeospatialMapVisual(tfList []any) *awstypes.GeospatialMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -123,112 +123,112 @@ func expandGeospatialMapVisual(tfList []interface{}) *awstypes.GeospatialMapVisu
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandGeospatialMapConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGeospatialMapConfiguration(tfList []interface{}) *awstypes.GeospatialMapConfiguration {
+func expandGeospatialMapConfiguration(tfList []any) *awstypes.GeospatialMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GeospatialMapConfiguration{}
 
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandGeospatialMapFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["map_style_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["map_style_options"].([]any); ok && len(v) > 0 {
 		apiObject.MapStyleOptions = expandGeospatialMapStyleOptions(v)
 	}
-	if v, ok := tfMap["point_style_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["point_style_options"].([]any); ok && len(v) > 0 {
 		apiObject.PointStyleOptions = expandGeospatialPointStyleOptions(v)
 	}
-	if v, ok := tfMap["tooltip"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tooltip"].([]any); ok && len(v) > 0 {
 		apiObject.Tooltip = expandTooltipOptions(v)
 	}
-	if v, ok := tfMap["visual_palatte"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palatte"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
-	if v, ok := tfMap["window_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["window_options"].([]any); ok && len(v) > 0 {
 		apiObject.WindowOptions = expandGeospatialWindowOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandGeospatialMapFieldWells(tfList []interface{}) *awstypes.GeospatialMapFieldWells {
+func expandGeospatialMapFieldWells(tfList []any) *awstypes.GeospatialMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GeospatialMapFieldWells{}
 
-	if v, ok := tfMap["geospatial_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["geospatial_map_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.GeospatialMapAggregatedFieldWells = expandGeospatialMapAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandGeospatialMapAggregatedFieldWells(tfList []interface{}) *awstypes.GeospatialMapAggregatedFieldWells {
+func expandGeospatialMapAggregatedFieldWells(tfList []any) *awstypes.GeospatialMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.GeospatialMapAggregatedFieldWells{}
 
-	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
 		apiObject.Colors = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["geospatial"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["geospatial"].([]any); ok && len(v) > 0 {
 		apiObject.Geospatial = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandGeospatialPointStyleOptions(tfList []interface{}) *awstypes.GeospatialPointStyleOptions {
+func expandGeospatialPointStyleOptions(tfList []any) *awstypes.GeospatialPointStyleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -238,57 +238,57 @@ func expandGeospatialPointStyleOptions(tfList []interface{}) *awstypes.Geospatia
 	if v, ok := tfMap["selected_point_style"].(string); ok && v != "" {
 		apiObject.SelectedPointStyle = awstypes.GeospatialSelectedPointStyle(v)
 	}
-	if v, ok := tfMap["cluster_marker_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cluster_marker_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ClusterMarkerConfiguration = expandClusterMarkerConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandClusterMarkerConfiguration(tfList []interface{}) *awstypes.ClusterMarkerConfiguration {
+func expandClusterMarkerConfiguration(tfList []any) *awstypes.ClusterMarkerConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ClusterMarkerConfiguration{}
 
-	if v, ok := tfMap["cluster_marker"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["cluster_marker"].([]any); ok && len(v) > 0 {
 		apiObject.ClusterMarker = expandClusterMarker(v)
 	}
 
 	return apiObject
 }
 
-func expandClusterMarker(tfList []interface{}) *awstypes.ClusterMarker {
+func expandClusterMarker(tfList []any) *awstypes.ClusterMarker {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ClusterMarker{}
 
-	if v, ok := tfMap["simple_cluster_marker"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["simple_cluster_marker"].([]any); ok && len(v) > 0 {
 		apiObject.SimpleClusterMarker = expandSimpleClusterMarker(v)
 	}
 
 	return apiObject
 }
 
-func expandSimpleClusterMarker(tfList []interface{}) *awstypes.SimpleClusterMarker {
+func expandSimpleClusterMarker(tfList []any) *awstypes.SimpleClusterMarker {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -302,12 +302,12 @@ func expandSimpleClusterMarker(tfList []interface{}) *awstypes.SimpleClusterMark
 	return apiObject
 }
 
-func flattenGeospatialMapVisual(apiObject *awstypes.GeospatialMapVisual) []interface{} {
+func flattenGeospatialMapVisual(apiObject *awstypes.GeospatialMapVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 
@@ -327,15 +327,15 @@ func flattenGeospatialMapVisual(apiObject *awstypes.GeospatialMapVisual) []inter
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialMapConfiguration(apiObject *awstypes.GeospatialMapConfiguration) []interface{} {
+func flattenGeospatialMapConfiguration(apiObject *awstypes.GeospatialMapConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldWells != nil {
 		tfMap["field_wells"] = flattenGeospatialMapFieldWells(apiObject.FieldWells)
@@ -359,29 +359,29 @@ func flattenGeospatialMapConfiguration(apiObject *awstypes.GeospatialMapConfigur
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialMapFieldWells(apiObject *awstypes.GeospatialMapFieldWells) []interface{} {
+func flattenGeospatialMapFieldWells(apiObject *awstypes.GeospatialMapFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.GeospatialMapAggregatedFieldWells != nil {
 		tfMap["geospatial_map_aggregated_field_wells"] = flattenGeospatialMapAggregatedFieldWells(apiObject.GeospatialMapAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialMapAggregatedFieldWells(apiObject *awstypes.GeospatialMapAggregatedFieldWells) []interface{} {
+func flattenGeospatialMapAggregatedFieldWells(apiObject *awstypes.GeospatialMapAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Colors != nil {
 		tfMap["colors"] = flattenDimensionFields(apiObject.Colors)
@@ -393,61 +393,61 @@ func flattenGeospatialMapAggregatedFieldWells(apiObject *awstypes.GeospatialMapA
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenGeospatialPointStyleOptions(apiObject *awstypes.GeospatialPointStyleOptions) []interface{} {
+func flattenGeospatialPointStyleOptions(apiObject *awstypes.GeospatialPointStyleOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ClusterMarkerConfiguration != nil {
 		tfMap["cluster_marker_configuration"] = flattenClusterMarkerConfiguration(apiObject.ClusterMarkerConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenClusterMarkerConfiguration(apiObject *awstypes.ClusterMarkerConfiguration) []interface{} {
+func flattenClusterMarkerConfiguration(apiObject *awstypes.ClusterMarkerConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.ClusterMarker != nil {
 		tfMap["cluster_marker"] = flattenClusterMarker(apiObject.ClusterMarker)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenClusterMarker(apiObject *awstypes.ClusterMarker) []interface{} {
+func flattenClusterMarker(apiObject *awstypes.ClusterMarker) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.SimpleClusterMarker != nil {
 		tfMap["simple_cluster_marker"] = flattenSimpleClusterMarker(apiObject.SimpleClusterMarker)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSimpleClusterMarker(apiObject *awstypes.SimpleClusterMarker) []interface{} {
+func flattenSimpleClusterMarker(apiObject *awstypes.SimpleClusterMarker) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
 		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -36,7 +36,7 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codecommit", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codecommit", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_http"),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_ssh"),
 					resource.TestCheckNoResourceAttr(resourceName, "default_branch"),
@@ -413,6 +413,7 @@ resource "aws_kms_key" "test" {
 
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codecommit_repository" "test" {

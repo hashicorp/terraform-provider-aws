@@ -158,10 +158,11 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
-* `domain` - Indicates if this EIP is for use in VPC (`vpc`).
+* `domain` - (Optional) Indicates if this EIP is for use in VPC (`vpc`).
 * `instance` - (Optional) EC2 instance ID.
 * `ipam_pool_id`- (Optional) The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
@@ -169,13 +170,12 @@ This resource supports the following arguments:
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`.
   This option is only available for VPC EIPs.
 * `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc` - (Optional **Deprecated**) Boolean if the EIP is in a VPC or not. Use `domain` instead.
-  Defaults to `true` unless the region supports EC2-Classic.
 
-~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both. Including both will **not** return an error from the AWS API, but will have undefined behavior. See the relevant [AssociateAddress API Call][1] for more information.
+~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both.
+Including both will **not** return an error from the AWS API, but will have undefined behavior.
+See the relevant [AssociateAddress API Call][1] for more information.
 
-~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error but `address` will be used in the
-case both options are defined as the api only requires one or the other.
+~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error, however, only `address` will be used if both options are defined as the API only requires one of the two.
 
 ## Attribute Reference
 
@@ -230,4 +230,4 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html
 
-<!-- cache-key: cdktf-0.20.8 input-fc859c27b8ed39f1aa79d1a35464a0828f069a21f0ee0b6396a7029a6bbcc2f7 -->
+<!-- cache-key: cdktf-0.20.8 input-3dbf67b605771ce2e754ec5aa3238197316e0a9bf2513104becd30d3cc6d1352 -->

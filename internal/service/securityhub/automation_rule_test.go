@@ -72,7 +72,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelCritical)),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "0"),
@@ -98,7 +98,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelLow)),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "15.5"),
@@ -449,7 +449,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "CRITICAL"
@@ -508,7 +508,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "LOW"

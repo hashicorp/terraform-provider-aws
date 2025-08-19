@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmincidents_response_plan")
-func DataSourceResponsePlan() *schema.Resource {
+// @SDKDataSource("aws_ssmincidents_response_plan", name="Response Plan")
+func dataSourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 
@@ -172,7 +172,7 @@ const (
 	DSNameResponsePlan = "Response Plan Data Source"
 )
 
-func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 

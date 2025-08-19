@@ -77,7 +77,7 @@ func resourceLandingZone() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -89,12 +89,10 @@ func resourceLandingZone() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
@@ -129,7 +127,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
 }
 
-func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
@@ -147,7 +145,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, landingZone.Arn)
 	if landingZone.DriftStatus != nil {
-		if err := d.Set("drift_status", []interface{}{flattenLandingZoneDriftStatusSummary(landingZone.DriftStatus)}); err != nil {
+		if err := d.Set("drift_status", []any{flattenLandingZoneDriftStatusSummary(landingZone.DriftStatus)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting drift_status: %s", err)
 		}
 	} else {
@@ -170,7 +168,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
@@ -200,14 +198,15 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
 }
 
-func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ControlTower Landing Zone: %s", d.Id())
-	output, err := conn.DeleteLandingZone(ctx, &controltower.DeleteLandingZoneInput{
+	input := controltower.DeleteLandingZoneInput{
 		LandingZoneIdentifier: aws.String(d.Id()),
-	})
+	}
+	output, err := conn.DeleteLandingZone(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Landing Zone: %s", err)
@@ -281,7 +280,7 @@ func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client
 }
 
 func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findLandingZoneOperationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -317,12 +316,12 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 	return nil, err
 }
 
-func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatusSummary) map[string]interface{} {
+func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatusSummary) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStatus: apiObject.Status,
 	}
 

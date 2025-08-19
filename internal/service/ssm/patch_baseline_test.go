@@ -47,7 +47,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
@@ -81,7 +81,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
@@ -400,6 +400,47 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMPatchBaseline_availableSecurityUpdatesComplianceStatus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(name, string(awstypes.PatchComplianceStatusCompliant)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "available_security_updates_compliance_status", string(awstypes.PatchComplianceStatusCompliant)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(name, string(awstypes.PatchComplianceStatusNonCompliant)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "available_security_updates_compliance_status", string(awstypes.PatchComplianceStatusNonCompliant)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
+				),
 			},
 		},
 	})
@@ -767,4 +808,32 @@ resource "aws_ssm_patch_baseline" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(rName, complianceStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                                         = "patch-baseline-%[1]s"
+  operating_system                             = "WINDOWS"
+  description                                  = "Baseline"
+  approved_patches_compliance_level            = "CRITICAL"
+  available_security_updates_compliance_status = "%[2]s"
+  approval_rule {
+    approve_after_days = 7
+    compliance_level   = "CRITICAL"
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["WindowsServer2019", "WindowsServer2022", "MicrosoftDefenderAntivirus"]
+    }
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates", "FeaturePacks", "SecurityUpdates", "Updates", "UpdateRollups"]
+    }
+    patch_filter {
+      key    = "MSRC_SEVERITY"
+      values = ["*"]
+    }
+  }
+}
+`, rName, complianceStatus)
 }

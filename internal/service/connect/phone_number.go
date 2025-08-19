@@ -46,8 +46,6 @@ func resourcePhoneNumber() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -108,7 +106,7 @@ func resourcePhoneNumber() *schema.Resource {
 	}
 }
 
-func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -174,7 +172,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourcePhoneNumberRead(ctx, d, meta)...)
 }
 
-func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -205,7 +203,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -235,7 +233,7 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourcePhoneNumberRead(ctx, d, meta)...)
 }
 
-func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -245,10 +243,11 @@ func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Phone Number: %s", d.Id())
-	_, err = conn.ReleasePhoneNumber(ctx, &connect.ReleasePhoneNumberInput{
+	input := connect.ReleasePhoneNumberInput{
 		ClientToken:   aws.String(uuid),
 		PhoneNumberId: aws.String(d.Id()),
-	})
+	}
+	_, err = conn.ReleasePhoneNumber(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -294,21 +293,21 @@ func findPhoneNumber(ctx context.Context, conn *connect.Client, input *connect.D
 	return output.ClaimedPhoneNumberSummary, nil
 }
 
-func flattenPhoneNumberStatus(apiObject *awstypes.PhoneNumberStatus) []interface{} {
+func flattenPhoneNumberStatus(apiObject *awstypes.PhoneNumberStatus) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrMessage: aws.ToString(apiObject.Message),
 		names.AttrStatus:  apiObject.Status,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func statusPhoneNumber(ctx context.Context, conn *connect.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

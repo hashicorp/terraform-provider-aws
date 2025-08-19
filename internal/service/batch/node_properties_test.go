@@ -134,6 +134,68 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 `,
 			wantEquivalent: true,
 		},
+		"Single node ECS Properties with multiple containers": {
+			apiJSON: `
+{
+	"mainNode": 1,
+	"nodeRangeProperties": [
+		{
+			"ecsProperties": {
+				"taskProperties": [
+				{
+					"containers": [
+					{
+						"name": "container1",
+						"image": "my_ecr_image1"
+					},
+					{
+						"name": "container2",
+						"image": "my_ecr_image2"
+					}
+					]
+				}
+				]
+			},
+			"targetNodes": "0:",
+			"environment": [],
+			"mountPoints": []
+		}
+	],
+	"numNodes": 1
+}
+`,
+			configurationJSON: `
+{
+  "mainNode": 1,
+  "nodeRangeProperties": [
+    {
+      "ecsProperties": {
+        "taskProperties": [
+          {
+            "containers": [
+              {
+                "name": "container2",
+                "image": "my_ecr_image2"
+              },
+              {
+                "name": "container1",
+                "image": "my_ecr_image1"
+              }
+            ]
+          }
+        ]
+      },
+      "targetNodes": "0:",
+      "environment": [],
+      "mountPoints": []
+    }
+  ],
+  "numNodes": 1
+}
+
+`,
+			wantEquivalent: true,
+		},
 	}
 
 	for name, testCase := range testCases {

@@ -58,6 +58,7 @@ resource "aws_connect_hours_of_operation" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `config` - (Required) One or more config blocks which define the configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below.
 * `description` - (Optional) Specifies the description of the Hours of Operation.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.

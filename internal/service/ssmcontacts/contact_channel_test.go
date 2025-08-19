@@ -52,7 +52,7 @@ func testAccContactChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(channelResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
 					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(channelResourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
+					acctest.MatchResourceAttrRegionalARN(ctx, channelResourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
 				),
 			},
 			{

@@ -43,8 +43,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the LAG.
-* `connectionsBandwidth` - (Required) The bandwidth of the individual physical connections bundled by the LAG. Valid values: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps, 10Gbps and 100Gbps. Case sensitive.
+* `connectionsBandwidth` - (Required) The bandwidth of the individual dedicated connections bundled by the LAG. Valid values: 1Gbps, 10Gbps, 100Gbps, and 400Gbps. Case sensitive. Refer to the AWS Direct Connection supported bandwidths for [Dedicated Connections](https://docs.aws.amazon.com/directconnect/latest/UserGuide/dedicated_connection.html).
 * `location` - (Required) The AWS Direct Connect location in which the LAG should be allocated. See [DescribeLocations](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLocations.html) for the list of AWS Direct Connect locations. Use `locationCode`.
 * `connectionId` - (Optional) The ID of an existing dedicated connection to migrate to the LAG.
 * `forceDestroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
@@ -90,4 +91,4 @@ Using `terraform import`, import Direct Connect LAGs using the LAG `id`. For exa
 % terraform import aws_dx_lag.test_lag dxlag-fgnsp5rq
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ed3f72bbdf567cfec0fe7862f21073034886100b66c1dcbdcdf0587bf6a6a4c4 -->
+<!-- cache-key: cdktf-0.20.8 input-4d0c9530338a90704d9acbbf414fe0e76a460f28d8c2b8ffd7e86d0081f36474 -->

@@ -51,7 +51,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 				Config: testAccRegexPatternSetConfig_basic(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`regexpatternset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`regexpatternset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
 					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "one"),

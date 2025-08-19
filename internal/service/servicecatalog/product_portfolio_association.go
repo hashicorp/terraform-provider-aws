@@ -63,7 +63,7 @@ func resourceProductPortfolioAssociation() *schema.Resource {
 	}
 }
 
-func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -113,7 +113,7 @@ func resourceProductPortfolioAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceProductPortfolioAssociationRead(ctx, d, meta)...)
 }
 
-func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -147,7 +147,7 @@ func resourceProductPortfolioAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProductPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

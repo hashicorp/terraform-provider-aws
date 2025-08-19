@@ -48,7 +48,8 @@ func testAccCheckSerialConsoleAccessDataSource(ctx context.Context, n string) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		actual, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		input := ec2.GetSerialConsoleAccessStatusInput{}
+		actual, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 		if err != nil {
 			return fmt.Errorf("Error reading serial console access toggle: %q", err)
 		}

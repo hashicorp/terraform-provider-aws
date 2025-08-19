@@ -200,6 +200,29 @@ func TestAccEC2EBSSnapshotCopy_storageTier(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSSnapshotCopy_withCompletionDurationMinutes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var snapshot awstypes.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_copy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotCopyConfig_completionDurationMinutes(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
+					resource.TestCheckResourceAttr(resourceName, "completion_duration_minutes", "15"),
+				),
+			},
+		},
+	})
+}
+
 func testAccEBSSnapshotCopyBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -223,7 +246,7 @@ func testAccEBSSnapshotCopyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), `
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
 }
 `)
 }
@@ -232,7 +255,7 @@ func testAccEBSSnapshotCopyConfig_storageTier(rName string) string {
 	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
   storage_tier       = "archive"
 
   tags = {
@@ -246,7 +269,7 @@ func testAccEBSSnapshotCopyConfig_tags1(rName, tagKey1, tagValue1 string) string
 	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
 
   tags = {
     %[1]q = %[2]q
@@ -259,7 +282,7 @@ func testAccEBSSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagV
 	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
 
   tags = {
     %[1]q = %[2]q
@@ -274,7 +297,7 @@ func testAccEBSSnapshotCopyConfig_description(rName string) string {
 resource "aws_ebs_snapshot_copy" "test" {
   description        = "Copy Snapshot Acceptance Test"
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
 
   tags = {
     Name = %[1]q
@@ -321,7 +344,7 @@ resource "aws_ebs_snapshot" "test" {
 
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.alternate.name
+  source_region      = data.aws_region.alternate.region
 
   tags = {
     Name = %[1]q
@@ -335,11 +358,12 @@ func testAccEBSSnapshotCopyConfig_kms(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_ebs_snapshot_copy" "test" {
   source_snapshot_id = aws_ebs_snapshot.test.id
-  source_region      = data.aws_region.current.name
+  source_region      = data.aws_region.current.region
   encrypted          = true
   kms_key_id         = aws_kms_key.test.arn
 
@@ -348,4 +372,18 @@ resource "aws_ebs_snapshot_copy" "test" {
   }
 }
 `, rName))
+}
+
+func testAccEBSSnapshotCopyConfig_completionDurationMinutes(rName string, durantionMinutes int) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotCopyBaseConfig(rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot_copy" "test" {
+  source_snapshot_id          = aws_ebs_snapshot.test.id
+  source_region               = data.aws_region.current.region
+  completion_duration_minutes = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, durantionMinutes))
 }

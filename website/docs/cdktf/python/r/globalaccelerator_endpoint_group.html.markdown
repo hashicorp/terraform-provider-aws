@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
                 weight=100
             )
             ],
-            listener_arn=Token.as_string(aws_globalaccelerator_listener_example.id)
+            listener_arn=Token.as_string(aws_globalaccelerator_listener_example.arn)
         )
 ```
 
@@ -105,4 +105,4 @@ Using `terraform import`, import Global Accelerator endpoint groups using the `i
 % terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-48677c74b60b74b1eb3424087d22e429d2236cebe37c1b292da850fb32a95838 -->
+<!-- cache-key: cdktf-0.20.8 input-b781b682698ede014f8b3206d9a1013586c30c6e11924f36e9d0e2b3be8788f1 -->

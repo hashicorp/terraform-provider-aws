@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_pipes_pipe: Add `kms_key_identifier` argument
+```

@@ -62,6 +62,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `thingGroupIndexingConfiguration` - (Optional) Thing group indexing configuration. See below.
 * `thingIndexingConfiguration` - (Optional) Thing indexing configuration. See below.
 
@@ -102,4 +105,4 @@ The `filter` configuration block supports the following:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-632e1d902ca26f482ec035558f74be20583a22a0dee9c8e8349d7c76ef519f71 -->
+<!-- cache-key: cdktf-0.20.8 input-7b93778083724f9d7803ecb63527b89e0f851b13c0add32c93da3c2521db8a8a -->

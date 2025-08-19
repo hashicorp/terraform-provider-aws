@@ -38,17 +38,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Trust")
+// @FrameworkResource("aws_directory_service_trust", name="Trust")
 func newTrustResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustResource{}, nil
 }
 
 type trustResource struct {
-	framework.ResourceWithConfigure
-}
-
-func (*trustResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_directory_service_trust"
+	framework.ResourceWithModel[trustResourceModel]
 }
 
 func (r *trustResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -57,6 +53,7 @@ func (r *trustResource) Schema(ctx context.Context, request resource.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"conditional_forwarder_ip_addrs": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Set{
@@ -243,7 +240,7 @@ func (r *trustResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	data.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
+	data.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, forwarder.DnsIpAddrs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -335,7 +332,7 @@ func (r *trustResource) Update(ctx context.Context, request resource.UpdateReque
 			return
 		}
 
-		new.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSet(ctx, forwarder.DnsIpAddrs)
+		new.ConditionalForwarderIPAddrs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, forwarder.DnsIpAddrs)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -350,10 +347,11 @@ func (r *trustResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().DSClient(ctx)
 
-	_, err := conn.DeleteTrust(ctx, &directoryservice.DeleteTrustInput{
+	input := directoryservice.DeleteTrustInput{
 		DeleteAssociatedConditionalForwarder: data.DeleteAssociatedConditionalForwarder.ValueBool(),
 		TrustId:                              fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err := conn.DeleteTrust(ctx, &input)
 
 	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return
@@ -397,7 +395,8 @@ func (r *trustResource) ImportState(ctx context.Context, request resource.Import
 }
 
 type trustResourceModel struct {
-	ConditionalForwarderIPAddrs          types.Set                                   `tfsdk:"conditional_forwarder_ip_addrs"`
+	framework.WithRegionModel
+	ConditionalForwarderIPAddrs          fwtypes.SetOfString                         `tfsdk:"conditional_forwarder_ip_addrs"`
 	CreatedDateTime                      timetypes.RFC3339                           `tfsdk:"created_date_time"`
 	DeleteAssociatedConditionalForwarder types.Bool                                  `tfsdk:"delete_associated_conditional_forwarder"`
 	DirectoryID                          types.String                                `tfsdk:"directory_id"`
@@ -471,7 +470,7 @@ func findTrustByDomain(ctx context.Context, conn *directoryservice.Client, direc
 }
 
 func statusTrust(ctx context.Context, conn *directoryservice.Client, directoryID, trustID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findTrustByTwoPartKey(ctx, conn, directoryID, trustID)
 
 		if tfresource.NotFound(err) {

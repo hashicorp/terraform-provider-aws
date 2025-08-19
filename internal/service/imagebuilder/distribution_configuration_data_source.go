@@ -251,6 +251,26 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ami_account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"data_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"parameter_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -263,7 +283,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

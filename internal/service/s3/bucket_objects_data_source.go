@@ -27,7 +27,7 @@ func dataSourceBucketObjects() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
-				Deprecated: "Use the aws_s3_objects data source instead",
+				Deprecated: "bucket is deprecated. Use the aws_s3_objects data source instead.",
 				Type:       schema.TypeString,
 				Required:   true,
 			},
@@ -77,7 +77,7 @@ func dataSourceBucketObjects() *schema.Resource {
 	}
 }
 
-func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 

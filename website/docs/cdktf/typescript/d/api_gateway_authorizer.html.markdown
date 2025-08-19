@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authorizerId` - (Required) Authorizer identifier.
 * `restApiId` - (Required) ID of the associated REST API.
 
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerArns` - List of the Amazon Cognito user pool ARNs.
 * `type` - Type of the authorizer.
 
-<!-- cache-key: cdktf-0.20.8 input-7c505056a62ecddc8f4337cf059da361268167b1838c9f6ea4a6d78a7e84dfe3 -->
+<!-- cache-key: cdktf-0.20.8 input-6b500714dfcf6faac5477e5cec4deef3d1c3744bb4e3257f1cd0ab986aca71e3 -->

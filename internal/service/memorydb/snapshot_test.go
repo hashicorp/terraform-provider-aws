@@ -33,8 +33,9 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "snapshot/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "snapshot/"+rName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.description", "aws_memorydb_cluster.test", names.AttrDescription),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine", "aws_memorydb_cluster.test", names.AttrEngine),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine_version", "aws_memorydb_cluster.test", names.AttrEngineVersion),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.maintenance_window", "aws_memorydb_cluster.test", "maintenance_window"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.name", "aws_memorydb_cluster.test", names.AttrName),
@@ -286,9 +287,12 @@ resource "aws_memorydb_subnet_group" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -325,7 +329,10 @@ func testAccSnapshotConfig_kms(rName string) string {
 	return acctest.ConfigCompose(
 		testAccSnapshotConfigBase(rName),
 		fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_memorydb_snapshot" "test" {
   cluster_name = aws_memorydb_cluster.test.name

@@ -40,7 +40,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 				Config: testAccSMBFileShareConfig_authenticationActiveDirectory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "ActiveDirectory"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
@@ -91,7 +91,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_guestAccess(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GuestAccess"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "ClientSpecified"),
@@ -1157,6 +1157,7 @@ func testAccSMBFileShareConfig_encryptedUpdate(rName string, readOnly bool) stri
 	return acctest.ConfigCompose(testAcc_SMBFileShare_GuestAccessBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 
@@ -1259,6 +1260,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 
@@ -1280,6 +1282,7 @@ resource "aws_kms_key" "test" {
   count = 2
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = "Terraform Acceptance Testing"
 }
 

@@ -5,6 +5,7 @@ package outposts
 
 import (
 	"context"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -43,7 +44,7 @@ func dataSourceOutpostInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 
@@ -77,17 +78,14 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 
 	// Check requested instance type
 	if v, ok := d.GetOk(names.AttrInstanceType); ok {
-		for _, foundInstanceType := range foundInstanceTypes {
-			if foundInstanceType == v.(string) {
-				resultInstanceType = v.(string)
-				break
-			}
+		if slices.Contains(foundInstanceTypes, v.(string)) {
+			resultInstanceType = v.(string)
 		}
 	}
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
-	if l := d.Get("preferred_instance_types").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_instance_types").([]any); len(l) > 0 {
 		for _, elem := range l {
 			preferredInstanceType, ok := elem.(string)
 
@@ -95,11 +93,8 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 				continue
 			}
 
-			for _, foundInstanceType := range foundInstanceTypes {
-				if foundInstanceType == preferredInstanceType {
-					resultInstanceType = preferredInstanceType
-					break
-				}
+			if slices.Contains(foundInstanceTypes, preferredInstanceType) {
+				resultInstanceType = preferredInstanceType
 			}
 
 			if resultInstanceType != "" {

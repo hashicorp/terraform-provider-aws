@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,12 +48,20 @@ func resourceEIPAssociation() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ExactlyOneOf: []string{
+					names.AttrInstanceID,
+					names.AttrNetworkInterfaceID,
+				},
 			},
 			"private_ip_address": {
 				Type:     schema.TypeString,
@@ -71,11 +79,11 @@ func resourceEIPAssociation() *schema.Resource {
 	}
 }
 
-func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.AssociateAddressInput{}
+	input := ec2.AssociateAddressInput{}
 
 	if v, ok := d.GetOk("allocation_id"); ok {
 		input.AllocationId = aws.String(v.(string))
@@ -101,7 +109,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PublicIp = aws.String(v.(string))
 	}
 
-	output, err := conn.AssociateAddress(ctx, input)
+	output, err := conn.AssociateAddress(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
@@ -110,7 +118,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(output.AssociationId))
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
@@ -134,12 +142,12 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceEIPAssociationRead(ctx, d, meta)...)
 }
 
-func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
 	address, err := findEIPByAssociationID(ctx, conn, d.Id())
@@ -163,20 +171,18 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
-	input := &ec2.DisassociateAddressInput{
+	input := ec2.DisassociateAddressInput{
 		AssociationId: aws.String(d.Id()),
 	}
-
-	log.Printf("[DEBUG] Deleting EC2 EIP Association: %s", d.Id())
-	_, err := conn.DisassociateAddress(ctx, input)
+	_, err := conn.DisassociateAddress(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return diags

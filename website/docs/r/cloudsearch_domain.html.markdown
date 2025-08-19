@@ -49,6 +49,7 @@ resource "aws_cloudsearch_domain" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
 * `multi_az` - (Optional) Whether or not to maintain extra instances for the domain in a second Availability Zone to ensure high availability.

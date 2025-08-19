@@ -47,7 +47,7 @@ class MyConvertedCode extends TerraformStack {
       dataAccessRoleArn: Token.asString(awsIamRoleExample.arn),
       dependsOn: [awsIamRolePolicyExample],
       inputDataConfig: {
-        s3Uri: "s3://${" + test.bucket + "}/${" + documents.id + "}",
+        s3Uri: "s3://${" + test.bucket + "}/${" + documents.key + "}",
       },
       languageCode: "en",
       name: "example",
@@ -72,6 +72,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
@@ -98,7 +99,7 @@ The following arguments are optional:
 
 ### `inputDataConfig` Configuration Block
 
-* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
+* `augmentedManifests` - (Optional) List of training datasets produced by Amazon SageMaker AI Ground Truth.
   Used if `dataFormat` is `AUGMENTED_MANIFEST`.
   See the [`augmentedManifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `dataFormat` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
@@ -181,4 +182,4 @@ Using `terraform import`, import Comprehend Document Classifier using the ARN. F
 % terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3bdf44a11e1e62cc863f8955dc4387827ea8dcfb6ef1cd3b96e5d632e2eea8cf -->
+<!-- cache-key: cdktf-0.20.8 input-cc259bf7ecbb6f8e46398eaa9e07d953aa96a2746be4eb7426332e194ab53797 -->

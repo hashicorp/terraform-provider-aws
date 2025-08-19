@@ -62,7 +62,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -71,7 +71,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
-							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(testcase.expectedState)),
@@ -128,7 +128,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -137,7 +137,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
-							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 							resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -289,55 +289,6 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappearsAccepter(t *testing.T
 						plancheck.ExpectResourceAction(attachmentResourceName, plancheck.ResourceActionCreate),
 					},
 				},
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
-	const (
-		resourceName = "aws_networkmanager_vpc_attachment.test"
-	)
-
-	ctx := acctest.Context(t)
-	var v awstypes.VpcAttachment
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCAttachmentConfig_tags1(rName, "segment", "shared"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-				),
-			},
-			{
-				Config: testAccVPCAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-				),
-			},
-			{
-				Config: testAccVPCAttachmentConfig_tags1(rName, "segment", "shared"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -521,10 +472,6 @@ func testAccCheckVPCAttachmentExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager VPC Attachment ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindVPCAttachmentByID(ctx, conn, rs.Primary.ID)
@@ -610,39 +557,6 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `)
 }
 
-func testAccVPCAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccVPCAttachmentConfig_base(rName, false),
-		fmt.Sprintf(`
-resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpc_arn         = aws_vpc.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccVPCAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccVPCAttachmentConfig_base(rName, false),
-		fmt.Sprintf(`
-resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpc_arn         = aws_vpc.test.arn
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
 func testAccVPCAttachmentConfig_updates(rName string, requireAcceptance bool, nSubnets int, applianceModeSupport, ipv6Support bool) string {
 	return acctest.ConfigCompose(
 		testAccVPCAttachmentConfig_base(rName, requireAcceptance),
@@ -684,35 +598,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 
 func testAccVPCAttachmentConfig_base(rName string, requireAcceptance bool) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-  assign_ipv6_address_on_creation = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_networkmanager_global_network" "test" {
   tags = {
     Name = %[1]q
@@ -732,12 +619,14 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
+data "aws_region" "current" {}
+
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
       asn      = 64512
     }
   }
