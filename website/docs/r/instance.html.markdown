@@ -243,6 +243,7 @@ This resource supports the following arguments:
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `placement_group` - (Optional) Placement Group to start the instance in.
 * `placement_partition_number` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
+* `primary_network_interface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
 * `private_dns_name_options` - (Optional) Options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
 * `private_ip` - (Optional) Private IP address to associate with the instance in a VPC.
 * `root_block_device` - (Optional) Configuration block to customize details about the root block device of the instance. See [Block Devices](#ebs-ephemeral-and-root-block-devices) below for details. When accessing this as an attribute reference, it is a list containing one object.
@@ -398,6 +399,16 @@ Each `network_interface` block supports the following:
 * `delete_on_termination` - (Optional) Whether or not to delete the network interface on instance termination. Defaults to `false`. Currently, the only valid value is `false`, as this is only supported when creating new network interfaces when launching an instance.
 * `device_index` - (Required) Integer index of the network interface attachment. Limited by instance type.
 * `network_card_index` - (Optional) Integer index of the network card. Limited by instance type. The default index is `0`.
+* `network_interface_id` - (Required) ID of the network interface to attach.
+
+### Primary Network Interface
+
+Represents the primary network interface on the EC2 Instance.
+To manage additional network interfaces, use `aws_network_interface_attachment` resources.
+
+Each `primary_network_interface` block supports the following:
+
+* `delete_on_termination` - (Read-Only) Whether the network interface will be deleted when the instance terminates.
 * `network_interface_id` - (Required) ID of the network interface to attach.
 
 ### Private DNS Name Options
