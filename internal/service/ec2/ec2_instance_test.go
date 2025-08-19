@@ -8928,7 +8928,7 @@ resource "aws_instance" "test" {
     network_interface_id = aws_network_interface.primary.id
     device_index         = 0
   }
-  
+
   network_interface {
     network_interface_id = aws_network_interface.secondary.id
     device_index         = 1
