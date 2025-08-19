@@ -78,6 +78,8 @@ func (r *filterResource) Schema(ctx context.Context, request resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"code_repository_project_name":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"code_repository_provider_type":      stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_detector_name":   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_detector_tags":   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 						"code_vulnerability_file_path":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
@@ -561,6 +563,8 @@ type filterResourceModel struct {
 
 type filterCriteriaModel struct {
 	AWSAccountID                   fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"aws_account_id"`
+	CodeRepositoryProjectName      fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_repository_project_name"`
+	CodeRepositoryProviderType     fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_repository_provider_type"`
 	CodeVulnerabilityDetectorName  fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_detector_name"`
 	CodeVulnerabilityDetectorTags  fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_detector_tags"`
 	CodeVulnerabilityFilePath      fwtypes.SetNestedObjectValueOf[stringFilterModel]    `tfsdk:"code_vulnerability_file_path"`
