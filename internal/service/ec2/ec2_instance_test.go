@@ -3241,7 +3241,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_primaryNetworkInterface(rName),
+				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
@@ -3292,7 +3292,7 @@ func TestAccEC2Instance_NetworkInterface_networkCardIndex(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_networkCardIndex(rName),
+				Config: testAccInstanceConfig_networkInterface_networkCardIndex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
@@ -3340,7 +3340,7 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_primaryNetworkInterfaceSourceDestCheck(rName),
+				Config: testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
@@ -3374,7 +3374,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -3404,7 +3404,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_attachSecondaryNetworkInterface_inlineAttachment(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -3461,7 +3461,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_attachSecondaryNetworkInterface_attachmentResource_Setup(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -3491,7 +3491,7 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_attachmentReso
 				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_attachSecondaryNetworkInterface_attachmentResource(rName),
+				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -3543,7 +3543,7 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName),
+				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -3571,7 +3571,7 @@ func TestAccEC2Instance_NetworkInterface_addSecondaryInterface(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_addSecondaryNetworkInterface(rName),
+				Config: testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckENIExists(ctx, eniPrimaryResourceName, &eniPrimary),
@@ -8547,7 +8547,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_primaryNetworkInterface(rName string) string {
+func testAccInstanceConfig_networkInterface_primaryNetworkInterface(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8577,7 +8577,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_networkCardIndex(rName string) string {
+func testAccInstanceConfig_networkInterface_networkCardIndex(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8608,7 +8608,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_primaryNetworkInterfaceSourceDestCheck(rName string) string {
+func testAccInstanceConfig_networkInterface_primaryNetworkInterfaceSourceDestCheck(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8639,7 +8639,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment_Setup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8678,7 +8678,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_attachSecondaryNetworkInterface_inlineAttachment(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8723,7 +8723,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_attachSecondaryNetworkInterface_attachmentResource_Setup(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource_Setup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8762,7 +8762,7 @@ resource "aws_network_interface" "secondary" {
 `, rName))
 }
 
-func testAccInstanceConfig_attachSecondaryNetworkInterface_attachmentResource(rName string) string {
+func testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_attachmentResource(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8807,7 +8807,7 @@ resource "aws_network_interface_attachment" "secondary" {
 `, rName))
 }
 
-func testAccInstanceConfig_addSecondaryNetworkInterfaceBefore(rName string) string {
+func testAccInstanceConfig_networkInterface_addSecondaryNetworkInterfaceBefore(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
@@ -8846,7 +8846,7 @@ resource "aws_network_interface" "secondary" {
 `, rName))
 }
 
-func testAccInstanceConfig_addSecondaryNetworkInterface(rName string) string {
+func testAccInstanceConfig_networkInterface_addSecondaryNetworkInterface(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
