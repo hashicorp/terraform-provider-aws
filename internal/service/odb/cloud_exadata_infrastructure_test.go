@@ -363,7 +363,7 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   storage_count                    = 3
   compute_count                    = 2
   availability_zone_id             = "use1-az6"
-  customer_contacts_to_send_to_oci = [{ email =%[2]q }, { email = %[3]q }]
+  customer_contacts_to_send_to_oci = [{ email = "%[2]s" }, { email = "%[3]s" }]
   database_server_type             = "X11M"
   storage_server_type              = "X11M-HC"
   maintenance_window {
