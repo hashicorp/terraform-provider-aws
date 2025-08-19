@@ -3,7 +3,6 @@ package arcregionswitch
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -32,44 +31,14 @@ func DataSourcePlan() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"execution_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"wait_for_execution": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+
 			"wait_for_health_checks": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
 				Description: "Wait for Route53 health check IDs to be populated (takes ~4 minutes)",
 			},
-			"execution_events": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"event_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"step_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resources": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
+
 			"route53_health_checks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -322,59 +291,6 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	// Handle execution data if execution_id is provided
-	if executionId := d.Get("execution_id").(string); executionId != "" {
-		if err := d.Set("execution_events", []interface{}{}); err != nil {
-			return diag.Errorf("setting execution_events: %s", err)
-		}
-
-		if d.Get("wait_for_execution").(bool) {
-			timeout := d.Timeout(schema.TimeoutRead)
-			err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
-				events, err := listExecutionEvents(ctx, conn, arn, executionId)
-				if err != nil {
-					// If execution not found, just set empty events and continue
-					if isExecutionNotFoundError(err) {
-						if err := d.Set("execution_events", []interface{}{}); err != nil {
-							return retry.NonRetryableError(fmt.Errorf("setting execution_events: %s", err))
-						}
-						return nil
-					}
-					return retry.NonRetryableError(err)
-				}
-
-				healthCheckIds := ExtractHealthCheckIds(events)
-				if len(healthCheckIds) == 0 {
-					return retry.RetryableError(fmt.Errorf("health check IDs not yet available"))
-				}
-
-				if err := d.Set("execution_events", FlattenExecutionEvents(events)); err != nil {
-					return retry.NonRetryableError(fmt.Errorf("setting execution_events: %s", err))
-				}
-				return nil
-			})
-			if err != nil {
-				return diag.Errorf("waiting for execution events: %s", err)
-			}
-		} else {
-			events, err := listExecutionEvents(ctx, conn, arn, executionId)
-			if err != nil {
-				// If execution not found, just set empty events and continue
-				if isExecutionNotFoundError(err) {
-					if err := d.Set("execution_events", []interface{}{}); err != nil {
-						return diag.Errorf("setting execution_events: %s", err)
-					}
-				} else {
-					return diag.Errorf("listing execution events: %s", err)
-				}
-			} else {
-				if err := d.Set("execution_events", FlattenExecutionEvents(events)); err != nil {
-					return diag.Errorf("setting execution_events: %s", err)
-				}
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -406,11 +322,6 @@ func dataSourceStepSchema() map[string]*schema.Schema {
 	}
 
 	return stepSchema
-}
-
-func isExecutionNotFoundError(err error) bool {
-	return strings.Contains(err.Error(), "ResourceNotFoundException") &&
-		strings.Contains(err.Error(), "Execution not found")
 }
 
 func listRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]types.Route53HealthCheck, error) {
@@ -445,54 +356,6 @@ func flattenRoute53HealthChecks(healthChecks []types.Route53HealthCheck) []inter
 			"hosted_zone_id":  aws.ToString(hc.HostedZoneId),
 			"record_name":     aws.ToString(hc.RecordName),
 			"region":          aws.ToString(hc.Region),
-		})
-	}
-	return result
-}
-
-func listExecutionEvents(ctx context.Context, conn *arcregionswitch.Client, planArn, executionId string) ([]types.ExecutionEvent, error) {
-	input := &arcregionswitch.ListPlanExecutionEventsInput{
-		PlanArn:     aws.String(planArn),
-		ExecutionId: aws.String(executionId),
-	}
-
-	var events []types.ExecutionEvent
-	paginator := arcregionswitch.NewListPlanExecutionEventsPaginator(conn, input)
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		events = append(events, page.Items...)
-	}
-
-	return events, nil
-}
-
-func ExtractHealthCheckIds(events []types.ExecutionEvent) []string {
-	var healthCheckIds []string
-	for _, event := range events {
-		healthCheckIds = append(healthCheckIds, event.Resources...)
-	}
-	if len(healthCheckIds) == 0 {
-		return nil
-	}
-	return healthCheckIds
-}
-
-func FlattenExecutionEvents(events []types.ExecutionEvent) []interface{} {
-	if len(events) == 0 {
-		return nil
-	}
-
-	var result []interface{}
-	for _, event := range events {
-		result = append(result, map[string]interface{}{
-			"event_id":  aws.ToString(event.EventId),
-			"step_name": aws.ToString(event.StepName),
-			"resources": event.Resources,
 		})
 	}
 	return result
