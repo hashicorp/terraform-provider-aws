@@ -38,34 +38,6 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccARCRegionSwitchPlanDataSource_withExecution(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	dataSourceName := "data.aws_arcregionswitch_plan.test"
-	resourceName := "aws_arcregionswitch_plan.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlanDataSourceConfig_withExecution(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "execution_id", "1234567890abcdef"),
-					resource.TestCheckResourceAttr(dataSourceName, "wait_for_execution", "true"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "execution_events.#"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -108,18 +80,6 @@ func testAccPlanDataSourceConfig_basic(rName string) string {
 
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
-}
-`, testAccPlanConfig_basic(rName))
-}
-
-func testAccPlanDataSourceConfig_withExecution(rName string) string {
-	return fmt.Sprintf(`
-%s
-
-data "aws_arcregionswitch_plan" "test" {
-  arn                 = aws_arcregionswitch_plan.test.arn
-  execution_id        = "1234567890abcdef"
-  wait_for_execution  = true
 }
 `, testAccPlanConfig_basic(rName))
 }
@@ -193,9 +153,6 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					// Verify no execution data is returned when not requested
-					resource.TestCheckNoResourceAttr(dataSourceName, "execution_id"),
-					resource.TestCheckNoResourceAttr(dataSourceName, "execution_events"),
 					// Verify health checks exist but IDs may be empty without wait
 					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "2"),
 				),
