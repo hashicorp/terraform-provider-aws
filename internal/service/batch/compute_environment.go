@@ -266,6 +266,10 @@ func resourceComputeEnvironment() *schema.Resource {
 				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEType](),
 			},
+			"unmanaged_v_cpus": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"update_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -311,6 +315,10 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk(names.AttrState); ok {
 		input.State = awstypes.CEState(v.(string))
+	}
+
+	if v, ok := d.GetOk("unmanaged_v_cpus"); ok {
+		input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
 	}
 
 	output, err := conn.CreateComputeEnvironment(ctx, input)
@@ -385,6 +393,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatus, computeEnvironment.Status)
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
+	d.Set("unmanaged_v_cpus", computeEnvironment.UnmanagedvCpus)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}
@@ -409,6 +418,12 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange(names.AttrState) {
 			input.State = awstypes.CEState(d.Get(names.AttrState).(string))
+		}
+
+		if d.HasChange("unmanaged_v_cpus") {
+			if v, ok := d.GetOk("unmanaged_v_cpus"); ok {
+				input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
+			}
 		}
 
 		if d.HasChange("update_policy") {
@@ -581,6 +596,11 @@ func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.R
 		// UNMANAGED compute environments can have no compute_resources configured.
 		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
+		}
+	} else {
+		// Only UNMANAGED compute environments can use UnmanagedvCpus.
+		if _, ok := diff.GetOk("unmanaged_v_cpus"); ok {
+			return fmt.Errorf("`unmanaged_v_cpus` can only be specified when `type` is %q", string(awstypes.CETypeUnmanaged))
 		}
 	}
 
@@ -853,7 +873,7 @@ func isServiceLinkedRoleDiff(diff *schema.ResourceDiff) bool {
 	if diff.HasChange(names.AttrServiceRole) {
 		beforeRaw, afterRaw := diff.GetChange(names.AttrServiceRole)
 		before, _ = beforeRaw.(string)
-		after, _ := afterRaw.(string)
+		after, _ = afterRaw.(string)
 		return isServiceLinkedRole(before) && isServiceLinkedRole(after)
 	}
 	afterRaw, _ := diff.GetOk(names.AttrServiceRole)
