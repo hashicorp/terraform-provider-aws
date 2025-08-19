@@ -592,7 +592,7 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "primary_network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -650,10 +650,11 @@ func resourceInstance() *schema.Resource {
 			},
 			"primary_network_interface": {
 				// Note: Changes to `primary_network_interface` should be mirrored in `aws_spot_instance_request`
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "ipv6_addresses", "ipv6_address_count", "network_interface", "private_ip", "secondary_private_ips", names.AttrSecurityGroups, "source_dest_check", names.AttrSubnetID, names.AttrVPCSecurityGroupIDs},
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				Computed:      true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrDeleteOnTermination: {
