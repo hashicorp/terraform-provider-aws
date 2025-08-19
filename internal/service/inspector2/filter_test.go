@@ -860,12 +860,12 @@ resource "aws_inspector2_filter" "test" {
   reason      = %[4]q
   filter_criteria {
     code_repository_project_name {
-	  comparison = %[5]q
-	  value      = %[6]q
+      comparison = %[5]q
+      value      = %[6]q
     }
     code_repository_provider_type {
-	  comparison = %[5]q
-	  value      = %[6]q
+      comparison = %[5]q
+      value      = %[6]q
     }
     code_vulnerability_detector_name {
       comparison = %[5]q
