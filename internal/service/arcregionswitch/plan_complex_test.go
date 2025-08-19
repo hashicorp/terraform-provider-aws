@@ -11,6 +11,10 @@ import (
 )
 
 func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test requiring VPC creation and Route53 health check setup")
+	}
+
 	ctx := acctest.Context(t)
 	var plan sdktypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
@@ -54,6 +58,10 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 }
 
 func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping complex test with multiple workflow steps")
+	}
+
 	ctx := acctest.Context(t)
 	var plan sdktypes.Plan
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
