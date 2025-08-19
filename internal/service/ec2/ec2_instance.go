@@ -658,9 +658,7 @@ func resourceInstance() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
-							Optional: true,
-							ForceNew: true,
-							Default:  false,
+							Computed: true,
 						},
 						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
@@ -2695,9 +2693,8 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		v := primaryNetworkInterface.([]any)
 		ini := v[0].(map[string]any)
 		ni := awstypes.InstanceNetworkInterfaceSpecification{
-			DeviceIndex:         aws.Int32(0),
-			NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-			DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+			DeviceIndex:        aws.Int32(0),
+			NetworkInterfaceId: aws.String(ini[names.AttrNetworkInterfaceID].(string)),
 		}
 		networkInterfaces = append(networkInterfaces, ni)
 	}

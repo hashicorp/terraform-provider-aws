@@ -8613,7 +8613,6 @@ resource "aws_network_interface" "test" {
   subnet_id   = aws_subnet.test.id
   private_ips = ["10.1.1.42"]
 }
-
 `)
 }
 
