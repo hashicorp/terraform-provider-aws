@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var s3TablesCatalogPattern = regexache.MustCompile(`^\d{12}:s3tablescatalog\/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$`)
+
 func validPrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -62,8 +64,6 @@ func validCatalogID(v any, k string) (ws []string, errors []error) {
 	}
 
 	// Check if it's an S3 Tables catalog ID format: {account-id}:s3tablescatalog/{table-bucket-name}
-	// Pattern: ^\d{12}:s3tablescatalog\/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$
-	s3TablesCatalogPattern := regexache.MustCompile(`^\d{12}:s3tablescatalog\/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$`)
 	if s3TablesCatalogPattern.MatchString(value) {
 		// Additional validation: extract account ID part and validate it
 		parts := strings.Split(value, ":")
