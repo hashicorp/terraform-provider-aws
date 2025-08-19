@@ -181,6 +181,16 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reason", reason_1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_1),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_project_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_project_name.*", map[string]string{
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_provider_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_provider_type.*", map[string]string{
+						"comparison":    comparison_1,
+						names.AttrValue: value_1,
+					}),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
 						"comparison":    comparison_1,
@@ -205,6 +215,16 @@ func testAccInspector2Filter_stringFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, action_2),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_vulnerability_detector_name.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_project_name.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_project_name.*", map[string]string{
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.code_repository_provider_type.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_repository_provider_type.*", map[string]string{
+						"comparison":    comparison_2,
+						names.AttrValue: value_2,
+					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.code_vulnerability_detector_name.*", map[string]string{
 						"comparison":    comparison_2,
 						names.AttrValue: value_2,
@@ -839,6 +859,14 @@ resource "aws_inspector2_filter" "test" {
   description = %[3]q
   reason      = %[4]q
   filter_criteria {
+    code_repository_project_name {
+	  comparison = %[5]q
+	  value      = %[6]q
+    }
+    code_repository_provider_type {
+	  comparison = %[5]q
+	  value      = %[6]q
+    }
     code_vulnerability_detector_name {
       comparison = %[5]q
       value      = %[6]q
