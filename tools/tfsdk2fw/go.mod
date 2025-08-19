@@ -32,7 +32,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acm v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.43.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/amp v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/amp v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.31.0 // indirect
@@ -52,10 +52,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.57.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.28.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/backup v1.46.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/batch v1.57.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/batch v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.44.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.48.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/billing v1.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.36.0 // indirect
@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.46.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.56.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.135.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.136.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.32.0 // indirect
@@ -141,7 +141,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.33.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.125.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.126.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.36.0 // indirect
@@ -238,11 +238,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rum v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.87.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.64.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.65.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.209.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.210.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.38.0 // indirect
@@ -297,6 +297,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -326,7 +327,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.18.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.28.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
-	github.com/hashicorp/terraform-plugin-testing v1.13.2 // indirect
+	github.com/hashicorp/terraform-plugin-testing v1.13.3 // indirect
 	github.com/hashicorp/terraform-registry-address v0.2.5 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
@@ -371,7 +372,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
-	gopkg.in/dnaeon/go-vcr.v4 v4.0.4 // indirect
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
