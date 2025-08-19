@@ -119,11 +119,17 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 		v = strings.ReplaceAll(v, " ", "")
 		if ctx.Value(fieldNamePrefixRecurse) == nil {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
+			ctxP := context.WithValue(ctx, fieldNamePrefixRecurse, true)
 			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
-				return findFieldFuzzy(ctx, trimmed, typeFrom, typeTo, flexer)
+				if f, ok2 := findFieldFuzzy(ctxP, trimmed, typeFrom, typeTo, flexer); ok2 {
+					return f, true
+				}
+			} else {
+				if f, ok2 := findFieldFuzzy(ctxP, v+fieldNameFrom, typeFrom, typeTo, flexer); ok2 {
+					return f, true
+				}
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
+			// no match via prefix mutation; fall through to suffix handling on the original name
 		}
 	}
 
