@@ -1,14 +1,14 @@
 ---
-subcategory: "OpenSearch Ingestion"
+subcategory: "Oracle Database@AWS"
 layout: "aws"
-page_title: "AWS: aws_osis_pipeline"
+page_title: "AWS: aws_odb_cloud_exadata_infrastructure"
 description: |-
-  Terraform resource for managing an AWS OpenSearch Ingestion Pipeline.
+  Terraform resource for managing an Oracle Database@AWS.
 ---
 
 # Resource: aws_odb_cloud_exadata_infrastructure
 
-Terraform resource for creating Exadata Infrastructure resource in AWS for Oracle Database Service.
+Terraform resource for creating Exadata Infrastructure resource in AWS for Oracle Database@AWS.
 
 ## Example Usage
 

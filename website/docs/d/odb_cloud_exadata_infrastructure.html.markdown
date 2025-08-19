@@ -1,14 +1,16 @@
 ---
-subcategory: "Polly"
-layout: "aws"
-page_title: "AWS: aws_polly_voices"
+subcategory: "Oracle Database@AWS"
+layout: "AWS: aws_odb_cloud_exadata_infrastructure"
+page_title: "AWS: aws_odb_cloud_exadata_infrastructure"
 description: |-
-  Terraform data source for managing an AWS Polly Voices.
+  Terraform data source for managing Exadata Infrastructure resource in AWS for Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_cloud_exadata_infrastructure
 
-Terraform data source for Exadata Infrastructure resource in AWS for Oracle Database Service.
+Terraform data source for Exadata Infrastructure resource in AWS for Oracle Database@AWS.
+
+You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
 ## Example Usage
 
