@@ -1509,20 +1509,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		} else {
 			d.Set("deployment_circuit_breaker", nil)
 		}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> ff5bf3555b (WIP: Read Handler B/G)
 
 		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(ctx, service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
-<<<<<<< HEAD
->>>>>>> 3a4db3db6c (WIP: Enable B/G graceful termination with SIGINT)
-=======
-
->>>>>>> ff5bf3555b (WIP: Read Handler B/G)
 	}
 
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
@@ -1810,7 +1800,6 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return false, err
 			},
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
@@ -1858,7 +1847,6 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := conn.UpdateService(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "draining ECS Service (%s): %s", d.Id(), err)
 		}
@@ -1885,7 +1873,6 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): %s", d.Id(), err)
 	}
@@ -1959,7 +1946,6 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 			return false, err
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1969,7 +1955,6 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 
 func findService(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServicesInput) (*awstypes.Service, error) {
 	output, err := findServices(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -2165,7 +2150,6 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 				var err error
 				primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, *primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
-
 				if err != nil {
 					return nil, "", err
 				}
@@ -2322,7 +2306,6 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterN
 	}
 
 	err = waitForDeploymentTerminalStatus(ctx, conn, *serviceDeploymentARN)
-
 	if err != nil {
 		return err
 	}
@@ -2332,7 +2315,6 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, clusterN
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, serviceDeploymentARN string) error {
 	stateConf := &retry.StateChangeConf{
-		// NOTE: SHOULD BELOW BE OF THE NON-STANDARD serviceStatusPending (i.e. "tfPENDING") values?
 		Pending: []string{string(awstypes.ServiceDeploymentStatusInProgress), string(awstypes.ServiceDeploymentStatusPending)},
 		Target:  deploymentTerminalStates,
 		Refresh: func() (interface{}, string, error) {
