@@ -101,14 +101,37 @@ type standardsControlDefinitionsDataSourceModel struct {
 }
 
 type securityControlDefinitionModel struct {
-	ControlID                 types.String                                          `tfsdk:"control_id"`
-	CurrentRegionAvailability fwtypes.StringEnum[awstypes.RegionAvailabilityStatus] `tfsdk:"current_region_availability"`
-	CustomizableProperties    fwtypes.ListOfString                                  `tfsdk:"customizable_properties"`
-	Description               types.String                                          `tfsdk:"description"`
-	ParameterDefinitions      fwtypes.MapOfString                                   `tfsdk:"parameter_definitions"`
-	RemediationURL            types.String                                          `tfsdk:"remediation_url"`
-	SeverityRating            fwtypes.StringEnum[awstypes.SeverityRating]           `tfsdk:"severity_rating"`
-	Title                     types.String                                          `tfsdk:"title"`
+	ControlID                 types.String                                                        `tfsdk:"control_id"`
+	CurrentRegionAvailability fwtypes.StringEnum[awstypes.RegionAvailabilityStatus]               `tfsdk:"current_region_availability"`
+	CustomizableProperties    fwtypes.ListOfString                                                `tfsdk:"customizable_properties"`
+	Description               types.String                                                        `tfsdk:"description"`
+	ParameterDefinitions      fwtypes.MapValueOf[fwtypes.ObjectValueOf[parameterDefinitionModel]] `tfsdk:"parameter_definitions"`
+	RemediationURL            types.String                                                        `tfsdk:"remediation_url"`
+	SeverityRating            fwtypes.StringEnum[awstypes.SeverityRating]                         `tfsdk:"severity_rating"`
+	Title                     types.String                                                        `tfsdk:"title"`
+}
+
+type parameterDefinitionModel struct {
+	Description          types.String                                     `tfsdk:"description"`
+	ConfigurationOptions fwtypes.ObjectValueOf[configurationOptionsModel] `tfsdk:"configuration_options"`
+}
+
+type configurationOptionsModel struct {
+	Boolean     types.Bool                              `tfsdk:"boolean"`
+	Double      types.Float64                           `tfsdk:"double"`
+	Enum        fwtypes.ObjectValueOf[enumOptionsModel] `tfsdk:"enum"`
+	EnumList    fwtypes.ObjectValueOf[enumOptionsModel] `tfsdk:"enum_list"`
+	Integer     types.Int64                             `tfsdk:"integer"`
+	IntegerList fwtypes.ListOfInt64                     `tfsdk:"integer_list"`
+	String      types.String                            `tfsdk:"string"`
+	StringList  fwtypes.ListOfString                    `tfsdk:"string_list"`
+}
+
+type enumOptionsModel struct {
+	AllowedValues fwtypes.ListOfString `tfsdk:"allowed_values"`
+	DefaultValue  types.String         `tfsdk:"default_value"`
+	MaxItems      types.Int64          `tfsdk:"max_items"`
+	MinItems      types.Int64          `tfsdk:"min_items"`
 }
 
 func findSecurityControlDefinitions(ctx context.Context, conn *securityhub.Client, input *securityhub.ListSecurityControlDefinitionsInput, filter tfslices.Predicate[*awstypes.SecurityControlDefinition]) ([]awstypes.SecurityControlDefinition, error) {
