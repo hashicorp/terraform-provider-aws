@@ -11,6 +11,10 @@ import (
 )
 
 // @SDKResource("aws_sqs_queue_redrive_policy", name="Queue Redrive Policy")
+// @IdentityAttribute("queue_url")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(idAttrDuplicates="queue_url")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 func resourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNameRedrivePolicy,
@@ -31,10 +35,6 @@ func resourceQueueRedrivePolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"redrive_policy": sdkv2.JSONDocumentSchemaRequired(),
-		},
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CreateWithoutTimeout: h.Upsert,
