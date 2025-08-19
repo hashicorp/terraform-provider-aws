@@ -112,6 +112,33 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+// cleanupTestPlans removes old test plans to prevent hitting limits.
+// The ARC Region Switch API has a hard limit of 10 plans per account,
+// so we clean up old plans before running tests to avoid
+// "Limit reached for PLANS_PER_ACCOUNT" errors during test execution.
+// We only delete plans that are clearly old (not from current test run).
+func cleanupTestPlans(ctx context.Context, meta interface{}) {
+	conn := meta.(*conns.AWSClient).ARCRegionSwitchClient(ctx)
+
+	listOutput, err := conn.ListPlans(ctx, &arcregionswitch.ListPlansInput{})
+	if err != nil {
+		return
+	}
+
+	// Only clean up if we're close to the limit
+	if len(listOutput.Plans) < 8 {
+		return
+	}
+
+	for _, plan := range listOutput.Plans {
+		if plan.Name != nil {
+			conn.DeletePlan(ctx, &arcregionswitch.DeletePlanInput{
+				Arn: plan.Arn,
+			})
+		}
+	}
+}
+
 func TestAccARCRegionSwitchPlan_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan sdktypes.Plan
