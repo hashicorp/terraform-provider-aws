@@ -19,11 +19,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `deletion_protection` attribute ([#43752](https://github.com/hashicorp/terraform-provider-aws/issues/43752))
+* data-source/aws_eks_cluster: Add `deletion_protection` attribute ([#43779](https://github.com/hashicorp/terraform-provider-aws/issues/43779))
 * resource/aws_cloudwatch_event_rule: Add resource identity support ([#43758](https://github.com/hashicorp/terraform-provider-aws/issues/43758))
 * resource/aws_cloudwatch_metric_alarm: Add resource identity support ([#43759](https://github.com/hashicorp/terraform-provider-aws/issues/43759))
 * resource/aws_dynamodb_table: Add `replica.deletion_protection_enabled` argument ([#43240](https://github.com/hashicorp/terraform-provider-aws/issues/43240))
-* resource/aws_eks_cluster: Add `deletion_protection` argument ([#43752](https://github.com/hashicorp/terraform-provider-aws/issues/43752))
+* resource/aws_eks_cluster: Add `deletion_protection` argument ([#43779](https://github.com/hashicorp/terraform-provider-aws/issues/43779))
 * resource/aws_lambda_function: Add resource identity support ([#43821](https://github.com/hashicorp/terraform-provider-aws/issues/43821))
 * resource/aws_sns_topic_data_protection_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
 * resource/aws_sns_topic_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
