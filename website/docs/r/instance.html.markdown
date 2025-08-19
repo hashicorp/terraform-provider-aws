@@ -33,7 +33,7 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_instance" "web" {
+resource "aws_instance" "example" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
@@ -46,7 +46,7 @@ resource "aws_instance" "web" {
 Using AWS Systems Manager Parameter Store
 
 ```terraform
-resource "aws_instance" "web" {
+resource "aws_instance" "example" {
   ami           = "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
   instance_type = "t3.micro"
 
@@ -59,7 +59,7 @@ resource "aws_instance" "web" {
 ### Spot instance example
 
 ```terraform
-data "aws_ami" "this" {
+data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]
   filter {
@@ -72,8 +72,8 @@ data "aws_ami" "this" {
   }
 }
 
-resource "aws_instance" "this" {
-  ami = data.aws_ami.this.id
+resource "aws_instance" "example" {
+  ami = data.aws_ami.example.id
   instance_market_options {
     market_type = "spot"
     spot_options {
@@ -108,7 +108,7 @@ resource "aws_subnet" "my_subnet" {
   }
 }
 
-resource "aws_network_interface" "foo" {
+resource "aws_network_interface" "example" {
   subnet_id   = aws_subnet.my_subnet.id
   private_ips = ["172.16.10.100"]
 
@@ -117,12 +117,12 @@ resource "aws_network_interface" "foo" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "example" {
   ami           = "ami-005e54dee72cc1d00" # us-west-2
   instance_type = "t2.micro"
 
   network_interface {
-    network_interface_id = aws_network_interface.foo.id
+    network_interface_id = aws_network_interface.example.id
     device_index         = 0
   }
 
