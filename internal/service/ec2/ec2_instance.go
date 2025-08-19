@@ -622,6 +622,7 @@ func resourceInstance() *schema.Resource {
 						},
 					},
 				},
+				Deprecated: "network_interface is deprecated. To specify the primary network interface, use primary_network_interface instead. To attach additional network interfaces, use the aws_network_interface_attachment resource.",
 			},
 			"outpost_arn": {
 				Type:     schema.TypeString,

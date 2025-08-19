@@ -240,7 +240,7 @@ This resource supports the following arguments:
 * `maintenance_options` - (Optional) Maintenance and recovery options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
 * `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
-* `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
+* `network_interface` - (Optional, **Deprecated** to specify the primary network interface, use `primary_network_interface`, to attach additional network interfaces, use `aws_network_interface_attachment` resources) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `placement_group` - (Optional) Placement Group to start the instance in.
 * `placement_partition_number` - (Optional) Number of the partition the instance is in. Valid only if [the `aws_placement_group` resource's](placement_group.html) `strategy` argument is set to `"partition"`.
 * `primary_network_interface` - (Optional) The primary network interface. See [Primary Network Interface](#primary-network-interface) below.
@@ -390,7 +390,11 @@ For more information, see the documentation on the [Instance Metadata Service](h
 
 ### Network Interfaces
 
-Each of the `network_interface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use the `aws_network_interface` or `aws_network_interface_attachment` resources instead.
+`network_interface` is **deprecated**.
+Use `primary_network_interface` to specify the primary network interface.
+To attach additional network interfaces, use `aws_network_interface_attachment` resources.
+
+Each of the `network_interface` blocks attach a network interface to an EC2 Instance during boot time. However, because the network interface is attached at boot-time, replacing/modifying the network interface **WILL** trigger a recreation of the EC2 Instance. If you should need at any point to detach/modify/re-attach a network interface to the instance, use `aws_network_interface_attachment` resources instead.
 
 The `network_interface` configuration block _does_, however, allow users to supply their own network interface to be used as the default network interface on an EC2 Instance, attached at `eth0`.
 
