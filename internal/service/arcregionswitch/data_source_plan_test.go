@@ -14,10 +14,14 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_basic(rName),
@@ -40,10 +44,14 @@ func TestAccARCRegionSwitchPlanDataSource_withExecution(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_withExecution(rName),
@@ -64,10 +72,14 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_route53HealthChecks(rName),
@@ -122,10 +134,14 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_route53HealthChecksWithWait(rName),
@@ -163,10 +179,14 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_plan.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, "arcregionswitch"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlanDataSourceConfig_withoutWaitFlags(rName),
