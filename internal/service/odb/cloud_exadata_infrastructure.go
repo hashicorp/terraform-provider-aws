@@ -227,7 +227,8 @@ func (r *resourceCloudExadataInfrastructure) Schema(ctx context.Context, req res
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"total_storage_size_in_gbs": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total amount of storage, in gigabytes (GB), on the Exadata infrastructure.",
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
