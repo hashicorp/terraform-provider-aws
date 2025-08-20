@@ -260,8 +260,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceBucketServerSideEncryptionConfiguration,
 			TypeName: "aws_s3_bucket_server_side_encryption_configuration",
-			Name:     "Bucket Server-side Encryption Configuration",
+			Name:     "Bucket Server Side Encryption Configuration",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrBucket, true),
+				inttypes.StringIdentityAttribute(names.AttrExpectedBucketOwner, false),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      resourceImportID{},
+			},
 		},
 		{
 			Factory:  resourceBucketVersioning,
