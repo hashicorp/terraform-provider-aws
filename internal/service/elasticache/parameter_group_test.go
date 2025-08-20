@@ -11,6 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -429,6 +431,63 @@ func TestAccElastiCacheParameterGroup_description(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheParameterGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.CacheParameterGroup
+	resourceName := "aws_elasticache_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_namePrefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheParameterGroup_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.CacheParameterGroup
+	resourceName := "aws_elasticache_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cacheParameterGroup1 awstypes.CacheParameterGroup
@@ -551,6 +610,23 @@ resource "aws_elasticache_parameter_group" "test" {
   name        = %[2]q
 }
 `, description, rName)
+}
+
+func testAccParameterGroupConfig_namePrefix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_parameter_group" "test" {
+  family      = "redis2.8"
+  name_prefix = %[1]q
+}
+`, rName)
+}
+
+func testAccParameterGroupConfig_nameGenerated() string {
+	return `
+resource "aws_elasticache_parameter_group" "test" {
+  family = "redis2.8"
+}
+`
 }
 
 func testAccParameterGroupConfig_1(rName, family, parameterName1, parameterValue1 string) string {
