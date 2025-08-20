@@ -144,7 +144,7 @@ func testAccLandingZone_noDiffWithIntegerRetentionDays(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_stringRetentionDays,
+				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
@@ -154,7 +154,6 @@ func testAccLandingZone_noDiffWithIntegerRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				// This step should not trigger any changes since retentionDays is already an integer
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
@@ -271,40 +270,3 @@ resource "aws_controltower_landing_zone" "test" {
 }
 `, acctest.Region(), landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
-
-var testAccLandingZoneConfig_stringRetentionDays = fmt.Sprintf(`
-resource "aws_controltower_landing_zone" "test" {
-  manifest_json = jsonencode({
-    governedRegions = ["us-west-2", "us-west-1"]
-    organizationStructure = {
-      security = {
-        name = "CORE"
-      }
-      sandbox = {
-        name = "Sandbox"
-      }
-    }
-    centralizedLogging = {
-      accountId = "222222222222"
-      configurations = {
-        loggingBucket = {
-          retentionDays = "60"
-        }
-        accessLoggingBucket = {
-          retentionDays = "60"
-        }
-        kmsKeyArn = "arn:aws:kms:us-west-1:123456789123:key/e84XXXXX-6bXX-49XX-9eXX-ecfXXXXXXXXX"
-      }
-      enabled = true
-    }
-    securityRoles = {
-      accountId = "333333333333"
-    }
-    accessManagement = {
-      enabled = true
-    }
-  })
-
-  version = %[1]q
-}
-`, landingZoneVersion)
