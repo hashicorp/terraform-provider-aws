@@ -5,17 +5,15 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -33,6 +32,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -200,49 +200,13 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the ODB network was created.",
 			},
-			"managed_services": schema.ObjectAttribute{
+			"managed_services": schema.ListAttribute{
 				Computed:    true,
-				CustomType:  fwtypes.NewObjectTypeOf[odbNetworkManagedServicesResourceModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworkManagedServicesResourceModel](ctx),
 				Description: "The managed services configuration for the ODB network.",
-				AttributeTypes: map[string]attr.Type{
-					"service_network_arn":  types.StringType,
-					"resource_gateway_arn": types.StringType,
-					"managed_service_ipv4_cidrs": types.SetType{
-						ElemType: types.StringType,
-					},
-					"service_network_endpoint": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"vpc_endpoint_id":   types.StringType,
-							"vpc_endpoint_type": fwtypes.StringEnumType[odbtypes.VpcEndpointType](),
-						},
-					},
-					"managed_s3_backup_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ManagedResourceStatus](),
-							"ipv4_addresses": types.SetType{
-								ElemType: types.StringType,
-							},
-						},
-					},
-					"zero_tl_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ManagedResourceStatus](),
-							"cidr":   types.StringType,
-						},
-					},
-					"s3_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ManagedResourceStatus](),
-							"ipv4_addresses": types.SetType{
-								ElemType: types.StringType,
-							},
-							"domain_name":        types.StringType,
-							"s3_policy_document": types.StringType,
-						},
-					},
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -267,8 +231,7 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	input := odb.CreateOdbNetworkInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Tags:        getTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
@@ -302,7 +265,7 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 	}
 	//set zero etl access
 	if plan.ZeroEtlAccess.ValueEnum() == odbtypes.AccessEnabled {
-		_, err = waitManagedServiceEnabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		createdOdbNetwork, err = waitManagedServiceEnabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.ZeroEtlAccess.Status
 		})
 		if err != nil {
@@ -312,10 +275,8 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 			)
 			return
 		}
-		plan.ZeroEtlAccess = fwtypes.StringEnumValue(odbtypes.AccessEnabled)
-
 	} else if plan.ZeroEtlAccess.ValueEnum() == odbtypes.AccessDisabled {
-		_, err = waitManagedServiceDisabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		createdOdbNetwork, err = waitManagedServiceDisabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.ZeroEtlAccess.Status
 		})
 		if err != nil {
@@ -325,12 +286,10 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 			)
 			return
 		}
-		plan.ZeroEtlAccess = fwtypes.StringEnumValue(odbtypes.AccessDisabled)
 	}
-
 	//set s3 access
 	if plan.S3Access.ValueEnum() == odbtypes.AccessEnabled {
-		_, err = waitManagedServiceEnabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		createdOdbNetwork, err = waitManagedServiceEnabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.S3Access.Status
 		})
 		if err != nil {
@@ -340,10 +299,8 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 			)
 			return
 		}
-		plan.S3Access = fwtypes.StringEnumValue(odbtypes.AccessEnabled)
-
 	} else if plan.S3Access.ValueEnum() == odbtypes.AccessDisabled {
-		_, err = waitManagedServiceDisabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		createdOdbNetwork, err = waitManagedServiceDisabled(ctx, conn, *createdOdbNetwork.OdbNetworkId, managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.S3Access.Status
 		})
 		if err != nil {
@@ -353,17 +310,12 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 			)
 			return
 		}
-		plan.S3Access = fwtypes.StringEnumValue(odbtypes.AccessDisabled)
 	}
-
-	plan.S3PolicyDocument = types.StringPointerValue(createdOdbNetwork.ManagedServices.S3Access.S3PolicyDocument)
-	plan.CreatedAt = types.StringValue(createdOdbNetwork.CreatedAt.Format(time.RFC3339))
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdOdbNetwork, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 
 }
@@ -390,36 +342,13 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 		return
 	}
-	if out.ManagedServices != nil {
-
-		readS3AccessStatus, err := managedServiceStatusToAccessStatus(out.ManagedServices.S3Access.Status)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		state.S3Access = fwtypes.StringEnumValue(readS3AccessStatus)
-		state.S3PolicyDocument = types.StringPointerValue(out.ManagedServices.S3Access.S3PolicyDocument)
-
-		readZeroEtlAccessStatus, err := managedServiceStatusToAccessStatus(out.ManagedServices.ZeroEtlAccess.Status)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		state.ZeroEtlAccess = fwtypes.StringEnumValue(readZeroEtlAccessStatus)
-	} else {
+	if out.ManagedServices == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetwork, state.OdbNetworkId.String(), errors.New("odbNetwork managed service not found")),
 			"Odb Network managed service cannot be nil",
 		)
 		return
 	}
-	state.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -441,29 +370,22 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	isUpdateRequired := false
 	var input odb.UpdateOdbNetworkInput
 
-	if !plan.DisplayName.Equal(state.DisplayName) {
+	if !plan.DisplayName.Equal(state.DisplayName) { //TODO display name change : create new
 		isUpdateRequired = true
 		input.DisplayName = plan.DisplayName.ValueStringPointer()
 	}
 
 	if !plan.S3Access.Equal(state.S3Access) {
 		isUpdateRequired = true
-		input.S3Access = plan.S3Access.ValueEnum()
 	}
-
 	if !plan.ZeroEtlAccess.Equal(state.ZeroEtlAccess) {
 		isUpdateRequired = true
-		input.ZeroEtlAccess = plan.ZeroEtlAccess.ValueEnum()
 	}
 	if !plan.S3PolicyDocument.Equal(state.S3PolicyDocument) {
 		isUpdateRequired = true
-		if !plan.S3PolicyDocument.IsNull() || !plan.S3PolicyDocument.IsUnknown() {
-			input.S3PolicyDocument = plan.S3PolicyDocument.ValueStringPointer()
-		}
 	}
 	if isUpdateRequired {
-		input.OdbNetworkId = state.OdbNetworkId.ValueStringPointer()
-
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		out, err := conn.UpdateOdbNetwork(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -492,7 +414,7 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	if plan.S3Access.ValueEnum() == odbtypes.AccessEnabled {
-		_, err = waitManagedServiceEnabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		updatedOdbNwk, err = waitManagedServiceEnabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.S3Access.Status
 		})
 		if err != nil {
@@ -502,10 +424,9 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-		plan.S3Access = fwtypes.StringEnumValue(odbtypes.AccessEnabled)
 
 	} else if plan.S3Access.ValueEnum() == odbtypes.AccessDisabled {
-		_, err = waitManagedServiceDisabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		updatedOdbNwk, err = waitManagedServiceDisabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.S3Access.Status
 		})
 		if err != nil {
@@ -515,11 +436,10 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-		plan.S3Access = fwtypes.StringEnumValue(odbtypes.AccessDisabled)
 	}
 
 	if plan.ZeroEtlAccess.ValueEnum() == odbtypes.AccessEnabled {
-		_, err = waitManagedServiceEnabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		updatedOdbNwk, err = waitManagedServiceEnabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.ZeroEtlAccess.Status
 		})
 		if err != nil {
@@ -529,10 +449,9 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-		plan.ZeroEtlAccess = fwtypes.StringEnumValue(odbtypes.AccessEnabled)
 
 	} else if plan.ZeroEtlAccess.ValueEnum() == odbtypes.AccessDisabled {
-		_, err = waitManagedServiceDisabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
+		updatedOdbNwk, err = waitManagedServiceDisabled(ctx, conn, plan.OdbNetworkId.ValueString(), managedServiceTimeout, func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus {
 			return managedService.ZeroEtlAccess.Status
 		})
 		if err != nil {
@@ -542,18 +461,13 @@ func (r *resourceNetwork) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-		plan.ZeroEtlAccess = fwtypes.StringEnumValue(odbtypes.AccessDisabled)
 	}
-	plan.S3PolicyDocument = types.StringPointerValue(updatedOdbNwk.ManagedServices.S3Access.S3PolicyDocument)
-	plan.CreatedAt = types.StringValue(updatedOdbNwk.CreatedAt.Format(time.RFC3339))
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNwk, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceNetwork) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ODBClient(ctx)
-
 	var state odbNetworkResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -609,16 +523,6 @@ func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeou
 	}
 
 	return nil, err
-}
-
-func managedServiceStatusToAccessStatus(mangedStatus odbtypes.ManagedResourceStatus) (odbtypes.Access, error) {
-	if mangedStatus == odbtypes.ManagedResourceStatusDisabled {
-		return odbtypes.AccessDisabled, nil
-	}
-	if mangedStatus == odbtypes.ManagedResourceStatusEnabled {
-		return odbtypes.AccessEnabled, nil
-	}
-	return "", errors.New("can not convert managed status to access status")
 }
 
 func waitManagedServiceEnabled(ctx context.Context, conn *odb.Client, id string, timeout time.Duration, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) (*odbtypes.OdbNetwork, error) {
@@ -786,8 +690,8 @@ type odbNetworkResourceModel struct {
 	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                `tfsdk:"status"`
 	StatusReason            types.String                                                               `tfsdk:"status_reason"`
 	Timeouts                timeouts.Value                                                             `tfsdk:"timeouts"`
-	ManagedServices         fwtypes.ObjectValueOf[odbNetworkManagedServicesResourceModel]              `tfsdk:"managed_services"`
-	CreatedAt               types.String                                                               `tfsdk:"created_at" autoflex:",noflatten"`
+	ManagedServices         fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesResourceModel]    `tfsdk:"managed_services"`
+	CreatedAt               timetypes.RFC3339                                                          `tfsdk:"created_at"`
 	Tags                    tftags.Map                                                                 `tfsdk:"tags"`
 	TagsAll                 tftags.Map                                                                 `tfsdk:"tags_all"`
 }
