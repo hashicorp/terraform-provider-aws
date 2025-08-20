@@ -336,13 +336,13 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 
 // fixRetentionDaysType ensures that retentionDays values are always numbers in the manifest JSON returned from AWS
 func fixRetentionDaysType(manifestJSON string) (string, error) {
-	var manifest map[string]interface{}
+	var manifest map[string]any
 	if err := json.DecodeFromBytes([]byte(manifestJSON), &manifest); err != nil {
 		return "", err
 	}
 
 	// Check if nested path exists - most concise
-	if loggingBucket, ok := manifest["centralizedLogging"].(map[string]interface{})["configurations"].(map[string]interface{})["loggingBucket"].(map[string]interface{}); ok {
+	if loggingBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["loggingBucket"].(map[string]any); ok {
 		if retentionDays, ok := loggingBucket["retentionDays"].(string); ok {
 			if days, err := strconv.Atoi(retentionDays); err == nil {
 				loggingBucket["retentionDays"] = days
@@ -351,7 +351,7 @@ func fixRetentionDaysType(manifestJSON string) (string, error) {
 	}
 
 	// Same for accessLoggingBucket
-	if accessBucket, ok := manifest["centralizedLogging"].(map[string]interface{})["configurations"].(map[string]interface{})["accessLoggingBucket"].(map[string]interface{}); ok {
+	if accessBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["accessLoggingBucket"].(map[string]any); ok {
 		if retentionDays, ok := accessBucket["retentionDays"].(string); ok {
 			if days, err := strconv.Atoi(retentionDays); err == nil {
 				accessBucket["retentionDays"] = days
