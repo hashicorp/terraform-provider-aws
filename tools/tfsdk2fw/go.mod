@@ -322,7 +322,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.23.1-0.20250717072919-061a850a52d2 // indirect
 	github.com/hashicorp/terraform-json v0.26.0 // indirect
-	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250813073447-f532c5b7f52a // indirect
+	github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 // indirect

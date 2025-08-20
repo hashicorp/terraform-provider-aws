@@ -574,7 +574,7 @@ func (r jobQueueResource) List(ctx context.Context, request list.ListRequest, st
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-		result := request.NewListResult()
+		result := request.NewListResult(ctx)
 		var input batch.DescribeJobQueuesInput
 		for jobQueue, err := range listJobQueues(ctx, conn, &input) {
 			if err != nil {
