@@ -128,6 +128,49 @@ func testAccLandingZone_tags(t *testing.T) {
 	})
 }
 
+func testAccLandingZone_noDiffWithIntegerRetentionDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_controltower_landing_zone.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLandingZoneConfig_stringRetentionDays,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, landingZoneVersion),
+				),
+			},
+			{
+				// This step should not trigger any changes since retentionDays is already an integer
+				Config: testAccLandingZoneConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, landingZoneVersion),
+				),
+				// This is the key assertion - no plan changes should occur
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func testAccPreCheckNoLandingZone(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
@@ -228,3 +271,40 @@ resource "aws_controltower_landing_zone" "test" {
 }
 `, acctest.Region(), landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
+
+var testAccLandingZoneConfig_stringRetentionDays = fmt.Sprintf(`
+resource "aws_controltower_landing_zone" "test" {
+  manifest_json = jsonencode({
+    governedRegions = ["us-west-2", "us-west-1"]
+    organizationStructure = {
+      security = {
+        name = "CORE"
+      }
+      sandbox = {
+        name = "Sandbox"
+      }
+    }
+    centralizedLogging = {
+      accountId = "222222222222"
+      configurations = {
+        loggingBucket = {
+          retentionDays = "60"
+        }
+        accessLoggingBucket = {
+          retentionDays = "60"
+        }
+        kmsKeyArn = "arn:aws:kms:us-west-1:123456789123:key/e84XXXXX-6bXX-49XX-9eXX-ecfXXXXXXXXX"
+      }
+      enabled = true
+    }
+    securityRoles = {
+      accountId = "333333333333"
+    }
+    accessManagement = {
+      enabled = true
+    }
+  })
+
+  version = %[1]q
+}
+`, landingZoneVersion)
