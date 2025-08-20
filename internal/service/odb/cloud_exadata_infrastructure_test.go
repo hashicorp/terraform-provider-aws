@@ -353,7 +353,6 @@ func (cloudExaDataInfraResourceTest) testAccPreCheck(ctx context.Context, t *tes
 }
 
 func (cloudExaDataInfraResourceTest) exaDataInfraResourceWithAllConfig(randomId, emailAddress1, emailAddress2 string) string {
-
 	exaDataInfra := fmt.Sprintf(`
 
 
