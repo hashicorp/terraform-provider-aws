@@ -1294,11 +1294,13 @@ func checkPolicyTypeTargetTagsConsistencyCustomizeDiff(ctx context.Context, d *s
 	if policyDetails == nil {
 		return nil
 	}
-	if policyDetails.PolicyType == awstypes.PolicyTypeValuesEbsSnapshotManagement || policyDetails.PolicyType == awstypes.PolicyTypeValuesImageManagement {
+
+	switch policyDetails.PolicyType {
+	case awstypes.PolicyTypeValuesEbsSnapshotManagement, awstypes.PolicyTypeValuesImageManagement:
 		if len(policyDetails.TargetTags) == 0 {
 			return fmt.Errorf("target_tags must be specified for policy_type %s", policyDetails.PolicyType)
 		}
-	} else if policyDetails.PolicyType == awstypes.PolicyTypeValuesEventBasedPolicy {
+	case awstypes.PolicyTypeValuesEventBasedPolicy:
 		if len(policyDetails.TargetTags) > 0 {
 			return fmt.Errorf("target_tags must not be specified for policy_type %s", policyDetails.PolicyType)
 		}
