@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chime v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.25.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.29.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.30.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.64.0 // indirect
@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.48.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.244.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.245.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.63.0 // indirect
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.22.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/polly v1.51.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/polly v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.29.0 // indirect
