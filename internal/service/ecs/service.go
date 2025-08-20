@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -2115,17 +2113,7 @@ func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNa
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, primaryDeploymentArn **string, operationTime time.Time) retry.StateRefreshFunc {
-	var primaryTaskSet *awstypes.Deployment
-	var isNewPrimaryDeployment bool
-	var isNewECSDeployment bool
-	tflog.Debug(ctx, "statusServiceWaitForStable", map[string]interface{}{
-		"primarytaskset":         primaryTaskSet,
-		"isNewECSDeployment":     isNewECSDeployment,
-		"isNewPrimaryDeployment": isNewPrimaryDeployment,
-		"operationTime":          operationTime,
-	})
-
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, primaryDeploymentArn **string, operationTime time.Time, primaryTaskSet **awstypes.Deployment, isNewPrimaryDeployment *bool, isNewECSDeployment *bool) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
 		if err != nil {
@@ -2138,50 +2126,28 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 		output := outputRaw.(*awstypes.Service)
 
-		if primaryTaskSet == nil {
-			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
+		if *primaryTaskSet == nil {
+			*primaryTaskSet = findPrimaryTaskSet(output.Deployments)
 
-			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
-				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
-				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
+			if *primaryTaskSet != nil && (*primaryTaskSet).CreatedAt != nil {
+				createdAtUTC := (*primaryTaskSet).CreatedAt.UTC()
+				*isNewPrimaryDeployment = createdAtUTC.After(operationTime)
 			}
 		}
 
-		if !isNewECSDeployment {
-			isNewECSDeployment = output.DeploymentController != nil &&
+		if !*isNewECSDeployment {
+			*isNewECSDeployment = output.DeploymentController != nil &&
 				output.DeploymentController.Type == awstypes.DeploymentControllerTypeEcs &&
-				isNewPrimaryDeployment
+				*isNewPrimaryDeployment
 		}
 
-		tflog.Debug(ctx, "STABILIZATION FLOW", map[string]interface{}{
-			"primarytaskset":         primaryTaskSet,
-			"primaryDeploymentArn":   *primaryDeploymentArn,
-			"isNewECSDeployment":     isNewECSDeployment,
-			"type":                   output.DeploymentController.Type,
-			"isNewPrimaryDeployment": isNewPrimaryDeployment,
-			"operationTime":          operationTime,
-			"createdAt":              primaryTaskSet.CreatedAt.UTC(),
-		})
-
 		// For new deployments with ECS deployment controller, check the deployment status
-		if isNewECSDeployment {
-			tflog.Debug(ctx, "Blue/green deployment detected", map[string]interface{}{
-				"primaryDeploymentArn": *primaryDeploymentArn,
-				"isNewECSDeployment":   isNewECSDeployment,
-			})
-
+		if *isNewECSDeployment {
 			if *primaryDeploymentArn == nil {
-				tflog.Debug(ctx, "Finding primary deployment ARN")
 				serviceArn := aws.ToString(output.ServiceArn)
 
 				var err error
-				*primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
-
-				tflog.Debug(ctx, "Primary deployment ARN result", map[string]interface{}{
-					"primaryDeploymentArn": *primaryDeploymentArn,
-					"error":                err,
-				})
-
+				*primaryDeploymentArn, err = findPrimaryDeploymentARN(ctx, conn, *primaryTaskSet, serviceArn, clusterNameOrARN, operationTime)
 				if err != nil {
 					return nil, "", err
 				}
@@ -2191,11 +2157,6 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 			}
 
 			deploymentStatus, err := findDeploymentStatus(ctx, conn, **primaryDeploymentArn)
-			tflog.Debug(ctx, "Deployment status check", map[string]interface{}{
-				"deploymentStatus": deploymentStatus,
-				"error":            err,
-			})
-
 			if err != nil {
 				return nil, "", err
 			}
@@ -2204,14 +2165,8 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 		// For other deployment controllers or in-place updates, check based on desired count
 		if n, dc, rc := len(output.Deployments), output.DesiredCount, output.RunningCount; n == 1 && dc == rc {
-			tflog.Debug(ctx, "Desired count check stable", map[string]interface{}{
-				"output": output,
-			})
 			serviceStatus = serviceStatusStable
 		} else {
-			tflog.Debug(ctx, "Desired count check pending", map[string]interface{}{
-				"output": output,
-			})
 			serviceStatus = serviceStatusPending
 		}
 
@@ -2353,17 +2308,22 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running.
 // Does not return tags.
 func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, sigintCancellation bool, timeout time.Duration) (*awstypes.Service, error) {
-	var primaryDeploymentArn **string = new(*string)
-	var cancelFunc context.CancelFunc
-	var cancelCtx context.Context
-	var done chan struct{}
-	var goroutineStarted bool
+	var (
+		primaryDeploymentArn   **string = new(*string)
+		primaryTaskSet         *awstypes.Deployment
+		isNewPrimaryDeployment bool
+		isNewECSDeployment     bool
+		cancelFunc             context.CancelFunc
+		cancelCtx              context.Context
+		done                   chan struct{}
+		goroutineStarted       bool
+	)
 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
 		Refresh: func() (any, string, error) {
-			result, status, err := statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, primaryDeploymentArn, operationTime)()
+			result, status, err := statusServiceWaitForStable(ctx, conn, serviceName, clusterNameOrARN, primaryDeploymentArn, operationTime, &primaryTaskSet, &isNewPrimaryDeployment, &isNewECSDeployment)()
 
 			// Create context and start goroutine only when needed
 			if sigintCancellation && !goroutineStarted && *primaryDeploymentArn != nil {
@@ -2383,7 +2343,6 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clust
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	// Cleanup only if goroutine was started
 	if goroutineStarted {
 		cancelFunc()
 		<-done

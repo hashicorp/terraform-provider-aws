@@ -3643,7 +3643,7 @@ func testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName string, sho
 	return acctest.ConfigCompose(testAccServiceConfig_blueGreenDeploymentBase(rName), fmt.Sprintf(`
 
 resource "aws_ecs_task_definition" "test2" {
-  family                   = %[1]q
+  family                   = "%[1]s-test2"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 256
