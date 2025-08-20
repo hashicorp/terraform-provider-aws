@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -514,11 +513,11 @@ func TestAccDLMLifecyclePolicy_checkPolicyTypeTargetTagsConsistency(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLifecyclePolicyConfig_withoutTargetTags(rName),
-				ExpectError: regexp.MustCompile(`target_tags must be specified for policy_type EBS_SNAPSHOT_MANAGEMENT`),
+				ExpectError: regexache.MustCompile(`target_tags must be specified for policy_type EBS_SNAPSHOT_MANAGEMENT`),
 			},
 			{
 				Config:      testAccLifecyclePolicyConfig_eventWithTargetTags(rName),
-				ExpectError: regexp.MustCompile(`target_tags must not be specified for policy_type EVENT_BASED_POLICY`),
+				ExpectError: regexache.MustCompile(`target_tags must not be specified for policy_type EVENT_BASED_POLICY`),
 			},
 		},
 	})
