@@ -113,8 +113,8 @@ github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.25.0 h1:/a4GRYzQy
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.25.0/go.mod h1:hX5xwl8FzmIQMxfkaNxMbGVnTzDyCaNCe0qGApFDSHc=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.25.0 h1:BtwQUwyufH3WhisHCct+10JB3tbqYgnlcZkWQ8TrKrc=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.25.0/go.mod h1:TzNwrF98kIjcl1NOYUqZ9P0OsUsD1GN8fSJrt+gOUMU=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.29.0 h1:wpkgV+tKLNoHsRlaIWv5gswz4hZY1TbwIIuQX/atPmw=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.29.0/go.mod h1:s1Uq5wrZPR4SHPux9chAZ0woE7zzpTBaeFDOxNWEfOw=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.30.0 h1:hCBn//RJXE2AY1sipbSGESCKwQnxxKJKwI2oB9zBBy8=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.30.0/go.mod h1:s1Uq5wrZPR4SHPux9chAZ0woE7zzpTBaeFDOxNWEfOw=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.32.0 h1:GL80iUAU3t3NG8hqI1YM/VTehaHcYzBBu8lv0I0YrR0=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.32.0/go.mod h1:ZuzNLZis3yt5/NyM5jn7SWQ3uhtq9I5c3JQLcQZcOEI=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.27.0 h1:iYhGDJl3qGz7ZwBxnO8KWP3HBXBEHQwQuCTLtnvl+/c=
@@ -217,8 +217,8 @@ github.com/aws/aws-sdk-go-v2/service/dsql v1.9.0 h1:AWC9tLObLqxSeyolw7aug3PxEnU7
 github.com/aws/aws-sdk-go-v2/service/dsql v1.9.0/go.mod h1:v4koXz6cYLm9p9kT2iYCcLCxxDkX8JFg3UBElyXB80I=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.48.0 h1:6QbNrD5/LaVqsbvw+XZkUwRfJuPh11Y6cmUT/Umva2o=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.48.0/go.mod h1:tMQ/Edfn5xLcBFSVd3JDreJPias8GqBq0dVbCbMz9vs=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.244.0 h1:KfETrpt7yv2nkSrjOltgmKyAl8scbzYc4TFtZeoV6uc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.244.0/go.mod h1:EeWmteKqZjaMj45MUmPET1SisFI+HkqWIRQoyjMivcc=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.245.0 h1:NSmUES4o6jcxmd8/SeYwo3/wtr4e+pL2I8z7ZaseGsU=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.245.0/go.mod h1:EeWmteKqZjaMj45MUmPET1SisFI+HkqWIRQoyjMivcc=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.49.0 h1:NgkSYzgM3UhdSrXUKkl49FhbIPpNguZE4EXEGRhDcEU=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.49.0/go.mod h1:bi1dAg6vk8KC8nyf6DjQ3dkNJbzTirMSmZHbcRNa2vE=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.36.0 h1:8GcatvIKYx5WkwjwY4H+K7egBHOddC3wwS6fIbpOUlQ=
@@ -413,8 +413,8 @@ github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.23.0 h1:BtpUqF+QdW6NY
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.23.0/go.mod h1:SMXXR2N0zJmYAjJazRlfNSKCV4ei228xhFO+ZoqXH7w=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.22.0 h1:kjP4uojcr0zt3Xon5cuEWf95wDNZ2a3D9EWP1l2mYE4=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.22.0/go.mod h1:1AhqeD/xOF18b3v19C3p0gJigmQ52Kxe/Fifijwqtlo=
-github.com/aws/aws-sdk-go-v2/service/polly v1.51.0 h1:/ArRJKD83NVXj+9OAfZEahwvHkSSqPfTYx0ThC/XsAI=
-github.com/aws/aws-sdk-go-v2/service/polly v1.51.0/go.mod h1:S4iYoRxJQK+7h0jBi6fiUW9JyW8adhtoXW5mEc0qzhU=
+github.com/aws/aws-sdk-go-v2/service/polly v1.52.0 h1:XHfm7tNvgZc9TL4bW3TA6v0OaewvzUxBRX/+rDHe/FA=
+github.com/aws/aws-sdk-go-v2/service/polly v1.52.0/go.mod h1:S4iYoRxJQK+7h0jBi6fiUW9JyW8adhtoXW5mEc0qzhU=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.38.0 h1:WjynubA3yutEkbjZtzgNXAMhndGWraS2g5W9TXdtBhY=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.38.0/go.mod h1:6XKuQQSJAmFkNQ+6JxygxJw1rjbS4AMJ998ZvQAMGhI=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.32.0 h1:j2UihqELKZYVxUXtEJ/ANG+L4zyejh4B9K6Hc7ZzW/8=
