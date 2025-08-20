@@ -5,8 +5,10 @@ package controltower
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,7 +81,12 @@ func resourceLandingZone() *schema.Resource {
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
-					return json
+					fixedJSON, err := fixRetentionDays(json)
+					if err != nil {
+						// If fixing fails, return the original normalized JSON
+						return json
+					}
+					return fixedJSON
 				},
 			},
 			names.AttrVersion: {
@@ -159,7 +166,12 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set("manifest_json", v)
+		fixedManifestJSON, err := fixRetentionDays(v)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "fixing retentionDays in manifest_json: %s", err)
+		}
+
+		d.Set("manifest_json", fixedManifestJSON)
 	} else {
 		d.Set("manifest_json", nil)
 	}
@@ -326,4 +338,42 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 	}
 
 	return tfMap
+}
+
+// fixRetentionDays ensures that retentionDays values are always numbers in the manifest JSON
+func fixRetentionDays(manifestJSON string) (string, error) {
+	var manifest map[string]interface{}
+	
+	if err := json.Unmarshal([]byte(manifestJSON), &manifest); err != nil {
+		return "", err
+	}
+	
+	// Fix retentionDays in centralizedLogging.configurations.loggingBucket
+	if centralizedLogging, ok := manifest["centralizedLogging"].(map[string]interface{}); ok {
+		if configurations, ok := centralizedLogging["configurations"].(map[string]interface{}); ok {
+			if loggingBucket, ok := configurations["loggingBucket"].(map[string]interface{}); ok {
+				if retentionDays, ok := loggingBucket["retentionDays"].(string); ok {
+					if retentionDaysInt, err := strconv.Atoi(retentionDays); err == nil {
+						loggingBucket["retentionDays"] = retentionDaysInt
+					}
+				}
+			}
+			
+			if accessLoggingBucket, ok := configurations["accessLoggingBucket"].(map[string]interface{}); ok {
+				if retentionDays, ok := accessLoggingBucket["retentionDays"].(string); ok {
+					if retentionDaysInt, err := strconv.Atoi(retentionDays); err == nil {
+						accessLoggingBucket["retentionDays"] = retentionDaysInt
+					}
+				}
+			}
+		}
+	}
+	
+	// Convert back to JSON string
+	fixedJSON, err := json.Marshal(manifest)
+	if err != nil {
+		return "", err
+	}
+	
+	return string(fixedJSON), nil
 }
