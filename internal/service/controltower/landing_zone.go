@@ -341,7 +341,6 @@ func fixRetentionDaysType(manifestJSON string) (string, error) {
 		return "", err
 	}
 
-	// Check if nested path exists - most concise
 	if loggingBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["loggingBucket"].(map[string]any); ok {
 		if retentionDays, ok := loggingBucket["retentionDays"].(string); ok {
 			if days, err := strconv.Atoi(retentionDays); err == nil {
@@ -350,7 +349,6 @@ func fixRetentionDaysType(manifestJSON string) (string, error) {
 		}
 	}
 
-	// Same for accessLoggingBucket
 	if accessBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["accessLoggingBucket"].(map[string]any); ok {
 		if retentionDays, ok := accessBucket["retentionDays"].(string); ok {
 			if days, err := strconv.Atoi(retentionDays); err == nil {
