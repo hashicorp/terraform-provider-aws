@@ -26,6 +26,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Tables",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  DataSourceTableQuery,
+			TypeName: "aws_dynamodb_table_query",
+		},
 	}
 }
 
