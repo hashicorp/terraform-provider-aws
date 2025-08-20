@@ -616,18 +616,20 @@ func resourceService() *schema.Resource {
 			"deployment_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"strategy": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          string(awstypes.DeploymentStrategyRolling),
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
 						},
 						"bake_time_in_minutes": {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 1440),
 						},
 						"lifecycle_hook": {
@@ -1104,7 +1106,6 @@ func resourceService() *schema.Resource {
 			"sigint_cancellation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"task_definition": {
 				Type:     schema.TypeString,
@@ -2543,7 +2544,7 @@ func flattenDeploymentConfiguration(ctx context.Context, apiObject *awstypes.Dep
 
 	tfMap := map[string]any{}
 
-	if v := apiObject.Strategy; v != "" && v != awstypes.DeploymentStrategy("") {
+	if v := apiObject.Strategy; v != "" {
 		tfMap["strategy"] = string(v)
 	}
 
