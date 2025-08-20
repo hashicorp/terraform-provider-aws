@@ -214,6 +214,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						"policy_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							ForceNew:         true,
 							Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
 							ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
 						},
