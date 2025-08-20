@@ -32,6 +32,7 @@ var (
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
 	DeleteCacheCluster                        = deleteCacheCluster
+	DetermineAttrEngineVersionRedis           = determineAttrEngineVersionRedis
 	DiffVersion                               = diffVersion
 	EmptyDescription                          = emptyDescription
 	EngineMemcached                           = engineMemcached

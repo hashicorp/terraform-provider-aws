@@ -12,6 +12,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
+	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -927,6 +929,64 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				if !testcase.expectError.MatchString(err.Error()) {
 					t.Fatalf("unexpected error: %q", err.Error())
 				}
+			}
+		})
+	}
+}
+
+func TestDetermineAttrEngineVersionRedis(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		configVersion string // state file value
+		engineVersion string // aws value
+		expected      string
+	}{
+		{
+			configVersion: "5.4.3",
+			engineVersion: "5.4.3",
+			expected:      "5.4.3",
+		},
+		{
+			configVersion: "5.4.3",
+			engineVersion: "7.1",
+			expected:      "7.1",
+		},
+		{
+			configVersion: "6.x",
+			engineVersion: "6.2.6",
+			expected:      "6.x",
+		},
+		{
+			configVersion: "6.2.6",
+			engineVersion: "7.1",
+			expected:      "7.1",
+		},
+		{
+			configVersion: "7.0",
+			engineVersion: "7.1",
+			expected:      "7.1",
+		},
+		{
+			configVersion: "6.x",
+			engineVersion: "7.1",
+			expected:      "7.1",
+		},
+	}
+
+	for _, testcase := range testcases {
+		testcase := testcase
+		t.Run(testcase.engineVersion, func(t *testing.T) {
+			t.Parallel()
+			engineVersion, _ := gversion.NewVersion(testcase.engineVersion)
+			attrEngineVersion, err := tfelasticache.DetermineAttrEngineVersionRedis(testcase.configVersion, engineVersion)
+
+			if err != nil {
+				t.Errorf("expected no error, got %s", err)
+			}
+
+			if testcase.expected != attrEngineVersion {
+				t.Errorf("expected %s, got %s", testcase.expected, attrEngineVersion)
 			}
 		})
 	}
