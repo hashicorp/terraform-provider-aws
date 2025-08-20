@@ -549,7 +549,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.27"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion130),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
@@ -561,7 +561,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.28"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion131),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
@@ -1245,7 +1245,7 @@ func testAccNodeGroupConfig_base(rName string) string {
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.32"
+  version  = %[2]q
 
   vpc_config {
     subnet_ids         = aws_subnet.test[*].id
@@ -1257,7 +1257,7 @@ resource "aws_eks_cluster" "test" {
     aws_main_route_table_association.test,
   ]
 }
-`, rName))
+`, rName, clusterDefaultVersion))
 }
 
 func testAccNodeGroupConfig_versionBase(rName string, version string) string {

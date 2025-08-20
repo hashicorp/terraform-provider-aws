@@ -29,11 +29,17 @@ import (
 )
 
 const (
-	clusterVersionUpgradeInitial = "1.27"
-	clusterVersionUpgradeUpdated = "1.28"
+	clusterVersion130 = "1.30"
+	clusterVersion131 = "1.31"
+	clusterVersion132 = "1.32"
 
-	clusterVersionUpgradeForceInitial = "1.30"
-	clusterVersionUpgradeForceUpdated = "1.31"
+	clusterDefaultVersion = clusterVersion132
+
+	clusterVersionUpgradeInitial = clusterVersion130
+	clusterVersionUpgradeUpdated = clusterVersion131
+
+	clusterVersionUpgradeForceInitial = clusterVersion130
+	clusterVersionUpgradeForceUpdated = clusterVersion132
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -275,13 +281,13 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.56.1",
+						VersionConstraint: "6.9.0",
 					},
 				},
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckNoResourceAttr(resourceName, "bootstrap_self_managed_addons"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 				),
 			},
 			{
