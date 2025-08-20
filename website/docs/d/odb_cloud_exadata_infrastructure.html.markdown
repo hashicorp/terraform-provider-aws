@@ -27,6 +27,7 @@ data "aws_odb_cloud_exadata_infrastructure" "example" {
 The following arguments are optional:
 
 * `id` - (Required) The unique identifier of the Exadata infrastructure.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -69,4 +70,3 @@ This data source exports the following attributes in addition to the arguments a
 * `database_server_type` - The database server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
 * `storage_server_type` - The storage server model type of the Exadata infrastructure. For the list of valid model names, use the ListDbSystemShapes operation.
 * `maintenance_window` - The scheduling details of the maintenance window. Patching and system updates take place during the maintenance window.
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
