@@ -468,6 +468,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
+	d.Set("worker_replacement_strategy", environment.LastUpdate.WorkerReplacementStrategy)
 	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
