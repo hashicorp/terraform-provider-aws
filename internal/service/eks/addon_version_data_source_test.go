@@ -54,11 +54,10 @@ data "aws_eks_addon_version" "test" {
 }
 
 resource "aws_eks_addon" "test" {
-  addon_name    = %[2]q
-  cluster_name  = aws_eks_cluster.test.name
-  addon_version = data.aws_eks_addon_version.test.version
-
-  resolve_conflicts = "OVERWRITE"
+  addon_name                  = %[2]q
+  cluster_name                = aws_eks_cluster.test.name
+  addon_version               = data.aws_eks_addon_version.test.version
+  resolve_conflicts_on_create = "OVERWRITE"
 }
 
 data "aws_eks_addon" "test" {
