@@ -215,7 +215,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.8.0
+	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.39.0
