@@ -1004,6 +1004,9 @@ resource "aws_s3_bucket" "conflict" {
 func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
+	const artifactsDataSourceName = "data.aws_servicecatalog_provisioning_artifacts.product_artifacts"
+	const initialArtifactID = "provisioning_artifact_details.0.id"
+	const newArtifactID = "provisioning_artifact_details.1.id"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var pprod awstypes.ProvisionedProductDetail
 
@@ -1015,44 +1018,66 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create with working configuration using simple template
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_working(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "none"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "none"),
 				),
 			},
+
 			// Step 2: Update to failing configuration - this should fail and leave resource TAINTED
 			{
-				Config:      testAccProvisionedProductConfig_retryTaintedUpdate_failing(rName),
-				ExpectError: regexache.MustCompile(`Properties validation failed`),
+				Config:      testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "changed_once"),
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
 			},
+
 			// Step 3: Verify resource is now TAINTED after the failed update
 			// Use RefreshOnly to avoid triggering any plan changes due to config differences
 			{
 				RefreshState: true,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// testAccCheckProvisionedProductExists(ctx, resourceName, &pprod), // Can't use this because it fails on TAINTED
 					testAccCheckProvisionedProductStatus(ctx, resourceName, "TAINTED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "TAINTED"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "changed_once"),
 				),
 			},
+
 			// Step 4: CRITICAL TEST - Apply the same failing config again
 			// BUG: Currently this shows "no changes" but should retry the update
 			// ConfigPlanChecks should FAIL with current implementation, demonstrating the bug
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_failing(rName),
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "changed_once"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				ExpectError: regexache.MustCompile(`Properties validation failed`),
 			},
+
 			// Step 5: Clean up by applying a working config
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_working(rName),
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "changed_to_force_an_update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "changed_to_force_an_update"),
 				),
 			},
 		},
@@ -1093,12 +1118,72 @@ func testAccCheckProvisionedProductStatus(ctx context.Context, resourceName, exp
 	}
 }
 
-// testAccProvisionedProductConfig_retryTaintedUpdate_working creates a simple working CloudFormation template
+// testAccProvisionedProductConfig_retryTaintedUpdate creates a simple working CloudFormation template
 // This avoids the complex conditional logic that was causing issues in the basic config
-func testAccProvisionedProductConfig_retryTaintedUpdate_working(rName string) string {
+func testAccProvisionedProductConfig_retryTaintedUpdate(rName string, useNewVersion bool, simulateFailure bool, extraParam string) string {
 	return acctest.ConfigCompose(
 		testAccProvisionedProductPortfolioBaseConfig(rName),
 		fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                     = %[1]q
+  product_id               = aws_servicecatalog_product.test.id
+  provisioning_artifact_id = %[2]t ? local.new_provisioning_artifact.id : local.initial_provisioning_artifact.id
+
+  provisioning_parameters {
+    key   = "FailureSimulation"
+    value = "%[3]t"
+  }
+
+  provisioning_parameters {
+    key   = "ExtraParam"
+    value = %[4]q
+  }
+
+  depends_on = [
+    aws_servicecatalog_constraint.launch_constraint,
+  ]
+}
+
+resource "aws_servicecatalog_product" "test" {
+  description         = %[1]q
+  name                = %[1]q
+  owner               = "ägare"
+  type                = "CLOUD_FORMATION_TEMPLATE"
+
+  provisioning_artifact_parameters {
+    name         = "%[1]s - Initial"
+    description  = "Initial"
+    template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+    type         = "CLOUD_FORMATION_TEMPLATE"
+  }
+}
+
+resource "aws_servicecatalog_provisioning_artifact" "new_version" {
+  product_id = aws_servicecatalog_product.test.id
+
+  name         = "%[1]s - New"
+  description  = "New"
+  template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  type         = "CLOUD_FORMATION_TEMPLATE"
+
+  # Force a new version to be created when MPI version changes
+  # Is this needed?
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+data "aws_servicecatalog_provisioning_artifacts" "product_artifacts" {
+  product_id = aws_servicecatalog_product.test.id
+
+  depends_on = [aws_servicecatalog_provisioning_artifact.new_version]
+}
+
+locals {
+  initial_provisioning_artifact = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[0]
+  new_provisioning_artifact     = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[1]
+}
+
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -1106,114 +1191,47 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.json"
+  key    = "product_template.yaml"
 
-  content = jsonencode({
-    AWSTemplateFormatVersion = "2010-09-09"
+  source = "${path.module}/testdata/foo/product_template.yaml"
+}
 
-    Resources = {
-      TestBucket = {
-        Type = "AWS::S3::Bucket"
-      }
-    }
+# Required to validate provisioned product on update
+resource "aws_servicecatalog_constraint" "launch_constraint" {
+  description  = "Launch constraint for test product"
+  portfolio_id = aws_servicecatalog_portfolio.test.id
+  product_id   = aws_servicecatalog_product.test.id
+  type         = "LAUNCH"
 
-    Outputs = {
-      BucketName = {
-        Description = "Bucket Name"
-        Value = {
-          Ref = "TestBucket"
+  parameters = jsonencode({
+    "RoleArn" = aws_iam_role.launch_role.arn
+  })
+
+  depends_on = [aws_iam_role_policy_attachment.launch_role]
+}
+
+# IAM role for Service Catalog launch constraint
+resource "aws_iam_role" "launch_role" {
+  name = "%[1]s-launch-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "servicecatalog.amazonaws.com"
         }
       }
-    }
+    ]
   })
 }
 
-resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = %[1]q
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
+# Attach admin policy to launch role (for demo purposes only)
+resource "aws_iam_role_policy_attachment" "launch_role" {
+  role       = aws_iam_role.launch_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
-
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_product.test.id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-}
-`, rName))
-}
-
-// testAccProvisionedProductConfig_retryTaintedUpdate_failing creates a CloudFormation template that will fail
-// This uses an invalid S3 bucket name to trigger a CloudFormation validation error
-func testAccProvisionedProductConfig_retryTaintedUpdate_failing(rName string) string {
-	return acctest.ConfigCompose(
-		testAccProvisionedProductPortfolioBaseConfig(rName),
-		fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "%[1]s.json"
-
-  content = jsonencode({
-    AWSTemplateFormatVersion = "2010-09-09"
-
-    Resources = {
-      TestBucket = {
-        Type = "AWS::S3::Bucket"
-        Properties = {
-          BucketName = "INVALID_BUCKET_NAME_WITH_UPPERCASE_AND_UNDERSCORES"
-        }
-      }
-    }
-
-    Outputs = {
-      BucketName = {
-        Description = "Bucket Name"
-        Value = {
-          Ref = "TestBucket"
-        }
-      }
-    }
-  })
-}
-
-resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
-  support_description = %[1]q
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-}
-
-resource "aws_servicecatalog_provisioned_product" "test" {
-  name                       = %[1]q
-  product_id                 = aws_servicecatalog_product.test.id
-  provisioning_artifact_name = %[1]q
-  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
-}
-`, rName))
+`, rName, useNewVersion, simulateFailure, extraParam))
 }
