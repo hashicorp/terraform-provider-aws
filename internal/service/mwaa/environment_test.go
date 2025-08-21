@@ -13,8 +13,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -309,16 +313,14 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePublicOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "SAT:03:00"),
-					resource.TestCheckResourceAttr(resourceName, "worker_replacement_strategy", string(awstypes.WorkerReplacementStrategyGraceful)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "production"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"worker_replacement_strategy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -480,7 +482,7 @@ func TestAccMWAAEnvironment_updateAirflowWorkerReplacementStrategy(t *testing.T)
 	}
 
 	ctx := acctest.Context(t)
-	var environment1, environment2 awstypes.Environment
+	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -493,10 +495,21 @@ func TestAccMWAAEnvironment_updateAirflowWorkerReplacementStrategy(t *testing.T)
 			{
 				Config: testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "worker_replacement_strategy", "FORCED"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				ExpectNonEmptyPlan: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_replacement_strategy"), tfknownvalue.StringExact(awstypes.WorkerReplacementStrategyForced)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -506,10 +519,19 @@ func TestAccMWAAEnvironment_updateAirflowWorkerReplacementStrategy(t *testing.T)
 			{
 				Config: testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
-					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
-					resource.TestCheckResourceAttr(resourceName, "worker_replacement_strategy", "GRACEFUL"),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_replacement_strategy"), tfknownvalue.StringExact(awstypes.WorkerReplacementStrategyGraceful)),
+				},
 			},
 		},
 	})
@@ -947,7 +969,6 @@ resource "aws_mwaa_environment" "test" {
   startup_script_s3_path          = aws_s3_object.startup_script.key
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
-  worker_replacement_strategy     = "GRACEFUL"
 
   tags = {
     Name        = %[1]q
