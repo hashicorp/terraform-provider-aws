@@ -1,11 +1,11 @@
-resource "aws_route_table" "test" {
-{{- template "region" }}
-  vpc_id = aws_vpc.test.id
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
 
-{{- template "tags" . }}
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_vpc" "test" {
-{{- template "region" }}
   cidr_block = "10.1.0.0/16"
 }
+
