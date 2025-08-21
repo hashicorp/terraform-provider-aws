@@ -23,6 +23,7 @@ func resourceNetworkInterfaceAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourceNetworkInterfaceAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceAttachmentRead,
 		DeleteWithoutTimeout: resourceNetworkInterfaceAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -70,6 +71,7 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 		InstanceId:         aws.String(d.Get(names.AttrInstanceID).(string)),
 		DeviceIndex:        aws.Int32(int32(d.Get("device_index").(int))),
 	}
+
 	if v, ok := d.GetOk("network_card_index"); ok {
 		if v, ok := v.(int); ok {
 			input.NetworkCardIndex = aws.Int32(int32(v))
@@ -93,7 +95,7 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	network_interface, err := findNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
+	eni, err := findNetworkInterfaceByAttachmentID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface Attachment (%s) not found, removing from state", d.Id())
@@ -105,12 +107,13 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrNetworkInterfaceID, network_interface.NetworkInterfaceId)
-	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
-	d.Set("device_index", network_interface.Attachment.DeviceIndex)
-	d.Set(names.AttrInstanceID, network_interface.Attachment.InstanceId)
-	d.Set("network_card_index", network_interface.Attachment.NetworkCardIndex)
-	d.Set(names.AttrStatus, network_interface.Attachment.Status)
+	attachment := eni.Attachment
+	d.Set("attachment_id", attachment.AttachmentId)
+	d.Set("device_index", attachment.DeviceIndex)
+	d.Set(names.AttrInstanceID, attachment.InstanceId)
+	d.Set("network_card_index", attachment.NetworkCardIndex)
+	d.Set(names.AttrNetworkInterfaceID, eni.NetworkInterfaceId)
+	d.Set(names.AttrStatus, eni.Attachment.Status)
 
 	return diags
 }
