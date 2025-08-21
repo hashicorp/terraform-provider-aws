@@ -50,11 +50,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activeDirectoryName` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `adminGroup` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
 * `authorGroup` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
-* `awsAccountId` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `contactNumber` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directoryId` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
@@ -63,6 +62,7 @@ The following arguments are optional:
 * `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `readerGroup` - (Optional) Reader group associated with your Active Directory or IAM Identity Center account.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -109,4 +109,4 @@ Using `terraform import`, import a QuickSight Account Subscription using `awsAcc
 % terraform import aws_quicksight_account_subscription.example "012345678901"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-91f15acfde890cfcdac040526affe195a1fd48d31edee885daba381184ecfb08 -->
+<!-- cache-key: cdktf-0.20.8 input-eacb7ec4cba3fd5e27f0175a40ea7e761046d3ab1f24476e28c1a1427ff9cbd5 -->

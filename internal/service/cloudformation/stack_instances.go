@@ -549,7 +549,7 @@ func deleteStackInstances(ctx context.Context, d *schema.ResourceData, meta any,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation Stack Instances: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteStackInstances(ctx, input)
 	})
 

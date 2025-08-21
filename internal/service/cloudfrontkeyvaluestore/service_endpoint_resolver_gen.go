@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params cloudfrontkeyval
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up cloudfrontkeyvaluestore endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up cloudfrontkeyvaluestore endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {
