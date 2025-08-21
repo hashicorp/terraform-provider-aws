@@ -540,7 +540,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 	})
 }
 
-func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
+func TestAccSyntheticsCanary_vpcIPv6AllowedForDualStack(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -557,7 +557,7 @@ func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, true),
+				Config: testAccCanaryConfig_vpcIPv6AllowedForDualStack(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -573,7 +573,7 @@ func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, false),
+				Config: testAccCanaryConfig_vpcIPv6AllowedForDualStack(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -583,7 +583,7 @@ func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, true),
+				Config: testAccCanaryConfig_vpcIPv6AllowedForDualStack(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -593,7 +593,7 @@ func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStackUpdated(rName),
+				Config: testAccCanaryConfig_vpcIPv6AllowedForDualStackUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
@@ -1332,7 +1332,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName))
 }
 
-func testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName string, ipv6 bool) string {
+func testAccCanaryConfig_vpcIPv6AllowedForDualStack(rName string, ipv6 bool) string {
 	return acctest.ConfigCompose(
 		testAccCanaryConfig_base(rName),
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
@@ -1363,7 +1363,7 @@ resource "aws_synthetics_canary" "test" {
 `, rName, ipv6))
 }
 
-func testAccCanaryConfig_vpcIpv6AllowedForDualStackUpdated(rName string) string {
+func testAccCanaryConfig_vpcIPv6AllowedForDualStackUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryConfig_base(rName),
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
