@@ -69,8 +69,8 @@ The following arguments are required:
 
 ### `data_query` Argument Reference
 
-* `query_statement` - (Required) Query statement.
-* `table_configurations` - (Optional) Table configuration.
+* `query_statement` - (Required) Query statement. The SQL table name for CUR 2.0 is `COST_AND_USAGE_REPORT`. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html) for a list of available columns.
+* `table_configurations` - (Optional) Table configuration. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html#cur2-table-configurations) for the available configurations. In addition to those listed in the documentation, `BILLING_VIEW_ARN` must also be included, as shown in the example above.
 
 ### `destination_configurations` Argument Reference
 
