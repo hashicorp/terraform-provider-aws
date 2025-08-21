@@ -6,6 +6,7 @@ package opensearch_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -117,6 +118,65 @@ func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
+func TestAccOpenSearchPackage_upgradePossible(t *testing.T) {
+	ctx := acctest.Context(t)
+	pkgName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_package.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPackageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPackageConfig_upgradeVersion(pkgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPackageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "available_package_version", "v1"),
+					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
+					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),
+					resource.TestCheckResourceAttr(resourceName, "package_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", "TXT-DICTIONARY"),
+				),
+			},
+			{
+				PreConfig: func() {
+					f, err := os.OpenFile("./test-fixtures/example-opensearch-custom-package.txt", os.O_APPEND|os.O_WRONLY, 0600)
+					if err != nil {
+						panic(err)
+					}
+
+					defer f.Close()
+
+					if _, err := f.WriteString("bicycle, brake"); err != nil {
+						panic(err)
+					}
+				},
+				Config: testAccPackageConfig_upgradeVersion(pkgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPackageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "available_package_version", "v2"),
+					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
+					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),
+					resource.TestCheckResourceAttr(resourceName, "package_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", "TXT-DICTIONARY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"package_source", // This isn't returned by the API
+				},
+			},
+		},
+	})
+}
+
 func testAccPackageConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -135,6 +195,31 @@ resource "aws_opensearch_package" "test" {
   package_source {
     s3_bucket_name = aws_s3_bucket.test.bucket
     s3_key         = aws_s3_object.test.key
+  }
+  package_type = "TXT-DICTIONARY"
+}
+`, rName)
+}
+
+func testAccPackageConfig_upgradeVersion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = %[1]q
+  source = "./test-fixtures/example-opensearch-custom-package.txt"
+  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
+}
+
+resource "aws_opensearch_package" "test" {
+  package_name = %[1]q
+  package_source {
+    s3_bucket_name = aws_s3_bucket.test.bucket
+    s3_key         = aws_s3_object.test.key
+	source_version = aws_s3_object.test.etag
   }
   package_type = "TXT-DICTIONARY"
 }
