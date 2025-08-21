@@ -432,11 +432,11 @@ resource "aws_arcregionswitch_plan" "test" {
       arc_routing_control_config {
         region_and_routing_controls {
           region = "us-east-1"
-          routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/control1"]
+          routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"]
         }
         region_and_routing_controls {
           region = "us-west-2"
-          routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/control2"]
+          routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"]
         }
         cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
         external_id        = "routing-external-id"
