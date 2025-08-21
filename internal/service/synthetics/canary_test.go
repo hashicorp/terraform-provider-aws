@@ -506,6 +506,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
@@ -521,6 +522,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
@@ -530,7 +532,74 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSyntheticsCanary_vpcIpv6AllowedForDualStack(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+			},
+			{
+				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccCanaryConfig_vpcIpv6AllowedForDualStackUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtFalse),
 				),
 			},
 		},
@@ -1256,6 +1325,66 @@ resource "aws_synthetics_canary" "test" {
   vpc_config {
     subnet_ids         = [aws_subnet.test[1].id]
     security_group_ids = [aws_security_group.test[1].id]
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccCanaryConfig_vpcIpv6AllowedForDualStack(rName string, ipv6 bool) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		testAccCanarySecurityGroupBaseConfig(rName, 2),
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
+
+    ipv6_allowed_for_dual_stack = %[2]t
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, ipv6))
+}
+
+func testAccCanaryConfig_vpcIpv6AllowedForDualStackUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		testAccCanarySecurityGroupBaseConfig(rName, 2),
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
