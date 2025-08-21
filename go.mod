@@ -151,7 +151,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.44.0
