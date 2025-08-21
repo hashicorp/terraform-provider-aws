@@ -39,7 +39,7 @@ const (
 	clusterVersionUpgradeUpdated = clusterVersion131
 
 	clusterVersionUpgradeForceInitial = clusterVersion130
-	clusterVersionUpgradeForceUpdated = clusterVersion132
+	clusterVersionUpgradeForceUpdated = clusterVersion131
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -1368,11 +1368,11 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_upgradePolicy(rName, "STANDARD"),
+				Config: testAccClusterConfig_upgradePolicy(rName, "EXTENDED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "EXTENDED"),
 				),
 			},
 			{
@@ -1382,11 +1382,11 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_upgradePolicy(rName, "EXTENDED"),
+				Config: testAccClusterConfig_upgradePolicy(rName, "STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "EXTENDED"),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "STANDARD"),
 				),
 			},
 			{
