@@ -522,7 +522,6 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ProvisionedProductStatusAvailable,
-			awstypes.ProvisionedProductStatusTainted,
 			awstypes.ProvisionedProductStatusUnderChange,
 		),
 		Target:  []string{},
@@ -530,7 +529,26 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			var foo *retry.UnexpectedStateError
+			if errors.As(err, &foo) {
+				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
+				status := string(detail.Status)
+				if status == string(awstypes.ProvisionedProductStatusTainted) {
+					// Create a custom error type that signals state refresh is needed
+					return &ProvisionedProductFailureError{
+						StatusMessage: aws.ToString(detail.StatusMessage),
+						Status:        status,
+						NeedsRefresh:  true,
+					}
+				}
+			}
+		}
+		return err
+	}
 
 	return err
 }

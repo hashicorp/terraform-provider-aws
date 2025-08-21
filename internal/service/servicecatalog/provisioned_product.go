@@ -593,7 +593,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.TerminateProvisionedProductInput{
+	input := servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(id.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
@@ -602,9 +602,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get(names.AttrStatus).(string); ok && v == string(awstypes.ProvisionedProductStatusTainted) {
-		input.IgnoreErrors = true
-	} else if v, ok := d.GetOk("ignore_errors"); ok {
+	if v, ok := d.GetOk("ignore_errors"); ok {
 		input.IgnoreErrors = v.(bool)
 	}
 
@@ -612,7 +610,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		input.RetainPhysicalResources = v.(bool)
 	}
 
-	_, err := conn.TerminateProvisionedProduct(ctx, input)
+	_, err := conn.TerminateProvisionedProduct(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -623,6 +621,23 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
+
+	if failureErr, ok := errs.As[*ProvisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
+		input.IgnoreErrors = true
+
+		_, err = conn.TerminateProvisionedProduct(ctx, &input)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
+		}
+
+		err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
+
+	}
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
