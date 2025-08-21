@@ -602,7 +602,9 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ignore_errors"); ok {
+	if v, ok := d.Get(names.AttrStatus).(string); ok && v == string(awstypes.ProvisionedProductStatusTainted) {
+		input.IgnoreErrors = true
+	} else if v, ok := d.GetOk("ignore_errors"); ok {
 		input.IgnoreErrors = v.(bool)
 	}
 

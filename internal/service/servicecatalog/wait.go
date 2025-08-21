@@ -520,7 +520,11 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProvisionedProductStatusAvailable, awstypes.ProvisionedProductStatusUnderChange),
+		Pending: enum.Slice(
+			awstypes.ProvisionedProductStatusAvailable,
+			awstypes.ProvisionedProductStatusTainted,
+			awstypes.ProvisionedProductStatusUnderChange,
+		),
 		Target:  []string{},
 		Refresh: statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,
