@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_mwaa_environment: Add worker replacement strategy input
+resource/aws_mwaa_environment: Add `worker_replacement_strategy` argument
 ```
