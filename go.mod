@@ -198,7 +198,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.38.1
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.32.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.92.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.33.0
