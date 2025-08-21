@@ -3398,7 +3398,7 @@ resource "aws_ecs_task_definition" "test" {
       essential = true
       environment = [
         {
-          name  = "TEST_SUFFIX"
+          name  = "test_name"
           value = "test_val"
         }
       ]
@@ -3538,7 +3538,7 @@ resource "aws_ecs_task_definition" "should_fail" {
       ]
       environment = [
         {
-          name  = "TEST_SUFFIX"
+          name  = "test_name"
           value = "test_val"
         }
       ]
@@ -3661,7 +3661,7 @@ resource "aws_ecs_task_definition" "test2" {
       essential = true
       environment = [
         {
-          name  = "TEST_SUFFIX_2"
+          name  = "test_name_2"
           value = "test_val_2"
         }
       ]
