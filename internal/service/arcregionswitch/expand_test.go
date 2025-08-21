@@ -490,14 +490,14 @@ func TestExpandSteps(t *testing.T) {
 								map[string]interface{}{
 									"region": "us-west-2",
 									"routing_control_arns": []interface{}{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1",
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-2",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457",
 									},
 								},
 								map[string]interface{}{
 									"region": "us-east-1",
 									"routing_control_arns": []interface{}{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-3",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458",
 									},
 								},
 							},
@@ -518,17 +518,17 @@ func TestExpandSteps(t *testing.T) {
 							RegionAndRoutingControls: map[string][]types.ArcRoutingControlState{
 								"us-west-2": {
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-2"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 								},
 								"us-east-1": {
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-3"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 								},
@@ -874,17 +874,17 @@ func TestFlattenSteps(t *testing.T) {
 							RegionAndRoutingControls: map[string][]types.ArcRoutingControlState{
 								"us-west-2": {
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-2"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 								},
 								"us-east-1": {
 									{
-										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-3"),
+										RoutingControlArn: aws.String("arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458"),
 										State:             types.RoutingControlStateChangeOn,
 									},
 								},
@@ -907,14 +907,14 @@ func TestFlattenSteps(t *testing.T) {
 								map[string]interface{}{
 									"region": "us-east-1",
 									"routing_control_arns": []string{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-3",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458",
 									},
 								},
 								map[string]interface{}{
 									"region": "us-west-2",
 									"routing_control_arns": []string{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1",
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-2",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457",
 									},
 								},
 							},
@@ -1081,7 +1081,7 @@ func TestExpandStepsWithWorkflowAction(t *testing.T) {
 								map[string]interface{}{
 									"region": "us-west-2",
 									"routing_control_arns": []interface{}{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 									},
 								},
 							},
@@ -1106,7 +1106,7 @@ func TestExpandStepsWithWorkflowAction(t *testing.T) {
 								map[string]interface{}{
 									"region": "us-west-2",
 									"routing_control_arns": []interface{}{
-										"arn:aws:route53-recovery-control::123456789012:controlpanel/test-panel/routingcontrol/test-control-1",
+										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 									},
 								},
 							},
