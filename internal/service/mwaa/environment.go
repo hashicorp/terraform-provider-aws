@@ -328,11 +328,10 @@ func resourceEnvironment() *schema.Resource {
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &mwaa.CreateEnvironmentInput{
+	input := mwaa.CreateEnvironmentInput{
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
 		ExecutionRoleArn:     aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		Name:                 aws.String(name),
@@ -365,7 +364,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]any))
 	}
 
-	// input.MaxWorkers = aws.Int32(int32(90))
 	if v, ok := d.GetOk("max_workers"); ok {
 		input.MaxWorkers = aws.Int32(int32(v.(int)))
 	}
@@ -425,7 +423,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	var validationException, internalServerException = &awstypes.ValidationException{}, &awstypes.InternalServerException{}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return conn.CreateEnvironment(ctx, input)
+		return conn.CreateEnvironment(ctx, &input)
 	}, validationException.ErrorCode(), internalServerException.ErrorCode())
 
 	if err != nil {
@@ -443,7 +441,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	environment, err := findEnvironmentByName(ctx, conn, d.Id())
@@ -496,6 +493,9 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("webserver_vpc_endpoint_service", environment.WebserverVpcEndpointService)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
+	if environment.LastUpdate != nil {
+		d.Set("worker_replacement_strategy", environment.LastUpdate.WorkerReplacementStrategy)
+	}
 
 	setTagsOut(ctx, environment.Tags)
 
@@ -504,11 +504,10 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &mwaa.UpdateEnvironmentInput{
+		input := mwaa.UpdateEnvironmentInput{
 			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
@@ -605,7 +604,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.WorkerReplacementStrategy = awstypes.WorkerReplacementStrategy(v.(string))
 		}
 
-		_, err := conn.UpdateEnvironment(ctx, input)
+		_, err := conn.UpdateEnvironment(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MWAA Environment (%s): %s", d.Id(), err)
@@ -621,13 +620,13 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironment(ctx, &mwaa.DeleteEnvironmentInput{
+	input := mwaa.DeleteEnvironmentInput{
 		Name: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -671,10 +670,14 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 }
 
 func findEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
-	input := &mwaa.GetEnvironmentInput{
+	input := mwaa.GetEnvironmentInput{
 		Name: aws.String(name),
 	}
 
+	return findEnvironment(ctx, conn, &input)
+}
+
+func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvironmentInput) (*awstypes.Environment, error) {
 	output, err := conn.GetEnvironment(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
