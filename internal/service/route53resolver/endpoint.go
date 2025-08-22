@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -42,6 +43,15 @@ func resourceEndpoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		SchemaVersion: 1,
+
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceResolverEndpointV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: upgradeResolverEndpointV0toV1,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -59,7 +69,7 @@ func resourceEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrIPAddress: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 2,
 				MaxItems: 10,
@@ -87,7 +97,6 @@ func resourceEndpoint() *schema.Resource {
 						},
 					},
 				},
-				Set: endpointHashIPAddress,
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
@@ -138,7 +147,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        awstypes.ResolverEndpointDirection(d.Get("direction").(string)),
-		IpAddresses:      expandEndpointIPAddresses(d.Get(names.AttrIPAddress).(*schema.Set)),
+		IpAddresses:      expandEndpointIPAddresses(d.Get(names.AttrIPAddress).([]interface{})),
 		SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -200,7 +209,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrIPAddress, schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
+	if err := d.Set(names.AttrIPAddress, flattenEndpointIPAddresses(ipAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_address: %s", err)
 	}
 
@@ -241,41 +250,32 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if d.HasChange(names.AttrIPAddress) {
 		oraw, nraw := d.GetChange(names.AttrIPAddress)
-		o := oraw.(*schema.Set)
-		n := nraw.(*schema.Set)
-		del := o.Difference(n).List()
-		add := n.Difference(o).List()
+		oList := toIfaceSlice(oraw)
+		nList := toIfaceSlice(nraw)
 
-		// Add new before deleting old so number of IP addresses doesn't drop below 2.
-		for _, v := range add {
+		adds, dels := diffIPAddressLists(oList, nList)
+
+		for _, v := range adds {
 			input := &route53resolver.AssociateResolverEndpointIpAddressInput{
 				IpAddress:          expandEndpointIPAddressUpdate(v),
 				ResolverEndpointId: aws.String(d.Id()),
 			}
-
-			_, err := conn.AssociateResolverEndpointIpAddress(ctx, input)
-
-			if err != nil {
+			if _, err := conn.AssociateResolverEndpointIpAddress(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "associating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
 			}
-
 			if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 			}
 		}
 
-		for _, v := range del {
+		for _, v := range dels {
 			input := &route53resolver.DisassociateResolverEndpointIpAddressInput{
 				IpAddress:          expandEndpointIPAddressUpdate(v),
 				ResolverEndpointId: aws.String(d.Id()),
 			}
-
-			_, err := conn.DisassociateResolverEndpointIpAddress(ctx, input)
-
-			if err != nil {
+			if _, err := conn.DisassociateResolverEndpointIpAddress(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "disassociating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
 			}
-
 			if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 			}
@@ -391,7 +391,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 	return nil, err
 }
 
-func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) { //nolint:unparam
+func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id string, timeout time.Duration) (*awstypes.ResolverEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ResolverEndpointStatusUpdating),
 		Target:     enum.Slice(awstypes.ResolverEndpointStatusOperational),
@@ -461,10 +461,10 @@ func expandEndpointIPAddressUpdate(vIpAddress any) *awstypes.IpAddressUpdate {
 	return ipAddressUpdate
 }
 
-func expandEndpointIPAddresses(vIpAddresses *schema.Set) []awstypes.IpAddressRequest {
-	ipAddressRequests := []awstypes.IpAddressRequest{}
+func expandEndpointIPAddresses(vIpAddresses []interface{}) []awstypes.IpAddressRequest {
+	ipAddressRequests := make([]awstypes.IpAddressRequest, 0, len(vIpAddresses))
 
-	for _, vIpAddress := range vIpAddresses.List() {
+	for _, vIpAddress := range vIpAddresses {
 		ipAddressRequest := awstypes.IpAddressRequest{}
 
 		mIpAddress := vIpAddress.(map[string]any)
@@ -504,4 +504,153 @@ func flattenEndpointIPAddresses(ipAddresses []awstypes.IpAddressResponse) []any 
 	}
 
 	return vIpAddresses
+}
+
+func resourceResolverEndpointV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			names.AttrIPAddress: {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip":               {Type: schema.TypeString, Optional: true, Computed: true},
+						"ipv6":             {Type: schema.TypeString, Optional: true, Computed: true},
+						"ip_id":            {Type: schema.TypeString, Computed: true},
+						names.AttrSubnetID: {Type: schema.TypeString, Required: true},
+					},
+				},
+			},
+		},
+	}
+}
+
+func upgradeResolverEndpointV0toV1(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	const key = names.AttrIPAddress
+
+	v, ok := rawState[key]
+	if !ok || v == nil {
+		return rawState, nil
+	}
+
+	switch t := v.(type) {
+	case *schema.Set:
+		list := t.List()
+		sort.SliceStable(list, func(i, j int) bool {
+			mi := list[i].(map[string]interface{})
+			mj := list[j].(map[string]interface{})
+
+			si := fmt.Sprint(mi[names.AttrSubnetID])
+			sj := fmt.Sprint(mj[names.AttrSubnetID])
+			if si != sj {
+				return si < sj
+			}
+			ipi := fmt.Sprint(mi["ip"])
+			ipj := fmt.Sprint(mj["ip"])
+			if ipi == "" && ipj != "" {
+				return false
+			}
+			if ipj == "" && ipi != "" {
+				return true
+			}
+			return ipi < ipj
+		})
+		rawState[key] = list
+
+	case []interface{}:
+		list := t
+		sort.SliceStable(list, func(i, j int) bool {
+			mi := list[i].(map[string]interface{})
+			mj := list[j].(map[string]interface{})
+
+			si := fmt.Sprint(mi[names.AttrSubnetID])
+			sj := fmt.Sprint(mj[names.AttrSubnetID])
+			if si != sj {
+				return si < sj
+			}
+			ipi := fmt.Sprint(mi["ip"])
+			ipj := fmt.Sprint(mj["ip"])
+			if ipi == "" && ipj != "" {
+				return false
+			}
+			if ipj == "" && ipi != "" {
+				return true
+			}
+			return ipi < ipj
+		})
+		rawState[key] = list
+
+	default:
+		return rawState, nil
+	}
+
+	return rawState, nil
+}
+func toIfaceSlice(v any) []interface{} {
+	switch t := v.(type) {
+	case []interface{}:
+		return t
+	case *schema.Set:
+		return t.List()
+	case nil:
+		return nil
+	default:
+		return nil
+	}
+}
+
+func diffIPAddressLists(oldList, newList []interface{}) (adds []map[string]any, dels []map[string]any) {
+	type entry struct {
+		m map[string]any
+	}
+	keyOf := func(m map[string]any) string {
+		subnet := fmt.Sprint(m[names.AttrSubnetID])
+		ip, _ := m["ip"].(string)
+		if ip == "" {
+			ip = "(auto)"
+		}
+		return subnet + "|" + ip
+	}
+
+	oldCount := map[string]int{}
+	oldFirst := map[string]map[string]any{}
+	for _, v := range oldList {
+		m := v.(map[string]any)
+		k := keyOf(m)
+		oldCount[k]++
+		if _, ok := oldFirst[k]; !ok {
+			oldFirst[k] = m
+		}
+	}
+
+	newCount := map[string]int{}
+	newFirst := map[string]map[string]any{}
+	for _, v := range newList {
+		m := v.(map[string]any)
+		k := keyOf(m)
+		newCount[k]++
+		if _, ok := newFirst[k]; !ok {
+			newFirst[k] = m
+		}
+	}
+
+	for k, n := range newCount {
+		o := oldCount[k]
+		for i := 0; i < n-o; i++ {
+			if n > o {
+				adds = append(adds, newFirst[k])
+			}
+		}
+	}
+
+	for k, o := range oldCount {
+		n := newCount[k]
+		for i := 0; i < o-n; i++ {
+			if o > n {
+				dels = append(dels, oldFirst[k])
+			}
+		}
+	}
+
+	return
 }
