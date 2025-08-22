@@ -1,3 +1,3 @@
 ```release-note:bug
-internal/service/glue/catalog_table.go: "partition_keys" schema was missing the optional attribute "parameters" to match AWS definition found at github.com/aws/aws-sdk-go/service/glue
+resource/aws_glue_catalog_table: Fix `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors
 ```
