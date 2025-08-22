@@ -93,15 +93,15 @@ func resourceCatalogTable() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
+						names.AttrParameters: {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 131072),
-						},
-						"parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -783,12 +783,12 @@ func expandColumns(columns []any) []awstypes.Column {
 			column.Comment = aws.String(v.(string))
 		}
 
-		if v, ok := elementMap[names.AttrType]; ok {
-			column.Type = aws.String(v.(string))
-		}
-
 		if v, ok := elementMap[names.AttrParameters]; ok {
 			column.Parameters = flex.ExpandStringValueMap(v.(map[string]any))
+		}
+
+		if v, ok := elementMap[names.AttrType]; ok {
+			column.Type = aws.String(v.(string))
 		}
 
 		columnSlice = append(columnSlice, column)
@@ -956,20 +956,20 @@ func flattenColumns(cs []awstypes.Column) []map[string]any {
 func flattenColumn(c awstypes.Column) map[string]any {
 	column := make(map[string]any)
 
-	if v := aws.ToString(c.Name); v != "" {
-		column[names.AttrName] = v
-	}
-
-	if v := aws.ToString(c.Type); v != "" {
-		column[names.AttrType] = v
-	}
-
 	if v := aws.ToString(c.Comment); v != "" {
 		column[names.AttrComment] = v
 	}
 
+	if v := aws.ToString(c.Name); v != "" {
+		column[names.AttrName] = v
+	}
+
 	if v := c.Parameters; v != nil {
 		column[names.AttrParameters] = v
+	}
+
+	if v := aws.ToString(c.Type); v != "" {
+		column[names.AttrType] = v
 	}
 
 	return column
