@@ -83,6 +83,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+* `ipv6_allowed_for_dual_stack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 
