@@ -831,8 +831,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		expandTopLevelConnectionInfo(d, &input)
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
+		func(ctx context.Context) (any, error) {
 			return conn.CreateEndpoint(ctx, &input)
 		})
 
