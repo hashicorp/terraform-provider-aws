@@ -90,8 +90,10 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
