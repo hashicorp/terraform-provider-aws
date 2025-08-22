@@ -235,8 +235,9 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	switch healthCheckType {
 	case awstypes.HealthCheckTypeCalculated:
-		if v, ok := d.GetOk("child_health_threshold"); ok {
-			healthCheckConfig.HealthThreshold = aws.Int32(int32(v.(int)))
+		if v := d.GetRawConfig().GetAttr("child_health_threshold"); !v.IsNull() {
+			v, _ := v.AsBigFloat().Int64()
+			healthCheckConfig.HealthThreshold = aws.Int32(int32(v))
 		}
 
 		if v, ok := d.GetOk("child_healthchecks"); ok {
