@@ -42,6 +42,38 @@ If you are managing a specific set or list of IPs, instead of just using `privat
 
 This process can also be used to remove IP addresses in addition to the option of manually removing them. Adding IP addresses in a manually is more difficult because it requires knowledge of which addresses are available.
 
+### Example of Using Network Interface as Custom Primary Interface
+
+This example shows how to create a network interface and use it as the primary (device index 0) network interface for an EC2 instance. This configuration can be used for both resource creation and import when using the enhanced import ID format for instances.
+
+```terraform
+resource "aws_network_interface" "custom_primary" {
+  subnet_id       = aws_subnet.example.id
+  private_ips     = ["10.1.1.100"]
+  security_groups = [aws_security_group.example.id]
+
+  tags = {
+    Name = "custom-primary-interface"
+  }
+}
+
+resource "aws_instance" "example" {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = "t3.micro"
+
+  network_interface {
+    device_index         = 0
+    network_interface_id = aws_network_interface.custom_primary.id
+  }
+
+  tags = {
+    Name = "instance-with-custom-primary"
+  }
+}
+```
+
+**Note:** When importing an existing instance that uses a custom primary network interface like this, use the enhanced import ID format `i-1234567890abcdef0:with-network-interfaces` to ensure the network interface configuration is included in the imported state. See the [EC2 Instance Import documentation](instance.html#import) for more details.
+
 ## Argument Reference
 
 The following arguments are required:
