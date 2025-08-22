@@ -1,0 +1,11 @@
+```release-note:enhancement
+provider: Duplicate `default_tags` can now be included and will be overwritten by resource `tags`
+```
+
+```release-note:enhancement
+provider: Allow `default_tags` and resource `tags` to include zero values `""`
+```
+
+```release-note:enhancement
+provider: Allow `computed` `tags` on resources
+```

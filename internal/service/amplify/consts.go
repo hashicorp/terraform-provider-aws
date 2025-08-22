@@ -1,5 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
+import (
+	"time"
+)
+
 const (
-	StageNone = "NONE"
+	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	stageNone = "NONE"
 )

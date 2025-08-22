@@ -82,8 +82,9 @@ resource "aws_transcribe_language_model" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `base_model_name` - (Required) Name of reference base model.
 * `input_data_config` - (Required) The input data config for the LanguageModel. See [Input Data Config](#input-data-config) for more details.
 * `language_code` - (Required) The language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
@@ -95,28 +96,36 @@ The following arguments are required:
 * `s3_uri` - (Required) S3 URI where training data is located.
 * `tuning_data_s3_uri` - (Optional) S3 URI where tuning data is located.
 
-
 The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - LanguageModel name.
 * `arn` - ARN of the LanguageModel.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `600m`)
 
 ## Import
 
-Transcribe LanguageModel can be imported using the `model_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transcribe LanguageModel using the `model_name`. For example:
 
+```terraform
+import {
+  to = aws_transcribe_language_model.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_transcribe_language_model.example example-name
+
+Using `terraform import`, import Transcribe LanguageModel using the `model_name`. For example:
+
+```console
+% terraform import aws_transcribe_language_model.example example-name
 ```

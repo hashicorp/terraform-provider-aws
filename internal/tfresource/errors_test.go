@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource_test
 
 import (
@@ -6,11 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestNotFound(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -26,7 +31,7 @@ func TestNotFound(t *testing.T) {
 		},
 		{
 			Name:     "not found error",
-			Err:      &resource.NotFoundError{LastError: errors.New("test")},
+			Err:      &retry.NotFoundError{LastError: errors.New("test")},
 			Expected: true,
 		},
 		{
@@ -35,13 +40,15 @@ func TestNotFound(t *testing.T) {
 		},
 		{
 			Name:     "wrapped not found error",
-			Err:      fmt.Errorf("test: %w", &resource.NotFoundError{LastError: errors.New("test")}),
+			Err:      fmt.Errorf("test: %w", &retry.NotFoundError{LastError: errors.New("test")}),
 			Expected: true,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfresource.NotFound(testCase.Err)
 
 			if got != testCase.Expected {
@@ -52,6 +59,8 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestTimedOut(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -67,12 +76,12 @@ func TestTimedOut(t *testing.T) {
 		},
 		{
 			Name:     "timeout error",
-			Err:      &resource.TimeoutError{},
+			Err:      &retry.TimeoutError{},
 			Expected: true,
 		},
 		{
 			Name: "timeout error non-nil last error",
-			Err:  &resource.TimeoutError{LastError: errors.New("test")},
+			Err:  &retry.TimeoutError{LastError: errors.New("test")},
 		},
 		{
 			Name: "wrapped other error",
@@ -80,16 +89,18 @@ func TestTimedOut(t *testing.T) {
 		},
 		{
 			Name: "wrapped timeout error",
-			Err:  fmt.Errorf("test: %w", &resource.TimeoutError{}),
+			Err:  fmt.Errorf("test: %w", &retry.TimeoutError{}),
 		},
 		{
 			Name: "wrapped timeout error non-nil last error",
-			Err:  fmt.Errorf("test: %w", &resource.TimeoutError{LastError: errors.New("test")}),
+			Err:  fmt.Errorf("test: %w", &retry.TimeoutError{LastError: errors.New("test")}),
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfresource.TimedOut(testCase.Err)
 
 			if got != testCase.Expected {
@@ -100,6 +111,8 @@ func TestTimedOut(t *testing.T) {
 }
 
 func TestSetLastError(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name     string
 		Err      error
@@ -116,46 +129,48 @@ func TestSetLastError(t *testing.T) {
 		},
 		{
 			Name: "timeout error lastErr is nil",
-			Err:  &resource.TimeoutError{},
+			Err:  &retry.TimeoutError{},
 		},
 		{
 			Name:     "timeout error",
-			Err:      &resource.TimeoutError{},
+			Err:      &retry.TimeoutError{},
 			LastErr:  errors.New("lasttest"),
 			Expected: true,
 		},
 		{
 			Name: "timeout error non-nil last error lastErr is nil",
-			Err:  &resource.TimeoutError{LastError: errors.New("test")},
+			Err:  &retry.TimeoutError{LastError: errors.New("test")},
 		},
 		{
 			Name:    "timeout error non-nil last error no overwrite",
-			Err:     &resource.TimeoutError{LastError: errors.New("test")},
+			Err:     &retry.TimeoutError{LastError: errors.New("test")},
 			LastErr: errors.New("lasttest"),
 		},
 		{
 			Name: "unexpected state error lastErr is nil",
-			Err:  &resource.UnexpectedStateError{},
+			Err:  &retry.UnexpectedStateError{},
 		},
 		{
 			Name:     "unexpected state error",
-			Err:      &resource.UnexpectedStateError{},
+			Err:      &retry.UnexpectedStateError{},
 			LastErr:  errors.New("lasttest"),
 			Expected: true,
 		},
 		{
 			Name: "unexpected state error non-nil last error lastErr is nil",
-			Err:  &resource.UnexpectedStateError{LastError: errors.New("test")},
+			Err:  &retry.UnexpectedStateError{LastError: errors.New("test")},
 		},
 		{
 			Name:    "unexpected state error non-nil last error no overwrite",
-			Err:     &resource.UnexpectedStateError{LastError: errors.New("test")},
+			Err:     &retry.UnexpectedStateError{LastError: errors.New("test")},
 			LastErr: errors.New("lasttest"),
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			tfresource.SetLastError(testCase.Err, testCase.LastErr)
 
 			if testCase.Err != nil {

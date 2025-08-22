@@ -1,19 +1,43 @@
-<!--- See what makes a good Pull Request at : https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing --->
+<!---
+See what makes a good Pull Request at: https://hashicorp.github.io/terraform-provider-aws/raising-a-pull-request/
+--->
 
-<!--- Please keep this note for the community --->
+<!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
 
-### Community Note
+## Rollback Plan
 
-* Please vote on this pull request by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original pull request comment to help the community and maintainers prioritize this request
-* Please do not leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for pull request followers and do not help prioritize the request
+If a change needs to be reverted, we will publish an updated version of the library.
 
-<!--- Thank you for keeping this note for the community --->
+## Changes to Security Controls
 
-<!--- If your PR fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates --->
-Relates OR Closes #0000
+Are there any changes to security controls (access controls, encryption, logging) in this pull request? If so, explain.
 
-Output from acceptance testing:
+### Description
+<!---
+Please provide a helpful description of what change this pull request will introduce.
+--->
 
+
+### Relations
+<!---
+If your pull request fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates.
+
+For Example:
+
+Relates #0000
+or 
+Closes #0000
+--->
+
+Closes #0000
+
+### References
+<!---
+Optionally, provide any helpful references that may help the reviewer(s).
+--->
+
+
+### Output from Acceptance Testing
 <!--
 Replace TestAccXXX with a pattern that matches the tests affected by this PR.
 
@@ -21,8 +45,9 @@ Replace ec2 with the service package corresponding to your tests.
 
 For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
 -->
-```
-$ make testacc TESTS=TestAccXXX PKG=ec2
+
+```console
+% make testacc TESTS=TestAccXXX PKG=ec2
 
 ...
 ```

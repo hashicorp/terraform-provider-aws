@@ -1,24 +1,65 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceBus() *schema.Resource {
+// @SDKDataSource("aws_cloudwatch_event_bus", name="Event Bus")
+func dataSourceBus() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBusRead,
+		ReadWithoutTimeout: dataSourceBusRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"log_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include_detail": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"level": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -26,24 +67,28 @@ func DataSourceBus() *schema.Resource {
 	}
 }
 
-func dataSourceBusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	name := d.Get("name").(string)
+	eventBusName := d.Get(names.AttrName).(string)
+	output, err := findEventBusByName(ctx, conn, eventBusName)
 
-	input := &eventbridge.DescribeEventBusInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.DescribeEventBus(input)
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge Bus (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Event Bus (%s): %s", eventBusName, err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("name", output.Name)
+	d.SetId(eventBusName)
+	d.Set(names.AttrARN, output.Arn)
+	if err := d.Set("dead_letter_config", flattenDeadLetterConfig(output.DeadLetterConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+	}
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
+	if err := d.Set("log_config", flattenLogConfig(output.LogConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+	}
+	d.Set(names.AttrName, output.Name)
 
-	d.SetId(name)
-
-	return nil
+	return diags
 }

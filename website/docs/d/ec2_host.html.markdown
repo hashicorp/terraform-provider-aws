@@ -36,11 +36,14 @@ data "aws_ec2_host" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
-The given filters must match exactly one host whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `host_id` - (Optional) ID of the Dedicated Host.
+
+The arguments of this data source act as filters for querying the available EC2 Hosts in the current region.
+The given filters must match exactly one host whose data will be exported as attributes.
 
 ### filter
 
@@ -51,12 +54,13 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeHosts.html).
 * `values` - (Required) Set of values that are accepted for the given field. A host will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Dedicated Host.
 * `arn` - ARN of the Dedicated Host.
+* `asset_id` - The ID of the Outpost hardware asset on which the Dedicated Host is allocated.
 * `auto_placement` - Whether auto-placement is on or off.
 * `availability_zone` - Availability Zone of the Dedicated Host.
 * `cores` - Number of cores on the Dedicated Host.
@@ -70,6 +74,6 @@ In addition to the attributes above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

@@ -1,12 +1,12 @@
 ---
 subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
-page_title: "AWS: aws_saml_provider"
+page_title: "AWS: aws_iam_saml_provider"
 description: |-
   Get information on an IAM SAML provider.
 ---
 
-# Data Source: aws_saml_provider
+# Data Source: aws_iam_saml_provider
 
 This data source can be used to fetch information about a specific
 IAM SAML provider. This will allow you to easily retrieve the metadata
@@ -14,7 +14,7 @@ document of an existing SAML provider.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_saml_provider" "example" {
   arn = "arn:aws:iam::123456789:saml-provider/myprovider"
 }
@@ -22,11 +22,13 @@ data "aws_iam_saml_provider" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN assigned by AWS for the provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `create_date` - Creation date of the SAML provider in RFC1123 format, e.g. `Mon, 02 Jan 2006 15:04:05 MST`.
 * `name` - Name of the provider.

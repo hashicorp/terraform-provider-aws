@@ -6,7 +6,7 @@ description: |-
   Get information on a KMS public key
 ---
 
-# aws_kms_public_key
+# Data Source: aws_kms_public_key
 
 Use this data source to get the public key about the specified KMS Key with flexible key id input. This can be useful to reference key alias without having to hard code the ARN as input.
 
@@ -32,8 +32,9 @@ data "aws_kms_public_key" "by_key_arn" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`
     * Key ARN. E.g. - `arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab`
@@ -41,9 +42,9 @@ The following arguments are supported:
     * Alias ARN - E.g. - `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grant_tokens` - (Optional) List of grant tokens
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `customer_master_key_spec` - Type of the public key that was downloaded.

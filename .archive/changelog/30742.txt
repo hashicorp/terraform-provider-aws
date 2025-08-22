@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_quicksight_data_set: Correct custom_sql documentation
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_document: Correctly set `default_version`, `document_version`, `hash`, `latest_version` and `parameter` as Computed when `content` changes
+```

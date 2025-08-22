@@ -1,54 +1,69 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreditSpecificationRequest.html#API_CreditSpecificationRequest_Contents
-	CPUCreditsStandard  = "standard"
-	CPUCreditsUnlimited = "unlimited"
+	cpuCreditsStandard  = "standard"
+	cpuCreditsUnlimited = "unlimited"
 )
 
-func CPUCredits_Values() []string {
+func cpuCredits_Values() []string {
 	return []string{
-		CPUCreditsStandard,
-		CPUCreditsUnlimited,
+		cpuCreditsStandard,
+		cpuCreditsUnlimited,
 	}
 }
 
 const (
-	// The AWS SDK constant ec2.FleetOnDemandAllocationStrategyLowestPrice is incorrect.
-	FleetOnDemandAllocationStrategyLowestPrice = "lowestPrice"
+	// The AWS SDK constant ec2.fleetOnDemandAllocationStrategyLowestPrice is incorrect.
+	fleetOnDemandAllocationStrategyLowestPrice = "lowestPrice"
 )
 
-func FleetOnDemandAllocationStrategy_Values() []string {
+func fleetOnDemandAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
-		FleetOnDemandAllocationStrategyLowestPrice,
+		tfslices.RemoveAll(enum.Values[awstypes.FleetOnDemandAllocationStrategy](), string(awstypes.FleetOnDemandAllocationStrategyLowestPrice)),
+		fleetOnDemandAllocationStrategyLowestPrice,
 	)
 }
 
 const (
-	// The AWS SDK constant ec2.SpotAllocationStrategyLowestPrice is incorrect.
-	SpotAllocationStrategyLowestPrice = "lowestPrice"
+	// The AWS SDK constant ec2.spotAllocationStrategyLowestPrice is incorrect.
+	spotAllocationStrategyLowestPrice = "lowestPrice"
 )
 
-func SpotAllocationStrategy_Values() []string {
+func spotAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
-		SpotAllocationStrategyLowestPrice,
+		tfslices.RemoveAll(enum.Values[awstypes.SpotAllocationStrategy](), string(awstypes.SpotAllocationStrategyLowestPrice)),
+		spotAllocationStrategyLowestPrice,
 	)
 }
+
+const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-request-status.html#spot-instance-request-status-understand
+	spotInstanceRequestStatusCodeFulfilled          = "fulfilled"
+	spotInstanceRequestStatusCodePendingEvaluation  = "pending-evaluation"
+	spotInstanceRequestStatusCodePendingFulfillment = "pending-fulfillment"
+)
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
+	// NOTE: the State values returned from the service may be in varied case e.g. `Pending` and `pending`
+	// State is normalised to lower case for comparison against these constants
 	vpcEndpointStateAvailable         = "available"
 	vpcEndpointStateDeleted           = "deleted"
 	vpcEndpointStateDeleting          = "deleting"
 	vpcEndpointStateFailed            = "failed"
 	vpcEndpointStatePending           = "pending"
-	vpcEndpointStatePendingAcceptance = "pendingAcceptance"
+	vpcEndpointStatePendingAcceptance = "pendingacceptance"
 )
 
 const (
@@ -57,32 +72,37 @@ const (
 
 // See https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#check-import-task-status
 const (
-	EBSSnapshotImportStateActive     = "active"
-	EBSSnapshotImportStateDeleting   = "deleting"
-	EBSSnapshotImportStateDeleted    = "deleted"
-	EBSSnapshotImportStateUpdating   = "updating"
-	EBSSnapshotImportStateValidating = "validating"
-	EBSSnapshotImportStateValidated  = "validated"
-	EBSSnapshotImportStateConverting = "converting"
-	EBSSnapshotImportStateCompleted  = "completed"
+	ebsSnapshotImportStateActive     = "active"
+	ebsSnapshotImportStateDeleting   = "deleting"
+	ebsSnapshotImportStateDeleted    = "deleted"
+	ebsSnapshotImportStateUpdating   = "updating"
+	ebsSnapshotImportStateValidating = "validating"
+	ebsSnapshotImportStateValidated  = "validated"
+	ebsSnapshotImportStateConverting = "converting"
+	ebsSnapshotImportStateCompleted  = "completed"
 )
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateNetworkInterface.html#API_CreateNetworkInterface_Example_2_Response.
 const (
-	NetworkInterfaceStatusPending = "pending"
+	networkInterfaceStatusPending = "pending"
 )
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html#API_DescribeInternetGateways_Example_1_Response.
 const (
-	InternetGatewayAttachmentStateAvailable = "available"
+	internetGatewayAttachmentStateAvailable = "available"
 )
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CustomerGateway.html#API_CustomerGateway_Contents.
 const (
-	CustomerGatewayStateAvailable = "available"
-	CustomerGatewayStateDeleted   = "deleted"
-	CustomerGatewayStateDeleting  = "deleting"
-	CustomerGatewayStatePending   = "pending"
+	customerGatewayStateAvailable = "available"
+	customerGatewayStateDeleted   = "deleted"
+	customerGatewayStateDeleting  = "deleting"
+	customerGatewayStatePending   = "pending"
+)
+
+// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
+const (
+	ptrUpdateStatusPending = "PENDING"
 )
 
 const (
@@ -124,13 +144,13 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 }
 
 const (
-	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatJSON = names.AttrJSON
 	vpnTunnelCloudWatchLogOutputFormatText = "text"
 )
 
 func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
-		vpnTunnelCloudWatchLogOutputFormatJSON,
+		names.AttrJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
@@ -224,64 +244,79 @@ func vpnConnectionType_Values() []string {
 }
 
 const (
-	AmazonIPv6PoolID = "Amazon"
+	amazonIPv6PoolID               = "Amazon"
+	ipamManagedIPv6PoolID          = "IPAM Managed"
+	publicIPv4PoolIDIPAMPoolPrefix = "ipam-pool-"
 )
 
 const (
-	DefaultDHCPOptionsID = "default"
+	defaultDHCPOptionsID = "default"
 )
 
 const (
-	DefaultSecurityGroupName = "default"
+	defaultSecurityGroupName = "default"
 )
 
 const (
-	DefaultSnapshotImportRoleName = "vmimport"
+	defaultSnapshotImportRoleName = "vmimport"
 )
 
 const (
-	LaunchTemplateVersionDefault = "$Default"
-	LaunchTemplateVersionLatest  = "$Latest"
+	launchTemplateVersionDefault = "$Default"
+	launchTemplateVersionLatest  = "$Latest"
 )
 
 const (
-	SriovNetSupportSimple = "simple"
+	sriovNetSupportSimple = "simple"
 )
 
 const (
-	TargetStorageTierStandard = "standard"
+	targetStorageTierStandard awstypes.TargetStorageTier = "standard"
 )
 
-func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
-	for i, v := range slice {
-		if v == s {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-
-	return slice
-}
-
 const (
-	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
-	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
+	outsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
+	outsideIPAddressTypePublicIPv4  = "PublicIpv4"
 )
 
 func outsideIPAddressType_Values() []string {
 	return []string{
-		OutsideIPAddressTypePrivateIPv4,
-		OutsideIPAddressTypePublicIPv4,
+		outsideIPAddressTypePrivateIPv4,
+		outsideIPAddressTypePublicIPv4,
+	}
+}
+
+type securityGroupRuleType string
+
+const (
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
+)
+
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
+		securityGroupRuleTypeEgress,
+		securityGroupRuleTypeIngress,
 	}
 }
 
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
 )
 
-func securityGroupRuleType_Values() []string {
+const (
+	supportedRegionServiceStateAvailable = "Available"
+)
+
+const (
+	preSharedKeyStorageTypeSecretsManager = "SecretsManager"
+	preSharedKeyStorageTypeStandard       = "Standard"
+)
+
+func preSharedKeyStorageType_Values() []string {
 	return []string{
-		securityGroupRuleTypeEgress,
-		securityGroupRuleTypeIngress,
+		preSharedKeyStorageTypeSecretsManager,
+		preSharedKeyStorageTypeStandard,
 	}
 }

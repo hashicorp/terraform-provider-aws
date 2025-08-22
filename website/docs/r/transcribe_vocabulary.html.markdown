@@ -47,18 +47,18 @@ resource "aws_transcribe_vocabulary" "example" {
 The following arguments are required:
 
 * `language_code` - (Required) The language code you selected for your vocabulary.
-* `vocabulary_file_uri` - (Required) The Amazon S3 location (URI) of the text file that contains your custom vocabulary.
 * `vocabulary_name` - (Required) The name of the Vocabulary.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `phrases` - (Optional) - A list of terms to include in the vocabulary. Conflicts with `vocabulary_file_uri`
 * `vocabulary_file_uri` - (Optional) The Amazon S3 location (URI) of the text file that contains your custom vocabulary. Conflicts wth `phrases`.
 * `tags` - (Optional) A map of tags to assign to the Vocabulary. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the Vocabulary.
 * `arn` - ARN of the Vocabulary.
@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -74,8 +74,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transcribe Vocabulary can be imported using the `vocabulary_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transcribe Vocabulary using the `vocabulary_name`. For example:
 
+```terraform
+import {
+  to = aws_transcribe_vocabulary.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_transcribe_vocabulary.example example-name
+
+Using `terraform import`, import Transcribe Vocabulary using the `vocabulary_name`. For example:
+
+```console
+% terraform import aws_transcribe_vocabulary.example example-name
 ```

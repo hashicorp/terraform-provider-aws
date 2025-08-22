@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation_test
 
 import (
@@ -8,53 +11,55 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFormationType_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTypeExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
+					testAccCheckTypeExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
-					resource.TestCheckResourceAttr(resourceName, "description", "An example resource schema demonstrating some basic constructs and validation rules."),
-					resource.TestCheckResourceAttr(resourceName, "execution_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "is_default_version", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExecutionRoleARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "is_default_version", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_type", cloudformation.ProvisioningTypeFullyMutable),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestCheckResourceAttr(resourceName, "schema_handler_package", fmt.Sprintf("s3://%s/test", rName)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 					resource.TestCheckResourceAttr(resourceName, "source_url", "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git"),
-					resource.TestCheckResourceAttr(resourceName, "type", cloudformation.RegistryTypeResource),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.RegistryTypeResource)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
 					resource.TestCheckResourceAttr(resourceName, "type_name", typeName),
-					resource.TestCheckResourceAttr(resourceName, "visibility", cloudformation.VisibilityPrivate),
-					resource.TestMatchResourceAttr(resourceName, "version_id", regexp.MustCompile(`.+`)),
+					resource.TestCheckResourceAttr(resourceName, "visibility", string(awstypes.VisibilityPrivate)),
+					resource.TestMatchResourceAttr(resourceName, "version_id", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -62,24 +67,25 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 }
 
 func TestAccCloudFormationType_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTypeExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceType(), resourceName),
+					testAccCheckTypeExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceType(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceType(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,6 +94,7 @@ func TestAccCloudFormationType_disappears(t *testing.T) {
 }
 
 func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -95,16 +102,16 @@ func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_executionRoleARN(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTypeExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", iamRoleResourceName, "arn"),
+					testAccCheckTypeExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -112,6 +119,7 @@ func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
 }
 
 func TestAccCloudFormationType_logging(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
 	zipPath := testAccTypeZipGenerator(t, typeName)
@@ -120,65 +128,95 @@ func TestAccCloudFormationType_logging(t *testing.T) {
 	resourceName := "aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_logging(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTypeExists(resourceName),
+					testAccCheckTypeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_group_name", cloudwatchLogGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_group_name", cloudwatchLogGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTypeExists(resourceName string) resource.TestCheckFunc {
+func TestAccCloudFormationType_setDefaultVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	typeName := fmt.Sprintf("HashiCorp::TerraformAwsProvider::TfAccTest%s", sdkacctest.RandString(8))
+	zipPath := testAccTypeZipGenerator(t, typeName)
+	zipUpdatePath := testAccTypeZipGenerator(t, typeName)
+	resourceName := "aws_cloudformation_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTypeConfig_name(rName, zipPath, typeName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTypeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_default_version", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTypeConfig_name(rName, zipUpdatePath, typeName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTypeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "is_default_version", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFormation Type ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
-
-		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfcloudformation.FindTypeByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudformation_stack_set" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudformation_stack_set" {
+				continue
+			}
+
+			_, err := tfcloudformation.FindTypeByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFormation Type %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CloudFormation Type %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 // Since the CloudFormation resource schema type name must match the RegisterType TypeName
@@ -208,7 +246,7 @@ func testAccTypeZipGenerator(t *testing.T, typeName string) string {
 	tempDir := t.TempDir()
 	_, currentFilePath, _, _ := runtime.Caller(0)
 
-	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "testdata", "examplecompany-exampleservice-exampleresource")
+	sourceDirectoryPath := filepath.Join(filepath.Dir(currentFilePath), "test-fixtures", "examplecompany-exampleservice-exampleresource")
 	targetDirectoryPath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource")
 	targetZipFilePath := filepath.Join(tempDir, "examplecompany-exampleservice-exampleresource.zip")
 
@@ -228,7 +266,7 @@ func testAccTypeZipGenerator(t *testing.T, typeName string) string {
 	}
 
 	sourceBinDirectoryPath := filepath.Join(sourceDirectoryPath, "bin")
-	sourceBinHandlerFilePath := filepath.Join(sourceBinDirectoryPath, "handler")
+	sourceBinHandlerFilePath := filepath.Join(sourceBinDirectoryPath, "bootstrap")
 	targetHandlerZipFilePath := filepath.Join(targetDirectoryPath, "handler.zip")
 
 	err = testAccTypeBuildHandlerZip(sourceBinHandlerFilePath, targetHandlerZipFilePath)

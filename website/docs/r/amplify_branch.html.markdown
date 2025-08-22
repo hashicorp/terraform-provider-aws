@@ -143,12 +143,19 @@ resource "aws_sns_topic_policy" "amplify_app_master" {
   arn    = aws_sns_topic.amplify_app_master.arn
   policy = data.aws_iam_policy_document.amplify_app_master.json
 }
+
+resource "aws_sns_topic_subscription" "this" {
+  topic_arn = aws_sns_topic.amplify_app_master.arn
+  protocol  = "email"
+  endpoint  = "user@acme.com"
+}
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `branch_name` - (Required) Name for the branch.
 * `backend_environment_arn` - (Optional) ARN for a backend environment that is part of an Amplify app.
@@ -160,6 +167,7 @@ The following arguments are supported:
 * `enable_notification` - (Optional) Enables notifications for the branch.
 * `enable_performance_mode` - (Optional) Enables performance mode for the branch.
 * `enable_pull_request_preview` - (Optional) Enables pull request previews for this branch.
+* `enable_skew_protection` - (Optional) Enables skew protection for the branch.  
 * `environment_variables` - (Optional) Environment variables for the branch.
 * `framework` - (Optional) Framework for the branch.
 * `pull_request_environment_name` - (Optional) Amplify environment name for the pull request.
@@ -167,9 +175,9 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Content Time To Live (TTL) for the website in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the branch.
 * `associated_resources` - A list of custom resources that are linked to this branch.
@@ -180,8 +188,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amplify branch can be imported using `app_id` and `branch_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify branch using `app_id` and `branch_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_branch.master
+  id = "d2ypk4k47z8u6/master"
+}
 ```
-$ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
+
+Using `terraform import`, import Amplify branch using `app_id` and `branch_name`. For example:
+
+```console
+% terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```

@@ -26,14 +26,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The optional description for the tracker resource.
 * `kms_key_id` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
 * `position_filtering` - (Optional) The position filtering method of the tracker resource. Valid values: `TimeBased`, `DistanceBased`, `AccuracyBased`. Default: `TimeBased`.
 * `tags` - (Optional) Key-value tags for the tracker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the tracker resource was created in ISO 8601 format.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -42,8 +43,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_location_tracker` resources can be imported using the tracker name, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_location_tracker` resources using the tracker name. For example:
 
+```terraform
+import {
+  to = aws_location_tracker.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_tracker.example example
+
+Using `terraform import`, import `aws_location_tracker` resources using the tracker name. For example:
+
+```console
+% terraform import aws_location_tracker.example example
 ```

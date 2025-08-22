@@ -1,46 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
-	var addon eks.Addon
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	versionDataSourceName := "data.aws_eks_addon_version.test"
 	addonDataSourceName := "data.aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
-					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
+					resource.TestCheckResourceAttrPair(versionDataSourceName, names.AttrVersion, addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "true"),
+					resource.TestCheckResourceAttr(versionDataSourceName, names.AttrMostRecent, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccAddonVersionDataSourceConfig_basic(rName, addonName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAddonExists(ctx, addonDataSourceName, &addon),
-					resource.TestCheckResourceAttrPair(versionDataSourceName, "version", addonDataSourceName, "addon_version"),
+					resource.TestCheckResourceAttrPair(versionDataSourceName, names.AttrVersion, addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "false"),
+					resource.TestCheckResourceAttr(versionDataSourceName, names.AttrMostRecent, acctest.CtFalse),
 				),
 			},
 		},
@@ -48,7 +46,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 }
 
 func testAccAddonVersionDataSourceConfig_basic(rName, addonName string, mostRecent bool) string {
-	return acctest.ConfigCompose(testAccAddonBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 data "aws_eks_addon_version" "test" {
   addon_name         = %[2]q
   kubernetes_version = aws_eks_cluster.test.version
@@ -56,11 +54,10 @@ data "aws_eks_addon_version" "test" {
 }
 
 resource "aws_eks_addon" "test" {
-  addon_name    = %[2]q
-  cluster_name  = aws_eks_cluster.test.name
-  addon_version = data.aws_eks_addon_version.test.version
-
-  resolve_conflicts = "OVERWRITE"
+  addon_name                  = %[2]q
+  cluster_name                = aws_eks_cluster.test.name
+  addon_version               = data.aws_eks_addon_version.test.version
+  resolve_conflicts_on_create = "OVERWRITE"
 }
 
 data "aws_eks_addon" "test" {

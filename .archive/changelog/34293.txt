@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Mark `source_parameters.self_managed_kafka_parameters.credentials.basic_auth` as Optional
+```

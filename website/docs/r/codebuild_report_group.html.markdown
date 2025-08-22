@@ -15,27 +15,24 @@ Provides a CodeBuild Report Groups Resource.
 ```terraform
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "Enable IAM User Permissions"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions   = ["kms:*"]
+    resources = ["*"]
+  }
+}
 resource "aws_kms_key" "example" {
   description             = "my test kms key"
   deletion_window_in_days = 7
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+  policy                  = data.aws_iam_policy_document.example.json
 }
 
 resource "aws_s3_bucket" "example" {
@@ -62,8 +59,9 @@ resource "aws_codebuild_report_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
 * `export_config` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
@@ -84,9 +82,9 @@ The following arguments are supported:
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.
@@ -95,8 +93,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Report Group can be imported using the CodeBuild Report Group arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
 
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  id = "arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name"
+}
 ```
-$ terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
+
+Using `terraform import`, import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+
+```console
+% terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```

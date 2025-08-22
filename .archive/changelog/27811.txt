@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_datasync_task: Add `object_tags` attribute to `options` configuration block
+```
+
+```release-note:bug
+resource/aws_datasync_location_object_storage: Don't ignore `server_certificate` argument
+```

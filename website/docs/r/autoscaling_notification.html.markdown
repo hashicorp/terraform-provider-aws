@@ -54,21 +54,21 @@ resource "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_names` - (Required) List of AutoScaling Group Names
 * `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here][1]
 * `topic_arn` - (Required) Topic ARN for notifications to be sent through
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_names`
 * `notifications`
 * `topic_arn`
-
 
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html

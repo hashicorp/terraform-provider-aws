@@ -1,0 +1,11 @@
+```release-note:bug
+data-source/aws_resourceexplorer2_search: Fix panic caused by bad mappping between Terraform and AWS schemas
+```
+
+```release-note:bug
+data-source/aws_resourceexplorer2_search: Fix 401 unauthorized error due to missing `view_arn` in the AWS API request
+```
+
+```release-note:bug
+data-source/aws_resourceexplorer2_search: Fix state persistence and data types
+```

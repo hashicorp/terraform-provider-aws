@@ -12,7 +12,6 @@ Manages an AWS Storage Gateway file, tape, or volume gateway in the provider reg
 
 ~> **NOTE:** The Storage Gateway API requires the gateway to be connected to properly return information after activation. If you are receiving `The specified gateway is not connected` errors during resource creation (gateway activation), ensure your gateway instance meets the [Storage Gateway requirements](https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html).
 
-
 ## Example Usage
 
 ### Local Cache
@@ -62,7 +61,6 @@ resource "aws_storagegateway_gateway" "example" {
 }
 ```
 
-
 ### Tape Gateway
 
 ```terraform
@@ -100,10 +98,9 @@ resource "aws_storagegateway_gateway" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
+This resource supports the following arguments:
 
-The following arguments are supported:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gateway_name` - (Required) Name of the gateway.
 * `gateway_timezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `GMT-4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
 * `activation_key` - (Optional) Gateway activation key during resource creation. Conflicts with `gateway_ip_address`. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
@@ -121,6 +118,8 @@ The following arguments are supported:
 * `smb_file_share_visibility` - (Optional) Specifies whether the shares on this gateway appear when listing shares.
 * `tape_drive_type` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `IBM-ULT3580-TD5`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.
 
 ### maintenance_start_time
 
@@ -146,9 +145,9 @@ Information to join the gateway to an Active Directory domain for Server Message
 * `domain_controllers` - (Optional) List of IPv4 addresses, NetBIOS names, or host names of your domain server.
  If you need to specify the port number include it after the colon (“:”). For example, `mydc.mydomain.com:389`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the gateway.
 * `arn` - Amazon Resource Name (ARN) of the gateway.
@@ -165,20 +164,28 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 
 ## Import
 
-`aws_storagegateway_gateway` can be imported by using the gateway Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_storagegateway_gateway.example
+  id = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678"
+}
 ```
-$ terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
+
+Using `terraform import`, import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
 ```
 
-Certain resource arguments, like `gateway_ip_address` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
-
+Certain resource arguments, like `gateway_ip_address` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_storagegateway_gateway" "example" {

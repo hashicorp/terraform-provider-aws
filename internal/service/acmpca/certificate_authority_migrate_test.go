@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
@@ -8,11 +11,13 @@ import (
 )
 
 func TestCertificateAuthorityMigrateState(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_to_v1": {
 			StateVersion: 0,

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix `ValidationError` errors when starting Auto Scaling group instance refresh
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Change the default values of `instance_refresh.preferences.scale_in_protected_instances` and `instance_refresh.preferences.standby_instances` from `Wait` to the [Amazon EC2 Auto Scaling console recommended value](https://docs.aws.amazon.com/autoscaling/ec2/userguide/understand-instance-refresh-default-values.html) of `Ignore`
+```

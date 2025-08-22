@@ -1,0 +1,7 @@
+```release-note:bug
+provider: Fixes parsing error in AWS shared config files with extra whitespace
+```
+
+```release-note:bug
+provider: Fixes poor performance when parsing AWS shared config files
+```

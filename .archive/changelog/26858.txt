@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rolesanywhere_profile: Correctly handle updates to `enabled` and `session_policy`
+```
+
+```release-note:bug
+resource/aws_rolesanywhere_trust_anchor: Correctly handle updates to `enabled`
+```

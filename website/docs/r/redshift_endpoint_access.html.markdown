@@ -22,17 +22,18 @@ resource "aws_redshift_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required) The cluster identifier of the cluster to access.
 * `endpoint_name` - (Required) The Redshift-managed VPC endpoint name.
 * `resource_owner` - (Optional) The Amazon Web Services account ID of the owner of the cluster. This is only required if the cluster is in another Amazon Web Services account.
 * `subnet_group_name` - (Required) The subnet group from which Amazon Redshift chooses the subnet to deploy the endpoint.
 * `vpc_security_group_ids` - (Optional) The security group that defines the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The DNS address of the endpoint.
 * `id` - The Redshift-managed VPC endpoint name.
@@ -54,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift endpoint access can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift endpoint access using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_endpoint_access.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshift_endpoint_access.example example
+
+Using `terraform import`, import Redshift endpoint access using the `name`. For example:
+
+```console
+% terraform import aws_redshift_endpoint_access.example example
 ```

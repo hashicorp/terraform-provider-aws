@@ -33,8 +33,9 @@ data "aws_ec2_transit_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway.
 
@@ -45,7 +46,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
 * `arn` - EC2 Transit Gateway ARN
@@ -55,6 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 * `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
 * `description` - Description of the EC2 Transit Gateway
 * `dns_support` - Whether DNS support is enabled
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled
 * `multicast_support` - Whether Multicast support is enabled
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
@@ -65,6 +67,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

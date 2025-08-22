@@ -37,11 +37,11 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `exclude_compliant_resources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `include_compliance_details` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
 * `tag_filter` - (Optional) Specifies a list of Tag Filters (keys and values) to restrict the output to only those resources that have the specified tag and, if included, the specified value. See [Tag Filter](#tag-filter) below. Conflicts with `resource_arn_list`.
@@ -58,9 +58,9 @@ If you don't specify a `tag_filter`, the response includes all resources that we
 * `key` - (Required) One part of a key-value pair that makes up a tag.
 * `values` - (Optional) Optional part of a key-value pair that make up a tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `resource_tag_mapping_list` - List of objects matching the search criteria.
     * `compliance_details` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.

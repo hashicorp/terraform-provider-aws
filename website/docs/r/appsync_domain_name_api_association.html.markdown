@@ -21,22 +21,31 @@ resource "aws_appsync_domain_name_api_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API ID.
 * `domain_name` - (Required) Appsync domain name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Appsync domain name.
 
-
 ## Import
 
-`aws_appsync_domain_name_api_association` can be imported using the AppSync domain name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_domain_name_api_association` using the AppSync domain name. For example:
 
+```terraform
+import {
+  to = aws_appsync_domain_name_api_association.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_appsync_domain_name_api_association.example example.com
+
+Using `terraform import`, import `aws_appsync_domain_name_api_association` using the AppSync domain name. For example:
+
+```console
+% terraform import aws_appsync_domain_name_api_association.example example.com
 ```

@@ -33,6 +33,8 @@ resource "aws_default_vpc_dhcp_options" "default" {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_vpc_dhcp_options` differ slightly from `aws_vpc_dhcp_options`  resources.
 Namely, the `domain_name`, `domain_name_servers` and `ntp_servers` arguments are computed.
 The following arguments are still supported:
@@ -49,17 +51,26 @@ but Terraform cannot destroy it. Removing this resource from your configuration
 will remove it from your statefile and management, but will not destroy the DHCP Options Set.
 You can resume managing the DHCP Options Set via the AWS Console.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the DHCP Options Set.
 * `arn` - The ARN of the DHCP Options Set.
 
 ## Import
 
-VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC DHCP Options using the DHCP Options `id`. For example:
 
+```terraform
+import {
+  to = aws_default_vpc_dhcp_options.default_options
+  id = "dopt-d9070ebb"
+}
 ```
-$ terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
+
+Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. For example:
+
+```console
+% terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
 ```

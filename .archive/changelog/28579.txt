@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_endpoint: Add s3 setting `ignore_header_rows` and deprecate misspelled `ignore_headers_row`.
+```

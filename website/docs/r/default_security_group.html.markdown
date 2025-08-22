@@ -75,6 +75,7 @@ Removing this resource from your configuration will remove it from your statefil
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional, VPC only) Configuration block. Detailed below.
 * `ingress` - (Optional) Configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -96,9 +97,9 @@ Both `egress` and `ingress` objects have the same arguments.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the security group.
 * `description` - Description of the security group.
@@ -111,8 +112,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
+```terraform
+import {
+  to = aws_default_security_group.default_sg
+  id = "sg-903004f8"
+}
 ```
-$ terraform import aws_default_security_group.default_sg sg-903004f8
+
+Using `terraform import`, import Security Groups using the security group `id`. For example:
+
+```console
+% terraform import aws_default_security_group.default_sg sg-903004f8
 ```

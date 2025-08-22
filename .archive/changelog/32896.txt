@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_subnet: Fix allowing IPv6 to be enabled in an update after initial creation with IPv4 only
+```

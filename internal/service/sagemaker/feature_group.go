@@ -1,56 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceFeatureGroup() *schema.Resource {
+// @SDKResource("aws_sagemaker_feature_group", name="Feature Group")
+// @Tags(identifierAttribute="arn")
+func resourceFeatureGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFeatureGroupCreate,
-		Read:   resourceFeatureGroupRead,
-		Update: resourceFeatureGroupUpdate,
-		Delete: resourceFeatureGroupDelete,
+		CreateWithoutTimeout: resourceFeatureGroupCreate,
+		ReadWithoutTimeout:   resourceFeatureGroupRead,
+		UpdateWithoutTimeout: resourceFeatureGroupUpdate,
+		DeleteWithoutTimeout: resourceFeatureGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"feature_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
-				),
-			},
-			"record_identifier_feature_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
-						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
-				),
+			names.AttrDescription: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
 			},
 			"event_time_feature_name": {
 				Type:     schema.TypeString,
@@ -58,21 +55,9 @@ func ResourceFeatureGroup() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 				),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"feature_definition": {
 				Type:     schema.TypeList,
@@ -85,20 +70,64 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([-_]*[a-zA-Z0-9]){0,63}`),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
 									"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
 							),
 						},
 						"feature_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.FeatureType](),
+						},
+						"collection_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vector_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"dimension": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.IntBetween(1, 8192),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"collection_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CollectionType](),
 						},
 					},
 				},
+			},
+			"feature_group_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contain alphanumeric character and hyphens. Spaces are not allowed."),
+				),
 			},
 			"offline_store_config": {
 				Type:         schema.TypeList,
@@ -112,6 +141,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -119,34 +149,19 @@ func ResourceFeatureGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
-									"database": {
+									names.AttrDatabase: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-									},
-								},
-							},
-						},
-						"s3_storage_config": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"s3_uri": {
-										Type:     schema.TypeString,
-										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -154,6 +169,41 @@ func ResourceFeatureGroup() *schema.Resource {
 						"disable_glue_table_creation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
+						},
+						"s3_storage_config": {
+							Type:     schema.TypeList,
+							Required: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrKMSKeyID: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"resolved_output_s3_uri": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
+									"s3_uri": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"table_format": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          awstypes.TableFormatGlue,
+							ValidateDiagFunc: enum.Validate[awstypes.TableFormat](),
 						},
 					},
 				},
@@ -166,202 +216,302 @@ func ResourceFeatureGroup() *schema.Resource {
 				AtLeastOneOf: []string{"offline_store_config", "online_store_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enable_online_store": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							Default:  false,
+						},
 						"security_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
 						},
-						"enable_online_store": {
-							Type:     schema.TypeBool,
+						names.AttrStorageType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.StorageType](),
+						},
+						"ttl_duration": {
+							Type:     schema.TypeList,
 							Optional: true,
-							Default:  false,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrUnit: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.TtlDurationUnit](),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"record_identifier_feature_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([-_]*[0-9A-Za-z]){0,63}`),
+						"Must start and end with an alphanumeric character and Can only contains alphanumeric characters, hyphens, underscores. Spaces are not allowed."),
+				),
+			},
+			names.AttrRoleARN: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"throughput_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"throughput_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThroughputMode](),
+						},
+						"provisioned_read_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 10000000),
+						},
+						"provisioned_write_capacity_units": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 10000000),
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	name := d.Get("feature_group_name").(string)
-
 	input := &sagemaker.CreateFeatureGroupInput{
 		FeatureGroupName:            aws.String(name),
 		EventTimeFeatureName:        aws.String(d.Get("event_time_feature_name").(string)),
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
-		RoleArn:                     aws.String(d.Get("role_arn").(string)),
-		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
+		RoleArn:                     aws.String(d.Get(names.AttrRoleARN).(string)),
+		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]any)),
+		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("offline_store_config"); ok {
-		input.OfflineStoreConfig = expandFeatureGroupOfflineStoreConfig(v.([]interface{}))
+		input.OfflineStoreConfig = expandFeatureGroupOfflineStoreConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("online_store_config"); ok {
-		input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfig(v.([]interface{}))
+		input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfig(v.([]any))
 	}
 
-	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateFeatureGroup(input)
+	if v, ok := d.GetOk("throughput_config"); ok {
+		input.ThroughputConfig = expandThroughputConfig(v.([]any))
+	}
+
+	log.Printf("[DEBUG] SageMaker AI Feature Group create config: %#v", *input)
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		_, err := conn.CreateFeatureGroup(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid S3Uri provided") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFeatureGroup(input)
+		_, err = conn.CreateFeatureGroup(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating SageMaker Feature Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Feature Group: %s", err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitFeatureGroupCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
+	if _, err := waitFeatureGroupCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceFeatureGroupRead(d, meta)
+	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
 
-func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	output, err := FindFeatureGroupByName(conn, d.Id())
+	output, err := findFeatureGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] SageMaker AI Feature Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(output.FeatureGroupArn)
 	d.Set("feature_group_name", output.FeatureGroupName)
 	d.Set("event_time_feature_name", output.EventTimeFeatureName)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("record_identifier_feature_name", output.RecordIdentifierFeatureName)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrARN, output.FeatureGroupArn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return fmt.Errorf("setting feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return fmt.Errorf("setting online_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return fmt.Errorf("setting offline_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Feature Group (%s): %w", d.Id(), err)
+	if err := d.Set("throughput_config", flattenThroughputConfig(output.ThroughputConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting throughput_config for SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &sagemaker.UpdateFeatureGroupInput{
+			FeatureGroupName: aws.String(d.Id()),
+		}
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
+		if d.HasChange("online_store_config") {
+			input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]any))
+		}
+
+		if d.HasChange("throughput_config") {
+			input.ThroughputConfig = expandThroughputConfigUpdate(d.Get("throughput_config").([]any))
+		}
+
+		_, err := conn.UpdateFeatureGroup(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Feature Group (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitFeatureGroupUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFeatureGroupRead(d, meta)
+	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
 
-func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	input := &sagemaker.DeleteFeatureGroupInput{
 		FeatureGroupName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteFeatureGroup(input); err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil
+	if _, err := conn.DeleteFeatureGroup(ctx, input); err != nil {
+		if errs.IsA[*awstypes.ResourceNotFound](err) {
+			return diags
 		}
-		return fmt.Errorf("deleting SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Feature Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitFeatureGroupDeleted(conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil
-		}
-		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to delete: %w", d.Id(), err)
+	if _, err := waitFeatureGroupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Feature Group (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.FeatureDefinition {
-	featureDefs := make([]*sagemaker.FeatureDefinition, 0, len(l))
+func findFeatureGroupByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	input := &sagemaker.DescribeFeatureGroupInput{
+		FeatureGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeFeatureGroup(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandFeatureGroupFeatureDefinition(l []any) []awstypes.FeatureDefinition {
+	featureDefs := make([]awstypes.FeatureDefinition, 0, len(l))
 
 	for _, lRaw := range l {
-		data := lRaw.(map[string]interface{})
+		data := lRaw.(map[string]any)
 
-		featureDef := &sagemaker.FeatureDefinition{
+		featureDef := awstypes.FeatureDefinition{
 			FeatureName: aws.String(data["feature_name"].(string)),
-			FeatureType: aws.String(data["feature_type"].(string)),
+			FeatureType: awstypes.FeatureType(data["feature_type"].(string)),
+		}
+
+		if v, ok := data["collection_config"].([]any); ok && len(v) > 0 {
+			featureDef.CollectionConfig = expandCollectionConfig(v)
+		}
+
+		if v, ok := data["collection_type"].(string); ok && v != "" {
+			featureDef.CollectionType = awstypes.CollectionType(v)
 		}
 
 		featureDefs = append(featureDefs, featureDef)
@@ -370,13 +520,51 @@ func expandFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.FeatureDe
 	return featureDefs
 }
 
-func flattenFeatureGroupFeatureDefinition(config []*sagemaker.FeatureDefinition) []map[string]interface{} {
-	features := make([]map[string]interface{}, 0, len(config))
+func expandCollectionConfig(l []any) *awstypes.CollectionConfigMemberVectorConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	vectorConfig := expandVectorConfig(m["vector_config"].([]any))
+
+	config := &awstypes.CollectionConfigMemberVectorConfig{
+		Value: *vectorConfig,
+	}
+
+	return config
+}
+
+func expandVectorConfig(l []any) *awstypes.VectorConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.VectorConfig{
+		Dimension: aws.Int32(int32(m["dimension"].(int))),
+	}
+
+	return config
+}
+
+func flattenFeatureGroupFeatureDefinition(config []awstypes.FeatureDefinition) []map[string]any {
+	features := make([]map[string]any, 0, len(config))
 
 	for _, i := range config {
-		feature := map[string]interface{}{
-			"feature_name": aws.StringValue(i.FeatureName),
-			"feature_type": aws.StringValue(i.FeatureType),
+		feature := map[string]any{
+			"feature_name": aws.ToString(i.FeatureName),
+			"feature_type": i.FeatureType,
+		}
+
+		if i.CollectionConfig != nil {
+			feature["collection_config"] = flattenCollectionConfig(i.CollectionConfig.(*awstypes.CollectionConfigMemberVectorConfig))
+		}
+
+		if i.CollectionType != "" {
+			feature["collection_type"] = i.CollectionType
 		}
 
 		features = append(features, feature)
@@ -384,80 +572,145 @@ func flattenFeatureGroupFeatureDefinition(config []*sagemaker.FeatureDefinition)
 	return features
 }
 
-func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStoreConfig {
+func flattenCollectionConfig(config *awstypes.CollectionConfigMemberVectorConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"vector_config": flattenVectorConfig(&config.Value),
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenVectorConfig(config *awstypes.VectorConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"dimension": aws.ToInt32(config.Dimension),
+	}
+
+	return []map[string]any{m}
+}
+
+func expandFeatureGroupOnlineStoreConfig(l []any) *awstypes.OnlineStoreConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.OnlineStoreConfig{
+	config := &awstypes.OnlineStoreConfig{
 		EnableOnlineStore: aws.Bool(m["enable_online_store"].(bool)),
 	}
 
-	if v, ok := m["security_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["security_config"].([]any); ok && len(v) > 0 {
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
+	}
+
+	if v, ok := m[names.AttrStorageType].(string); ok && v != "" {
+		config.StorageType = awstypes.StorageType(v)
+	}
+
+	if v, ok := m["ttl_duration"].([]any); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
 	}
 
 	return config
 }
 
-func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) []map[string]interface{} {
+func flattenFeatureGroupOnlineStoreConfig(config *awstypes.OnlineStoreConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"enable_online_store": aws.BoolValue(config.EnableOnlineStore),
+	m := map[string]any{
+		names.AttrStorageType: config.StorageType,
+		"enable_online_store": aws.ToBool(config.EnableOnlineStore),
 	}
 
 	if config.SecurityConfig != nil {
 		m["security_config"] = flattenFeatureGroupOnlineStoreConfigSecurityConfig(config.SecurityConfig)
 	}
 
-	return []map[string]interface{}{m}
+	if config.TtlDuration != nil {
+		m["ttl_duration"] = flattenFeatureGroupOnlineStoreConfigTTLDuration(config.TtlDuration)
+	}
+
+	return []map[string]any{m}
 }
 
-func expandFeatureGroupOnlineStoreConfigSecurityConfig(l []interface{}) *sagemaker.OnlineStoreSecurityConfig {
+func expandFeatureGroupOnlineStoreConfigSecurityConfig(l []any) *awstypes.OnlineStoreSecurityConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.OnlineStoreSecurityConfig{
-		KmsKeyId: aws.String(m["kms_key_id"].(string)),
+	config := &awstypes.OnlineStoreSecurityConfig{
+		KmsKeyId: aws.String(m[names.AttrKMSKeyID].(string)),
 	}
 
 	return config
 }
 
-func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.OnlineStoreSecurityConfig) []map[string]interface{} {
+func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *awstypes.OnlineStoreSecurityConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"kms_key_id": aws.StringValue(config.KmsKeyId),
+	m := map[string]any{
+		names.AttrKMSKeyID: aws.ToString(config.KmsKeyId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineStoreConfig {
+func expandFeatureGroupOnlineStoreConfigTTLDuration(l []any) *awstypes.TtlDuration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.OfflineStoreConfig{}
+	config := &awstypes.TtlDuration{
+		Unit:  awstypes.TtlDurationUnit(m[names.AttrUnit].(string)),
+		Value: aws.Int32(int32(m[names.AttrValue].(int))),
+	}
 
-	if v, ok := m["s3_storage_config"].([]interface{}); ok && len(v) > 0 {
+	return config
+}
+
+func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *awstypes.TtlDuration) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		names.AttrUnit:  config.Unit,
+		names.AttrValue: aws.ToInt32(config.Value),
+	}
+
+	return []map[string]any{m}
+}
+
+func expandFeatureGroupOfflineStoreConfig(l []any) *awstypes.OfflineStoreConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.OfflineStoreConfig{}
+
+	if v, ok := m["s3_storage_config"].([]any); ok && len(v) > 0 {
 		config.S3StorageConfig = expandFeatureGroupOfflineStoreConfigS3StorageConfig(v)
 	}
 
-	if v, ok := m["data_catalog_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["data_catalog_config"].([]any); ok && len(v) > 0 {
 		config.DataCatalogConfig = expandFeatureGroupOfflineStoreConfigDataCatalogConfig(v)
 	}
 
@@ -465,16 +718,21 @@ func expandFeatureGroupOfflineStoreConfig(l []interface{}) *sagemaker.OfflineSto
 		config.DisableGlueTableCreation = aws.Bool(v)
 	}
 
+	if v, ok := m["table_format"].(string); ok {
+		config.TableFormat = awstypes.TableFormat(v)
+	}
+
 	return config
 }
 
-func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfig(config *awstypes.OfflineStoreConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"disable_glue_table_creation": aws.BoolValue(config.DisableGlueTableCreation),
+	m := map[string]any{
+		"disable_glue_table_creation": aws.ToBool(config.DisableGlueTableCreation),
+		"table_format":                config.TableFormat,
 	}
 
 	if config.DataCatalogConfig != nil {
@@ -485,69 +743,159 @@ func flattenFeatureGroupOfflineStoreConfig(config *sagemaker.OfflineStoreConfig)
 		m["s3_storage_config"] = flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config.S3StorageConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagemaker.S3StorageConfig {
+func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []any) *awstypes.S3StorageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.S3StorageConfig{
+	config := &awstypes.S3StorageConfig{
 		S3Uri: aws.String(m["s3_uri"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(m["kms_key_id"].(string))
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
+		config.KmsKeyId = aws.String(m[names.AttrKMSKeyID].(string))
+	}
+
+	if v, ok := m["resolved_output_s3_uri"].(string); ok && v != "" {
+		config.ResolvedOutputS3Uri = aws.String(m["resolved_output_s3_uri"].(string))
 	}
 
 	return config
 }
 
-func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3StorageConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *awstypes.S3StorageConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"s3_uri": aws.StringValue(config.S3Uri),
+	m := map[string]any{
+		"s3_uri": aws.ToString(config.S3Uri),
 	}
 
 	if config.KmsKeyId != nil {
-		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
 	}
 
-	return []map[string]interface{}{m}
+	if config.ResolvedOutputS3Uri != nil {
+		m["resolved_output_s3_uri"] = aws.ToString(config.ResolvedOutputS3Uri)
+	}
+
+	return []map[string]any{m}
 }
 
-func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sagemaker.DataCatalogConfig {
+func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []any) *awstypes.DataCatalogConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	config := &sagemaker.DataCatalogConfig{
+	config := &awstypes.DataCatalogConfig{
 		Catalog:   aws.String(m["catalog"].(string)),
-		Database:  aws.String(m["database"].(string)),
-		TableName: aws.String(m["table_name"].(string)),
+		Database:  aws.String(m[names.AttrDatabase].(string)),
+		TableName: aws.String(m[names.AttrTableName].(string)),
 	}
 
 	return config
 }
 
-func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.DataCatalogConfig) []map[string]interface{} {
+func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *awstypes.DataCatalogConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
-		"catalog":    aws.StringValue(config.Catalog),
-		"database":   aws.StringValue(config.Database),
-		"table_name": aws.StringValue(config.TableName),
+	m := map[string]any{
+		"catalog":           aws.ToString(config.Catalog),
+		names.AttrDatabase:  aws.ToString(config.Database),
+		names.AttrTableName: aws.ToString(config.TableName),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
+}
+
+func expandFeatureGroupOnlineStoreConfigUpdate(l []any) *awstypes.OnlineStoreConfigUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.OnlineStoreConfigUpdate{}
+
+	if v, ok := m["ttl_duration"].([]any); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
+	}
+
+	return config
+}
+
+func expandThroughputConfig(l []any) *awstypes.ThroughputConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.ThroughputConfig{
+		ThroughputMode: awstypes.ThroughputMode(m["throughput_mode"].(string)),
+	}
+
+	if config.ThroughputMode == awstypes.ThroughputModeProvisioned {
+		if v, ok := m["provisioned_read_capacity_units"].(int); ok {
+			config.ProvisionedReadCapacityUnits = aws.Int32(int32(v))
+		}
+
+		if v, ok := m["provisioned_write_capacity_units"].(int); ok {
+			config.ProvisionedWriteCapacityUnits = aws.Int32(int32(v))
+		}
+	}
+
+	return config
+}
+
+func expandThroughputConfigUpdate(l []any) *awstypes.ThroughputConfigUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.ThroughputConfigUpdate{
+		ThroughputMode: awstypes.ThroughputMode(m["throughput_mode"].(string)),
+	}
+
+	if v, ok := m["provisioned_read_capacity_units"].(int); ok {
+		config.ProvisionedReadCapacityUnits = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["provisioned_write_capacity_units"].(int); ok {
+		config.ProvisionedWriteCapacityUnits = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func flattenThroughputConfig(config *awstypes.ThroughputConfigDescription) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"throughput_mode": config.ThroughputMode,
+	}
+
+	if config.ProvisionedReadCapacityUnits != nil {
+		m["provisioned_read_capacity_units"] = aws.ToInt32(config.ProvisionedReadCapacityUnits)
+	}
+
+	if config.ProvisionedWriteCapacityUnits != nil {
+		m["provisioned_write_capacity_units"] = aws.ToInt32(config.ProvisionedWriteCapacityUnits)
+	}
+
+	return []map[string]any{m}
 }

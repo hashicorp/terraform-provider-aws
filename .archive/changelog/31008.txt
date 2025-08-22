@@ -1,0 +1,35 @@
+```release-note:breaking-change
+resource/aws_elasticache_replication_group: Remove `availability_zones`, `number_cache_clusters`, `replication_group_description` arguments -- use `preferred_cache_cluster_azs`, `num_cache_clusters`, and `description`, respectively, instead
+```
+
+```release-note:breaking-change
+resource/aws_elasticache_replication_group: Remove `cluster_mode` configuration block -- use top-level `num_node_groups` and `replicas_per_node_group` instead
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: Update configurations to use `preferred_cache_cluster_azs` instead of the `availability_zones` argument
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: Update configurations to use `num_cache_clusters` instead of the `number_cache_clusters` argument
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: Update configurations to use `description` instead of the `replication_group_description` argument
+```
+
+```release-note:note
+resource/aws_elasticache_replication_group: Update configurations to use top-level `num_node_groups` and `replicas_per_node_group` instead of `cluster_mode.0.num_node_groups` and `cluster_mode.0.replicas_per_node_group`, respectively
+```
+
+```release-note:breaking-change
+data-source/aws_elasticache_replication_group: Remove `number_cache_clusters`, `replication_group_description` arguments -- use `num_cache_clusters`, and `description`, respectively, instead
+```
+
+```release-note:note
+data-source/aws_elasticache_replication_group: Update configurations to use `num_cache_clusters` instead of the `number_cache_clusters` argument
+```
+
+```release-note:note
+data-source/aws_elasticache_replication_group: Update configurations to use `description` instead of the `replication_group_description` argument
+```

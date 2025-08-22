@@ -1,43 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDomain_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					testAccCheckDomainExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", names.AttrARN),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -50,26 +59,28 @@ func testAccDomain_basic(t *testing.T) {
 }
 
 func testAccDomain_defaultEncryptionKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "codeartifact") },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					testAccCheckDomainExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("domain/%s", rName)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "encryption_key", "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 				),
 			},
 			{
@@ -82,21 +93,22 @@ func testAccDomain_defaultEncryptionKey(t *testing.T) {
 }
 
 func testAccDomain_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService("codeartifact", t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "codeartifact") },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -105,40 +117,41 @@ func testAccDomain_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDomainConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+					testAccCheckDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
 			},
 		},
 	})
 }
 
 func testAccDomain_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
+					testAccCheckDomainExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,65 +159,96 @@ func testAccDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainExists(n string) resource.TestCheckFunc {
+func testAccDomain_MigrateAssetSizeBytesToString(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codeartifact_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CodeArtifactServiceID),
+		CheckDestroy: testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.14.0",
+					},
+				},
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset_size_bytes"), knownvalue.Int64Exact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.StringExact(rName)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDomainConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("asset_size_bytes"), knownvalue.StringExact("0")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.StringExact(rName)),
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no CodeArtifact domain set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
-
-		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = conn.DescribeDomain(&codeartifact.DescribeDomainInput{
-			Domain:      aws.String(domainName),
-			DomainOwner: aws.String(domainOwner),
-		})
+		_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrOwner], rs.Primary.Attributes[names.AttrDomain])
 
 		return err
 	}
 }
 
-func testAccCheckDomainDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codeartifact_domain" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
-
-		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		resp, err := conn.DescribeDomain(&codeartifact.DescribeDomainInput{
-			Domain:      aws.String(domainName),
-			DomainOwner: aws.String(domainOwner),
-		})
-
-		if err == nil {
-			if aws.StringValue(resp.Domain.Arn) == rs.Primary.ID {
-				return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
+func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codeartifact_domain" {
+				continue
 			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
+
+			_, err := tfcodeartifact.FindDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrOwner], rs.Primary.Attributes[names.AttrDomain])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
 		}
 
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDomainConfig_basic(rName string) string {
@@ -212,6 +256,7 @@ func testAccDomainConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {

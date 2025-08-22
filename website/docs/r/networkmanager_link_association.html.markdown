@@ -3,14 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_link_association"
 description: |-
-  Associates a link to a device.
+  Manages a Network Manager link association.
 ---
 
 # Resource: aws_networkmanager_link_association
 
-Associates a link to a device.
-A device can be associated to multiple links and a link can be associated to multiple devices.
-The device and link must be in the same global network and the same site.
+Manages a Network Manager link association. Associates a link to a device. A device can be associated to multiple links and a link can be associated to multiple devices. The device and link must be in the same global network and the same site.
 
 ## Example Usage
 
@@ -24,20 +22,36 @@ resource "aws_networkmanager_link_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `device_id` - (Required) The ID of the device.
-* `global_network_id` - (Required) The ID of the global network.
-* `link_id` - (Required) The ID of the link.
+* `device_id` - (Required) ID of the device.
+* `global_network_id` - (Required) ID of the global network.
+* `link_id` - (Required) ID of the link.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-`aws_networkmanager_link_association` can be imported using the global network ID, link ID and device ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_link_association` using the global network ID, link ID and device ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_link_association.example
+  id = "global-network-0d47f6t230mz46dy4,link-444555aaabbb11223,device-07f6fd08867abc123"
+}
 ```
-$ terraform import aws_networkmanager_link_association.example global-network-0d47f6t230mz46dy4,link-444555aaabbb11223,device-07f6fd08867abc123
+
+Using `terraform import`, import `aws_networkmanager_link_association` using the global network ID, link ID and device ID. For example:
+
+```console
+% terraform import aws_networkmanager_link_association.example global-network-0d47f6t230mz46dy4,link-444555aaabbb11223,device-07f6fd08867abc123
 ```

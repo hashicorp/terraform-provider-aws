@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "public_key_path" {
   description = <<DESCRIPTION
 Path to the SSH public key to be used for authentication.

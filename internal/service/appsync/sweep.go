@@ -1,201 +1,131 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package appsync
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_appsync_graphql_api", &resource.Sweeper{
-		Name: "aws_appsync_graphql_api",
-		F:    sweepGraphQLAPIs,
-	})
-
-	resource.AddTestSweepers("aws_appsync_domain_name", &resource.Sweeper{
-		Name: "aws_appsync_domain_name",
-		F:    sweepDomainNames,
-		Dependencies: []string{
-			"aws_appsync_domain_name_api_association",
-		},
-	})
-
-	resource.AddTestSweepers("aws_appsync_domain_name_api_association", &resource.Sweeper{
-		Name: "aws_appsync_domain_name_api_association",
-		F:    sweepDomainNameAssociations,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_appsync_api", sweepAPIs)
+	awsv2.Register("aws_appsync_graphql_api", sweepGraphQLAPIs, "aws_appsync_domain_name_api_association")
+	awsv2.Register("aws_appsync_domain_name", sweepDomainNames, "aws_appsync_domain_name_api_association")
+	awsv2.Register("aws_appsync_domain_name_api_association", sweepDomainNameAssociations)
 }
 
-func sweepGraphQLAPIs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListApisInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listAPIsPages(ctx, conn, &input, func(page *appsync.ListApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Apis {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAPIResource, client,
+				framework.NewAttribute("api_id", aws.ToString(v.ApiId))))
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return nil, err
 	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
 
-	input := &appsync.ListGraphqlApisInput{}
+	return sweepResources, nil
+}
 
-	for {
-		output, err := conn.ListGraphqlApis(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
-			return nil
+func sweepGraphQLAPIs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListGraphqlApisInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err := listGraphQLAPIsPages(ctx, conn, &input, func(page *appsync.ListGraphqlApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			err := fmt.Errorf("error reading AppSync GraphQL API: %w", err)
-			log.Printf("[ERROR] %s", err)
-			errs = multierror.Append(errs, err)
-			break
-		}
-
-		for _, graphAPI := range output.GraphqlApis {
-
-			r := ResourceGraphQLAPI()
+		for _, v := range page.GraphqlApis {
+			r := resourceGraphQLAPI()
 			d := r.Data(nil)
-
-			id := aws.StringValue(graphAPI.ApiId)
-			d.SetId(id)
+			d.SetId(aws.ToString(v.ApiId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		return nil, err
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync GraphQL API %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepDomainNames(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
+func sweepDomainNames(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListDomainNamesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &appsync.ListDomainNamesInput{}
-
-	for {
-		output, err := conn.ListDomainNames(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, err)
-			return nil
+	err := listDomainNamesPages(ctx, conn, &input, func(page *appsync.ListDomainNamesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			err := fmt.Errorf("error reading AppSync Domain Name: %w", err)
-			log.Printf("[ERROR] %s", err)
-			errs = multierror.Append(errs, err)
-			break
-		}
-
-		for _, dm := range output.DomainNameConfigs {
-
-			r := ResourceDomainName()
+		for _, v := range page.DomainNameConfigs {
+			r := resourceDomainName()
 			d := r.Data(nil)
-
-			id := aws.StringValue(dm.DomainName)
-			d.SetId(id)
+			d.SetId(aws.ToString(v.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		return nil, err
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }
 
-func sweepDomainNameAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AppSyncConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
+func sweepDomainNameAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AppSyncClient(ctx)
+	var input appsync.ListDomainNamesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &appsync.ListDomainNamesInput{}
-
-	for {
-		output, err := conn.ListDomainNames(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, err)
-			return nil
+	err := listDomainNamesPages(ctx, conn, &input, func(page *appsync.ListDomainNamesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			err := fmt.Errorf("error reading AppSync Domain Name Association: %w", err)
-			log.Printf("[ERROR] %s", err)
-			errs = multierror.Append(errs, err)
-			break
-		}
-
-		for _, dm := range output.DomainNameConfigs {
-
-			r := ResourceDomainNameAPIAssociation()
+		for _, v := range page.DomainNameConfigs {
+			r := resourceDomainNameAPIAssociation()
 			d := r.Data(nil)
-
-			id := aws.StringValue(dm.DomainName)
-			d.SetId(id)
+			d.SetId(aws.ToString(v.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextToken = output.NextToken
+	if err != nil {
+		return nil, err
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppSync Domain Name Association %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweepResources, nil
 }

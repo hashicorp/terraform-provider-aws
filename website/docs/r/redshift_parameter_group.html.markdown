@@ -36,8 +36,9 @@ resource "aws_redshift_parameter_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.
 * `description` - (Optional) The description of the Redshift parameter group. Defaults to "Managed by Terraform".
@@ -51,9 +52,9 @@ Parameter blocks support the following:
 
 You can read more about the parameters that Redshift supports in the [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of parameter group
 * `id` - The Redshift parameter group name.
@@ -61,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_parameter_group.paramgroup1
+  id = "parameter-group-test-terraform"
+}
 ```
-$ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
+
+Using `terraform import`, import Redshift Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe
 
 import (
@@ -8,21 +11,22 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transcribe_vocabulary", name="Vocabulary")
+// @Tags(identifierAttribute="arn")
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
@@ -41,7 +45,7 @@ func ResourceVocabulary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +53,7 @@ func ResourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,8 +66,8 @@ func ResourceVocabulary() *schema.Resource {
 				ExactlyOneOf: []string{"phrases", "vocabulary_file_uri"},
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vocabulary_file_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -78,8 +82,6 @@ func ResourceVocabulary() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 200),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -87,12 +89,14 @@ const (
 	ResNameVocabulary = "transcribe"
 )
 
-func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
-		LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("vocabulary_file_uri"); ok {
@@ -100,149 +104,120 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("phrases"); ok {
-		in.Phrases = expandPhrases(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+		in.Phrases = expandPhrases(v.([]any))
 	}
 
 	out, err := conn.CreateVocabulary(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabulary, d.Get("vocabulary_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
 
 	if _, err := waitVocabularyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForCreation, ResNameVocabulary, d.Id(), err)
 	}
 
-	return resourceVocabularyRead(ctx, d, meta)
+	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindVocabularyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transcribe Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("vocabulary/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabulary, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameVocabulary, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
-			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+			LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		}
 
 		if d.HasChanges("vocabulary_file_uri", "phrases") {
 			if d.Get("vocabulary_file_uri").(string) != "" {
 				in.VocabularyFileUri = aws.String(d.Get("vocabulary_file_uri").(string))
 			} else {
-				in.Phrases = expandPhrases(d.Get("phrases").([]interface{}))
+				in.Phrases = expandPhrases(d.Get("phrases").([]any))
 			}
 		}
 
 		log.Printf("[DEBUG] Updating Transcribe Vocabulary (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateVocabulary(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
+			return create.AppendDiagError(diags, names.Transcribe, create.ErrActionUpdating, ResNameVocabulary, d.Id(), err)
 		}
 
 		if _, err := waitVocabularyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
+			return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForUpdate, ResNameVocabulary, d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Transcribe Vocabulary (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceVocabularyRead(ctx, d, meta)
+	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
 
-	_, err := conn.DeleteVocabulary(ctx, &transcribe.DeleteVocabularyInput{
+	input := transcribe.DeleteVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionDeleting, ResNameVocabulary, d.Id(), err)
 	}
 
 	if _, err := waitVocabularyDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForDeletion, ResNameVocabulary, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -264,7 +239,7 @@ func waitVocabularyCreated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   vocabularyStatus(types.VocabularyStatePending),
 		Target:                    vocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusVocabulary(ctx, conn, id),
@@ -286,7 +261,7 @@ func waitVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id stri
 }
 
 func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetVocabularyOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: vocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, id),
@@ -305,8 +280,8 @@ func waitVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id stri
 	return nil, err
 }
 
-func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindVocabularyByName(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -329,7 +304,7 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -356,7 +331,7 @@ func vocabularyStatus(in ...types.VocabularyState) []string {
 	return s
 }
 
-func expandPhrases(in []interface{}) []string {
+func expandPhrases(in []any) []string {
 	var out []string
 
 	for _, val := range in {

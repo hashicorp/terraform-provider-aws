@@ -1,38 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/schemas"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSchemasRegistry_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "schemas", fmt.Sprintf("registry/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -45,21 +51,22 @@ func TestAccSchemasRegistry_basic(t *testing.T) {
 }
 
 func TestAccSchemasRegistry_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,21 +75,22 @@ func TestAccSchemasRegistry_disappears(t *testing.T) {
 }
 
 func TestAccSchemasRegistry_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -93,15 +101,15 @@ func TestAccSchemasRegistry_description(t *testing.T) {
 			{
 				Config: testAccRegistryConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -109,22 +117,23 @@ func TestAccSchemasRegistry_description(t *testing.T) {
 }
 
 func TestAccSchemasRegistry_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeRegistryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegistryDestroy,
+		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRegistryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -133,64 +142,62 @@ func TestAccSchemasRegistry_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRegistryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRegistryConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRegistryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegistryExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckRegistryExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckRegistryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+func testAccCheckRegistryDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_schemas_registry" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_schemas_registry" {
+				continue
+			}
+
+			_, err := tfschemas.FindRegistryByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Schemas Registry %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfschemas.FindRegistryByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EventBridge Schemas Registry %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRegistryExists(n string, v *schemas.DescribeRegistryOutput) resource.TestCheckFunc {
+func testAccCheckRegistryExists(ctx context.Context, n string, v *schemas.DescribeRegistryOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
-
-		output, err := tfschemas.FindRegistryByName(conn, rs.Primary.ID)
+		output, err := tfschemas.FindRegistryByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

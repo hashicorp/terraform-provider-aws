@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_service"
 description: |-
-    Provides an AWS App Mesh virtual service resource.
+    Terraform data source for managing an AWS App Mesh Virtual Service.
 ---
 
 # Data Source: aws_appmesh_virtual_service
@@ -12,14 +12,14 @@ The App Mesh Virtual Service data source allows details of an App Mesh Virtual S
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_service" "test" {
   name      = "example.mesh.local"
   mesh_name = "example-mesh"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_service" "test" {
@@ -31,36 +31,20 @@ data "aws_appmesh_virtual_service" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the virtual service.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual service exists.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the virtual service.
 * `created_date` - Creation date of the virtual service.
 * `last_updated_date` - Last update date of the virtual service.
 * `resource_owner` - Resource owner's AWS account ID.
-* `spec` - Virtual service specification
+* `spec` - Virtual service specification. See the [`aws_appmesh_virtual_service`](/docs/providers/aws/r/appmesh_virtual_service.html#spec) resource for details.
 * `tags` - Map of tags.
-
-### Spec
-
-* `provider` - App Mesh object that is acting as the provider for a virtual service.
-
-### Provider
-
-* `virtual_node` - Virtual node associated with the virtual service.
-* `virtual_router` - Virtual router associated with the virtual service.
-
-### Virtual Node
-
-* `virtual_node_name` - Name of the virtual node that is acting as a service provider.
-
-### Virtual Router
-
-* `virtual_router_name` - Name of the virtual router that is acting as a service provider.

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint: Add `private_dns_only_for_inbound_resolver_endpoint` attribute to the `dns_options` configuration block
+```

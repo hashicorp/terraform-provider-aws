@@ -1,85 +1,80 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
-	"fmt"
-	"strings"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
-	"github.com/hashicorp/terraform-provider-aws/version"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 )
 
-func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
-	session, err := session.NewSession(cfg)
-
-	if err != nil {
-		return nil, err
-	}
-
-	apnInfo := StdUserAgentProducts(terraformVersion)
-
-	awsbasev1.SetSessionUserAgent(session, apnInfo, awsbase.UserAgentProducts{})
-
-	return session.Copy(&aws.Config{Region: aws.String(region)}), nil
+// ServicePackage is the minimal interface exported from each AWS service package.
+// Its methods return the Plugin SDK and Framework resources and data sources implemented in the package.
+type ServicePackage interface {
+	FrameworkDataSources(context.Context) []*types.ServicePackageFrameworkDataSource
+	FrameworkResources(context.Context) []*types.ServicePackageFrameworkResource
+	SDKDataSources(context.Context) []*types.ServicePackageSDKDataSource
+	SDKResources(context.Context) []*types.ServicePackageSDKResource
+	ServicePackageName() string
 }
 
-func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {
-	return &awsbase.APNInfo{
-		PartnerName: "HashiCorp",
-		Products: []awsbase.UserAgentProduct{
-			{Name: "Terraform", Version: terraformVersion, Comment: "+https://www.terraform.io"},
-			{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
-		},
-	}
+// ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
+// Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
+type ServicePackageWithEphemeralResources interface {
+	ServicePackage
+	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 }
 
-func HasEC2Classic(platforms []string) bool {
-	for _, p := range platforms {
-		if p == "EC2" {
-			return true
-		}
-	}
-	return false
+type (
+	contextKeyType int
+)
+
+var (
+	contextKey contextKeyType
+)
+
+// InContext represents the resource information kept in Context.
+type InContext struct {
+	overrideRegion     string // Any currently in effect per-resource Region override.
+	resourceName       string // Friendly resource name, e.g. "Subnet"
+	servicePackageName string // Canonical name defined as a constant in names package
+	vcrEnabled         bool   // Whether VCR testing is enabled
 }
 
-func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
-	attrName := "supported-platforms"
-
-	input := ec2.DescribeAccountAttributesInput{
-		AttributeNames: []*string{aws.String(attrName)},
-	}
-	attributes, err := conn.DescribeAccountAttributes(&input)
-	if err != nil {
-		return nil, err
-	}
-
-	var platforms []string
-	for _, attr := range attributes.AccountAttributes {
-		if *attr.AttributeName == attrName {
-			for _, v := range attr.AttributeValues {
-				platforms = append(platforms, *v.AttributeValue)
-			}
-			break
-		}
-	}
-
-	if len(platforms) == 0 {
-		return nil, fmt.Errorf("no EC2 platforms detected")
-	}
-
-	return platforms, nil
+// OverrideRegion returns any currently in effect per-resource Region override.
+func (c *InContext) OverrideRegion() string {
+	return c.overrideRegion
 }
 
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
+// ResourceName returns the friendly resource name, e.g. "Subnet".
+func (c *InContext) ResourceName() string {
+	return c.resourceName
+}
 
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
+// ServicePackageName returns the canonical service name defined as a constant in the `names` package.
+func (c *InContext) ServicePackageName() string {
+	return c.servicePackageName
+}
+
+// VCREnabled indicates whether VCR testing is enabled.
+func (c *InContext) VCREnabled() bool {
+	return c.vcrEnabled
+}
+
+func NewResourceContext(ctx context.Context, servicePackageName, resourceName, overrideRegion string) context.Context {
+	v := InContext{
+		overrideRegion:     overrideRegion,
+		resourceName:       resourceName,
+		servicePackageName: servicePackageName,
+		vcrEnabled:         vcr.IsEnabled(),
 	}
 
-	return strings.Join(parts, ".")
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func FromContext(ctx context.Context) (*InContext, bool) {
+	v, ok := ctx.Value(contextKey).(*InContext)
+	return v, ok
 }

@@ -1,0 +1,19 @@
+```release-note:bug
+ resource/aws_lakeformation_permissions: Change `lf_tag`, `lf_tag.values`, `lf_tag_policy`, `lf_tag_policy.expression.key`, `lf_tag_policy.expression.values` and `lf_tag_policy.resource_type` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:bug
+ resource/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks
+```
+
+```release-note:bug
+ data-source/aws_lakeformation_permissions: Remove limit on number of `lf_tag_policy.expression` blocks
+```
+
+```release-note:bug
+ resource/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant
+```
+
+```release-note:bug
+ data-source/aws_lakeformation_permissions: Change `lf_tag_policy.expression` from `TypeList` to `TypeSet` as order is not significant
+```

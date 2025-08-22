@@ -1,23 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+func testAccEBSDefaultKMSKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSDefaultKMSKeyDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEBSDefaultKMSKey("data.aws_ebs_default_kms_key.current"),
+					testAccCheckEBSDefaultKMSKey(ctx, "data.aws_ebs_default_kms_key.current"),
 				),
 			},
 		},
@@ -25,5 +29,14 @@ func TestAccEC2EBSDefaultKMSKeyDataSource_basic(t *testing.T) {
 }
 
 const testAccEBSDefaultKMSKeyDataSourceConfig_basic = `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_ebs_default_kms_key" "test" {
+  key_arn = aws_kms_key.test.arn
+}
+
 data "aws_ebs_default_kms_key" "current" {}
 `

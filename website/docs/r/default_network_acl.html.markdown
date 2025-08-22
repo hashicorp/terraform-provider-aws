@@ -123,9 +123,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `egress` - (Optional) Configuration block for an egress rule. Detailed below.
 * `ingress` - (Optional) Configuration block for an ingress rule. Detailed below.
-* `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to. See the notes below on managing Subnets in the Default Network ACL
+* `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to. See the notes above on Managing Subnets in the Default Network ACL
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### egress and ingress
@@ -142,6 +143,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) The CIDR block to match. This must be a valid network mask.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
@@ -149,9 +151,9 @@ The following arguments are optional:
 
 -> For more information on ICMP types and codes, see [Internet Control Message Protocol (ICMP) Parameters](https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Default Network ACL
 * `id` - ID of the Default Network ACL
@@ -163,8 +165,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Default Network ACLs can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default Network ACLs using the `id`. For example:
 
+```terraform
+import {
+  to = aws_default_network_acl.sample
+  id = "acl-7aaabd18"
+}
 ```
-$ terraform import aws_default_network_acl.sample acl-7aaabd18
+
+Using `terraform import`, import Default Network ACLs using the `id`. For example:
+
+```console
+% terraform import aws_default_network_acl.sample acl-7aaabd18
 ```

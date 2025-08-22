@@ -1,46 +1,58 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
-	resourceName := "aws_organizations_organizational_unit.test"
-	dataSourceName := "data.aws_organizations_organizational_units.test"
-	resource.ParallelTest(t, resource.TestCase{
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	topOUDataSourceName := "data.aws_organizations_organizational_units.current"
+	newOUDataSourceName := "data.aws_organizations_organizational_units.test"
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
+				Config: testAccOrganizationalUnitsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "children.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "children.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "children.0.arn"),
+					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", 0),
+					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-const testAccOrganizationalUnitsDataSourceConfig_basic = `
-resource "aws_organizations_organization" "test" {}
+func testAccOrganizationalUnitsDataSourceConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_organizations_organization" "current" {}
 
 resource "aws_organizations_organizational_unit" "test" {
-  name      = "test"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  name      = %[1]q
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+}
+
+data "aws_organizations_organizational_units" "current" {
+  parent_id = aws_organizations_organizational_unit.test.parent_id
 }
 
 data "aws_organizations_organizational_units" "test" {
-  parent_id = aws_organizations_organizational_unit.test.parent_id
+  parent_id = aws_organizations_organizational_unit.test.id
 }
-`
+`, rName)
+}

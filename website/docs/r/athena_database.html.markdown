@@ -19,14 +19,15 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_athena_database" "example" {
   name   = "database_name"
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.
 * `acl_configuration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
@@ -35,6 +36,7 @@ The following arguments are supported:
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `force_destroy` - (Optional, Default: false) Boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
 * `properties` - (Optional) Key-value map of custom metadata properties for the database definition.
+* `workgroup` - (Optional) Name of the workgroup.
 
 ### ACL Configuration
 
@@ -47,26 +49,35 @@ The following arguments are supported:
 * `encryption_option` - (Required) Type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
 * `kms_key` - (Optional) KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Database name
 
 ## Import
 
-Athena Databases can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Athena Databases using their name. For example:
 
-```
-$ terraform import aws_athena_database.example example
+```terraform
+import {
+  to = aws_athena_database.example
+  id = "example"
+}
 ```
 
-Certain resource arguments, like `encryption_configuration` and `bucket`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import Athena Databases using their name. For example:
+
+```console
+% terraform import aws_athena_database.example example
+```
+
+Certain resource arguments, like `encryption_configuration` and `bucket`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_athena_database" "example" {
   name   = "database_name"
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   # There is no API for reading bucket
   lifecycle {

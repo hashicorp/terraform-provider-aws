@@ -11,9 +11,10 @@ description: |-
 Provides details about a specific Amazon Connect Hours of Operation.
 
 ## Example Usage
+
 By `name`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   name        = "Test"
@@ -22,7 +23,7 @@ data "aws_connect_hours_of_operation" "test" {
 
 By `hours_of_operation_id`
 
-```hcl
+```terraform
 data "aws_connect_hours_of_operation" "test" {
   instance_id           = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   hours_of_operation_id = "cccccccc-bbbb-cccc-dddd-111111111111"
@@ -31,22 +32,22 @@ data "aws_connect_hours_of_operation" "test" {
 
 ## Argument Reference
 
-~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
+This data source supports the following arguments:
 
-The following arguments are supported:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hours_of_operation_id` - (Optional) Returns information on a specific Hours of Operation by hours of operation id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Hours of Operation by name
 
-## Attributes Reference
+~> **NOTE:** `instance_id` and one of either `name` or `hours_of_operation_id` is required.
 
-In addition to all of the arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Hours of Operation.
 * `config` - Configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
 * `description` - Description of the Hours of Operation.
-* `hours_of_operation_arn` - (**Deprecated**) ARN of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
 * `instance_id` - Identifier of the hosting Amazon Connect Instance.
 * `name` - Name of the Hours of Operation.

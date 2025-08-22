@@ -45,12 +45,13 @@ The `source_s3_path` configuration block supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description for a thesaurus.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the thesaurus.
 * `id` - The unique identifiers of the thesaurus and index separated by a slash (`/`).
@@ -59,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -67,8 +68,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_kendra_thesaurus` can be imported using the unique identifiers of the thesaurus and index separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_kendra_thesaurus` using the unique identifiers of the thesaurus and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_thesaurus.example
+  id = "thesaurus-123456780/idx-8012925589"
+}
 ```
-$ terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
+
+Using `terraform import`, import `aws_kendra_thesaurus` using the unique identifiers of the thesaurus and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
 ```

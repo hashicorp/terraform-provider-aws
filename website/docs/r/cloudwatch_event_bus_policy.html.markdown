@@ -18,7 +18,7 @@ Provides a resource to create an EventBridge resource policy to support cross-ac
 
 ### Account Access
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
   statement {
     sid    = "DevAccountAccess"
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
 ### Organization Access
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
   statement {
     sid    = "OrganizationAccess"
@@ -82,7 +82,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
 ### Multiple Statements
 
-```hcl
+```terraform
 data "aws_iam_policy_document" "test" {
 
   statement {
@@ -136,21 +136,32 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
-* `event_bus_name` - (Optional) The event bus to set the permissions on. If you omit this, the permissions are set on the `default` event bus.
+* `event_bus_name` - (Optional) The name of the event bus to set the permissions on.
+  If you omit this, the permissions are set on the `default` event bus.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the EventBridge event bus.
 
 ## Import
 
-EventBridge permissions can be imported using the `event_bus_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge policy using the `event_bus_name`. For example:
 
-```shell
-$ terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
+```terraform
+import {
+  to = aws_cloudwatch_event_bus_policy.DevAccountAccess
+  id = "example-event-bus"
+}
+```
+
+Using `terraform import`, import an EventBridge policy using the `event_bus_name`. For example:
+
+```console
+% terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
 ```

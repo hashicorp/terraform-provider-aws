@@ -3,82 +3,126 @@ package emrcontainers
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/aws/aws-sdk-go/service/emrcontainers/emrcontainersiface"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists emrcontainers service tags.
+// listTags lists emrcontainers service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn emrcontainersiface.EMRContainersAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn emrcontainersiface.EMRContainersAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &emrcontainers.ListTagsForResourceInput{
+func listTags(ctx context.Context, conn *emrcontainers.Client, identifier string, optFns ...func(*emrcontainers.Options)) (tftags.KeyValueTags, error) {
+	input := emrcontainers.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return keyValueTags(ctx, output.Tags), nil
 }
 
-// map[string]*string handling
+// ListTags lists emrcontainers service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).EMRContainersClient(ctx), identifier)
 
-// Tags returns emrcontainers service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
-}
-
-// KeyValueTags creates KeyValueTags from emrcontainers service tags.
-func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
-	return tftags.New(tags)
-}
-
-// UpdateTags updates emrcontainers service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func UpdateTags(conn emrcontainersiface.EMRContainersAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn emrcontainersiface.EMRContainersAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &emrcontainers.UntagResourceInput{
-			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
-		}
-
-		_, err := conn.UntagResourceWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
+	if err != nil {
+		return smarterr.NewError(err)
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &emrcontainers.TagResourceInput{
-			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
-		}
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+	return nil
+}
 
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+// map[string]string handling
+
+// svcTags returns emrcontainers service tags.
+func svcTags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
+}
+
+// keyValueTags creates tftags.KeyValueTags from emrcontainers service tags.
+func keyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+	return tftags.New(ctx, tags)
+}
+
+// getTagsIn returns emrcontainers service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) map[string]string {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
 		}
 	}
 
 	return nil
+}
+
+// setTagsOut sets emrcontainers service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]string) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates emrcontainers service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn *emrcontainers.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*emrcontainers.Options)) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.EMRContainers)
+	if len(removedTags) > 0 {
+		input := emrcontainers.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     removedTags.Keys(),
+		}
+
+		_, err := conn.UntagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.EMRContainers)
+	if len(updatedTags) > 0 {
+		input := emrcontainers.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        svcTags(updatedTags),
+		}
+
+		_, err := conn.TagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates emrcontainers service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).EMRContainersClient(ctx), identifier, oldTags, newTags)
 }

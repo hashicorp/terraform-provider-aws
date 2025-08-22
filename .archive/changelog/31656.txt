@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_iam_role: The `role_last_used` attribute has been removed. Use the `aws_iam_role` data source instead.
+```
+
+```release-note:note
+resource/aws_iam_role: The `role_last_used` attribute has been removed. Use the `aws_iam_role` data source instead. See the community feedback provided in the [linked issue](https://github.com/hashicorp/terraform-provider-aws/issues/30861) for additional justification on this change. As the attribute is read-only, unlikely to be used as an input to another resource, and available in the corresponding data source, a breaking change in a minor version was deemed preferable to a long deprecation/removal cycle in this circumstance.
+```

@@ -12,7 +12,7 @@ Provides details about a specific Amazon Kendra Faq.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kendra_faq" "test" {
   faq_id   = "87654321-1234-4321-4321-321987654321"
   index_id = "12345678-1234-1234-1234-123456789123"
@@ -21,14 +21,15 @@ data "aws_kendra_faq" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `faq_id` - (Required) Identifier of the FAQ.
 * `index_id` - (Required) Identifier of the index that contains the FAQ.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the FAQ.
 * `created_at` - Unix datetime that the faq was created.

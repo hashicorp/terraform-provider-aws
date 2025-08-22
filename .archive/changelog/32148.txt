@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_security_group_egress_rule: `security_group_id` is Required
+```
+
+```release-note:bug
+resource/aws_vpc_security_group_ingress_rule: `security_group_id` is Required
+```

@@ -19,7 +19,7 @@ customer-managed prefix list in the current region.
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "example" {
-  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 }
 ```
 
@@ -36,24 +36,27 @@ data "aws_ec2_managed_prefix_list" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-prefix lists. The given filters must match exactly one prefix list
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the prefix list to select.
 * `name` - (Optional) Name of the prefix list to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
+The arguments of this data source act as filters for querying the available
+prefix lists. The given filters must match exactly one prefix list
+whose data will be exported as attributes.
+
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [DescribeManagedPrefixLists](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeManagedPrefixLists.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the selected prefix list.
 * `arn` - ARN of the selected prefix list.
@@ -66,6 +69,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

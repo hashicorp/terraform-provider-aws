@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -17,17 +22,17 @@ const (
 	statusIAMDelay  = "IAM DELAY"
 )
 
-func waitPermissionsReady(conn *lakeformation.LakeFormation, input *lakeformation.ListPermissionsInput, tableType string, columnNames []*string, excludedColumnNames []*string, columnWildcard bool) ([]*lakeformation.PrincipalResourcePermissions, error) {
-	stateConf := &resource.StateChangeConf{
+func waitPermissionsReady(ctx context.Context, conn *lakeformation.Client, input *lakeformation.ListPermissionsInput, tableType string, columnNames []string, excludedColumnNames []string, columnWildcard bool) ([]awstypes.PrincipalResourcePermissions, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusNotFound, statusIAMDelay},
 		Target:  []string{statusAvailable},
-		Refresh: statusPermissions(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
+		Refresh: statusPermissions(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard),
 		Timeout: permissionsReadyTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]*lakeformation.PrincipalResourcePermissions); ok {
+	if output, ok := outputRaw.([]awstypes.PrincipalResourcePermissions); ok {
 		return output, err
 	}
 

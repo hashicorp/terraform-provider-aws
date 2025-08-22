@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Correctly handle unconfigured `task_definition`, making `EXTERNAL` deployments possible
+```

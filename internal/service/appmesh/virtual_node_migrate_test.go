@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh_test
 
 import (
@@ -8,11 +11,13 @@ import (
 )
 
 func TestVirtualNodeMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_1-noBackendsOrDns": {
 			StateVersion: 0,

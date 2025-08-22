@@ -39,7 +39,7 @@ resource "aws_imagebuilder_image_recipe" "example" {
   }
 
   name         = "example"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 ```
@@ -50,30 +50,27 @@ The following arguments are required:
 
 * `component` - (Required) Ordered configuration block(s) with components for the image recipe. Detailed below.
 * `name` - (Required) Name of the image recipe.
-* `parent_image` - (Required) Platform of the image recipe.
-* `version` - (Required) Version of the image recipe.
+* `parent_image` - (Required) The image recipe uses this image as a base from which to build your customized image. The value can be the base image ARN or an AMI ID.
+* `version` - (Required) The semantic version of the image recipe, which specifies the version in the following format, with numeric values in each position to indicate a specific version: major.minor.patch. For example: 1.0.0.
 
-The following attributes are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
 * `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
+* `user_data_base64` - (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
-### block_device_mapping
-
-The following arguments are optional:
+### `block_device_mapping`
 
 * `device_name` - (Optional) Name of the device. For example, `/dev/sda` or `/dev/xvdb`.
 * `ebs` - (Optional) Configuration block with Elastic Block Storage (EBS) block device mapping settings. Detailed below.
 * `no_device` - (Optional) Set to `true` to remove a mapping from the parent image.
 * `virtual_name` - (Optional) Virtual device name. For example, `ephemeral0`. Instance store volumes are numbered starting from 0.
 
-#### ebs
-
-The following arguments are optional:
+#### `ebs`
 
 * `delete_on_termination` - (Optional) Whether to delete the volume on termination. Defaults to unset, which is the value inherited from the parent image.
 * `encrypted` - (Optional) Whether to encrypt the volume. Defaults to unset, which is the value inherited from the parent image.
@@ -84,31 +81,25 @@ The following arguments are optional:
 * `volume_size` - (Optional) Size of the volume, in GiB.
 * `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
 
-### component
-
-The `component` block supports the following arguments:
+### `component`
 
 * `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
 * `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
 
-### parameter
-
-The following arguments are required:
+### `parameter`
 
 * `name` - (Required) The name of the component parameter.
 * `value` - (Required) The value for the named component parameter.
 
-### systems_manager_agent
+### `systems_manager_agent`
 
-The following arguments are required:
+* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built.
 
-* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
+## Attribute Reference
 
-## Attributes Reference
+This resource exports the following attributes in addition to the arguments above:
 
-In addition to all arguments above, the following attributes are exported:
-
-* `arn` - (Required) Amazon Resource Name (ARN) of the image recipe.
+* `arn` - Amazon Resource Name (ARN) of the image recipe.
 * `date_created` - Date the image recipe was created.
 * `owner` - Owner of the image recipe.
 * `platform` - Platform of the image recipe.
@@ -116,8 +107,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image_recipe` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_image_recipe.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0"
+}
 ```
-$ terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
+
+Using `terraform import`, import `aws_imagebuilder_image_recipe` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_image_recipe.example arn:aws:imagebuilder:us-east-1:123456789012:image-recipe/example/1.0.0
 ```

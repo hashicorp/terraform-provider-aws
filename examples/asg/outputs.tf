@@ -1,9 +1,12 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 output "security_group" {
   value = aws_security_group.default.id
 }
 
 output "launch_configuration" {
-  value = aws_launch_configuration.web-lc.id
+  value = aws_launch_template.web-lt.id
 }
 
 output "asg_name" {

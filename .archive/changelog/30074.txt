@@ -1,0 +1,3 @@
+```release-note:bug    
+resource/aws_cognito_risk_configuration: Adds validation to `risk_exception_configuration` and requires at least one of `account_takeover_risk_configuration`, `compromised_credentials_risk_configuration`, or `risk_exception_configuration`.
+```

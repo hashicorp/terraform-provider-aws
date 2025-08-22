@@ -1,36 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EIPAssociation_basic(t *testing.T) {
-	var a ec2.Address
+	ctx := acctest.Context(t)
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
 				),
 			},
 			{
@@ -43,21 +49,22 @@ func TestAccEC2EIPAssociation_basic(t *testing.T) {
 }
 
 func TestAccEC2EIPAssociation_disappears(t *testing.T) {
-	var a ec2.Address
+	ctx := acctest.Context(t)
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIPAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,23 +72,58 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIPAssociation_instance(t *testing.T) {
-	var a ec2.Address
-	resource1Name := "aws_eip_association.test1"
-	resource2Name := "aws_eip_association.test2"
+func TestAccEC2EIPAssociation_instance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var a awstypes.Address
+	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_instance(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resource1Name, &a),
-					testAccCheckEIPAssociationExists(resource2Name, &a),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_instance.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2EIPAssociation_instance_publicIP(t *testing.T) {
+	ctx := acctest.Context(t)
+	var a awstypes.Address
+	resourceName := "aws_eip_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEIPAssociationConfig_instance_publicIP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_instance.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
 				),
 			},
 		},
@@ -89,20 +131,28 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 }
 
 func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
-	var a ec2.Address
+	ctx := acctest.Context(t)
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_networkInterface(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, "aws_network_interface.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_network_interface.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
 				),
 			},
 			{
@@ -115,7 +165,8 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 }
 
 func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
-	var a ec2.Address
+	ctx := acctest.Context(t)
+	var a awstypes.Address
 	resourceName := "aws_eip_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
@@ -124,17 +175,22 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPAssociationDestroy,
+		CheckDestroy:             testAccCheckEIPAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
-					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEIPAssociationExists(ctx, resourceName, &a),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^eipassoc-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "allocation_id", "aws_eip.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_reassociation"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_spot_instance_request.test", "spot_instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
+					resource.TestCheckResourceAttrPair(resourceName, "private_ip_address", "aws_spot_instance_request.test", "private_ip"),
+					resource.TestCheckResourceAttrPair(resourceName, "public_ip", "aws_eip.test", "public_ip"),
 				),
 			},
 			{
@@ -146,64 +202,16 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIPAssociation_classic(t *testing.T) {
-	var a ec2.Address
-	resourceName := "aws_eip_association.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckEC2Classic(t)
-			// Force to us-east-1 so that testAccCheckEIPAssociationExists/testAccCheckEIPAssociationDestroy work correctly.
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		CheckDestroy: testAccCheckEIPAssociationDestroy,
-		Steps: []resource.TestStep{
-			// Create the EC2-Classic Instance and ENI with the last version that supports that.
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "4.28.0",
-					},
-				},
-				Config: testAccEIPAssociationConfig_classicNoAssociation(),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccEIPAssociationConfig_classicWithAssociation(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
-					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckEIPAssociationExists(n string, v *ec2.Address) resource.TestCheckFunc {
+func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *awstypes.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 EIP Association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		var err error
-		var output *ec2.Address
-
-		if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-			output, err = tfec2.FindEIPByAssociationID(conn, rs.Primary.ID)
-		} else {
-			output, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
-		}
+		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -215,41 +223,37 @@ func testAccCheckEIPAssociationExists(n string, v *ec2.Address) resource.TestChe
 	}
 }
 
-func testAccCheckEIPAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_eip_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_eip_association" {
+				continue
+			}
+
+			_, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 EIP %s still exists", rs.Primary.ID)
 		}
 
-		var err error
-
-		if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-			_, err = tfec2.FindEIPByAssociationID(conn, rs.Primary.ID)
-		} else {
-			_, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
-		}
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 EIP %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccEIPAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.micro", "t3a.micro"),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -260,7 +264,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test[0].id
 
@@ -270,7 +274,7 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -286,9 +290,9 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_instance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.micro", "t3a.micro"),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -299,9 +303,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_instance" "test" {
-  count = 2
-
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test[0].id
 
@@ -311,23 +313,55 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_eip" "test" {
-  count = 2
-
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_eip_association" "test1" {
-  allocation_id = aws_eip.test[0].id
-  instance_id   = aws_instance.test[0].id
+resource "aws_eip_association" "test" {
+  allocation_id = aws_eip.test.id
+  instance_id   = aws_instance.test.id
+}
+`, rName))
 }
 
-resource "aws_eip_association" "test2" {
-  public_ip   = aws_eip.test[1].public_ip
-  instance_id = aws_instance.test[1].id
+func testAccEIPAssociationConfig_instance_publicIP(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.micro", "t3a.micro"),
+		fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip_association" "test" {
+  public_ip   = aws_eip.test.public_ip
+  instance_id = aws_instance.test.id
 }
 `, rName))
 }
@@ -351,7 +385,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -367,9 +401,9 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t4g.micro", "t3a.micro"),
 		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -389,7 +423,7 @@ resource "aws_key_pair" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   key_name             = aws_key_pair.test.key_name
   spot_price           = "0.10"
@@ -408,7 +442,7 @@ resource "aws_ec2_tag" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -420,27 +454,4 @@ resource "aws_eip_association" "test" {
   instance_id   = aws_spot_instance_request.test.spot_instance_id
 }
 `, rName, publicKey))
-}
-
-func testAccEIPAssociationConfig_classicNoAssociation() string {
-	return acctest.ConfigCompose(
-		testAccLatestAmazonLinuxPVEBSAMIConfig(),
-		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
-		`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-
-resource "aws_eip" "test" {}
-`)
-}
-
-func testAccEIPAssociationConfig_classicWithAssociation() string {
-	return acctest.ConfigCompose(testAccEIPAssociationConfig_classicNoAssociation(), `
-resource "aws_eip_association" "test" {
-  public_ip   = aws_eip.test.id
-  instance_id = aws_instance.test.id
-}
-`)
 }

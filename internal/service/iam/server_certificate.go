@@ -1,39 +1,56 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceServerCertificate() *schema.Resource {
+// @SDKResource("aws_iam_server_certificate", name="Server Certificate")
+// @Tags(identifierAttribute="name", resourceType="ServerCertificate")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.ServerCertificate", tlsKey=true, importStateId="rName", importIgnore="private_key")
+func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServerCertificateCreate,
-		Read:   resourceServerCertificateRead,
-		Update: resourceServerCertificateUpdate,
-		Delete: resourceServerCertificateDelete,
+		CreateWithoutTimeout: resourceServerCertificateCreate,
+		ReadWithoutTimeout:   resourceServerCertificateRead,
+		UpdateWithoutTimeout: resourceServerCertificateUpdate,
+		DeleteWithoutTimeout: resourceServerCertificateDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceServerCertificateImport,
+			StateContext: resourceServerCertificateImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"certificate_body": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -41,23 +58,37 @@ func ResourceServerCertificate() *schema.Resource {
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-
-			"path": {
+			"expiration": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrNamePrefix},
+				ValidateFunc:  validation.StringLenBetween(0, 128),
+			},
+			names.AttrNamePrefix: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
+			},
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
-				ForceNew: true,
 			},
-
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -65,244 +96,214 @@ func ResourceServerCertificate() *schema.Resource {
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"upload_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	var sslCertName string
-	if v, ok := d.GetOk("name"); ok {
-		sslCertName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		sslCertName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		sslCertName = resource.UniqueId()
-	}
-
-	createOpts := &iam.UploadServerCertificateInput{
+	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
-		PrivateKey:            aws.String(d.Get("private_key").(string)),
+		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
 		ServerCertificateName: aws.String(sslCertName),
+		Tags:                  getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
+		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
-		createOpts.CertificateChain = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrPath); ok {
+		input.Path = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("path"); ok {
-		createOpts.Path = aws.String(v.(string))
-	}
+	output, err := conn.UploadServerCertificate(ctx, input)
 
-	log.Printf("[DEBUG] Creating IAM Server Certificate with opts: %s", createOpts)
-	resp, err := conn.UploadServerCertificate(createOpts)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	partition := meta.(*conns.AWSClient).Partition(ctx)
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		input.Tags = nil
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if createOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating IAM Server Certificate (%s) with tags: %s. Trying create without tags.", sslCertName, err)
-		createOpts.Tags = nil
-
-		resp, err = conn.UploadServerCertificate(createOpts)
+		output, err = conn.UploadServerCertificate(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error uploading server certificate: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Server Certificate (%s): %s", sslCertName, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ServerCertificateMetadata.ServerCertificateId))
-	d.Set("name", sslCertName)
+	d.SetId(aws.ToString(output.ServerCertificateMetadata.ServerCertificateId))
+	d.Set(names.AttrName, sslCertName) // Required for resource Read.
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if createOpts.Tags == nil && len(tags) > 0 {
-		err := serverCertificateUpdateTags(conn, d.Get("name").(string), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := serverCertificateCreateTags(ctx, conn, sslCertName, tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(d, meta)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for IAM Server Certificate (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting IAM Server Certificate (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceServerCertificateRead(d, meta)
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	resp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
-		ServerCertificateName: aws.String(d.Get("name").(string)),
-	})
+	cert, err := findServerCertificateByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Server Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Server Certificate (%s): %s", d.Id(), err)
 	}
 
-	cert := resp.ServerCertificate
 	metadata := cert.ServerCertificateMetadata
-	d.SetId(aws.StringValue(metadata.ServerCertificateId))
-
+	d.SetId(aws.ToString(metadata.ServerCertificateId))
+	d.Set(names.AttrARN, metadata.Arn)
 	d.Set("certificate_body", cert.CertificateBody)
-	d.Set("certificate_chain", cert.CertificateChain)
-	d.Set("path", metadata.Path)
-	d.Set("arn", metadata.Arn)
+	d.Set(names.AttrCertificateChain, cert.CertificateChain)
 	if metadata.Expiration != nil {
-		d.Set("expiration", aws.TimeValue(metadata.Expiration).Format(time.RFC3339))
+		d.Set("expiration", aws.ToTime(metadata.Expiration).Format(time.RFC3339))
 	} else {
 		d.Set("expiration", nil)
 	}
-
+	d.Set(names.AttrName, metadata.ServerCertificateName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
+	d.Set(names.AttrPath, metadata.Path)
 	if metadata.UploadDate != nil {
-		d.Set("upload_date", aws.TimeValue(metadata.UploadDate).Format(time.RFC3339))
+		d.Set("upload_date", aws.ToTime(metadata.UploadDate).Format(time.RFC3339))
 	} else {
 		d.Set("upload_date", nil)
 	}
 
-	tags := KeyValueTags(cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, cert.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-		err := serverCertificateUpdateTags(conn, d.Get("name").(string), o, n)
+	if d.HasChanges(names.AttrName, names.AttrNamePrefix, names.AttrPath) {
+		input := &iam.UpdateServerCertificateInput{}
 
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(d, meta)
+		if d.HasChange(names.AttrName) {
+			oldName, newName := d.GetChange(names.AttrName)
+
+			// Handle both a name change and a switch to using a name prefix
+			newSSLCertName := create.Name(newName.(string), d.Get(names.AttrNamePrefix).(string))
+
+			input.ServerCertificateName = aws.String(oldName.(string))
+			input.NewServerCertificateName = aws.String(newSSLCertName)
+		} else if d.HasChange(names.AttrNamePrefix) {
+			oldName := d.Get(names.AttrName).(string)
+
+			// Handle only a name prefix change using an empty string as name (as it hasn't been changed)
+			newSSLCertName := create.Name("", d.Get(names.AttrNamePrefix).(string))
+
+			input.ServerCertificateName = aws.String(oldName)
+			input.NewServerCertificateName = aws.String(newSSLCertName)
 		}
+		nameChanged := input.NewServerCertificateName != nil
 
-		if err != nil {
-			return fmt.Errorf("failed updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
-		}
-	}
-
-	return resourceServerCertificateRead(d, meta)
-}
-
-func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get("name").(string)),
-		})
-
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
-					currentlyInUseBy(awsErr.Message(), meta.(*conns.AWSClient).ELBConn)
-					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
-					return resource.RetryableError(err)
-				}
-				if awsErr.Code() == iam.ErrCodeNoSuchEntityException {
-					return nil
-				}
+		if d.HasChange(names.AttrPath) {
+			if !nameChanged {
+				name := d.Get(names.AttrName).(string)
+				input.ServerCertificateName = aws.String(name)
 			}
-			return resource.NonRetryableError(err)
+			input.NewPath = aws.String(d.Get(names.AttrPath).(string))
 		}
-		return nil
-	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get("name").(string)),
-		})
+		_, err := conn.UpdateServerCertificate(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM Server Certificate (%s): %s", d.Id(), err)
+		}
+
+		// If the name was changed, the new name must be set in the state for tag update that precedes resource read
+		if nameChanged {
+			d.Set(names.AttrName, input.NewServerCertificateName)
+		}
 	}
 
-	return err
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
+func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DeleteConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.DeleteServerCertificate(ctx, &iam.DeleteServerCertificateInput{
+			ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
+		})
+	}, "currently in use by arn")
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Server Certificate (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	d.Set(names.AttrName, d.Id())
 	// private_key can't be fetched from any API call
 	return []*schema.ResourceData{d}, nil
 }
 
-func currentlyInUseBy(awsErr string, conn *elb.ELB) {
-	r := regexp.MustCompile(`currently in use by ([a-z0-9:-]+)\/([a-z0-9-]+)\.`)
-	matches := r.FindStringSubmatch(awsErr)
-	if len(matches) > 0 {
-		lbName := matches[2]
-		describeElbOpts := &elb.DescribeLoadBalancersInput{
-			LoadBalancerNames: []*string{aws.String(lbName)},
-		}
-		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
-			if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
-				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
-			}
+func findServerCertificateByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.ServerCertificate, error) {
+	input := &iam.GetServerCertificateInput{
+		ServerCertificateName: aws.String(name),
+	}
+
+	output, err := conn.GetServerCertificate(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ServerCertificate == nil || output.ServerCertificate.ServerCertificateMetadata == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ServerCertificate, nil
 }
 
-func normalizeCert(cert interface{}) string {
+func normalizeCert(cert any) string {
 	if cert == nil || cert == (*string)(nil) {
 		return ""
 	}
@@ -312,7 +313,7 @@ func normalizeCert(cert interface{}) string {
 	case string:
 		rawCert = cert
 	case *string:
-		rawCert = aws.StringValue(cert)
+		rawCert = aws.ToString(cert)
 	default:
 		return ""
 	}
@@ -339,4 +340,24 @@ func stripCR(b []byte) []byte {
 // This DiffSuppressFunc prevents the resource from triggering needless recreation.
 func suppressNormalizeCertRemoval(k, old, new string, d *schema.ResourceData) bool {
 	return normalizeCert(new) == old
+}
+
+func serverCertificateTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListServerCertificateTagsInput{
+		ServerCertificateName: aws.String(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListServerCertificateTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
+	}
+
+	return output, nil
 }

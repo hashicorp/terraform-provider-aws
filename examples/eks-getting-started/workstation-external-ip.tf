@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 #
 # Workstation External IP
 #
@@ -14,5 +17,5 @@ data "http" "workstation-external-ip" {
 
 # Override with variable or hardcoded value if necessary
 locals {
-  workstation-external-cidr = "${chomp(data.http.workstation-external-ip.body)}/32"
+  workstation-external-cidr = "${chomp(data.http.workstation-external-ip.response_body)}/32"
 }

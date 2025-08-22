@@ -1,354 +1,352 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEnvironment() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceEnvironmentCreate,
-		Read:   resourceEnvironmentRead,
-		Update: resourceEnvironmentUpdate,
-		Delete: resourceEnvironmentDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+// @FrameworkResource("aws_appconfig_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
+func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentResource{}
 
-		Schema: map[string]*schema.Schema{
-			"application_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+	return r, nil
+}
+
+type environmentResource struct {
+	framework.ResourceWithModel[environmentResourceModel]
+	framework.WithImportByID
+}
+
+func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrApplicationID: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
+						"value must contain 4-7 lowercase letters or numbers",
+					),
+				},
 			},
-			"environment_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"monitor": {
-				Type:     schema.TypeSet,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"alarm_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 2048),
-								verify.ValidARN,
-							),
+				Computed: true,
+				Default:  stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
+			},
+			"environment_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 64),
+				},
+			},
+			names.AttrState: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"monitor": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[monitorModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(5),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"alarm_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
 						},
-						"alarm_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+						"alarm_role_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
 						},
 					},
 				},
 			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	appId := d.Get("application_id").(string)
-
-	input := &appconfig.CreateEnvironmentInput{
-		Name:          aws.String(d.Get("name").(string)),
-		ApplicationId: aws.String(appId),
-		Tags:          Tags(tags.IgnoreAWS()),
+func (r *environmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
+	conn := r.Meta().AppConfigClient(ctx)
+
+	name := data.Name.ValueString()
+	input := appconfig.CreateEnvironmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("monitor"); ok && v.(*schema.Set).Len() > 0 {
-		input.Monitors = expandEnvironmentMonitors(v.(*schema.Set).List())
-	}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
-	environment, err := conn.CreateEnvironment(input)
+	output, err := conn.CreateEnvironment(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppConfig Environment for Application (%s): %w", appId, err)
+		response.Diagnostics.AddError(fmt.Sprintf("creating AppConfig Environment (%s)", name), err.Error())
+
+		return
 	}
 
-	if environment == nil {
-		return fmt.Errorf("error creating AppConfig Environment for Application (%s): empty response", appId)
-	}
+	// Set values for unknowns.
+	data.ARN = fwflex.StringValueToFramework(ctx, environmentARN(ctx, r.Meta(), aws.ToString(output.ApplicationId), aws.ToString(output.Id)))
+	data.EnvironmentID = fwflex.StringToFramework(ctx, output.Id)
+	data.State = fwflex.StringValueToFramework(ctx, output.State)
+	data.setID(ctx)
 
-	d.Set("environment_id", environment.Id)
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
-
-	return resourceEnvironmentRead(d, meta)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	envID, appID, err := EnvironmentParseID(d.Id())
+	if err := data.InitFromID(ctx); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().AppConfigClient(ctx)
+
+	output, err := findEnvironmentByTwoPartKey(ctx, conn, data.ApplicationID.ValueString(), data.EnvironmentID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
 
 	if err != nil {
-		return err
+		response.Diagnostics.AddError(fmt.Sprintf("reading AppConfig Environment (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	input := &appconfig.GetEnvironmentInput{
-		ApplicationId: aws.String(appID),
-		EnvironmentId: aws.String(envID),
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.GetEnvironment(input)
+	// Additional fields.
+	data.ARN = fwflex.StringValueToFramework(ctx, environmentARN(ctx, r.Meta(), aws.ToString(output.ApplicationId), aws.ToString(output.Id)))
+	data.Description = fwflex.StringToFrameworkLegacy(ctx, output.Description)
+	data.setID(ctx) // output.Id will have overwritten ID.
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Appconfig Environment (%s) for Application (%s) not found, removing from state", envID, appID)
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): empty response", envID, appID)
-	}
-
-	d.Set("application_id", output.ApplicationId)
-	d.Set("environment_id", output.Id)
-	d.Set("description", output.Description)
-	d.Set("name", output.Name)
-	d.Set("state", output.State)
-
-	if err := d.Set("monitor", flattenEnvironmentMonitors(output.Monitors)); err != nil {
-		return fmt.Errorf("error setting monitor: %w", err)
-	}
-
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, envID),
-		Service:   "appconfig",
-	}.String()
-
-	d.Set("arn", arn)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Environment (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		envID, appID, err := EnvironmentParseID(d.Id())
+	conn := r.Meta().AppConfigClient(ctx)
+
+	if !new.Description.Equal(old.Description) ||
+		!new.Monitors.Equal(old.Monitors) ||
+		!new.Name.Equal(old.Name) {
+		input := appconfig.UpdateEnvironmentInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if input.Monitors == nil {
+			input.Monitors = make([]awstypes.Monitor, 0)
+		}
+
+		output, err := conn.UpdateEnvironment(ctx, &input)
 
 		if err != nil {
-			return err
+			response.Diagnostics.AddError(fmt.Sprintf("updating AppConfig Environment (%s)", new.ID.ValueString()), err.Error())
+
+			return
 		}
 
-		updateInput := &appconfig.UpdateEnvironmentInput{
-			EnvironmentId: aws.String(envID),
-			ApplicationId: aws.String(appID),
-		}
-
-		if d.HasChange("description") {
-			updateInput.Description = aws.String(d.Get("description").(string))
-		}
-
-		if d.HasChange("name") {
-			updateInput.Name = aws.String(d.Get("name").(string))
-		}
-
-		if d.HasChange("monitor") {
-			updateInput.Monitors = expandEnvironmentMonitors(d.Get("monitor").(*schema.Set).List())
-		}
-
-		_, err = conn.UpdateEnvironment(updateInput)
-
-		if err != nil {
-			return fmt.Errorf("error updating AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
-		}
+		new.State = fwflex.StringValueToFramework(ctx, output.State)
+	} else {
+		new.State = old.State
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig Environment (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceEnvironmentRead(d, meta)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
-
-	envID, appID, err := EnvironmentParseID(d.Id())
-
-	if err != nil {
-		return err
+func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	input := &appconfig.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(envID),
-		ApplicationId: aws.String(appID),
+	conn := r.Meta().AppConfigClient(ctx)
+
+	tflog.Debug(ctx, "Deleting AppConfig Environment", map[string]any{
+		names.AttrApplicationID: data.ApplicationID.ValueString(),
+		"environment_id":        data.EnvironmentID.ValueString(),
+	})
+	input := appconfig.DeleteEnvironmentInput{
+		ApplicationId: fwflex.StringFromFramework(ctx, data.ApplicationID),
+		EnvironmentId: fwflex.StringFromFramework(ctx, data.EnvironmentID),
 	}
+	_, err := conn.DeleteEnvironment(ctx, &input)
 
-	_, err = conn.DeleteEnvironment(input)
-
-	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Environment (%s) for Application (%s): %w", envID, appID, err)
-	}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting AppConfig Environment (%s)", data.ID.ValueString()), err.Error())
 
-	return nil
+		return
+	}
 }
 
-func EnvironmentParseID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
+const environmentResourceIDSeparator = ":"
+
+func environmentCreateResourceID(environmentID, applicationID string) string {
+	parts := []string{environmentID, applicationID}
+	id := strings.Join(parts, environmentResourceIDSeparator)
+
+	return id
+}
+
+func environmentParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, environmentResourceIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%q), expected EnvironmentID:ApplicationID", id)
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EnvironmentID%[2]sApplicationID", id, environmentResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-func expandEnvironmentMonitor(tfMap map[string]interface{}) *appconfig.Monitor {
-	if tfMap == nil {
-		return nil
+func findEnvironmentByTwoPartKey(ctx context.Context, conn *appconfig.Client, applicationID, environmentID string) (*appconfig.GetEnvironmentOutput, error) {
+	input := appconfig.GetEnvironmentInput{
+		ApplicationId: aws.String(applicationID),
+		EnvironmentId: aws.String(environmentID),
 	}
 
-	monitor := &appconfig.Monitor{}
-
-	if v, ok := tfMap["alarm_arn"].(string); ok && v != "" {
-		monitor.AlarmArn = aws.String(v)
-	}
-
-	if v, ok := tfMap["alarm_role_arn"].(string); ok && v != "" {
-		monitor.AlarmRoleArn = aws.String(v)
-	}
-
-	return monitor
+	return findEnvironment(ctx, conn, &input)
 }
 
-func expandEnvironmentMonitors(tfList []interface{}) []*appconfig.Monitor {
-	// AppConfig API requires a 0 length slice instead of a nil value
-	// when updating from N monitors to 0/nil monitors
-	monitors := make([]*appconfig.Monitor, 0)
+func findEnvironment(ctx context.Context, conn *appconfig.Client, input *appconfig.GetEnvironmentInput) (*appconfig.GetEnvironmentOutput, error) {
+	output, err := conn.GetEnvironment(ctx, input)
 
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		monitor := expandEnvironmentMonitor(tfMap)
-
-		if monitor == nil {
-			continue
-		}
-
-		monitors = append(monitors, monitor)
 	}
 
-	return monitors
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func flattenEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
-	if monitor == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := monitor.AlarmArn; v != nil {
-		tfMap["alarm_arn"] = aws.StringValue(v)
-	}
-
-	if v := monitor.AlarmRoleArn; v != nil {
-		tfMap["alarm_role_arn"] = aws.StringValue(v)
-	}
-
-	return tfMap
+type environmentResourceModel struct {
+	framework.WithRegionModel
+	ApplicationID types.String                                 `tfsdk:"application_id"`
+	ARN           types.String                                 `tfsdk:"arn"`
+	Description   types.String                                 `tfsdk:"description"`
+	EnvironmentID types.String                                 `tfsdk:"environment_id"`
+	ID            types.String                                 `tfsdk:"id"`
+	Monitors      fwtypes.SetNestedObjectValueOf[monitorModel] `tfsdk:"monitor"`
+	Name          types.String                                 `tfsdk:"name"`
+	State         types.String                                 `tfsdk:"state"`
+	Tags          tftags.Map                                   `tfsdk:"tags"`
+	TagsAll       tftags.Map                                   `tfsdk:"tags_all"`
 }
 
-func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
-	if len(monitors) == 0 {
-		return nil
+func (model *environmentResourceModel) InitFromID(ctx context.Context) error {
+	environmentID, applicationID, err := environmentParseResourceID(model.ID.ValueString())
+
+	if err != nil {
+		return err
 	}
 
-	var tfList []interface{}
+	model.ApplicationID = fwflex.StringValueToFramework(ctx, applicationID)
+	model.EnvironmentID = fwflex.StringValueToFramework(ctx, environmentID)
 
-	for _, monitor := range monitors {
-		if monitor == nil {
-			continue
-		}
+	return nil
+}
 
-		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
-	}
+func (model *environmentResourceModel) setID(ctx context.Context) {
+	model.ID = fwflex.StringValueToFramework(ctx, environmentCreateResourceID(model.EnvironmentID.ValueString(), model.ApplicationID.ValueString()))
+}
 
-	return tfList
+type monitorModel struct {
+	AlarmARN     fwtypes.ARN `tfsdk:"alarm_arn"`
+	AlarmRoleARN fwtypes.ARN `tfsdk:"alarm_role_arn"`
+}
+
+func environmentARN(ctx context.Context, c *conns.AWSClient, applicationID, environmentID string) string {
+	return c.RegionalARN(ctx, "appconfig", "application/"+applicationID+"/environment/"+environmentID)
 }

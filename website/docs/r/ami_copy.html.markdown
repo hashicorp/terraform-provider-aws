@@ -25,7 +25,6 @@ block until the new AMI is available for use on new instances.
 ```terraform
 resource "aws_ami_copy" "example" {
   name              = "terraform-example"
-  description       = "A copy of ami-xxxxxxxx"
   source_ami_id     = "ami-xxxxxxxx"
   source_ami_region = "us-west-1"
 
@@ -37,8 +36,9 @@ resource "aws_ami_copy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
   given by `source_ami_region`.
@@ -52,9 +52,9 @@ The following arguments are supported:
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AMI.
 * `id` - ID of the created AMI.
@@ -65,7 +65,7 @@ configuration.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `40m`)
 * `update` - (Default `40m`)

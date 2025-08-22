@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_parameter: Fix `Cannot import non-existent remote object` errors when importing resources with version
+```

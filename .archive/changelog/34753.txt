@@ -1,0 +1,3 @@
+```release-note:bug
+resource/resource_share_acceptor: Wait until RAM resource share available after accepting the invitation
+```

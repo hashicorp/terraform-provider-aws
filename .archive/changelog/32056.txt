@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_organizations_organization: Return the full set of attributes when running as a [delegated administrator for AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html)
+```
+
+```release-note:new-resource
+aws_organizations_resource_policy
+```

@@ -1,34 +1,68 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
-	var client cognitoidentityprovider.UserPoolClientType
+	ctx := acctest.Context(t)
+	var client awstypes.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolClientDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserPoolClientExists(resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPoolClientDataSource_refreshTokenRotation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var client awstypes.UserPoolClientType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "data.aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolClientDataSourceConfig_refreshTokenRotation(rName, 10),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.feature", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_token_rotation.0.retry_grace_period_seconds", "10"),
 				),
 			},
 		},
@@ -36,10 +70,19 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 }
 
 func testAccUserPoolClientDataSourceConfig_basic(rName string) string {
-	return testAccUserPoolClientConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccUserPoolClientConfig_basic(rName), `
 data "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
   client_id    = aws_cognito_user_pool_client.test.id
 }
-`
+`)
+}
+
+func testAccUserPoolClientDataSourceConfig_refreshTokenRotation(rName string, retryGracePeriodSeconds int32) string {
+	return acctest.ConfigCompose(testAccUserPoolClientConfig_refreshTokenRotation(rName, retryGracePeriodSeconds), `
+data "aws_cognito_user_pool_client" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+  client_id    = aws_cognito_user_pool_client.test.id
+}
+`)
 }

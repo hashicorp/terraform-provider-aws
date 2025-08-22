@@ -1,0 +1,166 @@
+rules:
+  - id: quicksight-schema-string-len-between-required
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Required:     true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: stringLenBetweenSchema(attrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-len-between-optional
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Optional:     true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: stringLenBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-len-between-optionalcomputed
+    languages: [go]
+    message: String attributes with length validation should use stringLenBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-either:
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Optional:     true,
+                Computed:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Computed:     true,
+                Optional:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+    fix: stringLenBetweenSchema(attrOptionalComputed, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-string-enum
+    languages: [go]
+    message: String attributes with enum validation should use stringEnumSchema[<type>](<required>)
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-either:
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                Computed:         true,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                Computed:         true,
+                ValidateDiagFunc: $FUNC(),
+              }
+      - metavariable-regex:
+          metavariable: $REQOPT
+          regex: 'Required|Optional'
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
+    # Cannot be auto-fixed
+    severity: WARNING
+
+  - id: quicksight-schema-int-between-required
+    languages: [go]
+    message: Int attributes with between validation should use intBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Required:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: intBetweenSchema(attrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-int-between-optional
+    languages: [go]
+    message: Int attributes with between validation should use intBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Optional:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: intBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-float-between-required
+    languages: [go]
+    message: Float attributes with between validation should use floatBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Required:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: floatBetweenSchema(attrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: quicksight-schema-float-between-optional
+    languages: [go]
+    message: Float attributes with between validation should use floatBetweenSchema
+    paths:
+      include:
+        - internal/service/quicksight/schema
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Optional:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: floatBetweenSchema(attrOptional, $MIN, $MAX)
+    severity: WARNING

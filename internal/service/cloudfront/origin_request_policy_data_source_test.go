@@ -1,31 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_cloudfront_origin_request_policy.by_id"
 	dataSource2Name := "data.aws_cloudfront_origin_request_policy.by_name"
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),
@@ -36,7 +40,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_string_behavior", resourceName, "query_strings_config.0.query_string_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_strings.#", resourceName, "query_strings_config.0.query_strings.#"),
 
-					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),

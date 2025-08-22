@@ -1,38 +1,62 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDefaultTags() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceDefaultTagsRead,
+// @FrameworkDataSource("aws_default_tags", name="Default Tags")
+// @Region(overrideEnabled=false)
+func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &defaultTagsDataSource{}
 
-		Schema: map[string]*schema.Schema{
-			"tags": tftags.TagsSchemaComputed(),
+	return d, nil
+}
+
+type defaultTagsDataSource struct {
+	framework.DataSourceWithModel[defaultTagsDataSourceModel]
+}
+
+func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func dataSourceDefaultTagsRead(d *schema.ResourceData, meta interface{}) error {
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	d.SetId(meta.(*conns.AWSClient).Partition)
-
-	tags := defaultTagsConfig.GetTags()
-
-	if tags != nil {
-		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
-		}
-	} else {
-		d.Set("tags", nil)
+func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data defaultTagsDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return nil
+	defaultTagsConfig := d.Meta().DefaultTagsConfig(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
+	tags := defaultTagsConfig.GetTags()
+
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type defaultTagsDataSourceModel struct {
+	ID   types.String `tfsdk:"id"`
+	Tags tftags.Map   `tfsdk:"tags"`
 }

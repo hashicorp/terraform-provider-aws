@@ -38,8 +38,10 @@ output "availability_zone_to_volume_id" {
 
 ## Argument Reference
 
-* `filter` - (Optional) Custom filter block as described below.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired volumes.
 
@@ -62,7 +64,9 @@ data "aws_ebs_volumes" "ten_or_twenty_gb_volumes" {
 * `values` - (Required) Set of values that are accepted for the given field.
   EBS Volume IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of all the EBS Volume IDs found. This data source will fail if
@@ -70,6 +74,6 @@ data "aws_ebs_volumes" "ten_or_twenty_gb_volumes" {
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

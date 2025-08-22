@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 #
 # Terraform configuration for simple-websockets-chat-app that has the DynamoDB table and
 # Lambda functions needed to demonstrate the Websocket protocol on API Gateway.
@@ -175,7 +178,7 @@ resource "aws_lambda_function" "OnConnectFunction" {
   function_name = "OnConnectFunction"
   role          = aws_iam_role.OnConnectRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs20.x"
   memory_size   = 256
 
   environment {
@@ -223,7 +226,7 @@ resource "aws_iam_policy" "OnConnectCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -232,7 +235,7 @@ resource "aws_iam_policy" "OnConnectCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnConnectFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnConnectFunction.function_name}:*"
       ]
     }
   ]
@@ -259,7 +262,7 @@ resource "aws_lambda_function" "OnDisconnectFunction" {
   function_name = "OnDisconnectFunction"
   role          = aws_iam_role.OnDisconnectRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs20.x"
   memory_size   = 256
 
   environment {
@@ -307,7 +310,7 @@ resource "aws_iam_policy" "OnDisconnectCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -316,7 +319,7 @@ resource "aws_iam_policy" "OnDisconnectCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnDisconnectFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.OnDisconnectFunction.function_name}:*"
       ]
     }
   ]
@@ -343,7 +346,7 @@ resource "aws_lambda_function" "SendMessageFunction" {
   function_name = "SendMessageFunction"
   role          = aws_iam_role.SendMessageRole.arn
   handler       = "app.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs20.x"
   memory_size   = 256
 
   environment {
@@ -391,7 +394,7 @@ resource "aws_iam_policy" "SendMessageCloudWatchLogsPolicy" {
     {
       "Effect": "Allow",
       "Action": "logs:CreateLogGroup",
-      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -400,7 +403,7 @@ resource "aws_iam_policy" "SendMessageCloudWatchLogsPolicy" {
         "logs:PutLogEvents"
       ],
       "Resource": [
-        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.SendMessageFunction.function_name}:*"
+        "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.SendMessageFunction.function_name}:*"
       ]
     }
   ]

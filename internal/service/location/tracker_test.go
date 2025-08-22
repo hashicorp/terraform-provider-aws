@@ -1,40 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLocationTracker_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringTimeBased),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
+					testAccCheckTrackerExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "position_filtering", "TimeBased"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tracker_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 				),
@@ -49,20 +56,21 @@ func TestAccLocationTracker_basic(t *testing.T) {
 }
 
 func TestAccLocationTracker_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceTracker(), resourceName),
+					testAccCheckTrackerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceTracker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,20 +79,21 @@ func TestAccLocationTracker_disappears(t *testing.T) {
 }
 
 func TestAccLocationTracker_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -95,8 +104,8 @@ func TestAccLocationTracker_description(t *testing.T) {
 			{
 				Config: testAccTrackerConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -104,20 +113,21 @@ func TestAccLocationTracker_description(t *testing.T) {
 }
 
 func TestAccLocationTracker_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -130,20 +140,21 @@ func TestAccLocationTracker_kmsKeyID(t *testing.T) {
 }
 
 func TestAccLocationTracker_positionFiltering(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrackerConfig_positionFiltering(rName, locationservice.PositionFilteringAccuracyBased),
+				Config: testAccTrackerConfig_positionFiltering(rName, "AccuracyBased"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringAccuracyBased),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "position_filtering", "AccuracyBased"),
 				),
 			},
 			{
@@ -152,10 +163,10 @@ func TestAccLocationTracker_positionFiltering(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrackerConfig_positionFiltering(rName, locationservice.PositionFilteringDistanceBased),
+				Config: testAccTrackerConfig_positionFiltering(rName, "DistanceBased"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringDistanceBased),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "position_filtering", "DistanceBased"),
 				),
 			},
 		},
@@ -163,21 +174,22 @@ func TestAccLocationTracker_positionFiltering(t *testing.T) {
 }
 
 func TestAccLocationTracker_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrackerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTrackerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -186,56 +198,59 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrackerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTrackerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTrackerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTrackerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrackerExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckTrackerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
-func testAccCheckTrackerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_location_tracker" {
-			continue
+func testAccCheckTrackerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_location_tracker" {
+				continue
+			}
+
+			input := &location.DescribeTrackerInput{
+				TrackerName: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeTracker(ctx, input)
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Location Service Tracker (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Location Service Tracker (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &locationservice.DescribeTrackerInput{
-			TrackerName: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeTracker(input)
-
-		if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Location Service Tracker (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Location Service Tracker (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTrackerExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTrackerExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -243,13 +258,13 @@ func testAccCheckTrackerExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
 
-		input := &locationservice.DescribeTrackerInput{
+		input := &location.DescribeTrackerInput{
 			TrackerName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeTracker(input)
+		_, err := conn.DescribeTracker(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Location Service Tracker (%s): %w", rs.Primary.ID, err)
@@ -280,6 +295,7 @@ func testAccTrackerConfig_kmsKeyID(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_location_tracker" "test" {

@@ -1,39 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataExchangeRevision_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionDestroy,
+		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+/revisions/.+`)),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dataexchange", "data-sets/{data_set_id}/revisions/{revision_id}"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -45,22 +56,23 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 }
 
 func TestAccDataExchangeRevision_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionDestroy,
+		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRevisionConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRevisionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -69,20 +81,20 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRevisionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRevisionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRevisionConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRevisionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -90,22 +102,23 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 }
 
 func TestAccDataExchangeRevision_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionDestroy,
+		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,22 +127,23 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 }
 
 func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj dataexchange.GetRevisionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dataexchange_revision.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(dataexchange.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.DataExchangeEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRevisionDestroy,
+		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRevisionExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					testAccCheckRevisionExists(ctx, resourceName, &proj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +151,7 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 	})
 }
 
-func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
+func testAccCheckRevisionExists(ctx context.Context, n string, v *dataexchange.GetRevisionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -148,14 +162,14 @@ func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) res
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
 		dataSetId, revisionId, err := tfdataexchange.RevisionParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := tfdataexchange.FindRevisionById(conn, dataSetId, revisionId)
+		resp, err := tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
 		if err != nil {
 			return err
 		}
@@ -169,33 +183,35 @@ func testAccCheckRevisionExists(n string, v *dataexchange.GetRevisionOutput) res
 	}
 }
 
-func testAccCheckRevisionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn
+func testAccCheckRevisionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dataexchange_revision" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dataexchange_revision" {
+				continue
+			}
+
+			dataSetId, revisionId, err := tfdataexchange.RevisionParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			// Try to find the resource
+			_, err = tfdataexchange.FindRevisionByID(ctx, conn, dataSetId, revisionId)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataExchange Revision %s still exists", rs.Primary.ID)
 		}
 
-		dataSetId, revisionId, err := tfdataexchange.RevisionParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		// Try to find the resource
-		_, err = tfdataexchange.FindRevisionById(conn, dataSetId, revisionId)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DataExchange Revision %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccRevisionConfig_basic(rName string) string {

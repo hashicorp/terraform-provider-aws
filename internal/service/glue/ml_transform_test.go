@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueMlTransform_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,30 +32,30 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 	tableResourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "glue", regexp.MustCompile(`mlTransform/tfm-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_record_tables.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.data_type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.name", "my_column_1"),
@@ -67,28 +74,29 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, true, 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
 			{
@@ -99,27 +107,27 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 			{
 				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, false, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, true, 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
 		},
@@ -127,29 +135,30 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
@@ -162,28 +171,29 @@ func TestAccGlueMlTransform_description(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_glueVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_version(rName, "0.9"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_version(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
 				),
 			},
@@ -197,32 +207,33 @@ func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_maxRetries(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMLTransformConfig_maxRetries(rName, 11),
-				ExpectError: regexp.MustCompile(`expected max_retries to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_retries to be in the range`),
 			},
 			{
 				Config: testAccMLTransformConfig_maxRetries(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "0"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_maxRetries(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "max_retries", "10"),
 				),
 			},
@@ -236,23 +247,24 @@ func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform1, transform2, transform3 glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMLTransformConfig_tags1(rName, "key1", "value1"),
+				Config: testAccMLTransformConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -261,20 +273,20 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMLTransformConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccMLTransformConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccMLTransformConfig_tags1(rName, "key2", "value2"),
+				Config: testAccMLTransformConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -282,29 +294,30 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{
@@ -317,21 +330,22 @@ func TestAccGlueMlTransform_timeout(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_workerType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_workerType(rName, "Standard", 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "Standard"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "1"),
 				),
@@ -339,7 +353,7 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 			{
 				Config: testAccMLTransformConfig_workerType(rName, "G.1X", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
 				),
@@ -354,29 +368,30 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_maxCapacity(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "10"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "15"),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "15"),
 				),
 			},
 			{
@@ -389,22 +404,23 @@ func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 }
 
 func TestAccGlueMlTransform_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var transform glue.GetMLTransformOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMLTransformDestroy,
+		CheckDestroy:             testAccCheckMLTransformDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMLTransformExists(resourceName, &transform),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
+					testAccCheckMLTransformExists(ctx, resourceName, &transform),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -412,7 +428,7 @@ func TestAccGlueMlTransform_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMLTransformExists(resourceName string, mlTransform *glue.GetMLTransformOutput) resource.TestCheckFunc {
+func testAccCheckMLTransformExists(ctx context.Context, resourceName string, mlTransform *glue.GetMLTransformOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -423,9 +439,9 @@ func testAccCheckMLTransformExists(resourceName string, mlTransform *glue.GetMLT
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
+		output, err := conn.GetMLTransform(ctx, &glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -436,7 +452,7 @@ func testAccCheckMLTransformExists(resourceName string, mlTransform *glue.GetMLT
 			return fmt.Errorf("Glue ML Transform (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.TransformId) == rs.Primary.ID {
+		if aws.ToString(output.TransformId) == rs.Primary.ID {
 			*mlTransform = *output
 			return nil
 		}
@@ -445,33 +461,34 @@ func testAccCheckMLTransformExists(resourceName string, mlTransform *glue.GetMLT
 	}
 }
 
-func testAccCheckMLTransformDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_ml_transform" {
-			continue
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-
-		output, err := conn.GetMLTransform(&glue.GetMLTransformInput{
-			TransformId: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-				return nil
+func testAccCheckMLTransformDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_ml_transform" {
+				continue
 			}
 
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
+
+			output, err := conn.GetMLTransform(ctx, &glue.GetMLTransformInput{
+				TransformId: aws.String(rs.Primary.ID),
+			})
+
+			if err != nil {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
+					return nil
+				}
+			}
+
+			if output != nil && aws.ToString(output.TransformId) == rs.Primary.ID {
+				return fmt.Errorf("Glue ML Transform %s still exists", rs.Primary.ID)
+			}
+
+			return err
 		}
 
-		if output != nil && aws.StringValue(output.TransformId) == rs.Primary.ID {
-			return fmt.Errorf("Glue ML Transform %s still exists", rs.Primary.ID)
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
 func testAccMLTransformBaseConfig(rName string) string {

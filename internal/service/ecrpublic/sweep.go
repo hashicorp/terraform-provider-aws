@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ecrpublic
 
@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecrpublic_repository", &resource.Sweeper{
 		Name: "aws_ecrpublic_repository",
 		F:    sweepRepositories,
@@ -22,42 +24,45 @@ func init() {
 }
 
 func sweepRepositories(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	// "UnsupportedCommandException: DescribeRepositories command is only supported in us-east-1".
+	if region != endpoints.UsEast1RegionID {
+		log.Printf("[WARN] Skipping ECR Public Repository sweep for region: %s", region)
+		return nil
+	}
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ECRPublicConn
+	conn := client.ECRPublicClient(ctx)
 	input := &ecrpublic.DescribeRepositoriesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeRepositoriesPages(input, func(page *ecrpublic.DescribeRepositoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := ecrpublic.NewDescribeRepositoriesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECR Public Repository sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing ECR Public Repositories (%s): %w", region, err)
 		}
 
 		for _, repository := range page.Repositories {
 			r := ResourceRepository()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(repository.RepositoryName))
+			d.SetId(aws.ToString(repository.RepositoryName))
 			d.Set("registry_id", repository.RegistryId)
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ECR Public Repository sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing ECR Public Repositories (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECR Public Repositories (%s): %w", region, err)

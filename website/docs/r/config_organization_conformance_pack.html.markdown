@@ -16,7 +16,7 @@ Manages a Config Organization Conformance Pack. More information can be found in
 
 ### Using Template Body
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name = "example"
 
@@ -50,7 +50,7 @@ resource "aws_organizations_organization" "example" {
 
 ### Using Template S3 URI
 
-```hcl
+```terraform
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
   template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
@@ -85,8 +85,9 @@ EOT
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the organization conformance pack. Must begin with a letter and contain from 1 to 128 alphanumeric characters and hyphens.
 * `delivery_s3_bucket` - (Optional) Amazon S3 bucket where AWS Config stores conformance pack templates. Delivery bucket must begin with `awsconfigconforms` prefix. Maximum length of 63.
 * `delivery_s3_key_prefix` - (Optional) The prefix for the Amazon S3 bucket. Maximum length of 1024.
@@ -102,16 +103,16 @@ The `input_parameter` configuration block supports the following arguments:
 * `parameter_name` - (Required) The input key.
 * `parameter_value` - (Required) The input value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the organization conformance pack.
 * `id` - The name of the organization conformance pack.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
 - `update` - (Default `10m`)
@@ -119,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Config Organization Conformance Packs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Conformance Packs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_config_organization_conformance_pack.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_organization_conformance_pack.example example
+
+Using `terraform import`, import Config Organization Conformance Packs using the `name`. For example:
+
+```console
+% terraform import aws_config_organization_conformance_pack.example example
 ```

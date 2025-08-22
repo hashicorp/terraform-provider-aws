@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_route53_cidr_collection
+```
+
+```release-note:new-resource
+aws_route53_cidr_location
+```
+
+```release-note:enhancement
+resource/aws_route53_cidr_location: Add `cidr_routing_policy` argument
+```

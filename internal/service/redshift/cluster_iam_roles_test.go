@@ -1,31 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
-	var v redshift.Cluster
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster_iam_roles.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
@@ -37,14 +42,14 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 			{
 				Config: testAccClusterIAMRolesConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "1"),
 				),
 			},
@@ -53,21 +58,22 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 }
 
 func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
-	var v redshift.Cluster
+	ctx := acctest.Context(t)
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), resourceName),
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,7 +82,7 @@ func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 }
 
 func testAccClusterIAMRolesConfigBase(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2" {
   name = "%[1]s-ec2"
   path = "/"
@@ -126,17 +132,15 @@ EOF
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier    = %[1]q
+  database_name         = "mydb"
+  master_username       = "foo_test"
+  master_password       = "Mustbe8characters"
+  node_type             = "ra3.large"
+  allow_version_upgrade = false
+  skip_final_snapshot   = true
 }
-`, rName))
+`, rName)
 }
 
 func testAccClusterIAMRolesConfig_basic(rName string) string {

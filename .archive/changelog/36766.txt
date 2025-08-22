@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_elasticache_serverless_cache: Add `minimum` attribute in `cache_usage_limits.data_storage` and `cache_usage_limits.ecpu_per_second`
+```

@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
-
-var AccountIdPerRegionMap = map[string]string{
+var serviceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "098369216593",
 	endpoints.ApEast1RegionID:      "754344448648",
 	endpoints.ApNortheast1RegionID: "582318560864",
@@ -42,16 +46,14 @@ var AccountIdPerRegionMap = map[string]string{
 	endpoints.UsWest2RegionID:    "797873946194",
 }
 
-func DataSourceServiceAccount() *schema.Resource {
+// @SDKDataSource("aws_elb_service_account", name="Service Account")
+// @Region(validateOverrideInPartition=false)
+func dataSourceServiceAccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceAccountRead,
+		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,24 +61,17 @@ func DataSourceServiceAccount() *schema.Resource {
 	}
 }
 
-func dataSourceServiceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
-		region = v.(string)
+func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	c := meta.(*conns.AWSClient)
+	region := c.Region(ctx)
+	if v, ok := serviceAccountPerRegionMap[region]; ok {
+		d.SetId(v)
+		d.Set(names.AttrARN, c.GlobalARNWithAccount(ctx, "iam", v, "root"))
+
+		return diags
 	}
 
-	if accid, ok := AccountIdPerRegionMap[region]; ok {
-		d.SetId(accid)
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "iam",
-			AccountID: accid,
-			Resource:  "root",
-		}.String()
-		d.Set("arn", arn)
-
-		return nil
-	}
-
-	return fmt.Errorf("Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "unsupported ELB Service Account Region (%s)", region)
 }

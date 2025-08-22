@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_flow_definition"
 description: |-
-  Provides a SageMaker Flow Definition resource.
+  Provides a SageMaker AI Flow Definition resource.
 ---
 
 # Resource: aws_sagemaker_flow_definition
 
-Provides a SageMaker Flow Definition resource.
+Provides a SageMaker AI Flow Definition resource.
 
 ## Example Usage
 
@@ -47,7 +47,7 @@ resource "aws_sagemaker_flow_definition" "example" {
     task_count                            = 1
     task_description                      = "example"
     task_title                            = "example"
-    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:aws:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {
@@ -108,8 +108,9 @@ resource "aws_sagemaker_flow_definition" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `flow_definition_name` - (Required) The name of your flow definition.
 * `human_loop_config` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role needed to call other services on your behalf.
@@ -140,10 +141,9 @@ The following arguments are supported:
 * `dollars` - (Optional) The whole number of dollars in the amount. Valid value range between `0` and `2`.
 * `tenth_fractions_of_a_cent` - (Optional) Fractions of a cent, in tenths. Valid value range between `0` and `9`.
 
-
 ### Human Loop Activation Config
 
-* `human_loop_activation_conditions_config` - (Required) defines under what conditions SageMaker creates a human loop. See [Human Loop Activation Conditions Config](#human-loop-activation-conditions-config) details below.
+* `human_loop_activation_conditions_config` - (Required) defines under what conditions SageMaker AI creates a human loop. See [Human Loop Activation Conditions Config](#human-loop-activation-conditions-config) details below.
 
 #### Human Loop Activation Conditions Config
 
@@ -158,9 +158,9 @@ The following arguments are supported:
 * `s3_output_path` - (Required) The Amazon S3 path where the object containing human output will be made available.
 * `kms_key_id` - (Optional) The Amazon Key Management Service (KMS) key ARN for server-side encryption.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Flow Definition.
 * `id` - The name of the Flow Definition.
@@ -168,8 +168,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI Flow Definitions using the `flow_definition_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_flow_definition.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_flow_definition.example example
+
+Using `terraform import`, import SageMaker AI Flow Definitions using the `flow_definition_name`. For example:
+
+```console
+% terraform import aws_sagemaker_flow_definition.example example
 ```

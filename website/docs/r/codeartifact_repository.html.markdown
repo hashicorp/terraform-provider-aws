@@ -66,8 +66,9 @@ resource "aws_codeartifact_repository" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain that contains the created repository.
 * `repository` - (Required) The name of the repository to create.
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
@@ -84,9 +85,9 @@ The following arguments are supported:
 
 * `external_connection_name` - (Required) The name of the external connection associated with a repository.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the repository.
 * `arn` - The ARN of the repository.
@@ -95,8 +96,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeArtifact Repository can be imported using the CodeArtifact Repository ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_repository.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763"
+}
 ```
-$ terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
+
+Using `terraform import`, import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
+
+```console
+% terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```

@@ -32,10 +32,9 @@ resource "aws_route" "route" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available Route Table in the current region. The given filters must match exactly one Route Table whose data will be exported as attributes.
+This data source supports the following arguments:
 
-The following arguments are optional:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `gateway_id` - (Optional) ID of an Internet Gateway or Virtual Private Gateway which is connected to the Route Table (not exported if not passed as a parameter).
 * `route_table_id` - (Optional) ID of the specific Route Table to retrieve.
@@ -52,9 +51,9 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeRouteTables.html).
 * `values` - (Required) Set of values that are accepted for the given field. A Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the route table.
 * `associations` - List of associations with attributes detailed below.
@@ -97,6 +96,6 @@ Associations are also exported with the following attributes:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

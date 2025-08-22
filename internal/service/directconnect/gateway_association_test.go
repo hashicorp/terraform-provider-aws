@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
@@ -5,69 +8,132 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // V0 state upgrade testing must be done via acceptance testing due to API call
 func TestAccDirectConnectGatewayAssociation_v0StateUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
-					testAccCheckGatewayAssociationStateUpgradeV0(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
+					testAccCheckGatewayAssociationStateUpgradeV0(ctx, resourceName),
 				),
 			},
 		},
 	})
 }
 
+func TestAccDirectConnectGatewayAssociation_upgradeFromV6_4_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dx_gateway_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		CheckDestroy: testAccCheckGatewayAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.4.0",
+					},
+				},
+				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayAttachmentID)),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTransitGatewayAttachmentID), knownvalue.NotNull()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
 				),
 			},
 			{
@@ -81,33 +147,34 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewaySingleAccount(t *test
 }
 
 func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNCrossAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
-					// acctest.CheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
+					// acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
 				),
 			},
 		},
@@ -115,33 +182,35 @@ func TestAccDirectConnectGatewayAssociation_basicVPNGatewayCrossAccount(t *testi
 }
 
 func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicTransitSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 			{
@@ -155,34 +224,36 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewaySingleAccount(t *
 }
 
 func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicTransitCrossAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 					// dx_gateway_owner_account_id is the "awsalternate" provider's account ID.
-					// acctest.CheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
+					// acctest.CheckResourceAttrAccountID(ctx, resourceName, "dx_gateway_owner_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTransitGatewayAttachmentID),
 				),
 			},
 		},
@@ -190,24 +261,25 @@ func TestAccDirectConnectGatewayAssociation_basicTransitGatewayCrossAccount(t *t
 }
 
 func TestAccDirectConnectGatewayAssociation_multiVPNGatewaysSingleAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName1 := "aws_dx_gateway_association.test.0"
 	resourceName2 := "aws_dx_gateway_association.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName1, &ga, &gap),
-					testAccCheckGatewayAssociationExists(resourceName2, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName1, &ga, &gap),
+					testAccCheckGatewayAssociationExists(ctx, resourceName2, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName1, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName1, "allowed_prefixes.*", "10.255.255.0/28"),
 					resource.TestCheckResourceAttrSet(resourceName1, "dx_gateway_association_id"),
@@ -221,30 +293,31 @@ func TestAccDirectConnectGatewayAssociation_multiVPNGatewaysSingleAccount(t *tes
 }
 
 func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNSingleAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 				),
 			},
 			{
@@ -255,8 +328,8 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 			},
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNSingleAccountUpdated(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
 				),
@@ -266,43 +339,44 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewaySingleAccou
 }
 
 func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameVgw := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga directconnect.GatewayAssociation
-	var gap directconnect.GatewayAssociationProposal
+	var ga awstypes.DirectConnectGatewayAssociation
+	var gap awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNCrossAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/29"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 				),
 				// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccGatewayAssociationConfig_allowedPrefixesVPNCrossAccountUpdated(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga, &gap),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga, &gap),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 				),
 			},
 		},
@@ -310,28 +384,29 @@ func TestAccDirectConnectGatewayAssociation_allowedPrefixesVPNGatewayCrossAccoun
 }
 
 func TestAccDirectConnectGatewayAssociation_recreateProposal(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dx_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
-	var ga1, ga2 directconnect.GatewayAssociation
-	var gap1, gap2 directconnect.GatewayAssociationProposal
+	var ga1, ga2 awstypes.DirectConnectGatewayAssociation
+	var gap1, gap2 awstypes.DirectConnectGatewayAssociationProposal
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckGatewayAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNCrossAccount(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga1, &gap1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga1, &gap1),
 				),
 			},
 			{
 				Config: testAccGatewayAssociationConfig_basicVPNCrossAccountUpdatedProposal(rName, rBgpAsn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayAssociationExists(resourceName, &ga2, &gap2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGatewayAssociationExists(ctx, resourceName, &ga2, &gap2),
 					testAccCheckGatewayAssociationNotRecreated(&ga1, &ga2),
 					testAccCheckGatewayAssociationProposalRecreated(&gap1, &gap2),
 				),
@@ -351,50 +426,48 @@ func testAccGatewayAssociationImportStateIdFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccCheckGatewayAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckGatewayAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_gateway_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_gateway_association" {
+				continue
+			}
+
+			_, err := tfdirectconnect.FindGatewayAssociationByID(ctx, conn, rs.Primary.Attributes["dx_gateway_association_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Direct Connect Gateway Association %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfdirectconnect.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Direct Connect Gateway Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckGatewayAssociationExists(name string, ga *directconnect.GatewayAssociation, gap *directconnect.GatewayAssociationProposal) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAssociation, gap *awstypes.DirectConnectGatewayAssociationProposal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.Attributes["dx_gateway_association_id"] == "" {
-			return fmt.Errorf("No Direct Connect Gateway Association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
-
-		output, err := tfdirectconnect.FindGatewayAssociationByID(conn, rs.Primary.Attributes["dx_gateway_association_id"])
+		output, err := tfdirectconnect.FindGatewayAssociationByID(ctx, conn, rs.Primary.Attributes["dx_gateway_association_id"])
 
 		if err != nil {
 			return err
 		}
 
 		if proposalID := rs.Primary.Attributes["proposal_id"]; proposalID != "" {
-			output, err := tfdirectconnect.FindGatewayAssociationProposalByID(conn, proposalID)
+			output, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, proposalID)
 
 			if err != nil {
 				return err
@@ -403,15 +476,15 @@ func testAccCheckGatewayAssociationExists(name string, ga *directconnect.Gateway
 			*gap = *output
 		}
 
-		*ga = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckGatewayAssociationNotRecreated(old, new *directconnect.GatewayAssociation) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationNotRecreated(old, new *awstypes.DirectConnectGatewayAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if old, new := aws.StringValue(old.AssociationId), aws.StringValue(new.AssociationId); old != new {
+		if old, new := aws.ToString(old.AssociationId), aws.ToString(new.AssociationId); old != new {
 			return fmt.Errorf("Direct Connect Gateway Association (%s) recreated (%s)", old, new)
 		}
 
@@ -420,23 +493,19 @@ func testAccCheckGatewayAssociationNotRecreated(old, new *directconnect.GatewayA
 }
 
 // Perform check in acceptance testing as this StateUpgrader requires an API call
-func testAccCheckGatewayAssociationStateUpgradeV0(name string) resource.TestCheckFunc {
+func testAccCheckGatewayAssociationStateUpgradeV0(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		rawState := map[string]interface{}{
+		rawState := map[string]any{
 			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
 			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}
 
-		updatedRawState, err := tfdirectconnect.GatewayAssociationStateUpgradeV0(context.Background(), rawState, acctest.Provider.Meta())
+		updatedRawState, err := tfdirectconnect.GatewayAssociationStateUpgradeV0(ctx, rawState, acctest.Provider.Meta())
 
 		if err != nil {
 			return err

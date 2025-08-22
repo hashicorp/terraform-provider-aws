@@ -1,13 +1,16 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "aws_region" {
   description = "The AWS region to create things in."
   default     = "us-east-1"
 }
 
-# ubuntu-trusty-14.04 (x64)
+# ubuntu-jammy-22.04 (amd64)
 variable "aws_amis" {
   default = {
-    "us-east-1" = "ami-5f709f34"
-    "us-west-2" = "ami-7f675e4f"
+    "us-east-1" = "ami-005fc0f236362e99f"
+    "us-west-2" = "ami-0075013580f6322a1"
   }
 }
 

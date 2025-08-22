@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_amplify_app: Add support for `WEB_COMPUTE` `platform` value in support of [Next.js web apps](https://docs.aws.amazon.com/amplify/latest/userguide/ssr-Amplify-support.html)
+```

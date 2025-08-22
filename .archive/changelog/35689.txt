@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrock_provisioned_model_throughput
+```
+
+```release-note:note
+resource/aws_bedrock_provisioned_model_throughput: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

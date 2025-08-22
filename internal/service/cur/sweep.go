@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package cur
 
@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	cur "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_cur_report_definition", &resource.Sweeper{
 		Name: "aws_cur_report_definition",
 		F:    sweepReportDefinitions,
@@ -24,52 +23,46 @@ func init() {
 }
 
 func sweepReportDefinitions(region string) error {
-	c, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	if region != endpoints.UsEast1RegionID {
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for region: %s", region)
+		return nil
+	}
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	client := c.(*conns.AWSClient)
-	if rs, ok := endpoints.RegionsForService(endpoints.DefaultPartitions(), sweep.Partition(region), cur.ServiceName); ok {
-		_, ok := rs[region]
-		if !ok {
-			log.Printf("[WARN] Skipping Cost and Usage Report Definitions sweep for %s: not supported in this region", region)
+	conn := client.CURClient(ctx)
+	input := &cur.DescribeReportDefinitionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := cur.NewDescribeReportDefinitionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
 			return nil
 		}
-	}
 
-	conn := client.CURConn
-
-	input := &cur.DescribeReportDefinitionsInput{}
-	var sweeperErrs *multierror.Error
-	err = conn.DescribeReportDefinitionsPages(input, func(page *cur.DescribeReportDefinitionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
 		}
 
-		for _, reportDefinition := range page.ReportDefinitions {
-			r := ResourceReportDefinition()
+		for _, v := range page.ReportDefinitions {
+			r := resourceReportDefinition()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(reportDefinition.ReportName))
-			err = r.Delete(d, client)
+			d.SetId(aws.ToString(v.ReportName))
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Cost And Usage Report Definitions sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Cost And Usage Report Definitions: %w", err))
+		return fmt.Errorf("error sweeping Cost And Usage Report Definitions (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

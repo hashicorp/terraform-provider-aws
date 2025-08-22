@@ -35,8 +35,6 @@ resource "aws_kendra_experience" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** By default of the AWS Kendra API, updates to an existing `aws_kendra_experience` resource (e.g. updating the `name`) will also update the `configuration.content_source_configuration.direct_put_content` parameter to `false` if not already provided.
-
 The following arguments are required:
 
 * `index_id` - (Required, Forces new resource) The identifier of the index for your Amazon Kendra experience.
@@ -45,8 +43,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource if removed) A description for your Amazon Kendra experience.
 * `configuration` - (Optional) Configuration information for your Amazon Kendra experience. Terraform will only perform drift detection of its value when present in a configuration. [Detailed below](#configuration).
+
+~> **NOTE:** By default of the AWS Kendra API, updates to an existing `aws_kendra_experience` resource (e.g. updating the `name`) will also update the `configuration.content_source_configuration.direct_put_content` parameter to `false` if not already provided.
 
 ### `configuration`
 
@@ -71,9 +72,9 @@ The `user_identity_configuration` configuration block supports the following arg
 
 * `identity_attribute_name` - (Required) The AWS SSO field name that contains the identifiers of your users, such as their emails.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifiers of the experience and index separated by a slash (`/`).
 * `arn` - ARN of the Experience.
@@ -85,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -93,8 +94,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kendra Experience can be imported using the unique identifiers of the experience and index separated by a slash (`/`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_experience.example
+  id = "1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f"
+}
 ```
-$ terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
+
+Using `terraform import`, import Kendra Experience using the unique identifiers of the experience and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_experience.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```

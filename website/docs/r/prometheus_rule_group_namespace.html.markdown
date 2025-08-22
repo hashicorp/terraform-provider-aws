@@ -31,20 +31,34 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) The name of the rule group namespace
-* `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
+* `name` - (Required) The name of the rule group namespace.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The ARN of the rule group namespace.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Import
 
-The prometheus rule group namespace can be imported using the arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the prometheus rule group namespace using the arn. For example:
 
+```terraform
+import {
+  to = aws_prometheus_rule_group_namespace.demo
+  id = "arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name"
+}
 ```
-$ terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
+
+Using `terraform import`, import the prometheus rule group namespace using the arn. For example:
+
+```console
+% terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
 ```

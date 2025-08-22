@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix issue preventing `audio_pids` attribute from being configured in `m2ts_settings`
+```
+
+```release-note:bug
+resource/aws_medialive_channel: Fix issue causing `dbv_sub_pids` attribute to be configured incorrectly in `m2ts_settings`
+```

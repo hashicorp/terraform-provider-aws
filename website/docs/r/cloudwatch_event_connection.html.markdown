@@ -12,7 +12,6 @@ Provides an EventBridge connection resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -132,20 +131,87 @@ resource "aws_cloudwatch_event_connection" "test" {
 }
 ```
 
+## Example Usage CMK Encryption
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "key-policy-example"
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow use of the key"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        },
+        Action = [
+          "kms:DescribeKey",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"
+        ],
+        Resource = "*"
+        Condition = {
+          StringLike = {
+            "kms:ViaService" = "secretsmanager.*.amazonaws.com"
+            "kms:EncryptionContext:SecretARN" = [
+              "arn:aws:secretsmanager:*:*:secret:events!connection/*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+  tags = {
+    EventBridgeApiDestinations = "true"
+  }
+}
+
+resource "aws_cloudwatch_event_connection" "test" {
+  name               = "ngrok-connection"
+  description        = "A connection description"
+  authorization_type = "BASIC"
+  auth_parameters {
+    basic {
+      username = "user"
+      password = "Pass1234!"
+    }
+  }
+  kms_key_identifier = aws_kms_key.example.id
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
-* `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
-* `authorization_type` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name for the connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
+* `description` - (Optional) Description for the connection. Maximum of 512 characters.
+* `authorization_type` - (Required) Type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `auth_parameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
-* `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
+* `invocation_connectivity_parameters` - (Optional) Parameters to use for invoking a private API. Documented below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt this connection. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN.
 
 `auth_parameters` support the following:
 
 * `api_key` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
 * `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `api_key` and `oauth`. Documented below.
+* `invocation_http_parameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 * `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `api_key`. Documented below.
 
 `api_key` support the following:
@@ -184,18 +250,34 @@ The following arguments are supported:
     * `value` - (Required) The value associated with the key. Created and stored in AWS Secrets Manager if is secret.
     * `is_value_secret` - (Optional) Specified whether the value is secret.
 
-## Attributes Reference
+`invocation_connectivity_parameters` supports the following:
 
-In addition to all arguments above, the following attributes are exported:
+* `resource_parameters` - (Required) The parameters for EventBridge to use when invoking the resource endpoint. Documented below.
+
+`resource_parameters` supports the following:
+
+* `resource_configuration_arn` - (Required) ARN of the Amazon VPC Lattice [resource configuration](vpclattice_resource_configuration) for the resource endpoint.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the connection.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
 
-
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge connection using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_connection.test
+  id = "ngrok-connection"
+}
+```
+
+Using `terraform import`, import EventBridge EventBridge connection using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_connection.test ngrok-connection
+% terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```

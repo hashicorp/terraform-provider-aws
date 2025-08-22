@@ -28,8 +28,9 @@ resource "aws_appsync_api_cache" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) GraphQL API ID.
 * `api_caching_behavior` - (Required) Caching behavior. Valid values are `FULL_REQUEST_CACHING` and `PER_RESOLVER_CACHING`.
 * `type` - (Required) Cache instance type. Valid values are `SMALL`, `MEDIUM`, `LARGE`, `XLARGE`, `LARGE_2X`, `LARGE_4X`, `LARGE_8X`, `LARGE_12X`, `T2_SMALL`, `T2_MEDIUM`, `R4_LARGE`, `R4_XLARGE`, `R4_2XLARGE`, `R4_4XLARGE`, `R4_8XLARGE`.
@@ -37,16 +38,25 @@ The following arguments are supported:
 * `at_rest_encryption_enabled` - (Optional) At-rest encryption flag for cache. You cannot update this setting after creation.
 * `transit_encryption_enabled` - (Optional) Transit encryption flag when connecting to cache. You cannot update this setting after creation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AppSync API ID.
 
 ## Import
 
-`aws_appsync_api_cache` can be imported using the AppSync API ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_api_cache` using the AppSync API ID. For example:
 
+```terraform
+import {
+  to = aws_appsync_api_cache.example
+  id = "xxxxx"
+}
 ```
-$ terraform import aws_appsync_api_cache.example xxxxx
+
+Using `terraform import`, import `aws_appsync_api_cache` using the AppSync API ID. For example:
+
+```console
+% terraform import aws_appsync_api_cache.example xxxxx
 ```

@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_accessanalyzer_analyzer", &resource.Sweeper{
 		Name: "aws_accessanalyzer_analyzer",
 		F:    sweepAnalyzers,
@@ -22,43 +22,41 @@ func init() {
 }
 
 func sweepAnalyzers(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AccessAnalyzerConn
-	input := &accessanalyzer.ListAnalyzersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.AccessAnalyzerClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAnalyzersPages(input, func(page *accessanalyzer.ListAnalyzersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := accessanalyzer.ListAnalyzersInput{}
+	pages := accessanalyzer.NewListAnalyzersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Access Analyzer Analyzer sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, analyzer := range page.Analyzers {
-			r := ResourceAnalyzer()
+		if err != nil {
+			return fmt.Errorf("listing IAM Access Analyzer Analyzers (%s): %w", region, err)
+		}
+
+		for _, v := range page.Analyzers {
+			r := resourceAnalyzer()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(analyzer.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Access Analyzer Analyzer sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing Access Analyzer Analyzers (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping Access Analyzer Analyzers (%s): %w", region, err)
+		return fmt.Errorf("sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)
 	}
 
 	return nil

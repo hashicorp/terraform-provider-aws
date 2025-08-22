@@ -1,47 +1,87 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
+	"context"
 	"fmt"
+	"maps"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.days": "365",
-						"filter.#":          "1",
-						"filter.0.prefix":   "",
-						"id":                rName,
-						"status":            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -53,20 +93,21 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketLifecycleConfiguration(), resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketLifecycleConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,7 +115,71 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLifecycleConfiguration_rule_NoFilterOrPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
@@ -82,24 +187,53 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "logs/"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.date": date,
-						"filter.#":          "1",
-						"filter.0.prefix":   "logs/",
-						"id":                rName,
-						"status":            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "logs/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_Prefix("logs/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_Prefix("logs/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -107,18 +241,388 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, dateUpdated, "tmp/"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.date": dateUpdated,
-						"filter.#":          "1",
-						"filter.0.prefix":   "tmp/",
-						"id":                rName,
-						"status":            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, dateUpdated, "tmp/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(dateUpdated),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(dateUpdated),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_filterWithEmptyPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithEmptyPrefix(rName, date),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_Prefix(""),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_Prefix(""),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(200),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_objectSizeGreaterThanToPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(100),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(100),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, dateUpdated, "tmp/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(dateUpdated),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(dateUpdated),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_objectSizeLessThanToPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_LessThan(500),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_LessThan(500),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, dateUpdated, "tmp/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(dateUpdated),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(dateUpdated),
+								names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -130,30 +634,221 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 }
 
 func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":                      "1",
-						"expiration.0.date":                 date,
-						"filter.#":                          "1",
-						"filter.0.object_size_greater_than": "100",
-						"id":                                rName,
-						"status":                            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(100),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(100),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(200),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(0),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(0),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 200),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_GreaterThan(200),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_GreaterThan(200),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -165,30 +860,108 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 }
 
 func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":                   "1",
-						"expiration.0.date":              date,
-						"filter.#":                       "1",
-						"filter.0.object_size_less_than": "500",
-						"id":                             rName,
-						"status":                         tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_LessThan(500),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_LessThan(500),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 5000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_LessThan(5000),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_LessThan(5000),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -200,32 +973,136 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 }
 
 func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.date": date,
-						"filter.#":          "1",
-						"filter.0.and.#":    "1",
-						"filter.0.and.0.object_size_greater_than": "500",
-						"filter.0.and.0.object_size_less_than":    "64000",
-						"id":                                      rName,
-						"status":                                  tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(500),
+									"object_size_less_than":    knownvalue.Int64Exact(64000),
+									names.AttrPrefix:           knownvalue.StringExact(""),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(500),
+										"object_size_less_than":    knownvalue.Int64Exact(64000),
+										names.AttrPrefix:           knownvalue.StringExact(""),
+										names.AttrTags:             knownvalue.Null(),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 400, 65000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(400),
+									"object_size_less_than":    knownvalue.Int64Exact(65000),
+									names.AttrPrefix:           knownvalue.StringExact(""),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(400),
+										"object_size_less_than":    knownvalue.Int64Exact(65000),
+										names.AttrPrefix:           knownvalue.StringExact(""),
+										names.AttrTags:             knownvalue.Null(),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -237,33 +1114,211 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 }
 
 func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.date": date,
-						"filter.#":          "1",
-						"filter.0.and.#":    "1",
-						"filter.0.and.0.object_size_greater_than": "500",
-						"filter.0.and.0.object_size_less_than":    "64000",
-						"filter.0.and.0.prefix":                   rName,
-						"id":                                      rName,
-						"status":                                  tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(500),
+									"object_size_less_than":    knownvalue.Int64Exact(64000),
+									names.AttrPrefix:           knownvalue.StringExact(rName),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(500),
+										"object_size_less_than":    knownvalue.Int64Exact(64000),
+										names.AttrPrefix:           knownvalue.StringExact(rName),
+										names.AttrTags:             knownvalue.Null(),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_Filter_PrefixToAnd(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	currTime := time.Now()
+	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, "prefix/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterWithPrefixAndTags(rName, date, "prefix/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(date),
+							names.AttrFilter: checkFilter_And(
+								checkAnd(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(0),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("prefix/"),
+									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+										acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+									}),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Date(date),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(0),
+										"object_size_less_than":    knownvalue.Int64Exact(0),
+										names.AttrPrefix:           knownvalue.StringExact("prefix/"),
+										names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+											acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+										}),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -275,29 +1330,65 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 }
 
 func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusDisabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": tfs3.LifecycleRuleStatusDisabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusDisabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -306,62 +1397,97 @@ func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	date := time.Now()
 	expirationDate := time.Date(date.Year(), date.Month(), date.Day()+14, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_multipleRules(rName, expirationDate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                    "log",
-						"expiration.#":          "1",
-						"expiration.0.days":     "90",
-						"filter.#":              "1",
-						"filter.0.and.#":        "1",
-						"filter.0.and.0.prefix": "log/",
-						"filter.0.and.0.tags.%": "2",
-						"status":                tfs3.LifecycleRuleStatusEnabled,
-						"transition.#":          "2",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":          "30",
-						"storage_class": s3.StorageClassStandardIa,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":          "60",
-						"storage_class": s3.StorageClassGlacier,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id":                "tmp",
-						"expiration.#":      "1",
-						"expiration.0.date": expirationDate,
-						"filter.#":          "1",
-						"filter.0.prefix":   "tmp/",
-						"status":            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter: checkFilter_And(
+								checkAnd(map[string]knownvalue.Check{
+									names.AttrPrefix: knownvalue.StringExact("log/"),
+									names.AttrTags: knownvalue.MapExact(map[string]knownvalue.Check{
+										acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+										acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+									}),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact("log"),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Days(30, types.TransitionStorageClassStandardIa),
+								checkTransition_Days(60, types.TransitionStorageClassGlacier),
+							),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Date(expirationDate),
+							names.AttrFilter:                    checkFilter_Prefix("tmp/"),
+							names.AttrID:                        knownvalue.StringExact("tmp"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -374,25 +1500,51 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23730
 func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, s3.ReplicationRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "rule.1.filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.1.filter.0.prefix", ""),
+				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, tfs3.LifecycleRuleStatusEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName + "-1"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(true),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName + "-2"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -404,24 +1556,106 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *tes
 }
 
 func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"noncurrent_version_expiration.#":                 "1",
-						"noncurrent_version_expiration.0.noncurrent_days": "90",
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("config/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(90),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(90),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName, 100),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("config/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(100),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_Days(100),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -433,31 +1667,118 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 }
 
 func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"noncurrent_version_transition.#": "2",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days": "30",
-						"storage_class":   s3.StorageClassStandardIa,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days": "60",
-						"storage_class":   s3.StorageClassGlacier,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName, 30, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("config/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(30, types.TransitionStorageClassStandardIa),
+								checkNoncurrentVersionTransition_Days(60, types.TransitionStorageClassGlacier),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":     checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(30, types.TransitionStorageClassStandardIa),
+									checkNoncurrentVersionTransition_Days(60, types.TransitionStorageClassGlacier),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":     checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName, 45, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("config/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(45, types.TransitionStorageClassStandardIa),
+								checkNoncurrentVersionTransition_Days(90, types.TransitionStorageClassGlacier),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":     checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("config/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(45, types.TransitionStorageClassStandardIa),
+									checkNoncurrentVersionTransition_Days(90, types.TransitionStorageClassGlacier),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":     checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -469,30 +1790,107 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 }
 
 // Ensure backwards compatible with now-deprecated "prefix" configuration
-func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_RulePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basicPrefix(rName, "path1/"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
-						"expiration.0.days": "365",
-						"id":                rName,
-						"prefix":            "path1/",
-						"status":            tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path2/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact("path2/"),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact("path2/"),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -503,33 +1901,222 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23239
-func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
+// Ensure backwards compatible with now-deprecated "prefix" configuration
+func TestAccS3BucketLifecycleConfiguration_RulePrefixToFilter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":         "1",
-						"expiration.0.days":    "365",
-						"id":                   rName,
-						"filter.#":             "1",
-						"filter.0.tag.#":       "1",
-						"filter.0.tag.0.key":   "key1",
-						"filter.0.tag.0.value": "value1",
-						"status":               tfs3.LifecycleRuleStatusEnabled,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, "path1/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, "path1/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter:                    checkFilter_Prefix("path1/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(90),
+								names.AttrFilter:                    checkFilter_Prefix("path1/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TODO: RulePrefix to FilterAndPrefix
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23239
+func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Tag(acctest.CtKey1, acctest.CtValue1),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Tag(acctest.CtKey1, acctest.CtValue1),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Tag(acctest.CtKey2, acctest.CtValue2),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Tag(acctest.CtKey2, acctest.CtValue2),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -541,24 +2128,58 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 }
 
 func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "true",
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(true),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_DeleteMarker(true),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -567,13 +2188,46 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "false",
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(false),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_DeleteMarker(false),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -586,23 +2240,106 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11420
 func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#": "1",
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Empty(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Empty(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, "prefix2/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Empty(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix2/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Empty(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix2/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -615,24 +2352,58 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15138
 func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"abort_incomplete_multipart_upload.#":                       "1",
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "7",
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(7),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -641,13 +2412,46 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"abort_incomplete_multipart_upload.#":                       "1",
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "5",
-					}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(5),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(5),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -662,23 +2466,126 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 // https://github.com/hashicorp/terraform-provider-aws/issues/23117
 // does not introduce a regression.
 func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	currTime := time.Now()
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	dateUpdated := time.Date(currTime.Year()+1, currTime.Month(), currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.TransitionStorageClassStandardIa),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassStandardIa),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Date(date, types.TransitionStorageClassStandardIa),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Date(date, types.TransitionStorageClassStandardIa),
+								),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, dateUpdated, types.TransitionStorageClassStandardIa),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Date(dateUpdated, types.TransitionStorageClassStandardIa),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Date(dateUpdated, types.TransitionStorageClassStandardIa),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -693,6 +2600,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 // https://github.com/hashicorp/terraform-provider-aws/issues/23117
 // does not introduce a regression.
 func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
@@ -700,16 +2608,61 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -722,25 +2675,122 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23117
 func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
-						"days":          "0",
-						"date":          "",
-						"storage_class": s3.StorageClassIntelligentTiering,
-					}),
+				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_StorageClass(types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, types.TransitionStorageClassGlacier),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_StorageClass(types.TransitionStorageClassGlacier),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_StorageClass(types.TransitionStorageClassGlacier),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -753,20 +2803,122 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23117
 func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassGlacier),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Days(0, types.TransitionStorageClassGlacier),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Days(0, types.TransitionStorageClassGlacier),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -778,6 +2930,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 }
 
 func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
@@ -785,33 +2938,176 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 	date := time.Date(currTime.Year(), currTime.Month()+1, currTime.Day(), 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Date(date, types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, s3.StorageClassIntelligentTiering),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, types.TransitionStorageClassIntelligentTiering),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition": checkTransitions(
+								checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+							),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_Days(1),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition": checkTransitions(
+									checkTransition_Days(0, types.TransitionStorageClassIntelligentTiering),
+								),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -819,20 +3115,106 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23228
 func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
+				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "varies_by_storage_class"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix(""),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":     checkTransitions(),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix(""),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":     checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, "all_storage_classes_128K"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_None(),
+							names.AttrFilter:                    checkFilter_Prefix(""),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+								checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+							),
+							names.AttrPrefix: knownvalue.StringExact(""),
+							names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":     checkTransitions(),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_None(),
+								names.AttrFilter:                    checkFilter_Prefix(""),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_VersionsAndDays(2, 30),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(
+									checkNoncurrentVersionTransition_Days(30, "STANDARD_IA"),
+								),
+								names.AttrPrefix: knownvalue.StringExact(""),
+								names.AttrStatus: knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":     checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -842,206 +3224,1025 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 		},
 	})
 }
-func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
+
+func TestAccS3BucketLifecycleConfiguration_migrateFromBucket_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_lifecycleExpireMarker(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_migrateNoChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Enabled"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "true"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(true),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact("id1"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_DeleteMarker(true),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact("id1"),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
+func TestAccS3BucketLifecycleConfiguration_migrateFromBucket_withChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_lifecycleExpireMarker(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(bucketResourceName),
+					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_migrateChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Disabled"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "false"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(false),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact("id1"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusDisabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_DeleteMarker(false),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact("id1"),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact("path1/"),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusDisabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 		},
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23884.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/38551.
 func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "300"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "prefix1"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter: checkFilter_And(
+								checkAnd(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(300),
+									names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(90),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(300),
+										names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter: checkFilter_And(
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"object_size_greater_than": knownvalue.Int64Exact(0),
+									"object_size_less_than":    knownvalue.Int64Exact(0),
+									names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+									names.AttrTags:             knownvalue.Null(),
+								}),
+							),
+							names.AttrID:                    knownvalue.StringExact(rName),
+							"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                knownvalue.StringExact(""),
+							names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                    checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(90),
+								names.AttrFilter: checkFilter_And(
+									checkAnd(map[string]knownvalue.Check{
+										"object_size_greater_than": knownvalue.Int64Exact(0),
+										"object_size_less_than":    knownvalue.Int64Exact(0),
+										names.AttrPrefix:           knownvalue.StringExact("prefix1"),
+										names.AttrTags:             knownvalue.Null(),
+									}),
+								),
+								names.AttrID:                    knownvalue.StringExact(rName),
+								"noncurrent_version_expiration": checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition": checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                knownvalue.StringExact(""),
+								names.AttrStatus:                knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                    checkTransitions(),
+							}),
+						})),
+					},
+				},
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, "prefix2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "prefix2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(90),
+							names.AttrFilter:                    checkFilter_Prefix("prefix2"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(90),
+								names.AttrFilter:                    checkFilter_Prefix("prefix2"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
-			continue
-		}
-
-		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &s3.GetBucketLifecycleConfigurationInput{
-			Bucket: aws.String(bucket),
-		}
-
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
-
-		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-			return conn.GetBucketLifecycleConfiguration(input)
-		}, s3.ErrCodeNoSuchBucket)
-
-		if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if config, ok := output.(*s3.GetBucketLifecycleConfigurationOutput); ok && config != nil && len(config.Rules) != 0 {
-			return fmt.Errorf("S3 Lifecycle Configuration for bucket (%s) still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDirectoryBucketPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_directory_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
-func testAccCheckBucketLifecycleConfigurationExists(n string) resource.TestCheckFunc {
+func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_transitionDefaultMinimumObjectSize(rName, "varies_by_storage_class"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("varies_by_storage_class")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_transitionDefaultMinimumObjectSize(rName, "all_storage_classes_128K"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_transitionDefaultMinimumObjectSize_remove(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_transitionDefaultMinimumObjectSize(rName, "varies_by_storage_class"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("varies_by_storage_class")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_Days(365),
+								names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+								names.AttrID:                        knownvalue.StringExact(rName),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketLifecycleConfiguration_removeRule(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_removeRule_Setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(1),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact("to delete"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(true),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact("expire delete markers"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketLifecycleConfigurationConfig_removeRule(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_DeleteMarker(true),
+							names.AttrFilter:                    checkFilter_None(),
+							names.AttrID:                        knownvalue.StringExact("expire delete markers"),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+								"expiration":                        checkExpiration_DeleteMarker(true),
+								names.AttrFilter:                    checkFilter_None(),
+								names.AttrID:                        knownvalue.StringExact("expire delete markers"),
+								"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+								"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+								names.AttrPrefix:                    knownvalue.StringExact(""),
+								names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+								"transition":                        checkTransitions(),
+							}),
+						})),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+			if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
+				continue
+			}
+
+			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			}
+
+			_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Bucket Lifecycle Configuration %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketLifecycleConfigurationInput{
-			Bucket: aws.String(bucket),
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+		const (
+			lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
+		)
+		var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
+		err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+			var err error
+
+			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+			if tfresource.NotFound(err) {
+				return retry.RetryableError(err)
+			}
+			if err != nil {
+				return retry.NonRetryableError(err)
+			}
+
+			if lastOutput == nil || !tfs3.LifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
+				lastOutput = output
+				return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+			}
+
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		}
 
-		output, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-			return conn.GetBucketLifecycleConfiguration(input)
-		}, tfs3.ErrCodeNoSuchLifecycleConfiguration)
+		return err
+	}
+}
 
-		if err != nil {
-			return err
-		}
+func checkAbortIncompleteMultipartUpload_None() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{})
+}
 
-		if config, ok := output.(*s3.GetBucketLifecycleConfigurationOutput); !ok || config == nil {
-			return fmt.Errorf("S3 Bucket Replication Configuration for bucket (%s) not found", rs.Primary.ID)
-		}
+func checkAbortIncompleteMultipartUpload_Days(days int64) knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"days_after_initiation": knownvalue.Int64Exact(days),
+		}),
+	})
+}
 
-		return nil
+func checkExpiration_None() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{})
+}
+
+func checkExpiration_Date(date string) knownvalue.Check {
+	checks := expirationDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"date": knownvalue.StringExact(date),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkExpiration_Days(days int32) knownvalue.Check {
+	checks := expirationDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int32Exact(days),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkExpiration_DeleteMarker(marker bool) knownvalue.Check {
+	checks := expirationDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"expired_object_delete_marker": knownvalue.Bool(marker),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkExpiration_Empty() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			expirationDefaults(),
+		),
+	})
+}
+
+func expirationDefaults() map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"date":                         knownvalue.Null(),
+		"days":                         knownvalue.Int32Exact(0),
+		"expired_object_delete_marker": knownvalue.Bool(false),
+	}
+}
+
+func checkFilter_None() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{})
+}
+
+func checkFilter_And(check knownvalue.Check) knownvalue.Check {
+	checks := filterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"and": knownvalue.ListExact([]knownvalue.Check{
+			check,
+		}),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkFilter_GreaterThan(size int64) knownvalue.Check {
+	checks := filterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"object_size_greater_than": knownvalue.Int64Exact(size),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkFilter_LessThan(size int64) knownvalue.Check {
+	checks := filterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"object_size_less_than": knownvalue.Int64Exact(size),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkFilter_Prefix(prefix string) knownvalue.Check {
+	checks := filterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		names.AttrPrefix: knownvalue.StringExact(prefix),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func checkFilter_Tag(key, value string) knownvalue.Check {
+	checks := filterDefaults()
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"tag": knownvalue.ListExact([]knownvalue.Check{
+			knownvalue.ObjectExact(map[string]knownvalue.Check{
+				names.AttrKey:   knownvalue.StringExact(key),
+				names.AttrValue: knownvalue.StringExact(value),
+			}),
+		}),
+	})
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(
+			checks,
+		),
+	})
+}
+
+func filterDefaults() map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"and":                      knownvalue.ListExact([]knownvalue.Check{}),
+		"object_size_greater_than": knownvalue.Null(),
+		"object_size_less_than":    knownvalue.Null(),
+		names.AttrPrefix:           knownvalue.Null(),
+		"tag":                      knownvalue.ListExact([]knownvalue.Check{}),
+	}
+}
+
+func checkAnd(attrChecks map[string]knownvalue.Check) knownvalue.Check {
+	checks := andDefaults()
+	maps.Copy(checks, attrChecks)
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func andDefaults() map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"object_size_greater_than": knownvalue.Int64Exact(0),
+		"object_size_less_than":    knownvalue.Int64Exact(0),
+		names.AttrPrefix:           knownvalue.StringExact(""),
+		names.AttrTags:             knownvalue.Null(),
+	}
+}
+
+func checkNoncurrentVersionExpiration_None() knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{})
+}
+
+func checkNoncurrentVersionExpiration_Days(days int32) knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"newer_noncurrent_versions": knownvalue.Null(),
+			"noncurrent_days":           knownvalue.Int32Exact(days),
+		}),
+	})
+}
+
+func checkNoncurrentVersionExpiration_VersionsAndDays(versions, days int32) knownvalue.Check {
+	return knownvalue.ListExact([]knownvalue.Check{
+		knownvalue.ObjectExact(map[string]knownvalue.Check{
+			"newer_noncurrent_versions": knownvalue.Int32Exact(versions),
+			"noncurrent_days":           knownvalue.Int32Exact(days),
+		}),
+	})
+}
+
+func checkNoncurrentVersionTransitions(checks ...knownvalue.Check) knownvalue.Check {
+	return knownvalue.SetExact(checks)
+}
+
+func checkNoncurrentVersionTransition_Days(days int32, class types.TransitionStorageClass) knownvalue.Check {
+	return knownvalue.ObjectExact(map[string]knownvalue.Check{
+		"newer_noncurrent_versions": knownvalue.Null(),
+		"noncurrent_days":           knownvalue.Int32Exact(days),
+		names.AttrStorageClass:      tfknownvalue.StringExact(class),
+	})
+}
+
+func checkTransitions(checks ...knownvalue.Check) knownvalue.Check {
+	return knownvalue.SetExact(checks)
+}
+
+func checkTransition_Date(date string, class types.TransitionStorageClass) knownvalue.Check {
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"date": knownvalue.StringExact(date),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func checkTransition_Days(days int64, class types.TransitionStorageClass) knownvalue.Check {
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int64Exact(days),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func checkTransition_StorageClass(class types.TransitionStorageClass) knownvalue.Check {
+	checks := transitionDefaults(class)
+	maps.Copy(checks, map[string]knownvalue.Check{
+		"days": knownvalue.Int64Exact(0),
+	})
+	return knownvalue.ObjectExact(
+		checks,
+	)
+}
+
+func transitionDefaults(class types.TransitionStorageClass) map[string]knownvalue.Check {
+	return map[string]knownvalue.Check{
+		"date":                 knownvalue.Null(),
+		"days":                 knownvalue.Null(),
+		names.AttrStorageClass: tfknownvalue.StringExact(class),
 	}
 }
 
@@ -1051,9 +4252,28 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+
+    filter {
+      prefix = "prefix/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfigurationConfig_rule_NoFilterOrPrefix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1074,11 +4294,6 @@ func testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rNa
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1111,11 +4326,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
   rule {
@@ -1125,20 +4335,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     expiration {
       days = 365
     }
+
+    filter {
+      prefix = "prefix/"
+    }
   }
 }
 `, rName, status)
 }
 
-func testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_filterWithPrefix(rName, date, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1151,7 +4360,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
       date = %[2]q
     }
 
-    # One of prefix or filter required to ensure XML is well-formed
     filter {
       prefix = %[3]q
     }
@@ -1160,15 +4368,34 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date, prefix)
 }
 
-func testAccBucketLifecycleConfigurationConfig_basicPrefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_filterWithEmptyPrefix(rName, date string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      prefix = ""
+    }
+  }
+}
+`, rName, date)
+}
+
+func testAccBucketLifecycleConfigurationConfig_rulePrefix(rName, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1176,7 +4403,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   rule {
     id = %[1]q
 
-    # One of prefix or filter required to ensure XML is well-formed
     prefix = %[2]q
     status = "Enabled"
 
@@ -1192,11 +4418,6 @@ func testAccBucketLifecycleConfigurationConfig_filterTag(rName, key, value strin
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1226,11 +4447,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1241,20 +4457,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     expiration {
       expired_object_delete_marker = %[2]t
     }
+
+    filter {
+      prefix = "prefix/"
+    }
   }
 }
 `, rName, expired)
 }
 
-func testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName string) string {
+func testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1265,20 +4480,19 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
     status = "Enabled"
 
     expiration {}
+
+    filter {
+      prefix = %[2]q
+    }
   }
 }
-`, rName)
+`, rName, prefix)
 }
 
 func testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName string, days int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1291,6 +4505,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     id     = %[1]q
     status = "Enabled"
+
+    filter {
+      prefix = "prefix/"
+    }
   }
 }
 `, rName, days)
@@ -1300,11 +4518,6 @@ func testAccBucketLifecycleConfigurationConfig_multipleRules(rName, date string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1358,15 +4571,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date)
 }
 
-func testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName string) string {
+func testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName string, nonCurrentDays int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1375,30 +4583,24 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   rule {
     id = %[1]q
 
-    # One of prefix or filter required to ensure XML is well-formed
     filter {
       prefix = "config/"
     }
 
     noncurrent_version_expiration {
-      noncurrent_days = 90
+      noncurrent_days = %[2]d
     }
 
     status = "Enabled"
   }
 }
-`, rName)
+`, rName, nonCurrentDays)
 }
 
-func testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName string) string {
+func testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName string, standardDays, glacierDays int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1407,36 +4609,30 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   rule {
     id = %[1]q
 
-    # One of prefix or filter required to ensure XML is well-formed
     filter {
       prefix = "config/"
     }
 
     noncurrent_version_transition {
-      noncurrent_days = 30
+      noncurrent_days = %[2]d
       storage_class   = "STANDARD_IA"
     }
 
     noncurrent_version_transition {
-      noncurrent_days = 60
+      noncurrent_days = %[3]d
       storage_class   = "GLACIER"
     }
 
     status = "Enabled"
   }
 }
-`, rName)
+`, rName, standardDays, glacierDays)
 }
 
-func testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, storageClass string) string {
+func testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName string, storageClass types.TransitionStorageClass) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1444,6 +4640,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   rule {
     id = %[1]q
+
+    filter {
+      prefix = "prefix/"
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
@@ -1464,15 +4664,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, storageClass)
 }
 
-func testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, storageClass string) string {
+func testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName string, storageClass types.TransitionStorageClass) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1480,6 +4675,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   rule {
     id = %[1]q
+
+    filter {
+      prefix = "prefix/"
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
@@ -1501,15 +4700,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, storageClass)
 }
 
-func testAccBucketLifecycleConfigurationConfig_dateTransition(rName, transitionDate, storageClass string) string {
+func testAccBucketLifecycleConfigurationConfig_dateTransition(rName, transitionDate string, storageClass types.TransitionStorageClass) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1517,6 +4711,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
   rule {
     id = %[1]q
+
+    filter {
+      prefix = "prefix/"
+    }
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
@@ -1538,15 +4736,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, transitionDate, storageClass)
 }
 
-func testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName string) string {
+func testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName, transitionDefaultMinimumObjectSize string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1569,19 +4762,16 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     status = "Enabled"
   }
+
+  transition_default_minimum_object_size = %[2]q
 }
-`, rName)
+`, rName, transitionDefaultMinimumObjectSize)
 }
 
 func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date string, sizeGreaterThan int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1610,11 +4800,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1639,11 +4824,6 @@ func testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1675,11 +4855,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1704,15 +4879,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 `, rName, date, sizeGreaterThan, sizeLessThan)
 }
 
-func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string) string {
+func testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, prefix string, objectSizeGT int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1727,25 +4897,49 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
 
     filter {
       and {
-        object_size_greater_than = 300
+        object_size_greater_than = %[3]d
         prefix                   = %[2]q
       }
     }
 
     status = "Enabled"
   }
-}`, rName, prefix)
+}`, rName, prefix, objectSizeGT)
+}
+
+func testAccBucketLifecycleConfigurationConfig_filterWithPrefixAndTags(rName, date, prefix string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      date = %[2]q
+    }
+
+    filter {
+      and {
+        prefix = %[3]q
+        tags = {
+          key1 = "value1"
+        }
+      }
+    }
+  }
+}
+`, rName, date, prefix)
 }
 
 func testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
@@ -1773,11 +4967,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1800,11 +4989,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -1817,6 +5001,114 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
       expired_object_delete_marker = false
     }
   }
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfigurationConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+
+    filter {
+      prefix = "prefix/"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccBucketLifecycleConfigurationConfig_transitionDefaultMinimumObjectSize(rName, transitionDefaultMinimumObjectSize string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+
+    filter {
+      prefix = "prefix/"
+    }
+  }
+
+  transition_default_minimum_object_size = %[2]q
+}
+`, rName, transitionDefaultMinimumObjectSize)
+}
+
+func testAccBucketLifecycleConfigurationConfig_removeRule_Setup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id     = "to delete"
+    status = "Enabled"
+
+    filter {
+      prefix = "prefix/"
+    }
+    expiration {
+      days = 1
+    }
+  }
+
+  rule {
+    id     = "expire delete markers"
+    status = "Enabled"
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, rName)
+}
+
+func testAccBucketLifecycleConfigurationConfig_removeRule(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  rule {
+    id     = "expire delete markers"
+    status = "Enabled"
+
+    expiration {
+      expired_object_delete_marker = true
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
 }
 `, rName)
 }

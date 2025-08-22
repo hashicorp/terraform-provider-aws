@@ -1,32 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDirectoryConfig() *schema.Resource {
+// @SDKResource("aws_appstream_directory_config", name="Directory Config")
+func resourceDirectoryConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDirectoryConfigCreate,
 		ReadWithoutTimeout:   resourceDirectoryConfigRead,
 		UpdateWithoutTimeout: resourceDirectoryConfigUpdate,
 		DeleteWithoutTimeout: resourceDirectoryConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +52,6 @@ func ResourceDirectoryConfig() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(0, 2000),
 				},
-				Set: schema.HashString,
 			},
 			"service_account_credentials": {
 				Type:     schema.TypeList,
@@ -66,115 +75,153 @@ func ResourceDirectoryConfig() *schema.Resource {
 	}
 }
 
-func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
 	directoryName := d.Get("directory_name").(string)
-	input := &appstream.CreateDirectoryConfigInput{
+	input := appstream.CreateDirectoryConfigInput{
 		DirectoryName:                        aws.String(directoryName),
-		OrganizationalUnitDistinguishedNames: flex.ExpandStringSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
-		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{})),
+		OrganizationalUnitDistinguishedNames: flex.ExpandStringValueSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
+		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]any)),
 	}
 
-	output, err := conn.CreateDirectoryConfigWithContext(ctx, input)
+	output, err := conn.CreateDirectoryConfig(ctx, &input)
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppStream Directory Config (%s): %w", directoryName, err))
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Directory Config (%s): %s", directoryName, err)
 	}
 
-	if output == nil || output.DirectoryConfig == nil {
-		return diag.Errorf("error creating AppStream Directory Config (%s): empty response", directoryName)
-	}
+	d.SetId(aws.ToString(output.DirectoryConfig.DirectoryName))
 
-	d.SetId(aws.StringValue(output.DirectoryConfig.DirectoryName))
-
-	return resourceDirectoryConfigRead(ctx, d, meta)
+	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	resp, err := conn.DescribeDirectoryConfigsWithContext(ctx, &appstream.DescribeDirectoryConfigsInput{DirectoryNames: []*string{aws.String(d.Id())}})
+	directoryConfig, err := findDirectoryConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppStream Directory Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
-	if len(resp.DirectoryConfigs) == 0 {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "empty response"))
-	}
-
-	if len(resp.DirectoryConfigs) > 1 {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Directory Config (%s): %s", d.Id(), "multiple Directory Configs found"))
-	}
-
-	directoryConfig := resp.DirectoryConfigs[0]
-
-	d.Set("created_time", aws.TimeValue(directoryConfig.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(directoryConfig.CreatedTime).Format(time.RFC3339))
 	d.Set("directory_name", directoryConfig.DirectoryName)
-	d.Set("organizational_unit_distinguished_names", flex.FlattenStringSet(directoryConfig.OrganizationalUnitDistinguishedNames))
-
+	d.Set("organizational_unit_distinguished_names", flex.FlattenStringValueSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Directory Config (%s): %w", "service_account_credentials", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "setting service_account_credentials: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
-	input := &appstream.UpdateDirectoryConfigInput{
+func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+
+	input := appstream.UpdateDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
 	}
 
 	if d.HasChange("organizational_unit_distinguished_names") {
-		input.OrganizationalUnitDistinguishedNames = flex.ExpandStringSet(d.Get("organizational_unit_distinguished_names").(*schema.Set))
+		input.OrganizationalUnitDistinguishedNames = flex.ExpandStringValueSet(d.Get("organizational_unit_distinguished_names").(*schema.Set))
 	}
 
 	if d.HasChange("service_account_credentials") {
-		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]interface{}))
+		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]any))
 	}
 
-	_, err := conn.UpdateDirectoryConfigWithContext(ctx, input)
+	_, err := conn.UpdateDirectoryConfig(ctx, &input)
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating AppStream Directory Config (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "updating AppStream Directory Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceDirectoryConfigRead(ctx, d, meta)
+	return append(diags, resourceDirectoryConfigRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+func resourceDirectoryConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	log.Printf("[DEBUG] Deleting AppStream Directory Config: (%s)", d.Id())
-	_, err := conn.DeleteDirectoryConfigWithContext(ctx, &appstream.DeleteDirectoryConfigInput{
+	log.Printf("[DEBUG] Deleting AppStream Directory Config: %s", d.Id())
+	input := appstream.DeleteDirectoryConfigInput{
 		DirectoryName: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteDirectoryConfig(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream Directory Config (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findDirectoryConfigByID(ctx context.Context, conn *appstream.Client, id string) (*awstypes.DirectoryConfig, error) {
+	input := appstream.DescribeDirectoryConfigsInput{
+		DirectoryNames: []string{id},
+	}
+
+	return findDirectoryConfig(ctx, conn, &input)
+}
+
+func findDirectoryConfig(ctx context.Context, conn *appstream.Client, input *appstream.DescribeDirectoryConfigsInput) (*awstypes.DirectoryConfig, error) {
+	output, err := findDirectoryConfigs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDirectoryConfigs(ctx context.Context, conn *appstream.Client, input *appstream.DescribeDirectoryConfigsInput) ([]awstypes.DirectoryConfig, error) {
+	var output []awstypes.DirectoryConfig
+
+	err := describeDirectoryConfigsPages(ctx, conn, input, func(page *appstream.DescribeDirectoryConfigsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.DirectoryConfigs...)
+
+		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting AppStream Directory Config (%s): %w", d.Id(), err))
+		return nil, err
 	}
 
-	return nil
+	return output, nil
 }
 
-func expandServiceAccountCredentials(tfList []interface{}) *appstream.ServiceAccountCredentials {
+func expandServiceAccountCredentials(tfList []any) *awstypes.ServiceAccountCredentials {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	attr := tfList[0].(map[string]interface{})
+	attr := tfList[0].(map[string]any)
 
-	apiObject := &appstream.ServiceAccountCredentials{
+	apiObject := &awstypes.ServiceAccountCredentials{
 		AccountName:     aws.String(attr["account_name"].(string)),
 		AccountPassword: aws.String(attr["account_password"].(string)),
 	}
@@ -182,14 +229,14 @@ func expandServiceAccountCredentials(tfList []interface{}) *appstream.ServiceAcc
 	return apiObject
 }
 
-func flattenServiceAccountCredentials(apiObject *appstream.ServiceAccountCredentials, d *schema.ResourceData) []interface{} {
+func flattenServiceAccountCredentials(apiObject *awstypes.ServiceAccountCredentials, d *schema.ResourceData) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfList := map[string]interface{}{}
-	tfList["account_name"] = aws.StringValue(apiObject.AccountName)
+	tfList := map[string]any{}
+	tfList["account_name"] = aws.ToString(apiObject.AccountName)
 	tfList["account_password"] = d.Get("service_account_credentials.0.account_password").(string)
 
-	return []interface{}{tfList}
+	return []any{tfList}
 }

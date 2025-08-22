@@ -12,6 +12,8 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
+### Basic Example
+
 ```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
@@ -30,14 +32,27 @@ resource "aws_ses_configuration_set" "test" {
 }
 ```
 
+### Tracking Options
+
+```terraform
+resource "aws_ses_configuration_set" "test" {
+  name = "some-configuration-set-test"
+
+  tracking_options {
+    custom_redirect_domain = "sub.example.com"
+  }
+}
+```
+
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required) Name of the configuration set.
 
-The following argument is optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delivery_options` - (Optional) Whether messages that use the configuration set are required to use TLS. See below.
 * `reputation_metrics_enabled` - (Optional) Whether or not Amazon SES publishes reputation metrics for the configuration set, such as bounce and complaint rates, to Amazon CloudWatch. The default value is `false`.
 * `sending_enabled` - (Optional) Whether email sending is enabled or disabled for the configuration set. The default value is `true`.
@@ -51,9 +66,9 @@ The following argument is optional:
 
 * `custom_redirect_domain` - (Optional) Custom subdomain that is used to redirect email recipients to the Amazon SES event tracking domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - SES configuration set ARN.
 * `id` - SES configuration set name.
@@ -61,8 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SES Configuration Sets can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Configuration Sets using their `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_configuration_set.test
+  id = "some-configuration-set-test"
+}
 ```
-$ terraform import aws_ses_configuration_set.test some-configuration-set-test
+
+Using `terraform import`, import SES Configuration Sets using their `name`. For example:
+
+```console
+% terraform import aws_ses_configuration_set.test some-configuration-set-test
 ```

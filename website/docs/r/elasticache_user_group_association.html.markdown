@@ -10,7 +10,7 @@ description: |-
 
 Associate an existing ElastiCache user and an existing user group.
 
-~> **NOTE:** Terraform will detect changes in the `aws_elasticache_user_group` since `aws_elasticache_user_group_association` changes the user IDs associated with the user group. You can ignore these changes with the `lifecycle` `ignore_changes` meta argument as shown in the example.
+~> Terraform will detect changes in the `aws_elasticache_user_group` since `aws_elasticache_user_group_association` changes the user IDs associated with the user group. You can ignore these changes with the `lifecycle` `ignore_changes` meta argument as shown in the example.
 
 ## Example Usage
 
@@ -49,19 +49,36 @@ resource "aws_elasticache_user_group_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `user_group_id` - (Required) ID of the user group.
 * `user_id` - (Required) ID of the user to associated with the user group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-ElastiCache user group associations can be imported using the `user_group_id` and `user_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache user group associations using the `user_group_id` and `user_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user_group_association.example
+  id = "userGoupId1,userId"
+}
 ```
-$ terraform import aws_elasticache_user_group_association.example userGoupId1,userId
+
+Using `terraform import`, import ElastiCache user group associations using the `user_group_id` and `user_id`. For example:
+
+```console
+% terraform import aws_elasticache_user_group_association.example userGoupId1,userId
 ```

@@ -30,8 +30,9 @@ resource "aws_appintegrations_event_integration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Event Integration.
 * `eventbridge_bus` - (Required) EventBridge bus.
 * `event_filter` - (Required) Block that defines the configuration information for the event filter. The Event Filter block is documented below.
@@ -42,9 +43,9 @@ A `event_filter` block supports the following arguments:
 
 * `source` - (Required) Source of the events.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Event Integration.
 * `id` - Identifier of the Event Integration which is the name of the Event Integration.
@@ -52,8 +53,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Amazon AppIntegrations Event Integrations can be imported using the `name` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon AppIntegrations Event Integrations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appintegrations_event_integration.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_appintegrations_event_integration.example example-name
+
+Using `terraform import`, import Amazon AppIntegrations Event Integrations using the `name`. For example:
+
+```console
+% terraform import aws_appintegrations_event_integration.example example-name
 ```

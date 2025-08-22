@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestSortEndpointsString(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -31,6 +36,8 @@ func TestSortEndpointsString(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfkafka.SortEndpointsString(testCase.Input)
 
 			if got != testCase.Expected {

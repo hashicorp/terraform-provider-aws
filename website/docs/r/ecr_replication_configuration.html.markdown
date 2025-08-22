@@ -79,8 +79,9 @@ resource "aws_ecr_replication_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_configuration` - (Required) Replication configuration for a registry. See [Replication Configuration](#replication-configuration).
 
 ### Replication Configuration
@@ -102,16 +103,25 @@ The following arguments are supported:
 * `filter` - (Required) The repository filter details.
 * `filter_type` - (Required) The repository filter type. The only supported value is `PREFIX_MATCH`, which is a repository name prefix specified with the filter parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `registry_id` - The registry ID where the replication configuration was created.
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Replication Configuration using the `registry_id`. For example:
 
+```terraform
+import {
+  to = aws_ecr_replication_configuration.service
+  id = "012345678912"
+}
 ```
-$ terraform import aws_ecr_replication_configuration.service 012345678912
+
+Using `terraform import`, import ECR Replication Configuration using the `registry_id`. For example:
+
+```console
+% terraform import aws_ecr_replication_configuration.service 012345678912
 ```

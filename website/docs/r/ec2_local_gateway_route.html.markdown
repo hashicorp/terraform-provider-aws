@@ -22,22 +22,32 @@ resource "aws_ec2_local_gateway_route" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_cidr_block` - (Required) IPv4 CIDR range used for destination matches. Routing decisions are based on the most specific match.
 * `local_gateway_route_table_id` - (Required) Identifier of EC2 Local Gateway Route Table.
 * `local_gateway_virtual_interface_group_id` - (Required) Identifier of EC2 Local Gateway Virtual Interface Group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`)
 
 ## Import
 
-`aws_ec2_local_gateway_route` can be imported by using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
 
+```terraform
+import {
+  to = aws_ec2_local_gateway_route.example
+  id = "lgw-rtb-12345678_172.16.0.0/16"
+}
 ```
-$ terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
+
+Using `terraform import`, import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
+
+```console
+% terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
 ```

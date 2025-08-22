@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/YakDriver/regexache"
 )
 
-func validEndpointID(v interface{}, k string) (ws []string, es []error) {
+func validEndpointID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 255 {
 		es = append(es, fmt.Errorf("%q must not be longer than 255 characters", k))
 	}
-	if !regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]+$").MatchString(val) {
+	if !regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$").MatchString(val) {
 		es = append(es, fmt.Errorf("%q must start with a letter, only contain alphanumeric characters and hyphens", k))
 	}
 	if strings.Contains(val, "--") {
@@ -25,13 +29,13 @@ func validEndpointID(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validReplicationInstanceID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationInstanceID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 63 {
 		es = append(es, fmt.Errorf("%q must not be longer than 63 characters", k))
 	}
-	if !regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]+$").MatchString(val) {
+	if !regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$").MatchString(val) {
 		es = append(es, fmt.Errorf("%q must start with a letter, only contain alphanumeric characters and hyphens", k))
 	}
 	if strings.Contains(val, "--") {
@@ -44,7 +48,7 @@ func validReplicationInstanceID(v interface{}, k string) (ws []string, es []erro
 	return
 }
 
-func validReplicationSubnetGroupID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationSubnetGroupID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if val == "default" {
@@ -53,20 +57,20 @@ func validReplicationSubnetGroupID(v interface{}, k string) (ws []string, es []e
 	if len(val) > 255 {
 		es = append(es, fmt.Errorf("%q must not be longer than 255 characters", k))
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9. _-]+$`).MatchString(val) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_ .-]+$`).MatchString(val) {
 		es = append(es, fmt.Errorf("%q must only contain alphanumeric characters, periods, spaces, underscores and hyphens", k))
 	}
 
 	return
 }
 
-func validReplicationTaskID(v interface{}, k string) (ws []string, es []error) {
+func validReplicationTaskID(v any, k string) (ws []string, es []error) {
 	val := v.(string)
 
 	if len(val) > 255 {
 		es = append(es, fmt.Errorf("%q must not be longer than 255 characters", k))
 	}
-	if !regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]+$").MatchString(val) {
+	if !regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$").MatchString(val) {
 		es = append(es, fmt.Errorf("%q must start with a letter, only contain alphanumeric characters and hyphens", k))
 	}
 	if strings.Contains(val, "--") {

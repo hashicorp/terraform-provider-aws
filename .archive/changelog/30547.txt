@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function_url: Add `invoke_mode` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function_url: Add `invoke_mode` attribute
+```

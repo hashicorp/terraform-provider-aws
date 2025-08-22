@@ -36,20 +36,30 @@ resource "aws_api_gateway_documentation_part" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `version` - (Required) Version identifier of the API documentation snapshot.
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `description` - (Optional) Description of the API documentation version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ## Import
 
-API Gateway documentation versions can be imported using `REST-API-ID/VERSION`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_documentation_version.example
+  id = "5i4e1ko720/example-version"
+}
 ```
-$ terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
+
+Using `terraform import`, import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
+
+```console
+% terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
 ```

@@ -34,15 +34,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the InputSecurityGroup. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Whitelist Rules
 
 * `cidr` (Required) - The IPv4 CIDR that's whitelisted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - InputSecurityGroup Id.
 * `arn` - ARN of the InputSecurityGroup.
@@ -50,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
 * `update` - (Default `5m`)
@@ -58,8 +59,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive InputSecurityGroup can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive InputSecurityGroup using the `id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_input_security_group.example
+  id = "123456"
+}
 ```
-$ terraform import aws_medialive_input_security_group.example 123456
+
+Using `terraform import`, import MediaLive InputSecurityGroup using the `id`. For example:
+
+```console
+% terraform import aws_medialive_input_security_group.example 123456
 ```

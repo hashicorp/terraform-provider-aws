@@ -1,10 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
+
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/jmespath/go-jmespath"
 )
 
 const (
@@ -18,12 +25,12 @@ type IAMPolicyDoc struct {
 }
 
 type IAMPolicyStatement struct {
-	Sid           string
+	Sid           string                         `json:",omitempty"`
 	Effect        string                         `json:",omitempty"`
-	Actions       interface{}                    `json:"Action,omitempty"`
-	NotActions    interface{}                    `json:"NotAction,omitempty"`
-	Resources     interface{}                    `json:"Resource,omitempty"`
-	NotResources  interface{}                    `json:"NotResource,omitempty"`
+	Actions       any                            `json:"Action,omitempty"`
+	NotActions    any                            `json:"NotAction,omitempty"`
+	Resources     any                            `json:"Resource,omitempty"`
+	NotResources  any                            `json:"NotResource,omitempty"`
 	Principals    IAMPolicyStatementPrincipalSet `json:"Principal,omitempty"`
 	NotPrincipals IAMPolicyStatementPrincipalSet `json:"NotPrincipal,omitempty"`
 	Conditions    IAMPolicyStatementConditionSet `json:"Condition,omitempty"`
@@ -31,13 +38,13 @@ type IAMPolicyStatement struct {
 
 type IAMPolicyStatementPrincipal struct {
 	Type        string
-	Identifiers interface{}
+	Identifiers any
 }
 
 type IAMPolicyStatementCondition struct {
 	Test     string
 	Variable string
-	Values   interface{}
+	Values   any
 }
 
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
@@ -76,9 +83,9 @@ func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 }
 
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
-	raw := map[string]interface{}{}
+	raw := map[string]any{}
 
-	// Although IAM documentation says, that "*" and {"AWS": "*"} are equivalent
+	// Although IAM documentation says that "*" and {"AWS": "*"} are equivalent
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html),
 	// in practice they are not for IAM roles. IAM will return an error if trust
 	// policy have "*" or {"*": "*"} as principal, but will accept {"AWS": "*"}.
@@ -107,7 +114,8 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = make([]string, 0, len(i)+1)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 			}
-			sort.Sort(sort.Reverse(sort.StringSlice(i)))
+			slices.Sort(i)
+			slices.Reverse(i)
 			raw[p.Type] = append(raw[p.Type].([]string), i...)
 		case string:
 			switch v := raw[p.Type].(type) {
@@ -132,7 +140,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	var out IAMPolicyStatementPrincipalSet
 
-	var data interface{}
+	var data any
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -140,16 +148,17 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	switch t := data.(type) {
 	case string:
 		out = append(out, IAMPolicyStatementPrincipal{Type: "*", Identifiers: []string{"*"}})
-	case map[string]interface{}:
-		for key, value := range data.(map[string]interface{}) {
+	case map[string]any:
+		for key, value := range data.(map[string]any) {
 			switch vt := value.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: value.(string)})
-			case []interface{}:
+			case []any:
 				values := []string{}
-				for _, v := range value.([]interface{}) {
+				for _, v := range value.([]any) {
 					values = append(values, v.(string))
 				}
+				slices.Sort(values)
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
@@ -164,23 +173,33 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 }
 
 func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
-	raw := map[string]map[string]interface{}{}
+	raw := map[string]map[string]any{}
 
 	for _, c := range cs {
 		if _, ok := raw[c.Test]; !ok {
-			raw[c.Test] = map[string]interface{}{}
+			raw[c.Test] = map[string]any{}
+		}
+		if _, ok := raw[c.Test][c.Variable]; !ok {
+			raw[c.Test][c.Variable] = []string{}
 		}
 		switch i := c.Values.(type) {
 		case []string:
-			if _, ok := raw[c.Test][c.Variable]; !ok {
-				raw[c.Test][c.Variable] = make([]string, 0, len(i))
-			}
 			// order matters with values so not sorting here
 			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i...)
 		case string:
-			raw[c.Test][c.Variable] = i
+			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i)
 		default:
 			return nil, fmt.Errorf("Unsupported data type for IAMPolicyStatementConditionSet: %s", i)
+		}
+	}
+
+	// flatten entries with a single item to match AWS IAM syntax
+	for k1 := range raw {
+		for k2 := range raw[k1] {
+			items := raw[k1][k2].([]string)
+			if len(items) == 1 {
+				raw[k1][k2] = items[0]
+			}
 		}
 	}
 
@@ -190,7 +209,7 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	var out IAMPolicyStatementConditionSet
 
-	var data map[string]map[string]interface{}
+	var data map[string]map[string]any
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
@@ -202,7 +221,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
 			case bool:
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
-			case []interface{}:
+			case []any:
 				values := []string{}
 				for _, v := range var_values {
 					values = append(values, v.(string))
@@ -216,7 +235,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func policyDecodeConfigStringList(lI []interface{}) interface{} {
+func policyDecodeConfigStringList(lI []any) any {
 	if len(lI) == 1 {
 		return lI[0].(string)
 	}
@@ -224,6 +243,61 @@ func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	for i, vI := range lI {
 		ret[i] = vI.(string)
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
+	slices.Sort(ret)
+	slices.Reverse(ret)
 	return ret
+}
+
+// PolicyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// Assumes that non-"AWS" Principals are valid
+// The value can be a single string or a slice of strings
+// Valid strings are either an ARN or an AWS account ID
+func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+	var policyData any
+	err := json.Unmarshal([]byte(policy), &policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	principals, ok := result.([]any)
+	if !ok {
+		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
+	}
+
+	for _, principal := range principals {
+		switch x := principal.(type) {
+		case string:
+			if !IsValidPolicyAWSPrincipal(x) {
+				return false, nil
+			}
+		case []string:
+			for _, s := range x {
+				if !IsValidPolicyAWSPrincipal(s) {
+					return false, nil
+				}
+			}
+		}
+	}
+
+	return true, nil
+}
+
+// IsValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// That is: either an ARN, an AWS account ID, or `*`
+func IsValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+	if principal == "*" {
+		return true
+	}
+	if arn.IsARN(principal) {
+		return true
+	}
+	if regexache.MustCompile(`^\d{12}$`).MatchString(principal) {
+		return true
+	}
+	return false
 }

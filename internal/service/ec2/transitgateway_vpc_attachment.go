@@ -1,78 +1,96 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTransitGatewayVPCAttachment() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_vpc_attachment", name="Transit Gateway VPC Attachment")
+// @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
+func resourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayVPCAttachmentCreate,
-		Read:   resourceTransitGatewayVPCAttachmentRead,
-		Update: resourceTransitGatewayVPCAttachmentUpdate,
-		Delete: resourceTransitGatewayVPCAttachmentDelete,
+		CreateWithoutTimeout: resourceTransitGatewayVPCAttachmentCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayVPCAttachmentRead,
+		UpdateWithoutTimeout: resourceTransitGatewayVPCAttachmentUpdate,
+		DeleteWithoutTimeout: resourceTransitGatewayVPCAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.ApplianceModeSupportValueDisable,
-				ValidateFunc: validation.StringInSlice(ec2.ApplianceModeSupportValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ApplianceModeSupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.ApplianceModeSupportValue](),
+			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"dns_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.DnsSupportValueEnable,
-				ValidateFunc: validation.StringInSlice(ec2.DnsSupportValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.DnsSupportValueEnable,
+				ValidateDiagFunc: enum.Validate[awstypes.DnsSupportValue](),
 			},
 			"ipv6_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.Ipv6SupportValueDisable,
-				ValidateFunc: validation.StringInSlice(ec2.Ipv6SupportValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.Ipv6SupportValueDisable,
+				ValidateDiagFunc: enum.Validate[awstypes.Ipv6SupportValue](),
 			},
-			"subnet_ids": {
+			"security_group_referencing_support": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
+			},
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_default_route_table_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 			"transit_gateway_default_route_table_propagation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -86,105 +104,118 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayVPCAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayID := d.Get("transit_gateway_id").(string)
+	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
-		Options: &ec2.CreateTransitGatewayVpcAttachmentRequestOptions{
-			ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
-			DnsSupport:           aws.String(d.Get("dns_support").(string)),
-			Ipv6Support:          aws.String(d.Get("ipv6_support").(string)),
+		Options: &awstypes.CreateTransitGatewayVpcAttachmentRequestOptions{
+			ApplianceModeSupport: awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
+			DnsSupport:           awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+			Ipv6Support:          awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
 		},
-		SubnetIds:         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:         flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayAttachment),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway VPC Attachment: %s", input)
-	output, err := conn.CreateTransitGatewayVpcAttachment(input)
+	if v, ok := d.GetOk("security_group_referencing_support"); ok {
+		input.Options.SecurityGroupReferencingSupport = awstypes.SecurityGroupReferencingSupportValue(v.(string))
+	}
+
+	output, err := conn.CreateTransitGatewayVpcAttachment(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway VPC Attachment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway VPC Attachment: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.TransitGatewayVpcAttachment.TransitGatewayAttachmentId))
+	d.SetId(aws.ToString(output.TransitGatewayVpcAttachment.TransitGatewayAttachmentId))
 
-	if _, err := WaitTransitGatewayVPCAttachmentCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway VPC Attachment (%s) create: %w", d.Id(), err)
+	if _, err := waitTransitGatewayVPCAttachmentCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways.
-	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(output.TransitGatewayVpcAttachment.VpcOwnerId) {
-		if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-			return err
+	if aws.ToString(transitGateway.OwnerId) == aws.ToString(output.TransitGatewayVpcAttachment.VpcOwnerId) {
+		// Default values of transit_gateway_default_route_table_association and transit_gateway_default_route_table_propagation are both 'true'.
+		transitGatewayDefaultRouteTableAssociation := true
+		if v := d.GetRawConfig().GetAttr("transit_gateway_default_route_table_association"); v.IsKnown() && !v.IsNull() {
+			transitGatewayDefaultRouteTableAssociation = v.True()
 		}
 
-		if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-			return err
+		if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), transitGatewayDefaultRouteTableAssociation); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway VPC Attachment: %s", err)
+		}
+
+		transitGatewayDefaultRouteTablePropagation := true
+		if v := d.GetRawConfig().GetAttr("transit_gateway_default_route_table_propagation"); v.IsKnown() && !v.IsNull() {
+			transitGatewayDefaultRouteTablePropagation = v.True()
+		}
+
+		if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), transitGatewayDefaultRouteTablePropagation); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway VPC Attachment: %s", err)
 		}
 	}
 
-	return resourceTransitGatewayVPCAttachmentRead(d, meta)
+	return append(diags, resourceTransitGatewayVPCAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachmentByID(conn, d.Id())
+	transitGatewayVPCAttachment, err := findTransitGatewayVPCAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway VPC Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway VPC Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 	}
 
-	transitGatewayID := aws.StringValue(transitGatewayVPCAttachment.TransitGatewayId)
-	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+	transitGatewayID := aws.ToString(transitGatewayVPCAttachment.TransitGatewayId)
+	transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways.
 	transitGatewayDefaultRouteTableAssociation := true
 	transitGatewayDefaultRouteTablePropagation := true
 
-	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(transitGatewayVPCAttachment.VpcOwnerId) {
-		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId); transitGatewayRouteTableID != "" {
-			_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+	if aws.ToString(transitGateway.OwnerId) == aws.ToString(transitGatewayVPCAttachment.VpcOwnerId) {
+		if transitGatewayRouteTableID := aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId); transitGatewayRouteTableID != "" {
+			_, err := findTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
 			if tfresource.NotFound(err) {
 				transitGatewayDefaultRouteTableAssociation = false
 			} else if err != nil {
-				return fmt.Errorf("reading EC2 Transit Gateway Route Table Association (%s): %w", TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Association (%s): %s", transitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
 			}
 		} else {
 			transitGatewayDefaultRouteTableAssociation = false
 		}
 
-		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId); transitGatewayRouteTableID != "" {
-			_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+		if transitGatewayRouteTableID := aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId); transitGatewayRouteTableID != "" {
+			_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
 			if tfresource.NotFound(err) {
 				transitGatewayDefaultRouteTablePropagation = false
 			} else if err != nil {
-				return fmt.Errorf("reading EC2 Transit Gateway Route Table Propagation (%s): %w", TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
 			}
 		} else {
 			transitGatewayDefaultRouteTablePropagation = false
@@ -192,114 +223,108 @@ func resourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interf
 	}
 
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
+	vpcOwnerID := aws.ToString(transitGatewayVPCAttachment.VpcOwnerId)
+	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, vpcOwnerID, d.Id()))
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
+	d.Set(names.AttrSubnetIDs, transitGatewayVPCAttachment.SubnetIds)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
-	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
-	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
+	d.Set("vpc_owner_id", vpcOwnerID)
 
-	tags := KeyValueTags(transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "subnet_ids") {
+	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "security_group_referencing_support", names.AttrSubnetIDs) {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
-			Options: &ec2.ModifyTransitGatewayVpcAttachmentRequestOptions{
-				ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
-				DnsSupport:           aws.String(d.Get("dns_support").(string)),
-				Ipv6Support:          aws.String(d.Get("ipv6_support").(string)),
+			Options: &awstypes.ModifyTransitGatewayVpcAttachmentRequestOptions{
+				ApplianceModeSupport:            awstypes.ApplianceModeSupportValue(d.Get("appliance_mode_support").(string)),
+				DnsSupport:                      awstypes.DnsSupportValue(d.Get("dns_support").(string)),
+				Ipv6Support:                     awstypes.Ipv6SupportValue(d.Get("ipv6_support").(string)),
+				SecurityGroupReferencingSupport: awstypes.SecurityGroupReferencingSupportValue(d.Get("security_group_referencing_support").(string)),
 			},
 			TransitGatewayAttachmentId: aws.String(d.Id()),
 		}
 
-		o, n := d.GetChange("subnet_ids")
+		o, n := d.GetChange(names.AttrSubnetIDs)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
 		if add := ns.Difference(os); add.Len() > 0 {
-			input.AddSubnetIds = flex.ExpandStringSet(add)
+			input.AddSubnetIds = flex.ExpandStringValueSet(add)
 		}
 
 		if del := os.Difference(ns); del.Len() > 0 {
-			input.RemoveSubnetIds = flex.ExpandStringSet(del)
+			input.RemoveSubnetIds = flex.ExpandStringValueSet(del)
 		}
 
-		if _, err := conn.ModifyTransitGatewayVpcAttachment(input); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway VPC Attachment (%s): %w", d.Id(), err)
+		if _, err := conn.ModifyTransitGatewayVpcAttachment(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitTransitGatewayVPCAttachmentUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for EC2 Transit Gateway VPC Attachment (%s) update: %w", d.Id(), err)
+		if _, err := waitTransitGatewayVPCAttachmentUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
-		transitGatewayID := d.Get("transit_gateway_id").(string)
-		transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
+		transitGateway, err := findTransitGatewayByID(ctx, conn, transitGatewayID)
 
 		if err != nil {
-			return fmt.Errorf("reading EC2 Transit Gateway (%s): %w", transitGatewayID, err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
-			if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-				return err
+			if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.ToString(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 			}
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_propagation") {
-			if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-				return err
+			if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.ToString(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway VPC Attachment (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayVPCAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayVpcAttachment(&ec2.DeleteTransitGatewayVpcAttachmentInput{
+	input := ec2.DeleteTransitGatewayVpcAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTransitGatewayVpcAttachment(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway VPC Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayVPCAttachmentDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway VPC Attachment (%s) delete: %w", d.Id(), err)
+	if err := waitTransitGatewayVPCAttachmentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway VPC Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func transitGatewayAttachmentARN(ctx context.Context, c *conns.AWSClient, accountID, attachmentID string) string {
+	return c.RegionalARNWithAccount(ctx, names.EC2, accountID, "transit-gateway-attachment/"+attachmentID)
 }

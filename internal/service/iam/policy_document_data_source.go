@@ -1,134 +1,177 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
 
-func DataSourcePolicyDocument() *schema.Resource {
-	setOfString := &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
-	}
-
+// @SDKDataSource("aws_iam_policy_document", name="Policy Document")
+func dataSourcePolicyDocument() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePolicyDocumentRead,
+		ReadWithoutTimeout: dataSourcePolicyDocumentRead,
 
-		Schema: map[string]*schema.Schema{
-			"json": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"override_json": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use the attribute \"override_policy_documents\" instead.",
-			},
-			"override_policy_documents": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"policy_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_json": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use the attribute \"source_policy_documents\" instead.",
-			},
-			"source_policy_documents": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsJSON,
+		SchemaFunc: func() map[string]*schema.Schema {
+			principalsSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				}
+			}
+			setOfStringSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrJSON: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"statement": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": setOfString,
-						"condition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"test": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"values": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+				"minified_json": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"override_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated: "override_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
+				},
+				"override_policy_documents": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsJSON,
+					},
+				},
+				"policy_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"source_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated: "source_json is deprecated. This argument is retained only for " +
+						"backward compatibility with previous versions of this data source.",
+				},
+				"source_policy_documents": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsJSON,
+					},
+				},
+				"statement": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrActions: setOfStringSchema(),
+							names.AttrCondition: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"test": {
+											Type:     schema.TypeString,
+											Required: true,
 										},
-									},
-									"variable": {
-										Type:     schema.TypeString,
-										Required: true,
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"variable": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"effect": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "Allow",
-							ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
-						},
-						"not_actions":    setOfString,
-						"not_principals": dataSourcePolicyPrincipalSchema(),
-						"not_resources":  setOfString,
-						"principals":     dataSourcePolicyPrincipalSchema(),
-						"resources":      setOfString,
-						"sid": {
-							Type:     schema.TypeString,
-							Optional: true,
+							"effect": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "Allow",
+								ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
+							},
+							"not_actions":       setOfStringSchema(),
+							"not_principals":    principalsSchema(),
+							"not_resources":     setOfStringSchema(),
+							"principals":        principalsSchema(),
+							names.AttrResources: setOfStringSchema(),
+							"sid": {
+								// Because policy documents are widely used outside IAM, we don't enforce
+								// IAM validation rules requiring alphanumeric and no spaces.
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2012-10-17",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2008-10-17",
-					"2012-10-17",
-				}, false),
-			},
+				names.AttrVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "2012-10-17",
+					ValidateFunc: validation.StringInSlice([]string{
+						"2008-10-17",
+						"2012-10-17",
+					}, false),
+				},
+			}
 		},
 	}
 }
 
-func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	mergedDoc := &IAMPolicyDoc{}
 
-	if v, ok := d.GetOk("source_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), mergedDoc); err != nil {
-			return err
-		}
-	}
-
-	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("source_policy_documents"); ok && len(v.([]any)) > 0 {
 		// generate sid map to assure there are no duplicates in source jsons
 		sidMap := make(map[string]struct{})
 		for _, stmt := range mergedDoc.Statements {
@@ -138,21 +181,21 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		// merge sourceDocs in order specified
-		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
+		for sourceJSONIndex, sourceJSON := range v.([]any) {
 			if sourceJSON == nil {
 				continue
 			}
 
 			sourceDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
-				return err
+				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: %s", sourceJSONIndex, err)
 			}
 
 			// assure all statements in sourceDoc are unique before merging
 			for stmtIndex, stmt := range sourceDoc.Statements {
 				if stmt.Sid != "" {
 					if _, sidExists := sidMap[stmt.Sid]; sidExists {
-						return fmt.Errorf("duplicate Sid (%s) in source_policy_documents (item %d; statement %d). Remove the Sid or ensure Sids are unique.", stmt.Sid, sourceJSONIndex, stmtIndex)
+						return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging source document %d: duplicate Sid (%s) in source_policy_documents (statement %d). Remove the Sid or ensure Sids are unique.", sourceJSONIndex, stmt.Sid, stmtIndex)
 					}
 					sidMap[stmt.Sid] = struct{}{}
 				}
@@ -160,12 +203,11 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 			mergedDoc.Merge(sourceDoc)
 		}
-
 	}
 
 	// process the current document
 	doc := &IAMPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
@@ -173,19 +215,19 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if cfgStmts, hasCfgStmts := d.GetOk("statement"); hasCfgStmts {
-		var cfgStmtIntf = cfgStmts.([]interface{})
+		var cfgStmtIntf = cfgStmts.([]any)
 		stmts := make([]*IAMPolicyStatement, len(cfgStmtIntf))
 		sidMap := make(map[string]struct{})
 
 		for i, stmtI := range cfgStmtIntf {
-			cfgStmt := stmtI.(map[string]interface{})
+			cfgStmt := stmtI.(map[string]any)
 			stmt := &IAMPolicyStatement{
 				Effect: cfgStmt["effect"].(string),
 			}
 
 			if sid, ok := cfgStmt["sid"]; ok {
 				if _, ok := sidMap[sid.(string)]; ok {
-					return fmt.Errorf("duplicate Sid (%s). Remove the Sid or ensure the Sid is unique.", sid.(string))
+					return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: duplicate Sid (%s). Remove the Sid or ensure the Sid is unique.", sid.(string))
 				}
 				stmt.Sid = sid.(string)
 				if len(stmt.Sid) > 0 {
@@ -193,20 +235,20 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 				}
 			}
 
-			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
+			if actions := cfgStmt[names.AttrActions].(*schema.Set).List(); len(actions) > 0 {
 				stmt.Actions = policyDecodeConfigStringList(actions)
 			}
 			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {
 				stmt.NotActions = policyDecodeConfigStringList(actions)
 			}
 
-			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
+			if resources := cfgStmt[names.AttrResources].(*schema.Set).List(); len(resources) > 0 {
 				var err error
 				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					policyDecodeConfigStringList(resources), doc.Version,
 				)
 				if err != nil {
-					return fmt.Errorf("error reading resources: %w", err)
+					return sdkdiag.AppendErrorf(diags, "reading resources: %s", err)
 				}
 			}
 			if notResources := cfgStmt["not_resources"].(*schema.Set).List(); len(notResources) > 0 {
@@ -215,7 +257,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 					policyDecodeConfigStringList(notResources), doc.Version,
 				)
 				if err != nil {
-					return fmt.Errorf("error reading not_resources: %w", err)
+					return sdkdiag.AppendErrorf(diags, "reading not_resources: %s", err)
 				}
 			}
 
@@ -223,7 +265,7 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 				var err error
 				stmt.Principals, err = dataSourcePolicyDocumentMakePrincipals(principals, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading principals: %w", err)
+					return sdkdiag.AppendErrorf(diags, "reading principals: %s", err)
 				}
 			}
 
@@ -231,15 +273,15 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 				var err error
 				stmt.NotPrincipals, err = dataSourcePolicyDocumentMakePrincipals(notPrincipals, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading not_principals: %w", err)
+					return sdkdiag.AppendErrorf(diags, "reading not_principals: %s", err)
 				}
 			}
 
-			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
+			if conditions := cfgStmt[names.AttrCondition].(*schema.Set).List(); len(conditions) > 0 {
 				var err error
 				stmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {
-					return fmt.Errorf("error reading condition: %w", err)
+					return sdkdiag.AppendErrorf(diags, "reading condition: %s", err)
 				}
 			}
 
@@ -247,49 +289,50 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		doc.Statements = stmts
-
 	}
 
 	// merge our current document into mergedDoc
 	mergedDoc.Merge(doc)
 
 	// merge override_policy_documents policies into mergedDoc in order specified
-	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]interface{})) > 0 {
-		for _, overrideJSON := range v.([]interface{}) {
+	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]any)) > 0 {
+		for overrideJSONIndex, overrideJSON := range v.([]any) {
+			if overrideJSON == nil {
+				continue
+			}
 			overrideDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
-				return err
+				return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: merging override document %d: %s", overrideJSONIndex, err)
 			}
 
 			mergedDoc.Merge(overrideDoc)
 		}
-
-	}
-
-	// merge in override_json
-	if v, ok := d.GetOk("override_json"); ok {
-		overrideDoc := &IAMPolicyDoc{}
-		if err := json.Unmarshal([]byte(v.(string)), overrideDoc); err != nil {
-			return err
-		}
-
-		mergedDoc.Merge(overrideDoc)
 	}
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
+
+	jsonMinDoc, err := json.Marshal(mergedDoc)
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
+	}
+	jsonMinString := string(jsonMinDoc)
+
+	d.Set("minified_json", jsonMinString)
+
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
-	return nil
+	return diags
 }
 
-func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (interface{}, error) {
+func dataSourcePolicyDocumentReplaceVarsInList(in any, version string) (any, error) {
 	switch v := in.(type) {
 	case string:
 		if version == "2008-10-17" && strings.Contains(v, "&{") {
@@ -310,21 +353,21 @@ func dataSourcePolicyDocumentReplaceVarsInList(in interface{}, version string) (
 	}
 }
 
-func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (IAMPolicyStatementConditionSet, error) {
+func dataSourcePolicyDocumentMakeConditions(in []any, version string) (IAMPolicyStatementConditionSet, error) {
 	out := make([]IAMPolicyStatementCondition, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
+		item := itemI.(map[string]any)
 		out[i] = IAMPolicyStatementCondition{
 			Test:     item["test"].(string),
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.StringValueSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]any))),
 			version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading values: %w", err)
+			return nil, fmt.Errorf("reading values: %w", err)
 		}
 		itemValues := out[i].Values.([]string)
 		if len(itemValues) == 1 {
@@ -334,13 +377,13 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 	return IAMPolicyStatementConditionSet(out), nil
 }
 
-func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (IAMPolicyStatementPrincipalSet, error) {
+func dataSourcePolicyDocumentMakePrincipals(in []any, version string) (IAMPolicyStatementPrincipalSet, error) {
 	out := make([]IAMPolicyStatementPrincipal, len(in))
 	for i, itemI := range in {
 		var err error
-		item := itemI.(map[string]interface{})
+		item := itemI.(map[string]any)
 		out[i] = IAMPolicyStatementPrincipal{
-			Type: item["type"].(string),
+			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			policyDecodeConfigStringList(
@@ -348,30 +391,8 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 			), version,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("error reading identifiers: %w", err)
+			return nil, fmt.Errorf("reading identifiers: %w", err)
 		}
 	}
 	return IAMPolicyStatementPrincipalSet(out), nil
-}
-
-func dataSourcePolicyPrincipalSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"type": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"identifiers": {
-					Type:     schema.TypeSet,
-					Required: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-			},
-		},
-	}
 }

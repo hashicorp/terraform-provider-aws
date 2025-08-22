@@ -3,43 +3,67 @@ package xray
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/aws/aws-sdk-go/service/xray/xrayiface"
+	"github.com/YakDriver/smarterr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/xray"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists xray service tags.
+// listTags lists xray service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn xrayiface.XRayAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn xrayiface.XRayAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &xray.ListTagsForResourceInput{
+func listTags(ctx context.Context, conn *xray.Client, identifier string, optFns ...func(*xray.Options)) (tftags.KeyValueTags, error) {
+	input := xray.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	var output []awstypes.Tag
 
-	if err != nil {
-		return tftags.New(nil), err
+	pages := xray.NewListTagsForResourcePaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), smarterr.NewError(err)
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return keyValueTags(ctx, output), nil
+}
+
+// ListTags lists xray service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier)
+
+	if err != nil {
+		return smarterr.NewError(err)
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
 
-// Tags returns xray service tags.
-func Tags(tags tftags.KeyValueTags) []*xray.Tag {
-	result := make([]*xray.Tag, 0, len(tags))
+// svcTags returns xray service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &xray.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -50,52 +74,80 @@ func Tags(tags tftags.KeyValueTags) []*xray.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from xray service tags.
-func KeyValueTags(tags []*xray.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from xray service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates xray service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func UpdateTags(conn xrayiface.XRayAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn xrayiface.XRayAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
-
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &xray.UntagResourceInput{
-			ResourceARN: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
-		}
-
-		_, err := conn.UntagResourceWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
-		}
-	}
-
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &xray.TagResourceInput{
-			ResourceARN: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
-		}
-
-		_, err := conn.TagResourceWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+// getTagsIn returns xray service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []awstypes.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
 		}
 	}
 
 	return nil
+}
+
+// setTagsOut sets xray service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates xray service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn *xray.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*xray.Options)) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.XRay)
+	if len(removedTags) > 0 {
+		input := xray.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     removedTags.Keys(),
+		}
+
+		_, err := conn.UntagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.XRay)
+	if len(updatedTags) > 0 {
+		input := xray.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        svcTags(updatedTags),
+		}
+
+		_, err := conn.TagResource(ctx, &input, optFns...)
+
+		if err != nil {
+			return smarterr.NewError(err)
+		}
+	}
+
+	return nil
+}
+
+// UpdateTags updates xray service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).XRayClient(ctx), identifier, oldTags, newTags)
 }

@@ -117,8 +117,9 @@ resource "aws_lex_intent" "order_flowers_intent" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `conclusion_statement` - (Optional) The statement that you want Amazon Lex to convey to the user
 after the intent is successfully fulfilled by the Lambda function. This element is relevant only if
 you provide a Lambda function in the `fulfillment_activity`. If you return the intent to the client
@@ -240,9 +241,9 @@ Attributes are documented under [message](#message). Must contain between 1 and 
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not
@@ -253,7 +254,7 @@ included as an argument because the resource will add it automatically when upda
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `1m`)
 * `update` - (Default `1m`)
@@ -261,8 +262,17 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-Intents can be imported using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import intents using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_intent.order_flowers_intent
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_intent.order_flowers_intent OrderFlowers
+
+Using `terraform import`, import intents using their name. For example:
+
+```console
+% terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```

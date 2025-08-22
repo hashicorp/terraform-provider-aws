@@ -91,10 +91,9 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 ## Argument Reference
 
-~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
+This resource supports the following arguments:
 
-The following arguments are supported:
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
 * `associated_gateway_id` - (Optional) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
 Used for single account Direct Connect gateway associations.
@@ -104,18 +103,22 @@ Used for cross-account Direct Connect gateway associations.
 Used for cross-account Direct Connect gateway associations.
 * `allowed_prefixes` - (Optional) VPC prefixes (CIDRs) to advertise to the Direct Connect gateway. Defaults to the CIDR block of the VPC associated with the Virtual Gateway. To enable drift detection, must be configured.
 
-## Attributes Reference
+~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
 
-In addition to all arguments above, the following attributes are exported:
+~> **NOTE:** If the `associated_gateway_id` is in another region, an [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) in a new provider block for that region should be specified.
 
-* `id` - The ID of the Direct Connect gateway association resource.
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
 * `associated_gateway_type` - The type of the associated gateway, `transitGateway` or `virtualPrivateGateway`.
 * `dx_gateway_association_id` - The ID of the Direct Connect gateway association.
 * `dx_gateway_owner_account_id` - The ID of the AWS account that owns the Direct Connect gateway.
+* `transit_gateway_attachment_id` - The ID of the Transit Gateway Attachment when the type is `transitGateway`.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
@@ -123,9 +126,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect gateway associations can be imported using `dx_gateway_id` together with `associated_gateway_id`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect gateway associations using `dx_gateway_id` together with `associated_gateway_id`. For example:
 
+```terraform
+import {
+  to = aws_dx_gateway_association.example
+  id = "345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432"
+}
 ```
-$ terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
+
+Using `terraform import`, import Direct Connect gateway associations using `dx_gateway_id` together with `associated_gateway_id`. For example:
+
+```console
+% terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```

@@ -12,7 +12,7 @@ Provides details about a specific Amazon Kendra Experience.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kendra_experience" "example" {
   experience_id = "87654321-1234-4321-4321-321987654321"
   index_id      = "12345678-1234-1234-1234-123456789123"
@@ -21,14 +21,15 @@ data "aws_kendra_experience" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `experience_id` - (Required) Identifier of the Experience.
 * `index_id` - (Required) Identifier of the index that contains the Experience.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Experience.
 * `configuration` - Block that specifies the configuration information for your Amazon Kendra Experience. This includes `content_source_configuration`, which specifies the data source IDs and/or FAQ IDs, and `user_identity_configuration`, which specifies the user or group information to grant access to your Amazon Kendra Experience. Documented below.

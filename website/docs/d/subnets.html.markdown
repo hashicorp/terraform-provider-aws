@@ -12,7 +12,7 @@ This resource can be useful for getting back a set of subnet IDs.
 
 ## Example Usage
 
-The following shows outputing all CIDR blocks for every subnet ID in a VPC.
+The following shows outputting all CIDR blocks for every subnet ID in a VPC.
 
 ```terraform
 data "aws_subnets" "example" {
@@ -49,7 +49,7 @@ data "aws_subnets" "private" {
 }
 
 resource "aws_instance" "app" {
-  for_each      = toset(data.aws_subnets.example.ids)
+  for_each      = toset(data.aws_subnets.private.ids)
   ami           = var.ami
   instance_type = "t2.micro"
   subnet_id     = each.value
@@ -58,16 +58,22 @@ resource "aws_instance" "app" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired subnets.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
+* `values` - (Required) Set of values that are accepted for the given field.
+  A Subnet will be selected if any one of the given values matches.
 
 ```terraform
 data "aws_subnets" "selected" {
@@ -81,12 +87,14 @@ data "aws_subnets" "selected" {
 * `values` - (Required) Set of values that are accepted for the given field.
   Subnet IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - List of all the subnet ids found.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

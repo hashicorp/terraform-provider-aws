@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_sagemaker_data_quality_job_definition
+```
+
+```release-note:enhancement
+data-source/aws_sagemaker_prebuilt_ecr_image: Added sagemaker-model-monitor-analyzer images
+```

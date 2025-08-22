@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start_multiplex` - (Optional) Whether to start the Multiplex. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the Multiplex. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -58,16 +59,15 @@ The following arguments are optional:
 * `transport_stream_reserved_bitrate` - (Optional) Transport stream reserved bit rate.
 * `maximum_video_buffer_delay_milliseconds` - (Optional) Maximum video buffer delay.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Multiplex.
-* `example_attribute` - Concise description.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -75,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive Multiplex can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive Multiplex using the `id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_multiplex.example
+  id = "12345678"
+}
 ```
-$ terraform import aws_medialive_multiplex.example 12345678
+
+Using `terraform import`, import MediaLive Multiplex using the `id`. For example:
+
+```console
+% terraform import aws_medialive_multiplex.example 12345678
 ```

@@ -1,43 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchJobQueue_basic(t *testing.T) {
-	var jobQueue1 batch.JobQueueDetail
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("job-queue/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "job-queue/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -50,21 +58,22 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 }
 
 func TestAccBatchJobQueue_disappears(t *testing.T) {
-	var jobQueue1 batch.JobQueueDetail
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
-					testAccCheckJobQueueDisappears(&jobQueue1),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueue, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,23 +81,109 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8083
-func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) {
-	var jobQueue1 batch.JobQueueDetail
+func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_ComputeEnvironments_multiple(rName, string(awstypes.JQStateEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName, string(awstypes.JQStateEnabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBatchJobQueue_ComputeEnvironmentOrder_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, string(awstypes.JQStateEnabled), 1, 2, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, string(awstypes.JQStateEnabled), 2, 1, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.1.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.2.order", "3"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8083
+func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
-					testAccCheckJobQueueComputeEnvironmentOrderUpdate(&jobQueue1),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx, &jobQueue1),
 				),
 			},
 			{
@@ -101,28 +196,29 @@ func TestAccBatchJobQueue_ComputeEnvironments_externalOrderUpdate(t *testing.T) 
 }
 
 func TestAccBatchJobQueue_priority(t *testing.T) {
-	var jobQueue1, jobQueue2 batch.JobQueueDetail
+	ctx := acctest.Context(t)
+	var jobQueue1, jobQueue2 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueConfig_priority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 				),
 			},
 			{
 				Config: testAccJobQueueConfig_priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue2),
-					resource.TestCheckResourceAttr(resourceName, "priority", "2"),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "2"),
 				),
 			},
 			{
@@ -135,23 +231,24 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 }
 
 func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
-	var jobQueue1, jobQueue2 batch.JobQueueDetail
+	ctx := acctest.Context(t)
+	var jobQueue1, jobQueue2 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedulingPolicyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	schedulingPolicyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				// last variable selects the scheduling policy's arn. In this case, the first scheduling policy's arn.
 				Config: testAccJobQueueConfig_schedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
 				),
 			},
@@ -164,7 +261,7 @@ func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
 				// test switching the scheduling_policy_arn by changing the last variable to select the second scheduling policy's arn.
 				Config: testAccJobQueueConfig_schedulingPolicy(rName, schedulingPolicyName1, schedulingPolicyName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue2),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
 					resource.TestCheckResourceAttrSet(resourceName, "scheduling_policy_arn"),
 				),
 			},
@@ -173,28 +270,29 @@ func TestAccBatchJobQueue_schedulingPolicy(t *testing.T) {
 }
 
 func TestAccBatchJobQueue_state(t *testing.T) {
-	var jobQueue1, jobQueue2 batch.JobQueueDetail
+	ctx := acctest.Context(t)
+	var jobQueue1, jobQueue2 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_state(rName, batch.JQStateDisabled),
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateDisabled),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateDisabled)),
 				),
 			},
 			{
-				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
+				Config: testAccJobQueueConfig_state(rName, string(awstypes.JQStateEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue2),
-					resource.TestCheckResourceAttr(resourceName, "state", batch.JQStateEnabled),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
 				),
 			},
 			{
@@ -206,23 +304,23 @@ func TestAccBatchJobQueue_state(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_tags(t *testing.T) {
-	var jobQueue batch.JobQueueDetail
+func TestAccBatchJobQueue_jobStateTimeLimitActionsMultiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy,
+		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				Config: testAccJobQueueConfig_jobStateTimeLimitAction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
 				),
 			},
 			{
@@ -231,81 +329,98 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccJobQueueConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckJobQueueExists(n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
+func TestAccBatchJobQueue_upgradeComputeEnvironments(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jobQueue1 awstypes.JobQueueDetail
+	resourceName := "aws_batch_job_queue.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.95.0",
+					},
+				},
+				Config: testAccJobQueueConfig_StateUpgradeComputeEnvironments_initial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccJobQueueConfig_StateUpgradeComputeEnvironments_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckJobQueueExists(ctx context.Context, n string, v *awstypes.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
-		log.Printf("State: %#v", s.RootModule().Resources)
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Batch Job Queue ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
-		name := rs.Primary.Attributes["name"]
-		queue, err := tfbatch.GetJobQueue(conn, name)
+		output, err := tfbatch.FindJobQueueByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if queue == nil {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		*jq = *queue
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckJobQueueDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_batch_job_queue" {
-			continue
-		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
-		jq, err := tfbatch.GetJobQueue(conn, rs.Primary.Attributes["name"])
-		if err == nil {
-			if jq != nil {
-				return fmt.Errorf("Error: Job Queue still exists")
-			}
-		}
-		return nil
-	}
-	return nil
-}
-
-func testAccCheckJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
+func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
-		name := aws.StringValue(jobQueue.JobQueueName)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_batch_job_queue" {
+				continue
+			}
 
-		err := tfbatch.DisableJobQueue(name, conn)
-		if err != nil {
-			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
+			_, err := tfbatch.FindJobQueueByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Batch Job Queue %s still exists", rs.Primary.ID)
 		}
 
-		return tfbatch.DeleteJobQueue(name, conn)
+		return nil
 	}
 }
 
@@ -313,27 +428,27 @@ func testAccCheckJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.Tes
 // An external update to the Batch Job Queue (e.g. console) may trigger changes to the value of the Order
 // parameter that do not affect the operation of the queue itself, but the resource logic needs to handle.
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
-func testAccCheckJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
+func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQueue *awstypes.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
 
 		input := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: jobQueue.ComputeEnvironmentOrder,
 			JobQueue:                jobQueue.JobQueueName,
 		}
-		name := aws.StringValue(jobQueue.JobQueueName)
+		name := aws.ToString(jobQueue.JobQueueName)
 
 		if len(input.ComputeEnvironmentOrder) != 1 {
 			return fmt.Errorf("expected one ComputeEnvironmentOrder in Batch Job Queue (%s)", name)
 		}
 
-		if aws.Int64Value(input.ComputeEnvironmentOrder[0].Order) != 0 {
-			return fmt.Errorf("expected first ComputeEnvironmentOrder in Batch Job Queue (%s) to have existing Order value of 0", name)
+		if aws.ToInt32(input.ComputeEnvironmentOrder[0].Order) != 1 {
+			return fmt.Errorf("expected first ComputeEnvironmentOrder in Batch Job Queue (%s) to have existing Order value of 1", name)
 		}
 
-		input.ComputeEnvironmentOrder[0].Order = aws.Int64(1)
+		input.ComputeEnvironmentOrder[0].Order = aws.Int32(1)
 
-		_, err := conn.UpdateJobQueue(input)
+		_, err := conn.UpdateJobQueue(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error updating Batch Job Queue (%s): %s", name, err)
@@ -343,7 +458,7 @@ func testAccCheckJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueD
 	}
 }
 
-func testAccJobQueueConfigBase(rName string) string {
+func testAccJobQueueConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -403,13 +518,17 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-batch-job-queue"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -417,14 +536,14 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-batch-job-queue"
+    Name = %[1]q
   }
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-  service_role             = aws_iam_role.test.arn
-  type                     = "MANAGED"
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
 
   compute_resources {
     instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
@@ -443,18 +562,21 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccJobQueueConfig_priority(rName string, priority int) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = %[2]d
-  state                = "ENABLED"
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+  name     = %[1]q
+  priority = %[2]d
+  state    = "ENABLED"
 }
 `, rName, priority))
 }
 
-func testAccJobQueueSchedulingPolicy(rName string, rName2 string) string {
+func testAccJobQueueConfig_baseSchedulingPolicy(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_scheduling_policy" "test1" {
   name = %[1]q
@@ -488,15 +610,18 @@ resource "aws_batch_scheduling_policy" "test2" {
 
 func testAccJobQueueConfig_schedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
-		testAccJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
+		testAccJobQueueConfig_base(rName),
+		testAccJobQueueConfig_baseSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
 		fmt.Sprintf(`
 locals {
   select_scheduling_policy = %[2]q
 }
 
 resource "aws_batch_job_queue" "test" {
-  compute_environments  = [aws_batch_compute_environment.test.arn]
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
   name                  = %[1]q
   priority              = 1
   scheduling_policy_arn = local.select_scheduling_policy == "first" ? aws_batch_scheduling_policy.test1.arn : aws_batch_scheduling_policy.test2.arn
@@ -507,76 +632,340 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = 1
-  state                = %[2]q
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
 }
 `, rName, state))
 }
 
-func testAccJobQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccJobQueueConfig_ComputeEnvironments_multiple(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  dynamic "compute_environment_order" {
+    for_each = concat(
+      [aws_batch_compute_environment.test.arn],
+      aws_batch_compute_environment.more[*].arn,
+    )
+    content {
+      compute_environment = compute_environment_order.value
+      order               = compute_environment_order.key + 1
+    }
+  }
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
+}
+
+resource "aws_batch_compute_environment" "more" {
+  count = 2
+
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, state))
+}
+
+func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state string, o1 int, o2 int, o3 int) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environment_order {
+    order               = %[3]d
+    compute_environment = aws_batch_compute_environment.test.arn
+  }
+
+  compute_environment_order {
+    order               = %[4]d
+    compute_environment = aws_batch_compute_environment.more[0].arn
+  }
+
+  compute_environment_order {
+    order               = %[5]d
+    compute_environment = aws_batch_compute_environment.more[1].arn
+  }
+
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
+}
+
+resource "aws_batch_compute_environment" "more" {
+  count = 2
+
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, state, o1, o2, o3))
+}
+
+func testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName string, state string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.more[0].arn
+    order               = 1
+  }
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 2
+  }
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.more[1].arn
+    order               = 3
+  }
+  name     = %[1]q
+  priority = 1
+  state    = %[2]q
+}
+
+resource "aws_batch_compute_environment" "more" {
+  count = 2
+
+  name         = "%[1]s-${count.index + 1}"
+  service_role = aws_iam_role.test.arn
+  type         = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, state))
+}
+
+func testAccJobQueueConfig_jobStateTimeLimitAction(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
+  name     = %[1]q
+  priority = 1
+  state    = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 600
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"
+    state            = "RUNNABLE"
+  }
+}
+`, rName))
+}
+
+func testAccJobQueueConfig_jobStateTimeLimitActionUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+  name     = %[1]q
+  priority = 1
+  state    = "DISABLED"
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 610
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"
+    state            = "RUNNABLE"
+  }
+}
+`, rName))
+}
+
+// testAccJobQueueConfig_base returns the base configuration for the Terraform AWS Provider v5.95.0.
+// WARNING: Legacy configuration, breaking changes have been made to the aws_batch_compute_environment resource.
+func testAccJobQueueConfig_legacyBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "batch.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "%[1]s-ecs"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+    {
+        "Action": "sts:AssumeRole",
+        "Effect": "Allow",
+        "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        }
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_instance_role" {
+  name = aws_iam_role.ecs_instance_role.name
+  role = aws_iam_role_policy_attachment.ecs_instance_role.role
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+  service_role             = aws_iam_role.test.arn
+  type                     = "MANAGED"
+
+  compute_resources {
+    instance_role      = aws_iam_instance_profile.ecs_instance_role.arn
+    instance_type      = ["c5", "m5", "r5"]
+    max_vcpus          = 1
+    min_vcpus          = 0
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
+    type               = "EC2"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName)
+}
+
+func testAccJobQueueConfig_StateUpgradeComputeEnvironments_initial(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfig_legacyBase(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
   name                 = %[1]q
   priority             = 1
-  state                = "DISABLED"
-
-  tags = {
-    %[2]q = %[3]q
-  }
+  state                = "ENABLED"
 }
-`, rName, tagKey1, tagValue1))
+`, rName))
 }
 
-func testAccJobQueueConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccJobQueueConfig_StateUpgradeComputeEnvironments_updated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = 1
-  state                = "DISABLED"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 0
   }
+  name     = %[1]q
+  priority = 1
+  state    = "ENABLED"
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_launch_template" {
-			continue
-		}
-
-		resp, err := conn.DescribeLaunchTemplates(&ec2.DescribeLaunchTemplatesInput{
-			LaunchTemplateIds: []*string{aws.String(rs.Primary.ID)},
-		})
-
-		if err == nil {
-			if len(resp.LaunchTemplates) != 0 && *resp.LaunchTemplates[0].LaunchTemplateId == rs.Primary.ID {
-				return fmt.Errorf("Launch Template still exists")
-			}
-		}
-
-		if tfawserr.ErrCodeEquals(err, "InvalidLaunchTemplateId.NotFound") {
-			log.Printf("[WARN] launch template (%s) not found.", rs.Primary.ID)
-			continue
-		}
-		return err
-	}
-
-	return nil
+`, rName))
 }

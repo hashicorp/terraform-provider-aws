@@ -1,170 +1,194 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestInvertStringSlice(t *testing.T) {
-	testCases := []struct {
-		Name     string
-		Input    []string
-		Expected []string
-	}{
-		{
-			Name:     "DNS Suffix",
-			Input:    []string{"amazonaws", "com", "cn"},
-			Expected: []string{"cn", "com", "amazonaws"},
-		},
-		{
-			Name:     "Ordered List",
-			Input:    []string{"abc", "bcd", "cde", "xyz", "zzz"},
-			Expected: []string{"zzz", "xyz", "cde", "bcd", "abc"},
-		},
-		{
-			Name:     "Unordered List",
-			Input:    []string{"abc", "zzz", "bcd", "xyz", "cde"},
-			Expected: []string{"cde", "xyz", "bcd", "zzz", "abc"},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			if !reflect.DeepEqual(tfmeta.InvertStringSlice(testCase.Input), testCase.Expected) {
-				t.Errorf("got %v, expected %v", tfmeta.InvertStringSlice(testCase.Input), testCase.Expected)
-			}
-		})
-	}
-}
-
-func TestAccMetaService_basic(t *testing.T) {
-	dataSourceName := "data.aws_service.default"
+func TestAccMetaServiceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_service.test"
+	serviceID := "ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDataSourceConfig_basic(),
+				Config: testAccServiceDataSourceConfig_serviceID(serviceID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", ec2.EndpointsID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", serviceID, acctest.Region(), "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), ec2.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", ec2.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), serviceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", serviceID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func TestAccMetaService_byReverseDNSName(t *testing.T) {
+func TestAccMetaServiceDataSource_irregularServiceID(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_service.test"
+	serviceID := "resource-explorer-2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_serviceID(serviceID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", serviceID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), serviceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", serviceID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+func TestAccMetaServiceDataSource_irregularServiceIDUnsupported(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_service.test"
+	serviceID := "resourceexplorer2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDataSourceConfig_serviceID(serviceID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", serviceID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), serviceID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", serviceID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMetaServiceDataSource_byReverseDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byReverseDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.CnNorth1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, s3.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, endpoints.CnNorth1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "cn.com.amazonaws", endpoints.CnNorth1RegionID, names.S3)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "cn.com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", s3.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.S3),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func TestAccMetaService_byDNSName(t *testing.T) {
+func TestAccMetaServiceDataSource_byDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsEast1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsEast1RegionID, rds.EndpointsID)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsEast1RegionID, names.RDS)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", rds.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.RDS),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func TestAccMetaService_byParts(t *testing.T) {
+func TestAccMetaServiceDataSource_byParts(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byPart(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", s3.EndpointsID, acctest.Region(), "amazonaws.com")),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), s3.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", names.S3, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), names.S3)),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func TestAccMetaService_unsupported(t *testing.T) {
+func TestAccMetaServiceDataSource_unsupported(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_unsupported(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", waf.EndpointsID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", names.WAFEndpointID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", endpoints.AwsUsGovPartitionID),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", endpoints.UsGovWest1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsGovWest1RegionID, waf.EndpointsID)),
-					resource.TestCheckResourceAttr(dataSourceName, "service_id", waf.EndpointsID),
-					resource.TestCheckResourceAttr(dataSourceName, "supported", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, endpoints.UsGovWest1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsGovWest1RegionID, names.WAFEndpointID)),
+					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.WAFEndpointID),
+					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccServiceDataSourceConfig_basic() string {
+func testAccServiceDataSourceConfig_serviceID(id string) string {
 	return fmt.Sprintf(`
-data "aws_service" "default" {
+data "aws_service" "test" {
   service_id = %[1]q
 }
-`, ec2.EndpointsID)
+`, id)
 }
 
 func testAccServiceDataSourceConfig_byReverseDNSName() string {
@@ -191,7 +215,7 @@ data "aws_region" "current" {}
 
 data "aws_service" "test" {
   reverse_dns_prefix = "com.amazonaws"
-  region             = data.aws_region.current.name
+  region             = data.aws_region.current.region
   service_id         = "s3"
 }
 `

@@ -38,10 +38,11 @@ resource "aws_kinesis_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in.
-* `shard_count` – (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
+* `shard_count` - (Optional) The number of shards that the stream will use. If the `stream_mode` is `PROVISIONED`, this field is required.
 Amazon has guidelines for specifying the Stream size that should be referenced when creating a Kinesis stream. See [Amazon Kinesis Streams][2] for more.
 * `retention_period` - (Optional) Length of time data records are accessible after they are added to the stream. The maximum value of a stream's retention period is 8760 hours. Minimum value is 24. Default is 24.
 * `shard_level_metrics` - (Optional) A list of shard-level CloudWatch metrics which can be enabled for the stream. See [Monitoring with CloudWatch][3] for more. Note that the value ALL should not be used; instead you should provide an explicit list of metrics you wish to enable.
@@ -55,9 +56,9 @@ Amazon has guidelines for specifying the Stream size that should be referenced w
 
 * `stream_mode` - (Required) Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique Stream id
 * `name` - The unique Stream name
@@ -67,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `update` - (Default `120m`)
@@ -75,10 +76,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Streams can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_stream.test_stream
+  id = "terraform-kinesis-test"
+}
 ```
-$ terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
+
+Using `terraform import`, import Kinesis Streams using the `name`. For example:
+
+```console
+% terraform import aws_kinesis_stream.test_stream terraform-kinesis-test
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

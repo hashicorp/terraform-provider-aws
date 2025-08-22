@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_glue_connection: Add `athena_properties` argument and allow `DYNAMODB` connection type.
+```
+
+```release-note:enhancement
+resource/aws_glue_connection: Support `DYNAMODB` as a valid value for `connection_type`
+```
+
+```release-note:enhancement
+data-source/aws_glue_connection: Support `athena_properties` attribute
+```

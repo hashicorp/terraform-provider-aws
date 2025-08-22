@@ -1,15 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
-import "time"
-
 const (
-	AliasNamePrefix = "alias/"
+	aliasNamePrefix = "alias/"
+	cmkAliasPrefix  = aliasNamePrefix + "aws/"
 )
 
 const (
-	PolicyNameDefault = "default"
-)
-
-const (
-	propagationTimeout = 2 * time.Minute
+	policyNameDefault = "default"
 )

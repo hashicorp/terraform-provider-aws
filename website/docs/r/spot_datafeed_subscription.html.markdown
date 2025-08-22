@@ -21,24 +21,36 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = aws_s3_bucket.default.bucket
+  bucket = aws_s3_bucket.default.id
   prefix = "my_subdirectory"
 }
 ```
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-A Spot Datafeed Subscription can be imported using the word `spot-datafeed-subscription`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
 
+```terraform
+import {
+  to = aws_spot_datafeed_subscription.mysubscription
+  id = "spot-datafeed-subscription"
+}
 ```
-$ terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
+
+Using `terraform import`, import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
+
+```console
+% terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
 ```

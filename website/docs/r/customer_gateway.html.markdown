@@ -28,19 +28,21 @@ resource "aws_customer_gateway" "main" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `bgp_asn` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `1` to `2147483647`. Conflicts with `bgp_asn_extended`.
+* `bgp_asn_extended` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `2147483648` to `4294967295` Conflicts with `bgp_asn`.
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
 * `device_name` - (Optional) A name for the customer gateway device.
-* `ip_address` - (Required) The IPv4 address for the customer gateway device's outside interface.
+* `ip_address` - (Optional) The IPv4 address for the customer gateway device's outside interface.
 * `type` - (Required) The type of customer gateway. The only type AWS
   supports at this time is "ipsec.1".
 * `tags` - (Optional) Tags to apply to the gateway. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The amazon-assigned ID of the gateway.
 * `arn` - The ARN of the customer gateway.
@@ -48,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Customer Gateways can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Customer Gateways using the `id`. For example:
 
+```terraform
+import {
+  to = aws_customer_gateway.main
+  id = "cgw-b4dc3961"
+}
 ```
-$ terraform import aws_customer_gateway.main cgw-b4dc3961
+
+Using `terraform import`, import Customer Gateways using the `id`. For example:
+
+```console
+% terraform import aws_customer_gateway.main cgw-b4dc3961
 ```

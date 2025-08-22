@@ -81,17 +81,18 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required, Forces new resource) Application ID.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
 * `content` - (Required, Forces new resource) Content of the configuration or the configuration data.
 * `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
 * `description` - (Optional, Forces new resource) Description of the configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig  hosted configuration version.
 * `id` - AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
@@ -99,8 +100,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Hosted Configuration Versions can be imported by using the application ID, configuration profile ID, and version number separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Hosted Configuration Versions using the application ID, configuration profile ID, and version number separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_appconfig_hosted_configuration_version.example
+  id = "71abcde/11xxxxx/2"
+}
 ```
-$ terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
+
+Using `terraform import`, import AppConfig Hosted Configuration Versions using the application ID, configuration profile ID, and version number separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_appconfig_hosted_configuration_version.example 71abcde/11xxxxx/2
 ```

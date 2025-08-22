@@ -1,48 +1,56 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSecurityGroup() *schema.Resource {
+// @SDKDataSource("aws_security_group", name="Security Group")
+// @Tags
+// @Testing(tagsIdentifierAttribute="id")
+func dataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityGroupRead,
+		ReadWithoutTimeout: dataSourceSecurityGroupRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"name": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -51,29 +59,30 @@ func DataSourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": d.Get("name").(string),
-				"vpc-id":     d.Get("vpc_id").(string),
+				"group-name": d.Get(names.AttrName).(string),
+				"vpc-id":     d.Get(names.AttrVPCID).(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.GroupIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.GroupIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		svcTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]any))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -81,29 +90,20 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = nil
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := findSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Security Group", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Security Group", err))
 	}
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(aws.ToString(sg.GroupId))
+	ownerID := aws.ToString(sg.OwnerId)
+	d.Set(names.AttrARN, securityGroupARN(ctx, c, ownerID, d.Id()))
+	d.Set(names.AttrDescription, sg.Description)
+	d.Set(names.AttrName, sg.GroupName)
+	d.Set(names.AttrVPCID, sg.VpcId)
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: *sg.OwnerId,
-		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
-	}.String()
-	d.Set("arn", arn)
-	d.Set("description", sg.Description)
-	d.Set("name", sg.GroupName)
-	d.Set("vpc_id", sg.VpcId)
+	setTagsOut(ctx, sg.Tags)
 
-	if err := d.Set("tags", KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }

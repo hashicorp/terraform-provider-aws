@@ -31,6 +31,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) An optional description for the map resource.
 * `tags` - (Optional) Key-value tags for the map. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -40,9 +41,9 @@ The following arguments are required:
 
 * `style` - (Required) Specifies the map style selected from an available data provider. Valid values can be found in the [Location Service CreateMap API Reference](https://docs.aws.amazon.com/location/latest/APIReference/API_CreateMap.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
 * `map_arn` - The Amazon Resource Name (ARN) for the map resource. Used to specify a resource across all AWS.
@@ -51,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_location_map` resources can be imported using the map name, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_location_map` resources using the map name. For example:
 
+```terraform
+import {
+  to = aws_location_map.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_map.example example
+
+Using `terraform import`, import `aws_location_map` resources using the map name. For example:
+
+```console
+% terraform import aws_location_map.example example
 ```

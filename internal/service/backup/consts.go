@@ -1,18 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
-const (
-	frameworkStatusCompleted          = "COMPLETED"
-	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"
-	frameworkStatusDeletionInProgress = "DELETE_IN_PROGRESS"
-	frameworkStatusFailed             = "FAILED"
-	frameworkStatusUpdateInProgress   = "UPDATE_IN_PROGRESS"
-)
+import "time"
 
 const (
-	reportPlanDeploymentStatusCompleted        = "COMPLETED"
-	reportPlanDeploymentStatusCreateInProgress = "CREATE_IN_PROGRESS"
-	reportPlanDeploymentStatusDeleteInProgress = "DELETE_IN_PROGRESS"
-	reportPlanDeploymentStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+	propagationTimeout = 2 * time.Minute
 )
 
 const (

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,24 +8,28 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_kendra_experience", name="Experience")
 func ResourceExperience() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperienceCreate,
@@ -41,11 +48,11 @@ func ResourceExperience() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -70,7 +77,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 										},
 									},
 									"direct_put_content": {
@@ -85,7 +92,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 										},
 									},
 								},
@@ -104,7 +111,7 @@ func ResourceExperience() *schema.Resource {
 									"identity_attribute_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 									},
 								},
 							},
@@ -112,21 +119,21 @@ func ResourceExperience() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -141,29 +148,29 @@ func ResourceExperience() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]*`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]*`), ""),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("description", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta any) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -171,31 +178,33 @@ func ResourceExperience() *schema.Resource {
 	}
 }
 
-func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateExperienceInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
-		Name:        aws.String(d.Get("name").(string)),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
+		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Configuration = expandConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		in.Configuration = expandConfiguration(v.([]any))
 	}
 
 	out, err := conn.CreateExperience(ctx, in)
 	if err != nil {
-		return diag.Errorf("creating Amazon Kendra Experience (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Kendra Experience (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -204,18 +213,20 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if err := waitExperienceCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Kendra Experience (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amazon Kendra Experience (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceExperienceRead(ctx, d, meta)
+	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindExperienceByID(ctx, conn, id, indexId)
@@ -223,46 +234,48 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Experience (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "kendra",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexId, id),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("index_id", out.IndexId)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("experience_id", out.Id)
-	d.Set("name", out.Name)
-	d.Set("role_arn", out.RoleArn)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set(names.AttrStatus, out.Status)
 
-	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
-		return diag.Errorf("setting endpoints argument: %s", err)
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(out.Endpoints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
-	if err := d.Set("configuration", flattenConfiguration(out.Configuration)); err != nil {
-		return diag.Errorf("setting configuration argument: %s", err)
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(out.Configuration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &kendra.UpdateExperienceInput{
@@ -270,43 +283,45 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		IndexId: aws.String(indexId),
 	}
 
-	if d.HasChange("configuration") {
-		in.Configuration = expandConfiguration(d.Get("configuration").([]interface{}))
+	if d.HasChange(names.AttrConfiguration) {
+		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]any))
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if d.HasChange("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("role_arn") {
-		in.RoleArn = aws.String(d.Get("role_arn").(string))
+	if d.HasChange(names.AttrRoleARN) {
+		in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 	}
 
 	log.Printf("[DEBUG] Updating Kendra Experience (%s): %#v", d.Id(), in)
 	_, err = conn.UpdateExperience(ctx, in)
 	if err != nil {
-		return diag.Errorf("updating Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	if err := waitExperienceUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Kendra Experience (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Experience (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceExperienceRead(ctx, d, meta)
+	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
-func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Experience %s", d.Id())
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	_, err = conn.DeleteExperience(ctx, &kendra.DeleteExperienceInput{
 		Id:      aws.String(id),
@@ -315,22 +330,22 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	if err := waitExperienceDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Experience (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Experience (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -350,7 +365,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -370,7 +385,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
@@ -387,8 +402,8 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -412,7 +427,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	if errors.As(err, &resourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -429,12 +444,12 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	return out, nil
 }
 
-func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{} {
+func flattenConfiguration(apiObject *types.ExperienceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.ContentSourceConfiguration; v != nil {
 		m["content_source_configuration"] = flattenContentSourceConfiguration(v)
@@ -444,15 +459,15 @@ func flattenConfiguration(apiObject *types.ExperienceConfiguration) []interface{
 		m["user_identity_configuration"] = flattenUserIdentityConfiguration(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []interface{} {
+func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"direct_put_content": apiObject.DirectPutContent,
 	}
 
@@ -463,72 +478,71 @@ func flattenContentSourceConfiguration(apiObject *types.ContentSourceConfigurati
 	if v := apiObject.FaqIds; len(v) > 0 {
 		m["faq_ids"] = v
 	}
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
+func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	l := make([]interface{}, 0, len(apiObjects))
+	l := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 
 		if v := apiObject.Endpoint; v != nil {
-			m["endpoint"] = aws.ToString(v)
+			m[names.AttrEndpoint] = aws.ToString(v)
 		}
 
 		if v := string(apiObject.EndpointType); v != "" {
-			m["endpoint_type"] = v
+			m[names.AttrEndpointType] = v
 		}
 
 		l = append(l, m)
 	}
 
 	return l
-
 }
 
-func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []interface{} {
+func flattenUserIdentityConfiguration(apiObject *types.UserIdentityConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if v := apiObject.IdentityAttributeName; v != nil {
 		m["identity_attribute_name"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandConfiguration(tfList []interface{}) *types.ExperienceConfiguration {
+func expandConfiguration(tfList []any) *types.ExperienceConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	result := &types.ExperienceConfiguration{}
 
-	if v, ok := tfMap["content_source_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_source_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.ContentSourceConfiguration = expandContentSourceConfiguration(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["user_identity_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]interface{}))
+	if v, ok := tfMap["user_identity_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
+		result.UserIdentityConfiguration = expandUserIdentityConfiguration(v[0].(map[string]any))
 	}
 
 	return result
 }
 
-func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.ContentSourceConfiguration {
+func expandContentSourceConfiguration(tfMap map[string]any) *types.ContentSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -550,7 +564,7 @@ func expandContentSourceConfiguration(tfMap map[string]interface{}) *types.Conte
 	return result
 }
 
-func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserIdentityConfiguration {
+func expandUserIdentityConfiguration(tfMap map[string]any) *types.UserIdentityConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -564,7 +578,7 @@ func expandUserIdentityConfiguration(tfMap map[string]interface{}) *types.UserId
 	return result
 }
 
-func expandStringList(tfList []interface{}) []string {
+func expandStringList(tfList []any) []string {
 	var result []string
 
 	for _, rawVal := range tfList {

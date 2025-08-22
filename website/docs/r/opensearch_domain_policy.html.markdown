@@ -18,42 +18,64 @@ resource "aws_opensearch_domain" "example" {
   engine_version = "OpenSearch_1.1"
 }
 
-resource "aws_opensearch_domain_policy" "main" {
-  domain_name = aws_opensearch_domain.example.domain_name
+data "aws_iam_policy_document" "main" {
+  statement {
+    effect = "Allow"
 
-  access_policies = <<POLICIES
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": "es:*",
-            "Principal": "*",
-            "Effect": "Allow",
-            "Condition": {
-                "IpAddress": {"aws:SourceIp": "127.0.0.1/32"}
-            },
-            "Resource": "${aws_opensearch_domain.example.arn}/*"
-        }
-    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions   = ["es:*"]
+    resources = ["${aws_opensearch_domain.example.arn}/*"]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["127.0.0.1/32"]
+    }
+  }
 }
-POLICIES
+
+resource "aws_opensearch_domain_policy" "main" {
+  domain_name     = aws_opensearch_domain.example.domain_name
+  access_policies = data.aws_iam_policy_document.main.json
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain
 * `domain_name` - (Required) Name of the domain.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch Domain Policy using `domain_name` prefixed with `esd-policy-`. For example:
+
+```terraform
+import {
+  to = aws_opensearch_domain_policy.example
+  id = "esd-policy-tf-test"
+}
+```
+
+Using `terraform import`, import OpenSearch Domain Policy using `domain_name` prefixed with `esd-policy-`. For example:
+
+```console
+% terraform import aws_opensearch_domain_policy.example esd-policy-tf-test
+```

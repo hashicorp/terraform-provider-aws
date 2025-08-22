@@ -1,10 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -26,17 +32,17 @@ const (
 )
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
-func waitAdminAccountEnabled(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
-		Target:  []string{guardduty.AdminStatusEnabled},
-		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
+		Target:  enum.Slice(awstypes.AdminStatusEnabled),
+		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
 		Timeout: adminAccountEnabledTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*guardduty.AdminAccount); ok {
+	if output, ok := outputRaw.(*awstypes.AdminAccount); ok {
 		return output, err
 	}
 
@@ -44,17 +50,17 @@ func waitAdminAccountEnabled(conn *guardduty.GuardDuty, adminAccountID string) (
 }
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
-func waitAdminAccountNotFound(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{guardduty.AdminStatusDisableInProgress},
+func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AdminStatusDisableInProgress),
 		Target:  []string{adminStatusNotFound},
-		Refresh: statusAdminAccountAdmin(conn, adminAccountID),
+		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
 		Timeout: adminAccountNotFoundTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*guardduty.AdminAccount); ok {
+	if output, ok := outputRaw.(*awstypes.AdminAccount); ok {
 		return output, err
 	}
 
@@ -62,15 +68,15 @@ func waitAdminAccountNotFound(conn *guardduty.GuardDuty, adminAccountID string) 
 }
 
 // waitPublishingDestinationCreated waits for GuardDuty to return Publishing
-func waitPublishingDestinationCreated(conn *guardduty.GuardDuty, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{guardduty.PublishingStatusPendingVerification},
-		Target:  []string{guardduty.PublishingStatusPublishing},
-		Refresh: statusPublishingDestination(conn, destinationID, detectorID),
+func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PublishingStatusPendingVerification),
+		Target:  enum.Slice(awstypes.PublishingStatusPublishing),
+		Refresh: statusPublishingDestination(ctx, conn, destinationID, detectorID),
 		Timeout: publishingDestinationCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*guardduty.CreatePublishingDestinationOutput); ok {
 		return v, err

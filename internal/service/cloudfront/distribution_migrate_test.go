@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func TestDistributionMigrateState(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
 		Expected     map[string]string
-		Meta         interface{}
+		Meta         any
 	}{
 		"v0_to_v1": {
 			StateVersion: 0,
@@ -20,7 +26,7 @@ func TestDistributionMigrateState(t *testing.T) {
 				"wait_for_deployment": "",
 			},
 			Expected: map[string]string{
-				"wait_for_deployment": "true",
+				"wait_for_deployment": acctest.CtTrue,
 			},
 		},
 	}

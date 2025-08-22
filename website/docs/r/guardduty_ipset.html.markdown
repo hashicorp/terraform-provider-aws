@@ -44,8 +44,9 @@ resource "aws_s3_object" "MyIPSet" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
 * `detector_id` - (Required) The detector ID of the GuardDuty.
 * `format` - (Required) The format of the file that contains the IPSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
@@ -53,18 +54,26 @@ The following arguments are supported:
 * `name` - (Required) The friendly name to identify the IPSet.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty IPSet.
-* `id` - The ID of the GuardDuty IPSet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-GuardDuty IPSet can be imported using the the primary GuardDuty detector ID and IPSet ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_ipset.MyIPSet
+  id = "00b00fd5aecc0ab60a708659477e9617:123456789012"
+}
 ```
-$ terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
+
+Using `terraform import`, import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
+
+```console
+% terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```

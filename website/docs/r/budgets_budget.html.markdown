@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_budgets_budget
 
-Provides a budgets budget resource. Budgets use the cost visualisation provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
+Provides a budgets budget resource. Budgets use the cost visualization provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
 
 ## Example Usage
 
@@ -36,6 +36,11 @@ resource "aws_budgets_budget" "ec2" {
     notification_type          = "FORECASTED"
     subscriber_email_addresses = ["test@example.com"]
   }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
 }
 ```
 
@@ -47,6 +52,26 @@ resource "aws_budgets_budget" "cost" {
   budget_type  = "COST"
   limit_amount = "100"
   limit_unit   = "USD"
+}
+```
+
+Create a budget with planned budget limits.
+
+```terraform
+resource "aws_budgets_budget" "cost" {
+  # ...
+
+  planned_limit {
+    start_time = "2017-07-01_00:00"
+    amount     = "100"
+    unit       = "USD"
+  }
+
+  planned_limit {
+    start_time = "2017-08-01_00:00"
+    amount     = "200"
+    unit       = "USD"
+  }
 }
 ```
 
@@ -118,33 +143,82 @@ resource "aws_budgets_budget" "ri_utilization" {
 }
 ```
 
+Create a cost filter using resource tags
+
+```terraform
+resource "aws_budgets_budget" "cost" {
+  # ...
+  cost_filter {
+    name = "TagKeyValue"
+    values = [
+      # Format "TagKey$TagValue",
+      "aws:createdBy$Terraform",
+      "user:business-unit$human_resources",
+    ]
+  }
+}
+```
+
+Create a cost filter using resource tags, obtaining the tag value from a Terraform variable
+
+```terraform
+resource "aws_budgets_budget" "cost" {
+  # ...
+  cost_filter {
+    name = "TagKeyValue"
+    values = [
+      "TagKey${"$"}${var.TagValue}"
+    ]
+  }
+}
+```
+
 ## Argument Reference
+
+The following arguments are required:
+
+* `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
+* `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
+
+The following arguments are optional:
+
+* `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
+* `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto-adjust-data) which determines the budget amount for an auto-adjusting budget.
+* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
+* `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
+* `limit_amount` - (Optional) The amount of cost or usage being measured for a budget.
+* `limit_unit` - (Optional) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+* `name` - (Optional) The name of a budget. Unique within accounts.
+* `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
+* `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
+* `planned_limit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
+* `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
-The following arguments are supported:
+## Attribute Reference
 
-* `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
-* `name` - (Optional) The name of a budget. Unique within accounts.
-* `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
-* `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
-* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
-* `cost_filters` - (Optional, **Deprecated**) Map of [CostFilters](#cost-filters) key/value pairs to apply to the budget.
-* `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
-* `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
-* `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
-* `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
-* `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
-* `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
-* `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification
+This resource exports the following attributes in addition to the arguments above:
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - id of resource.
 * `arn` - The ARN of the budget.
+* `id` - id of resource.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### Auto Adjust Data
+
+The parameters that determine the budget amount for an auto-adjusting budget.
+
+* `auto_adjust_type` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `FORECAST`,`HISTORICAL`
+* `historical_options` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `auto_adjust_type` of `HISTORICAL` Configuration block that defines the historical data that your auto-adjusting budget is based on.
+* `last_auto_adjust_time` (Optional) - The last time that your budget was auto-adjusted.
+
+### Historical Options
+
+* `budget_adjustment_period` (Required) - The number of budget periods included in the moving-average calculation that determines your auto-adjusted budget amount.
+* `lookback_available_periods` (Optional) - The integer that describes how many budget periods in your BudgetAdjustmentPeriod are included in the calculation of your current budget limit. If the first budget period in your BudgetAdjustmentPeriod has no cost data, then that budget period isn’t included in the average that determines your budget limit. You can’t set your own LookBackAvailablePeriods. The value is automatically calculated from the `budget_adjustment_period` and your historical cost data.
 
 ### Cost Types
 
@@ -166,30 +240,12 @@ Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-mana
 
 ### Cost Filter
 
-Valid name for `cost_filter` parameter vary depending on the `budget_type` value.
+Valid keys for `cost_filter` parameter.
 
-* `cost`
-    * `AZ`
-    * `LinkedAccount`
-    * `Operation`
-    * `PurchaseType`
-    * `Service`
-    * `TagKeyValue`
-* `usage`
-    * `AZ`
-    * `LinkedAccount`
-    * `Operation`
-    * `PurchaseType`
-    * `UsageType:<service name>`
-    * `TagKeyValue`
+* name - (Required) The name of the cost filter. Valid values are `AZ`, `BillingEntity`, `CostCategory`, `InstanceType`, `InvoicingEntity`, `LegalEntityName`, `LinkedAccount`, `Operation`, `PurchaseType`, `Region`, `Service`, `TagKeyValue`, `UsageType`, and `UsageTypeGroup`.
+* values - (Required) The list of values used for filtering.
 
-Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
-
-### Cost Filters
-
-**Note**: Attribute `cost_filters` is deprecated. Use `cost_filter` instead.
-
-Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#cost-filter).
+Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
 
 ### Budget Notification
 
@@ -202,8 +258,27 @@ Valid keys for `notification` parameter.
 * `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
 * `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
 
+### Planned Budget Limits
+
+Valid keys for `planned_limit` parameter.
+
+* `start_time` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `amount` - (Required) The amount of cost or usage being measured for a budget.
+* `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:BudgetName`. For example:
 
-`$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`
+```terraform
+import {
+  to = aws_budgets_budget.myBudget
+  id = "123456789012:myBudget"
+}
+```
+
+Using `terraform import`, import budgets using `AccountID:BudgetName`. For example:
+
+```console
+% terraform import aws_budgets_budget.myBudget 123456789012:myBudget
+```

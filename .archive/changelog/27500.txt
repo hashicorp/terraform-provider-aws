@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_global_replication_group: Add `global_node_groups` and `num_node_groups` arguments
+```
+
+```release-note:enhancement
+resource/aws_elasticache_global_replication_group: Add timeouts.
+```

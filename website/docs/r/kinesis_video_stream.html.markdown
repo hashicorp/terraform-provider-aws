@@ -29,19 +29,20 @@ resource "aws_kinesis_video_stream" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
-* `data_retention_in_hours` – (Optional) The number of hours that you want to retain the data in the stream. Kinesis Video Streams retains the data in a data store that is associated with the stream. The default value is `0`, indicating that the stream does not persist data.
+* `data_retention_in_hours` - (Optional) The number of hours that you want to retain the data in the stream. Kinesis Video Streams retains the data in a data store that is associated with the stream. The default value is `0`, indicating that the stream does not persist data.
 * `device_name` - (Optional) The name of the device that is writing to the stream. **In the current implementation, Kinesis Video Streams does not use this name.**
 * `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that you want Kinesis Video Streams to use to encrypt stream data. If no key ID is specified, the default, Kinesis Video-managed key (`aws/kinesisvideo`) is used.
 * `media_type` - (Optional) The media type of the stream. Consumers of the stream can use this information when processing the stream. For more information about media types, see [Media Types][2]. If you choose to specify the MediaType, see [Naming Requirements][3] for guidelines.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique Stream id
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream (same as `id`)
@@ -51,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
 - `update` - (Default `120m`)
@@ -59,10 +60,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Streams can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_video_stream.test_stream
+  id = "arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975"
+}
 ```
-$ terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
+
+Using `terraform import`, import Kinesis Streams using the `arn`. For example:
+
+```console
+% terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

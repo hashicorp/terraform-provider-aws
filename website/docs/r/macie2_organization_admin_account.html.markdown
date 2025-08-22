@@ -23,20 +23,30 @@ resource "aws_macie2_organization_admin_account" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_account_id` - (Required) The AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie organization admin account.
 
 ## Import
 
-`aws_macie2_organization_admin_account` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_organization_admin_account` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_organization_admin_account.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_organization_admin_account.example abcd1
+
+Using `terraform import`, import `aws_macie2_organization_admin_account` using the id. For example:
+
+```console
+% terraform import aws_macie2_organization_admin_account.example abcd1
 ```

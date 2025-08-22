@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -24,18 +30,21 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
 				),
 			},
 			{
@@ -47,7 +56,8 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T) {
+func TestAccRDSInstanceAutomatedBackupsReplication_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -57,18 +67,54 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceAutomatedBackupsReplication(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance_automated_backups_replication.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "14"),
 				),
 			},
 			{
@@ -81,6 +127,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 }
 
 func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -90,18 +137,21 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_11_0),
+		},
+		CheckDestroy: testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceAutomatedBackupsReplicationExist(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
 				),
 			},
 			{
@@ -112,8 +162,53 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 		},
 	})
 }
+
+func testAccCheckInstanceAutomatedBackupsReplicationExist(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_instance_automated_backups_replication" {
+				continue
+			}
+
+			_, err := tfrds.FindDBInstanceAutomatedBackupByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Instance Automated Backups Replication %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
 func testAccInstanceAutomatedBackupsReplicationConfig_base(rName string, storageEncrypted bool) string {
-	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigRandomPassword(),
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -160,15 +255,31 @@ resource "aws_db_subnet_group" "test" {
   provider = "awsalternate"
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = "postgres"
+
+  provider = "awsalternate"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "postgresql-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = [%[3]s]
+
+  provider = "awsalternate"
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
-  engine                  = "postgres"
-  engine_version          = "13.4"
-  instance_class          = "db.t3.micro"
-  name                    = "mydb"
-  username                = "masterusername"
-  password                = "mustbeeightcharacters"
+  engine                  = data.aws_rds_engine_version.default.engine
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password_wo             = ephemeral.aws_secretsmanager_random_password.test.random_password
+  password_wo_version     = 1
+  username                = "tfacctest"
   backup_retention_period = 7
   skip_final_snapshot     = true
   storage_encrypted       = %[2]t
@@ -176,7 +287,7 @@ resource "aws_db_instance" "test" {
 
   provider = "awsalternate"
 }
-`, rName, storageEncrypted))
+`, rName, storageEncrypted, mainInstanceClasses))
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
@@ -199,7 +310,9 @@ resource "aws_db_instance_automated_backups_replication" "test" {
 func testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceAutomatedBackupsReplicationConfig_base(rName, true), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_db_instance_automated_backups_replication" "test" {
@@ -207,47 +320,4 @@ resource "aws_db_instance_automated_backups_replication" "test" {
   kms_key_id             = aws_kms_key.test.arn
 }
 `, rName))
-}
-
-func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS instance automated backups replication ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
-
-		return err
-	}
-}
-
-func testAccCheckInstanceAutomatedBackupsReplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance_automated_backups_replication" {
-			continue
-		}
-
-		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("RDS instance automated backups replication %s still exists", rs.Primary.ID)
-	}
-
-	return nil
 }

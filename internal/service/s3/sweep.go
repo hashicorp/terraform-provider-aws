@@ -1,236 +1,248 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package s3
 
 import (
 	"context"
 	"fmt"
-	"log"
-	"regexp"
 	"strings"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
-		Name: "aws_s3_object",
-		F:    sweepObjects,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_s3_bucket", sweepBuckets,
+		"aws_s3_access_point",
+		"aws_s3_object_gp_bucket",
+		"aws_s3control_access_grants_instance",
+		"aws_s3control_multi_region_access_point",
+	)
 
-	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
-		Name: "aws_s3_bucket",
-		F:    sweepBuckets,
-		Dependencies: []string{
-			"aws_s3_access_point",
-			"aws_s3_object",
-			"aws_s3control_multi_region_access_point",
-		},
-	})
+	awsv2.Register("aws_s3_directory_bucket", sweepDirectoryBuckets)
+
+	awsv2.Register("aws_s3_object", sweepObjects)
+
+	awsv2.Register("aws_s3_object_directory_bucket", sweepDirectoryBucketObjects)
+
+	awsv2.Register("aws_s3_object_gp_bucket", sweepGeneralPurposeBucketObjects,
+		"aws_m2_application",
+	)
 }
 
-func sweepObjects(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+const logKeyBucketName = "bucket_name"
+
+func sweepObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	tflog.Info(ctx, "Noop sweeper")
+	return nil, nil
+}
+
+func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3Client(ctx)
+
+	var sweepables []sweep.Sweepable
+
+	input := s3.ListBucketsInput{
+		BucketRegion: aws.String(client.Region(ctx)),
 	}
+	pages := s3.NewListBucketsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled
-	input := &s3.ListBucketsInput{}
-
-	output, err := conn.ListBuckets(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing S3 Objects: %s", err)
-	}
-
-	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Objects to sweep")
-		return nil
-	}
-
-	for _, bucket := range output.Buckets {
-		bucketName := aws.StringValue(bucket.Name)
-
-		hasPrefix := false
-		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
-
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(bucketName, prefix) {
-				hasPrefix = true
-				break
+		for _, bucket := range page.Buckets {
+			bucketName := aws.ToString(bucket.Name)
+			ctx = tflog.SetField(ctx, logKeyBucketName, bucketName)
+			if !bucketNameFilter(ctx, bucket) {
+				continue
 			}
-		}
 
-		if !hasPrefix {
-			log.Printf("[INFO] Skipping S3 Bucket: %s", bucketName)
-			continue
-		}
+			var objectLockEnabled bool
+			objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucketName, "")
+			if !tfresource.NotFound(err) {
+				if err != nil {
+					tflog.Warn(ctx, "Reading S3 Bucket Object Lock Configuration", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+				objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
+			}
 
-		bucketRegion, err := bucketRegion(conn, bucketName)
-
-		if err != nil {
-			log.Printf("[ERROR] Error getting S3 Bucket (%s) Location: %s", bucketName, err)
-			continue
-		}
-
-		if bucketRegion != region {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", bucketName, bucketRegion)
-			continue
-		}
-
-		objectLockEnabled, err := objectLockEnabled(conn, bucketName)
-
-		if err != nil {
-			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
-			continue
-		}
-
-		// Delete everything including locked objects. Ignore any object errors.
-		_, err = DeleteAllObjectVersions(conn, bucketName, "", objectLockEnabled, true)
-
-		if err != nil {
-			return fmt.Errorf("error deleting S3 Bucket (%s) Objects: %s", bucketName, err)
+			sweepables = append(sweepables, objectSweeper{
+				conn:   conn,
+				bucket: bucketName,
+				locked: objectLockEnabled,
+			})
 		}
 	}
 
+	return sweepables, nil
+}
+
+func sweepDirectoryBucketObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3ExpressClient(ctx)
+
+	var sweepables []sweep.Sweepable
+
+	pages := s3.NewListDirectoryBucketsPaginator(conn, &s3.ListDirectoryBucketsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bucket := range page.Buckets {
+			bucketName := aws.ToString(bucket.Name)
+			ctx = tflog.SetField(ctx, logKeyBucketName, bucketName)
+			if !bucketNameFilter(ctx, bucket) {
+				continue
+			}
+
+			sweepables = append(sweepables, directoryBucketObjectSweeper{
+				conn:   conn,
+				bucket: bucketName,
+			})
+		}
+	}
+
+	return sweepables, nil
+}
+
+type objectSweeper struct {
+	conn   *s3.Client
+	bucket string
+	locked bool
+}
+
+func (os objectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	// Delete everything including locked objects.
+	tflog.Info(ctx, "Emptying S3 General Purpose Bucket")
+	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
+	if err != nil {
+		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
+	}
+	tflog.Info(ctx, "Deleted Objects from S3 General Purpose Bucket", map[string]any{
+		"object_count": n,
+	})
 	return nil
 }
 
-func sweepBuckets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+type directoryBucketObjectSweeper struct {
+	conn   *s3.Client
+	bucket string
+}
+
+func (os directoryBucketObjectSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	tflog.Info(ctx, "Emptying S3 Directory Bucket")
+	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
-
-	conn := client.(*conns.AWSClient).S3Conn
-	input := &s3.ListBucketsInput{}
-
-	output, err := conn.ListBuckets(input)
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Buckets sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing S3 Buckets: %s", err)
-	}
-
-	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Buckets to sweep")
-		return nil
-	}
-
-	defaultNameRegexp := regexp.MustCompile(`^terraform-\d+$`)
-	for _, bucket := range output.Buckets {
-		name := aws.StringValue(bucket.Name)
-
-		sweepable := false
-		prefixes := []string{"tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap", "terraform-remote-s3-test"}
-
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(name, prefix) {
-				sweepable = true
-				break
-			}
-		}
-
-		if defaultNameRegexp.MatchString(name) {
-			sweepable = true
-		}
-
-		if !sweepable {
-			log.Printf("[INFO] Skipping S3 Bucket: %s", name)
-			continue
-		}
-
-		bucketRegion, err := bucketRegion(conn, name)
-
-		if err != nil {
-			log.Printf("[ERROR] Error getting S3 Bucket (%s) Location: %s", name, err)
-			continue
-		}
-
-		if bucketRegion != region {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) in different Region: %s", name, bucketRegion)
-			continue
-		}
-
-		input := &s3.DeleteBucketInput{
-			Bucket: bucket.Name,
-		}
-
-		log.Printf("[INFO] Deleting S3 Bucket: %s", name)
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteBucket(input)
-
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-				return nil
-			}
-
-			if tfawserr.ErrCodeEquals(err, "BucketNotEmpty") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("error deleting S3 Bucket (%s): %s", name, err)
-		}
-	}
-
+	tflog.Info(ctx, "Deleted Objects from S3 Directory Bucket", map[string]any{
+		"object_count": n,
+	})
 	return nil
 }
 
-func bucketRegion(conn *s3.S3, bucket string) (string, error) {
-	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
-		// By default, GetBucketRegion forces virtual host addressing, which
-		// is not compatible with many non-AWS implementations. Instead, pass
-		// the provider s3_force_path_style configuration, which defaults to
-		// false, but allows override.
-		r.Config.S3ForcePathStyle = conn.Config.S3ForcePathStyle
-	})
-	if err != nil {
-		return "", err
+func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3Client(ctx)
+
+	var sweepResources []sweep.Sweepable
+	r := resourceBucket()
+
+	input := s3.ListBucketsInput{
+		BucketRegion: aws.String(client.Region(ctx)),
+	}
+	pages := s3.NewListBucketsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bucket := range page.Buckets {
+			ctx = tflog.SetField(ctx, logKeyBucketName, aws.ToString(bucket.Name))
+			if !bucketNameFilter(ctx, bucket) {
+				continue
+			}
+
+			d := r.Data(nil)
+			d.SetId(aws.ToString(bucket.Name))
+
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+		}
 	}
 
-	return region, nil
+	return sweepResources, nil
 }
 
-func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
-	input := &s3.GetObjectLockConfigurationInput{
-		Bucket: aws.String(bucket),
+func bucketNameFilter(ctx context.Context, bucket types.Bucket) bool {
+	name := aws.ToString(bucket.Name)
+
+	prefixes := []string{
+		"tf-acc",
+		"tf-object-test",
+		"tf-test",
+		"tftest.applicationversion",
+		"terraform-remote-s3-test",
+		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
+		"resource-test-terraform",
+	}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(name, prefix) {
+			return true
+		}
 	}
 
-	output, err := conn.GetObjectLockConfiguration(input)
-
-	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
-		return false, nil
+	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	if defaultNameRegexp.MatchString(name) {
+		return true
 	}
 
-	if err != nil {
-		return false, err
+	tflog.Info(ctx, "Skipping resource", map[string]any{
+		"skip_reason": "no match on prefix list",
+	})
+	return false
+}
+
+func sweepDirectoryBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3ExpressClient(ctx)
+
+	var sweepResources []sweep.Sweepable
+
+	pages := s3.NewListDirectoryBucketsPaginator(conn, &s3.ListDirectoryBucketsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bucket := range page.Buckets {
+			ctx = tflog.SetField(ctx, logKeyBucketName, aws.ToString(bucket.Name))
+			if !bucketNameFilter(ctx, bucket) {
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(bucket.Name)),
+			))
+		}
 	}
 
-	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
+	return sweepResources, nil
 }

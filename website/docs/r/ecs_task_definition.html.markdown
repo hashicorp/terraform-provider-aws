@@ -156,7 +156,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 ```
 
-### Example Using `container_definitions` and `inference_accelerator`
+### Example Using `container_definitions`
 
 ```terraform
 resource "aws_ecs_task_definition" "test" {
@@ -179,21 +179,10 @@ resource "aws_ecs_task_definition" "test" {
         "containerPort": 80,
         "hostPort": 8080
       }
-    ],
-        "resourceRequirements":[
-            {
-                "type":"InferenceAccelerator",
-                "value":"device_1"
-            }
-        ]
+    ]
   }
 ]
 TASK_DEFINITION
-
-  inference_accelerator {
-    device_name = "device_1"
-    device_type = "eia1.medium"
-  }
 }
 ```
 
@@ -227,8 +216,6 @@ TASK_DEFINITION
 
 ## Argument Reference
 
-~> **NOTE**: Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
-
 The following arguments are required:
 
 * `container_definitions` - (Required) A list of valid [container definitions](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerDefinition.html) provided as a single valid JSON document. Please note that you should only provide values that are part of the container definition document. For a detailed description of what parameters are available, see the [Task Definition Parameters](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html) section from the official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide).
@@ -236,9 +223,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cpu` - (Optional) Number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
+* `enable_fault_injection` - (Optional) Enables fault injection and allows for fault injection requests to be accepted from the task's containers. Default is `false`.
 * `execution_role_arn` - (Optional) ARN of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
-* `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. [Detailed below.](#inference_accelerator)
 * `ipc_mode` - (Optional) IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
 * `memory` - (Optional) Amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `network_mode` - (Optional) Docker networking mode to use for the containers in the task. Valid values are `none`, `bridge`, `awsvpc`, and `host`.
@@ -251,7 +239,12 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `track_latest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
+
+~> **NOTE:** Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
+
+~> **Note:** Fault injection only works with tasks using the `awsvpc` or `host` network modes. Fault injection isn't available on Windows.
 
 ### volume
 
@@ -259,6 +252,7 @@ The following arguments are optional:
 * `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
 * `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 
@@ -320,23 +314,28 @@ For more information, see [Specifying an FSX Windows File Server volume in your 
 
 * `size_in_gib` - (Required) The total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
 
-### inference_accelerator
+## Attribute Reference
 
-* `device_name` - (Required) Elastic Inference accelerator device name. The deviceName must also be referenced in a container definition as a ResourceRequirement.
-* `device_type` - (Required) Elastic Inference accelerator type to use.
-
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
+* `arn_without_revision` - ARN of the Task Definition with the trailing `revision` removed. This may be useful for situations where the latest task definition is always desired. If a revision isn't specified, the latest ACTIVE revision is used. See the [AWS documentation](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_StartTask.html#ECS-StartTask-request-taskDefinition) for details.
 * `revision` - Revision of the task in a particular family.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-ECS Task Definitions can be imported via their Amazon Resource Name (ARN):
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Task Definitions using their ARNs. For example:
 
+```terraform
+import {
+  to = aws_ecs_task_definition.example
+  id = "arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123"
+}
 ```
-$ terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
+
+Using `terraform import`, import ECS Task Definitions using their ARNs. For example:
+
+```console
+% terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```

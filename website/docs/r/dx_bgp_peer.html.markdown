@@ -22,8 +22,9 @@ resource "aws_dx_bgp_peer" "peer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface on which to create the BGP peer.
@@ -33,9 +34,9 @@ Required for IPv4 BGP peers on public virtual interfaces.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic.
 Required for IPv4 BGP peers on public virtual interfaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the BGP peer resource.
 * `bgp_status` - The Up/Down state of the BGP peer.
@@ -44,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)

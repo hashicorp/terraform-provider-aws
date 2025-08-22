@@ -119,29 +119,24 @@ resource "aws_vpn_connection" "example" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `customer_gateway_id` - (Required) The ID of the customer gateway.
 * `type` - (Required) The type of VPN connection. The only type AWS supports at this time is "ipsec.1".
-
-One of the following arguments is required:
-
 * `transit_gateway_id` - (Optional) The ID of the EC2 Transit Gateway.
 * `vpn_gateway_id` - (Optional) The ID of the Virtual Private Gateway.
-
-Other arguments:
-
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `enable_acceleration` - (Optional, Default `false`) Indicate whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
+* `preshared_key_storage` - (Optional) Storage mode for the pre-shared key (PSK). Valid values are `Standard` (stored in the Site-to-Site VPN service) or `SecretsManager` (stored in AWS Secrets Manager).
 * `tags` - (Optional) Tags to apply to the connection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `local_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `local_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `outside_ip_address_type` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
 * `remote_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
-* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `remote_ipv6_network_cidr` - (Optional, Default `::/0`) The IPv6 CIDR on the AWS side of the VPN connection.
 * `transport_transit_gateway_attachment_id` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
@@ -154,6 +149,8 @@ Other arguments:
 * `tunnel2_dpd_timeout_action` - (Optional, Default `clear`) The action to take after DPD timeout occurs for the second VPN tunnel. Specify restart to restart the IKE initiation. Specify clear to end the IKE session. Valid values are `clear | none | restart`.
 * `tunnel1_dpd_timeout_seconds` - (Optional, Default `30`) The number of seconds after which a DPD timeout occurs for the first VPN tunnel. Valid value is equal or higher than `30`.
 * `tunnel2_dpd_timeout_seconds` - (Optional, Default `30`) The number of seconds after which a DPD timeout occurs for the second VPN tunnel. Valid value is equal or higher than `30`.
+* `tunnel1_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the first VPN tunnel. Valid values are `true | false`.
+* `tunnel2_enable_tunnel_lifecycle_control` - (Optional, Default `false`) Turn on or off tunnel endpoint lifecycle control feature for the second VPN tunnel. Valid values are `true | false`.
 * `tunnel1_ike_versions` - (Optional) The IKE versions that are permitted for the first VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel2_ike_versions` - (Optional) The IKE versions that are permitted for the second VPN tunnel. Valid values are `ikev1 | ikev2`.
 * `tunnel1_log_options` - (Optional) Options for logging VPN tunnel activity. See [Log Options](#log-options) below for more details.
@@ -197,9 +194,9 @@ The `cloudwatch_log_options` blocks supports the following arguments:
 * `log_group_arn` - (Optional) The Amazon Resource Name (ARN) of the CloudWatch log group to send logs to.
 * `log_output_format` - (Optional) Set log format. Default format is json. Possible values are: `json` and `text`. The default is `json`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the VPN Connection.
 * `id` - The amazon-assigned ID of the VPN connection.
@@ -208,19 +205,20 @@ In addition to all arguments above, the following attributes are exported:
 * `customer_gateway_configuration` - The configuration information for the VPN connection's customer gateway (in the native XML format).
 * `customer_gateway_id` - The ID of the customer gateway to which the connection is attached.
 * `routes` - The static routes associated with the VPN connection. Detailed below.
+* `preshared_key_arn` - ARN of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection. Note that even if it returns a valid Secrets Manager ARN, the pre-shared key(s) will not be stored in Secrets Manager unless the `preshared_key_storage` argument is set to `SecretsManager`.
 * `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1_address` - The public IP address of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
 * `tunnel1_vgw_inside_address` - The RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
-* `tunnel1_preshared_key` - The preshared key of the first VPN tunnel.
+* `tunnel1_preshared_key` - The preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1_bgp_asn` - The bgp asn number of the first VPN tunnel.
 * `tunnel1_bgp_holdtime` - The bgp holdtime of the first VPN tunnel.
 * `tunnel2_address` - The public IP address of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
 * `tunnel2_vgw_inside_address` - The RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
-* `tunnel2_preshared_key` - The preshared key of the second VPN tunnel.
+* `tunnel2_preshared_key` - The preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2_bgp_asn` - The bgp asn number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - The bgp holdtime of the second VPN tunnel.
 * `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
@@ -243,8 +241,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPN Connections can be imported using the `vpn connection id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPN Connections using the VPN connection `id`. For example:
 
+```terraform
+import {
+  to = aws_vpn_connection.testvpnconnection
+  id = "vpn-40f41529"
+}
 ```
-$ terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
+
+Using `terraform import`, import VPN Connections using the VPN connection `id`. For example:
+
+```console
+% terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```

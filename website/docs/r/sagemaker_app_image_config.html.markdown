@@ -1,14 +1,14 @@
 ---
-subcategory: "SageMaker"
+subcategory: "SageMaker AI"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_app_image_config"
 description: |-
-  Provides a SageMaker App Image Config resource.
+  Provides a SageMaker AI App Image Config resource.
 ---
 
 # Resource: aws_sagemaker_app_image_config
 
-Provides a SageMaker App Image Config resource.
+Provides a SageMaker AI App Image Config resource.
 
 ## Example Usage
 
@@ -23,6 +23,16 @@ resource "aws_sagemaker_app_image_config" "test" {
       name = "example"
     }
   }
+}
+```
+
+### Using Code Editor with empty configuration
+
+```terraform
+resource "aws_sagemaker_app_image_config" "test" {
+  app_image_config_name = "example"
+
+  code_editor_app_image_config {}
 }
 ```
 
@@ -44,11 +54,32 @@ resource "aws_sagemaker_app_image_config" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_image_config_name` - (Required) The name of the App Image Config.
-* `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
+* `code_editor_app_image_config` - (Optional) The CodeEditorAppImageConfig. See [Code Editor App Image Config](#code-editor-app-image-config) details below.
+* `jupyter_lab_image_config` - (Optional) The JupyterLabAppImageConfig. See [Jupyter Lab Image Config](#jupyter-lab-image-config) details below.
+* `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker AI image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Exactly one of `code_editor_app_image_config`, `jupyter_lab_image_config`, or `kernel_gateway_image_config` must be configured. Empty blocks (e.g., `code_editor_app_image_config {}`) are valid configurations.
+
+### Code Editor App Image Config
+
+* `container_config` - (Optional) The configuration used to run the application image container. See [Container Config](#container-config) details below.
+* `file_system_config` - (Optional) The URL where the Git repository is located. See [File System Config](#file-system-config) details below.
+
+### Jupyter Lab Image Config
+
+* `container_config` - (Optional) The configuration used to run the application image container. See [Container Config](#container-config) details below.
+* `file_system_config` - (Optional) The URL where the Git repository is located. See [File System Config](#file-system-config) details below.
+
+#### Container Config
+
+* `container_arguments` - (Optional) The arguments for the container when you're running the application.
+* `container_entrypoint` - (Optional) The entrypoint used to run the application in the container.
+* `container_environment_variables` - (Optional) The environment variables to set in the container.
 
 ### Kernel Gateway Image Config
 
@@ -68,9 +99,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the kernel.
 * `display_name` - (Optional) The display name of the kernel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the App Image Config.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this App Image Config.
@@ -78,8 +109,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker App Image Configs can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker AI App Image Configs using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_app_image_config.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_app_image_config.example example
+
+Using `terraform import`, import SageMaker AI App Image Configs using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_app_image_config.example example
 ```

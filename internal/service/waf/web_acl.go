@@ -1,61 +1,73 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceWebACL() *schema.Resource {
+// @SDKResource("aws_waf_web_acl", name="Web ACL")
+// @Tags(identifierAttribute="arn")
+func resourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWebACLCreate,
-		Read:   resourceWebACLRead,
-		Update: resourceWebACLUpdate,
-		Delete: resourceWebACLDelete,
+		CreateWithoutTimeout: resourceWebACLCreate,
+		ReadWithoutTimeout:   resourceWebACLRead,
+		UpdateWithoutTimeout: resourceWebACLUpdate,
+		DeleteWithoutTimeout: resourceWebACLDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -80,7 +92,7 @@ func ResourceWebACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -98,13 +110,13 @@ func ResourceWebACL() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -117,22 +129,22 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      waf.WafRuleTypeRegular,
-							ValidateFunc: validation.StringInSlice(waf.WafRuleType_Values(), false),
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.WafRuleTypeRegular,
+							ValidateDiagFunc: enum.Validate[awstypes.WafRuleType](),
 						},
 						"rule_id": {
 							Type:     schema.TypeString,
@@ -141,321 +153,296 @@ func ResourceWebACL() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateWebACLInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
+		input := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
-			MetricName:    aws.String(d.Get("metric_name").(string)),
-			Name:          aws.String(d.Get("name").(string)),
+			DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]any)),
+			MetricName:    aws.String(d.Get(names.AttrMetricName).(string)),
+			Name:          aws.String(name),
+			Tags:          getTagsIn(ctx),
 		}
 
-		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		return conn.CreateWebACL(params)
+		return conn.CreateWebACL(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating WAF Web ACL (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Web ACL (%s): %s", name, err)
 	}
 
-	resp := out.(*waf.CreateWebACLOutput)
-	d.SetId(aws.StringValue(resp.WebACL.WebACLId))
+	d.SetId(aws.ToString(output.(*waf.CreateWebACLOutput).WebACL.WebACLId))
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
-	}.String()
-
-	loggingConfiguration := d.Get("logging_configuration").([]interface{})
-	if len(loggingConfiguration) == 1 {
+	if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]any); len(loggingConfiguration) == 1 {
 		input := &waf.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, webACLARN(ctx, meta.(*conns.AWSClient), d.Id())),
 		}
 
-		if _, err := conn.PutLoggingConfiguration(input); err != nil {
-			return fmt.Errorf("error putting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+		_, err := conn.PutLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting WAF Web ACL (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
 
-	rules := d.Get("rules").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+	if rules := d.Get("rules").(*schema.Set).List(); len(rules) > 0 {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
-				Updates:       diffWebACLRules([]interface{}{}, rules),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]any)),
+				Updates:       diffWebACLRules([]any{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACL(req)
+
+			return conn.UpdateWebACL(ctx, input)
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating WAF Web ACL (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Web ACL (%s) rules: %s", d.Id(), err)
 		}
 	}
 
-	return resourceWebACLRead(d, meta)
+	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
-func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	params := &waf.GetWebACLInput{
-		WebACLId: aws.String(d.Id()),
-	}
+	webACL, err := findWebACLByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetWebACL(params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Web ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading WAF Web ACL (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Web ACL (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.WebACL == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading WAF Web ACL (%s): not found", d.Id())
-		}
-
-		log.Printf("[WARN] WAF Web ACL (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	arn := aws.ToString(webACL.WebACLArn)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set(names.AttrDefaultAction, flattenAction(webACL.DefaultAction)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+	}
+	d.Set(names.AttrMetricName, webACL.MetricName)
+	d.Set(names.AttrName, webACL.Name)
+	if err := d.Set("rules", flattenWebACLRules(webACL.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rules: %s", err)
 	}
 
-	d.Set("arn", resp.WebACL.WebACLArn)
-	arn := aws.StringValue(resp.WebACL.WebACLArn)
-
-	if err := d.Set("default_action", FlattenAction(resp.WebACL.DefaultAction)); err != nil {
-		return fmt.Errorf("error setting default_action: %w", err)
-	}
-	d.Set("name", resp.WebACL.Name)
-	d.Set("metric_name", resp.WebACL.MetricName)
-
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Web ACL (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("rules", FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
-		return fmt.Errorf("error setting rules: %w", err)
-	}
-
-	getLoggingConfigurationInput := &waf.GetLoggingConfigurationInput{
+	input := &waf.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(arn),
 	}
-	loggingConfiguration := []interface{}{}
 
-	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
+	output, err := conn.GetLoggingConfiguration(ctx, input)
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-		return fmt.Errorf("error reading WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+	loggingConfiguration := []any{}
+	switch {
+	case err == nil:
+		loggingConfiguration = flattenLoggingConfiguration(output.LoggingConfiguration)
+	case errs.IsA[*awstypes.WAFNonexistentItemException](err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading WAF Web ACL (%s) logging configuration: %s", d.Id(), err)
 	}
 
-	if getLoggingConfigurationOutput != nil {
-		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+	if err := d.Set(names.AttrLoggingConfiguration, loggingConfiguration); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 
-	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
-		return fmt.Errorf("error setting logging_configuration: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	if d.HasChanges("default_action", "rules") {
+	if d.HasChanges(names.AttrDefaultAction, "rules") {
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		wr := NewRetryer(conn)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]any)),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACL(req)
+
+			return conn.UpdateWebACL(ctx, input)
 		})
+
 		if err != nil {
-			return fmt.Errorf("error updating WAF Web ACL (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("logging_configuration") {
-		loggingConfiguration := d.Get("logging_configuration").([]interface{})
-
-		if len(loggingConfiguration) == 1 {
+	if d.HasChange(names.AttrLoggingConfiguration) {
+		if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]any); len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}
 
-			if _, err := conn.PutLoggingConfiguration(input); err != nil {
-				return fmt.Errorf("error updating WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+			_, err := conn.PutLoggingConfiguration(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting WAF Web ACL (%s) logging configuration: %s", d.Id(), err)
 			}
 		} else {
 			input := &waf.DeleteLoggingConfigurationInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
+				ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 			}
 
-			if _, err := conn.DeleteLoggingConfiguration(input); err != nil {
-				return fmt.Errorf("error deleting WAF Web ACL (%s) Logging Configuration: %w", d.Id(), err)
+			_, err := conn.DeleteLoggingConfiguration(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting WAF Web ACL (%s) logging configuration: %s", d.Id(), err)
 			}
-		}
-
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating WAF Web ACL (%s) tags: %w", d.Id(), err)
 		}
 	}
 
-	return resourceWebACLRead(d, meta)
+	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
-func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	// First, need to delete all rules
-	rules := d.Get("rules").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn)
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+	// First, need to delete all rules.
+	if rules := d.Get("rules").(*schema.Set).List(); len(rules) > 0 {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
-				Updates:       diffWebACLRules(rules, []interface{}{}),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]any)),
+				Updates:       diffWebACLRules(rules, []any{}),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACL(req)
+
+			return conn.UpdateWebACL(ctx, input)
 		})
-		if err != nil {
-			return fmt.Errorf("error removing WAF Web ACL (%s) rules: %w", d.Id(), err)
+
+		if err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Web ACL (%s) rules: %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteWebACLInput{
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
+		input := &waf.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		return conn.DeleteWebACL(req)
+		return conn.DeleteWebACL(ctx, input)
 	})
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting WAF Web ACL (%s): %w", d.Id(), err)
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Web ACL (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func expandLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
+func findWebACLByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.WebACL, error) {
+	input := &waf.GetWebACLInput{
+		WebACLId: aws.String(id),
+	}
+
+	output, err := conn.GetWebACL(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.WebACL == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.WebACL, nil
+}
+
+func expandLoggingConfiguration(l []any, resourceARN string) *awstypes.LoggingConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
-	loggingConfiguration := &waf.LoggingConfiguration{
-		LogDestinationConfigs: []*string{
-			aws.String(m["log_destination"].(string)),
+	loggingConfiguration := &awstypes.LoggingConfiguration{
+		LogDestinationConfigs: []string{
+			m["log_destination"].(string),
 		},
-		RedactedFields: expandRedactedFields(m["redacted_fields"].([]interface{})),
+		RedactedFields: expandRedactedFields(m["redacted_fields"].([]any)),
 		ResourceArn:    aws.String(resourceARN),
 	}
 
 	return loggingConfiguration
 }
 
-func expandRedactedFields(l []interface{}) []*waf.FieldToMatch {
+func expandRedactedFields(l []any) []awstypes.FieldToMatch {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	if m["field_to_match"] == nil {
 		return nil
 	}
 
-	redactedFields := make([]*waf.FieldToMatch, 0)
+	redactedFields := make([]awstypes.FieldToMatch, 0)
 
 	for _, fieldToMatch := range m["field_to_match"].(*schema.Set).List() {
 		if fieldToMatch == nil {
 			continue
 		}
 
-		redactedFields = append(redactedFields, ExpandFieldToMatch(fieldToMatch.(map[string]interface{})))
+		redactedFields = append(redactedFields, *expandFieldToMatch(fieldToMatch.(map[string]any)))
 	}
 
 	return redactedFields
 }
 
-func flattenLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *awstypes.LoggingConfiguration) []any {
 	if loggingConfiguration == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"log_destination": "",
 		"redacted_fields": flattenRedactedFields(loggingConfiguration.RedactedFields),
 	}
 
 	if len(loggingConfiguration.LogDestinationConfigs) > 0 {
-		m["log_destination"] = aws.StringValue(loggingConfiguration.LogDestinationConfigs[0])
+		m["log_destination"] = loggingConfiguration.LogDestinationConfigs[0]
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
+func flattenRedactedFields(fieldToMatches []awstypes.FieldToMatch) []any {
 	if len(fieldToMatches) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
 	fieldToMatchResource := &schema.Resource{
@@ -464,41 +451,136 @@ func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
 	}
-	l := make([]interface{}, len(fieldToMatches))
+	l := make([]any, len(fieldToMatches))
 
 	for i, fieldToMatch := range fieldToMatches {
-		l[i] = FlattenFieldToMatch(fieldToMatch)[0]
+		l[i] = flattenFieldToMatch(&fieldToMatch)[0]
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"field_to_match": schema.NewSet(schema.HashResource(fieldToMatchResource), l),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func diffWebACLRules(oldR, newR []interface{}) []*waf.WebACLUpdate {
-	updates := make([]*waf.WebACLUpdate, 0)
+func diffWebACLRules(oldR, newR []any) []awstypes.WebACLUpdate {
+	updates := make([]awstypes.WebACLUpdate, 0)
 
 	for _, or := range oldR {
-		aclRule := or.(map[string]interface{})
+		aclRule := or.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newR, aclRule); contains {
-			newR = append(newR[:idx], newR[idx+1:]...)
+			newR = slices.Delete(newR, idx, idx+1)
 			continue
 		}
-		updates = append(updates, ExpandWebACLUpdate(waf.ChangeActionDelete, aclRule))
+		updates = append(updates, expandWebACLUpdate(string(awstypes.ChangeActionDelete), aclRule))
 	}
 
 	for _, nr := range newR {
-		aclRule := nr.(map[string]interface{})
-		updates = append(updates, ExpandWebACLUpdate(waf.ChangeActionInsert, aclRule))
+		aclRule := nr.(map[string]any)
+		updates = append(updates, expandWebACLUpdate(string(awstypes.ChangeActionInsert), aclRule))
 	}
 	return updates
+}
+
+func expandAction(l []any) *awstypes.WafAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	return &awstypes.WafAction{
+		Type: awstypes.WafActionType(m[names.AttrType].(string)),
+	}
+}
+
+func expandOverrideAction(l []any) *awstypes.WafOverrideAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	return &awstypes.WafOverrideAction{
+		Type: awstypes.WafOverrideActionType(m[names.AttrType].(string)),
+	}
+}
+
+func expandWebACLUpdate(updateAction string, aclRule map[string]any) awstypes.WebACLUpdate {
+	var rule *awstypes.ActivatedRule
+
+	switch aclRule[names.AttrType].(string) {
+	case string(awstypes.WafRuleTypeGroup):
+		rule = &awstypes.ActivatedRule{
+			OverrideAction: expandOverrideAction(aclRule["override_action"].([]any)),
+			Priority:       aws.Int32(int32(aclRule[names.AttrPriority].(int))),
+			RuleId:         aws.String(aclRule["rule_id"].(string)),
+			Type:           awstypes.WafRuleType(aclRule[names.AttrType].(string)),
+		}
+	default:
+		rule = &awstypes.ActivatedRule{
+			Action:   expandAction(aclRule[names.AttrAction].([]any)),
+			Priority: aws.Int32(int32(aclRule[names.AttrPriority].(int))),
+			RuleId:   aws.String(aclRule["rule_id"].(string)),
+			Type:     awstypes.WafRuleType(aclRule[names.AttrType].(string)),
+		}
+	}
+
+	update := awstypes.WebACLUpdate{
+		Action:        awstypes.ChangeAction(updateAction),
+		ActivatedRule: rule,
+	}
+
+	return update
+}
+
+func flattenAction(n *awstypes.WafAction) []map[string]any {
+	if n == nil {
+		return nil
+	}
+
+	result := map[string]any{
+		names.AttrType: string(n.Type),
+	}
+
+	return []map[string]any{result}
+}
+
+func flattenWebACLRules(ts []awstypes.ActivatedRule) []map[string]any {
+	out := make([]map[string]any, len(ts))
+	for i, r := range ts {
+		m := make(map[string]any)
+
+		switch r.Type {
+		case awstypes.WafRuleTypeGroup:
+			actionMap := map[string]any{
+				names.AttrType: r.OverrideAction.Type,
+			}
+			m["override_action"] = []map[string]any{actionMap}
+		default:
+			actionMap := map[string]any{
+				names.AttrType: r.Action.Type,
+			}
+			m[names.AttrAction] = []map[string]any{actionMap}
+		}
+
+		m[names.AttrPriority] = r.Priority
+		m["rule_id"] = aws.ToString(r.RuleId)
+		m[names.AttrType] = string(r.Type)
+		out[i] = m
+	}
+	return out
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func webACLARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "webacl/"+id)
 }

@@ -84,7 +84,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
   task_invocation_parameters {
     run_command_parameters {
-      output_s3_bucket     = aws_s3_bucket.example.bucket
+      output_s3_bucket     = aws_s3_bucket.example.id
       output_s3_key_prefix = "output"
       service_role_arn     = aws_iam_role.example.arn
       timeout_seconds      = 600
@@ -131,8 +131,9 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `window_id` - (Required) The Id of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
 * `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
@@ -198,9 +199,9 @@ The following arguments are supported:
 * `name` - (Required) The parameter name.
 * `values` - (Required) The array of strings.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the maintenance window task.
 * `id` - The ID of the maintenance window task.
@@ -208,8 +209,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Maintenance Window Task can be imported using the `window_id` and `window_task_id` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
 
-```sh
-$ terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.task
+  id = "<window_id>/<window_task_id>"
+}
+```
+
+Using `terraform import`, import AWS Maintenance Window Task using the `window_id` and `window_task_id` separated by `/`. For example:
+
+```console
+% terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
 ```

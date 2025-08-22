@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_inspector2_delegated_admin_account: Fix `errors: *target must be interface or implement error` panic
+```
+
+```release-note:bug
+resource/aws_inspector2_enabler: Fix `interface conversion: interface {} is nil, not map[string]inspector2.AccountResourceStatus` panic
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53domains_registered_domain: Add `billing_contact` and `billing_privacy` arguments
+```

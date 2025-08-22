@@ -1,18 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,40 +29,25 @@ const (
 	ResNameAssessmentTemplate = "Assessment Template"
 )
 
+// @SDKResource("aws_inspector_assessment_template", name="Assessment Template")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTemplate")
+// @Testing(preIdentityVersion="v6.4.0")
+// @Tags(identifierAttribute="id")
 func ResourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAssessmentTemplateCreate,
-		Read:   resourceAssessmentTemplateRead,
-		Update: resourceAssessmentTemplateUpdate,
-		Delete: resourceAssessmentTemplateDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		CreateWithoutTimeout: resourceAssessmentTemplateCreate,
+		ReadWithoutTimeout:   resourceAssessmentTemplateRead,
+		UpdateWithoutTimeout: resourceAssessmentTemplateUpdate,
+		DeleteWithoutTimeout: resourceAssessmentTemplateDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"target_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"rules_package_arns": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -64,11 +57,11 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"event": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(inspector.Event_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InspectorEvent](),
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -76,123 +69,100 @@ func ResourceAssessmentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"rules_package_arns": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTargetARN: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAssessmentTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	req := &inspector.CreateAssessmentTemplateInput{
-		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
-		AssessmentTemplateName: aws.String(d.Get("name").(string)),
-		DurationInSeconds:      aws.Int64(int64(d.Get("duration").(int))),
-		RulesPackageArns:       flex.ExpandStringSet(d.Get("rules_package_arns").(*schema.Set)),
+	name := d.Get(names.AttrName).(string)
+	input := &inspector.CreateAssessmentTemplateInput{
+		AssessmentTargetArn:    aws.String(d.Get(names.AttrTargetARN).(string)),
+		AssessmentTemplateName: aws.String(name),
+		DurationInSeconds:      aws.Int32(int32(d.Get(names.AttrDuration).(int))),
+		RulesPackageArns:       flex.ExpandStringValueSet(d.Get("rules_package_arns").(*schema.Set)),
 	}
 
-	log.Printf("[DEBUG] Creating Inspector assessment template: %s", req)
-	resp, err := conn.CreateAssessmentTemplate(req)
+	output, err := conn.CreateAssessmentTemplate(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Inspector assessment template: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Assessment Template (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.AssessmentTemplateArn))
+	d.SetId(aws.ToString(output.AssessmentTemplateArn))
 
-	if len(tags) > 0 {
-		if err := updateTags(conn, d.Id(), nil, tags); err != nil {
-			return fmt.Errorf("error adding Inspector assessment template (%s) tags: %s", d.Id(), err)
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Inspector Classic Assessment Template (%s) tags: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("event_subscription"); ok && v.(*schema.Set).Len() > 0 {
+		input := expandEventSubscriptions(v.(*schema.Set).List(), output.AssessmentTemplateArn)
+
+		if err := subscribeToEvents(ctx, conn, input); err != nil {
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
-	input := []*inspector.SubscribeToEventInput{}
-
-	if v, ok := d.GetOk("event_subscription"); ok && v.(*schema.Set).Len() > 0 {
-		input = expandEventSubscriptions(v.(*schema.Set).List(), resp.AssessmentTemplateArn)
-	}
-
-	if err := subscribeToEvents(conn, input); err != nil {
-		return create.Error(names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
-	}
-
-	return resourceAssessmentTemplateRead(d, meta)
+	return append(diags, resourceAssessmentTemplateRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	resp, err := conn.DescribeAssessmentTemplates(&inspector.DescribeAssessmentTemplatesInput{
-		AssessmentTemplateArns: aws.StringSlice([]string{d.Id()}),
-	})
-	if err != nil {
-		return fmt.Errorf("error reading Inspector assessment template (%s): %s", d.Id(), err)
-	}
-
-	if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-		log.Printf("[WARN] Inspector assessment template (%s) not found, removing from state", d.Id())
+	template, err := FindAssessmentTemplateByID(ctx, conn, d.Id())
+	if errs.IsA[*retry.NotFoundError](err) {
+		log.Printf("[WARN] Inspector Classic Assessment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
-	template := resp.AssessmentTemplates[0]
+	arn := aws.ToString(template.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDuration, template.DurationInSeconds)
+	d.Set(names.AttrName, template.Name)
+	d.Set("rules_package_arns", template.RulesPackageArns)
+	d.Set(names.AttrTargetARN, template.AssessmentTargetArn)
 
-	arn := aws.StringValue(template.Arn)
-	d.Set("arn", arn)
-	d.Set("duration", template.DurationInSeconds)
-	d.Set("name", template.Name)
-	d.Set("target_arn", template.AssessmentTargetArn)
-
-	if err := d.Set("rules_package_arns", flex.FlattenStringSet(template.RulesPackageArns)); err != nil {
-		return fmt.Errorf("error setting rules_package_arns: %s", err)
-	}
-
-	tags, err := ListTags(conn, arn)
+	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Inspector assessment template (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	output, err := findSubscriptionsByAssessmentTemplateARN(conn, arn)
-
-	if err != nil {
-		return create.Error(names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	if err := d.Set("event_subscription", flattenSubscriptions(output)); err != nil {
-		return create.Error(names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := updateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Inspector assessment template (%s) tags: %s", d.Id(), err)
-		}
-	}
+func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
 	if d.HasChange("event_subscription") {
 		old, new := d.GetChange("event_subscription")
@@ -207,32 +177,61 @@ func resourceAssessmentTemplateUpdate(d *schema.ResourceData, meta interface{}) 
 		addEventSubscriptionsInput := expandEventSubscriptions(eventSubscriptionsToAdd.List(), templateId)
 		removeEventSubscriptionsInput := expandEventSubscriptions(eventSubscriptionsToRemove.List(), templateId)
 
-		if err := subscribeToEvents(conn, addEventSubscriptionsInput); err != nil {
-			return create.Error(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+		if err := subscribeToEvents(ctx, conn, addEventSubscriptionsInput); err != nil {
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 
-		if err := unsubscribeFromEvents(conn, removeEventSubscriptionsInput); err != nil {
-			return create.Error(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+		if err := unsubscribeFromEvents(ctx, conn, removeEventSubscriptionsInput); err != nil {
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
-	return resourceAssessmentTemplateRead(d, meta)
+	return append(diags, resourceAssessmentTemplateRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorClient(ctx)
 
-	_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
+	log.Printf("[INFO] Deleting Inspector Classic Assessment Template: %s", d.Id())
+	_, err := conn.DeleteAssessmentTemplate(ctx, &inspector.DeleteAssessmentTemplateInput{
 		AssessmentTemplateArn: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("error deleting Inspector assessment template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Inspector Classic Assessment Template (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*inspector.SubscribeToEventInput {
+func FindAssessmentTemplateByID(ctx context.Context, conn *inspector.Client, arn string) (*awstypes.AssessmentTemplate, error) {
+	in := &inspector.DescribeAssessmentTargetsInput{
+		AssessmentTargetArns: []string{arn},
+	}
+
+	out, err := conn.DescribeAssessmentTemplates(ctx, &inspector.DescribeAssessmentTemplatesInput{
+		AssessmentTemplateArns: []string{arn},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out.AssessmentTemplates) == 0 {
+		return nil, &retry.NotFoundError{
+			LastRequest: in,
+		}
+	}
+
+	if i := len(out.AssessmentTemplates); i > 1 {
+		return nil, tfresource.NewTooManyResultsError(i, in)
+	}
+
+	return &out.AssessmentTemplates[0], nil
+}
+
+func expandEventSubscriptions(tfList []any, templateArn *string) []*inspector.SubscribeToEventInput {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -240,7 +239,7 @@ func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*insp
 	var eventSubscriptions []*inspector.SubscribeToEventInput
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -254,37 +253,29 @@ func expandEventSubscriptions(tfList []interface{}, templateArn *string) []*insp
 	return eventSubscriptions
 }
 
-func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) *inspector.SubscribeToEventInput {
+func expandEventSubscription(tfMap map[string]any, templateArn *string) *inspector.SubscribeToEventInput {
 	if tfMap == nil {
 		return nil
 	}
 
 	eventSubscription := &inspector.SubscribeToEventInput{
-		Event:       aws.String(tfMap["event"].(string)),
+		Event:       awstypes.InspectorEvent(tfMap["event"].(string)),
 		ResourceArn: templateArn,
-		TopicArn:    aws.String(tfMap["topic_arn"].(string)),
+		TopicArn:    aws.String(tfMap[names.AttrTopicARN].(string)),
 	}
 
 	return eventSubscription
 }
 
-func flattenSubscriptions(subscriptions []*inspector.Subscription) []interface{} {
+func flattenSubscriptions(subscriptions []awstypes.Subscription) []any {
 	if len(subscriptions) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, subscription := range subscriptions {
-		if subscription == nil {
-			continue
-		}
-
 		for _, eventSubscription := range subscription.EventSubscriptions {
-			if eventSubscription == nil {
-				continue
-			}
-
 			tfList = append(tfList, flattenEventSubscription(eventSubscription, subscription.TopicArn))
 		}
 	}
@@ -292,22 +283,18 @@ func flattenSubscriptions(subscriptions []*inspector.Subscription) []interface{}
 	return tfList
 }
 
-func flattenEventSubscription(eventSubscription *inspector.EventSubscription, topicArn *string) map[string]interface{} {
-	if eventSubscription == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenEventSubscription(eventSubscription awstypes.EventSubscription, topicArn *string) map[string]any {
+	tfMap := map[string]any{}
 
 	tfMap["event"] = eventSubscription.Event
-	tfMap["topic_arn"] = topicArn
+	tfMap[names.AttrTopicARN] = topicArn
 
 	return tfMap
 }
 
-func subscribeToEvents(conn *inspector.Inspector, eventSubscriptions []*inspector.SubscribeToEventInput) error {
+func subscribeToEvents(ctx context.Context, conn *inspector.Client, eventSubscriptions []*inspector.SubscribeToEventInput) error {
 	for _, eventSubscription := range eventSubscriptions {
-		_, err := conn.SubscribeToEvent(eventSubscription)
+		_, err := conn.SubscribeToEvent(ctx, eventSubscription)
 
 		if err != nil {
 			return create.Error(names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, *eventSubscription.TopicArn, err)
@@ -317,7 +304,7 @@ func subscribeToEvents(conn *inspector.Inspector, eventSubscriptions []*inspecto
 	return nil
 }
 
-func unsubscribeFromEvents(conn *inspector.Inspector, eventSubscriptions []*inspector.SubscribeToEventInput) error {
+func unsubscribeFromEvents(ctx context.Context, conn *inspector.Client, eventSubscriptions []*inspector.SubscribeToEventInput) error {
 	for _, eventSubscription := range eventSubscriptions {
 		input := &inspector.UnsubscribeFromEventInput{
 			Event:       eventSubscription.Event,
@@ -325,7 +312,7 @@ func unsubscribeFromEvents(conn *inspector.Inspector, eventSubscriptions []*insp
 			TopicArn:    eventSubscription.TopicArn,
 		}
 
-		_, err := conn.UnsubscribeFromEvent(input)
+		_, err := conn.UnsubscribeFromEvent(ctx, input)
 
 		if err != nil {
 			return create.Error(names.Inspector, create.ErrActionDeleting, ResNameAssessmentTemplate, *eventSubscription.TopicArn, err)

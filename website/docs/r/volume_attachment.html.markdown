@@ -40,8 +40,9 @@ resource "aws_ebs_volume" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_name` - (Required) The device name to expose to the instance (for
 example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
 * `instance_id` - (Required) ID of the Instance to attach to
@@ -58,9 +59,9 @@ means attached.
 * `stop_instance_before_detaching` - (Optional, Boolean) Set this to true to ensure that the target instance is stopped
 before trying to detach the volume. Stops the instance, if it is not already stopped.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `device_name` - The device name exposed to the instance
 * `instance_id` - ID of the Instance
@@ -68,12 +69,20 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
 
-```
-$ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
+```terraform
+import {
+  to = aws_volume_attachment.example
+  id = "/dev/sdh:vol-049df61146c4d7901:i-12345678"
+}
 ```
 
+Using `terraform import`, import EBS Volume Attachments using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`. For example:
+
+```console
+% terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
+```
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names

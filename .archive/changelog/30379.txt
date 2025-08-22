@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix crash when updating `master_password`
+```
+
+```release-note:bug
+resource/aws_db_instance: Fix crash when updating `password`
+```

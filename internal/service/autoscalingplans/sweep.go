@@ -1,49 +1,39 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package autoscalingplans
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_autoscalingplans_scaling_plan", &resource.Sweeper{
-		Name: "aws_autoscalingplans_scaling_plan",
-		F:    sweepScalingPlans,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_autoscalingplans_scaling_plan", sweepScalingPlans)
 }
 
-func sweepScalingPlans(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).AutoScalingPlansConn
-	input := &autoscalingplans.DescribeScalingPlansInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+func sweepScalingPlans(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.AutoScalingPlansClient(ctx)
 
-	err = describeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+	var sweepResources []sweep.Sweepable
+	r := ResourceScalingPlan()
+
+	input := autoscalingplans.DescribeScalingPlansInput{}
+	err := describeScalingPlansPages(ctx, conn, &input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, scalingPlan := range page.ScalingPlans {
-			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
-			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
-
-			r := ResourceScalingPlan()
 			d := r.Data(nil)
-			d.SetId("????????????????") // ID not used in Delete.
-			d.Set("name", scalingPlanName)
-			d.Set("scaling_plan_version", scalingPlanVersion)
+			d.SetId("unused")
+			d.Set(names.AttrName, scalingPlan.ScalingPlanName)
+			d.Set("scaling_plan_version", scalingPlan.ScalingPlanVersion)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -51,20 +41,5 @@ func sweepScalingPlans(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Auto Scaling Scaling Plan sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Auto Scaling Scaling Plans (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping Auto Scaling Scaling Plans (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, err
 }

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `api_gateway`, `app_runner_service`, `cognito_user_pool`, and `verified_access_instance` configuration blocks to `association_config.request_body`
+```

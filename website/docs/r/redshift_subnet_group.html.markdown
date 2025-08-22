@@ -49,16 +49,17 @@ resource "aws_redshift_subnet_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Redshift Subnet group.
 * `description` - (Optional) The description of the Redshift Subnet group. Defaults to "Managed by Terraform".
 * `subnet_ids` - (Required) An array of VPC subnet IDs.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Subnet group name
 * `id` - The Redshift Subnet group ID.
@@ -66,8 +67,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift subnet groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift subnet groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_subnet_group.testgroup1
+  id = "test-cluster-subnet-group"
+}
 ```
-$ terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
+
+Using `terraform import`, import Redshift subnet groups using the `name`. For example:
+
+```console
+% terraform import aws_redshift_subnet_group.testgroup1 test-cluster-subnet-group
 ```

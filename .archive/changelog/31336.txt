@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Add ability to specify Aurora IO Optimized `storage_type`
+```

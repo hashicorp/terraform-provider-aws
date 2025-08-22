@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_account_setting_default: Remove plan-time validation of `value`
+```

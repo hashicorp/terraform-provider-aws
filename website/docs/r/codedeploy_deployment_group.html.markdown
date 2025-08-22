@@ -15,24 +15,22 @@ Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 ## Example Usage
 
 ```terraform
-resource "aws_iam_role" "example" {
-  name = "example-role"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codedeploy.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["codedeploy.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "example" {
+  name               = "example-role"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
@@ -82,6 +80,9 @@ resource "aws_codedeploy_deployment_group" "example" {
     alarms  = ["my-alarm-name"]
     enabled = true
   }
+
+  outdated_instances_strategy = "UPDATE"
+
 }
 ```
 
@@ -185,8 +186,9 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_name` - (Required) The name of the application.
 * `deployment_group_name` - (Required) The name of the deployment group.
 * `service_role_arn` - (Required) The service role ARN that allows deployments.
@@ -202,13 +204,15 @@ The following arguments are supported:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdated_instances_strategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
+* `termination_hook_enabled` - (Optional)  Indicates whether the deployment group was configured to have CodeDeploy install a termination hook into an Auto Scaling group.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
 You can configure a deployment to stop when a **CloudWatch** alarm detects that a metric has fallen below or exceeded a defined threshold. `alarm_configuration` supports the following:
 
-* `alarms` - (Optional) A list of alarms configured for the deployment group. _A maximum of 10 alarms can be added to a deployment group_.
+* `alarms` - (Optional) A list of alarms configured for the deployment group.
 * `enabled` - (Optional) Indicates whether the alarm configuration is enabled. This option is useful when you want to temporarily deactivate alarm monitoring for a deployment group without having to add the same alarms again later.
 * `ignore_poll_alarm_failure` - (Optional) Indicates whether a deployment should continue if information about the current state of alarms cannot be retrieved from CloudWatch. The default value is `false`.
     * `true`: The deployment will proceed even if alarm status information can't be retrieved.
@@ -221,7 +225,7 @@ _Only one `alarm_configuration` is allowed_.
 You can configure a deployment group to automatically rollback when a deployment fails or when a monitoring threshold you specify is met. In this case, the last known good version of an application revision is deployed. `auto_rollback_configuration` supports the following:
 
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
-* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE` and `DEPLOYMENT_STOP_ON_ALARM`.
+* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE`, `DEPLOYMENT_STOP_ON_ALARM` and `DEPLOYMENT_STOP_ON_REQUEST`.
 
 _Only one `auto_rollback_configuration` is allowed_.
 
@@ -317,7 +321,7 @@ The `target_group_pair_info` configuration block supports the following:
 
 The `prod_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. Must contain exactly one listener ARN.
 
 ##### load_balancer_info target_group_pair_info target_group Argument Reference
 
@@ -347,9 +351,9 @@ Add triggers to a Deployment Group to receive notifications about events related
 * `trigger_name` - (Required) The name of the notification trigger.
 * `trigger_target_arn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
@@ -359,10 +363,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_deployment_group.example
+  id = "my-application:my-deployment-group"
+}
 ```
-$ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
+
+Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
+
+```console
+% terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

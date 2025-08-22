@@ -1,30 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/yaml"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAPI() *schema.Resource {
+// @SDKResource("aws_apigatewayv2_api", name="API")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetApiOutput")
+func resourceAPI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPICreate,
-		Read:   resourceAPIRead,
-		Update: resourceAPIUpdate,
-		Delete: resourceAPIDelete,
+		CreateWithoutTimeout: resourceAPICreate,
+		ReadWithoutTimeout:   resourceAPIRead,
+		UpdateWithoutTimeout: resourceAPIUpdate,
+		DeleteWithoutTimeout: resourceAPIDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,9 +58,15 @@ func ResourceAPI() *schema.Resource {
 					"$request.header.x-api-key",
 				}, false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"body": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
 			},
 			"cors_configuration": {
 				Type:     schema.TypeList,
@@ -59,25 +82,25 @@ func ResourceAPI() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"allow_methods": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"allow_origins": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"expose_headers": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"max_age": {
 							Type:     schema.TypeInt,
@@ -92,7 +115,7 @@ func ResourceAPI() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -101,30 +124,30 @@ func ResourceAPI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"fail_on_warnings": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"execution_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"fail_on_warnings": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			},
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"body": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
-				ValidateFunc:     verify.ValidStringIsJSONOrYAML,
-			},
 			"protocol_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.ProtocolType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ProtocolType](),
 			},
 			"route_key": {
 				Type:     schema.TypeString,
@@ -136,330 +159,398 @@ func ResourceAPI() *schema.Resource {
 				Optional: true,
 				Default:  "$request.method $request.path",
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"target": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTarget: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	if body, ok := d.GetOk("body"); ok {
-		revertReq := &apigatewayv2.UpdateApiInput{
-			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
-			Description: aws.String(d.Get("description").(string)),
-			Version:     aws.String(d.Get("version").(string)),
-		}
-
-		log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec %s", d.Id())
-		importReq := &apigatewayv2.ReimportApiInput{
-			ApiId: aws.String(d.Id()),
-			Body:  aws.String(body.(string)),
-		}
-
-		if value, ok := d.GetOk("fail_on_warnings"); ok {
-			importReq.FailOnWarnings = aws.Bool(value.(bool))
-		}
-
-		_, err := conn.ReimportApi(importReq)
-
-		if err != nil {
-			return fmt.Errorf("error importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
-		}
-
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-		corsConfiguration := d.Get("cors_configuration")
-
-		if err := resourceAPIRead(d, meta); err != nil {
-			return err
-		}
-
-		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
-			if len(corsConfiguration.([]interface{})) == 0 {
-				log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
-				_, err := conn.DeleteCorsConfiguration(&apigatewayv2.DeleteCorsConfigurationInput{
-					ApiId: aws.String(d.Id()),
-				})
-				if err != nil {
-					return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
-				}
-			} else {
-				revertReq.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
-			}
-		}
-
-		if err := UpdateTags(conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
-		}
-
-		log.Printf("[DEBUG] Reverting API Gateway v2 API: %s", revertReq)
-		_, err = conn.UpdateApi(revertReq)
-		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
-		}
+	name := d.Get(names.AttrName).(string)
+	input := apigatewayv2.CreateApiInput{
+		Name:         aws.String(name),
+		ProtocolType: awstypes.ProtocolType(d.Get("protocol_type").(string)),
+		Tags:         getTagsIn(ctx),
 	}
 
-	return nil
-}
-
-func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	protocolType := d.Get("protocol_type").(string)
-	req := &apigatewayv2.CreateApiInput{
-		Name:         aws.String(d.Get("name").(string)),
-		ProtocolType: aws.String(protocolType),
-		Tags:         Tags(tags.IgnoreAWS()),
-	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
-		req.ApiKeySelectionExpression = aws.String(v.(string))
+		input.ApiKeySelectionExpression = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		req.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
+		input.CorsConfiguration = expandCORS(v.([]any))
 	}
+
 	if v, ok := d.GetOk("credentials_arn"); ok {
-		req.CredentialsArn = aws.String(v.(string))
+		input.CredentialsArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok {
-		req.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
+		input.DisableExecuteApiEndpoint = aws.Bool(v.(bool))
 	}
+
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok && v != "" {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk("route_key"); ok {
-		req.RouteKey = aws.String(v.(string))
+		input.RouteKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("route_selection_expression"); ok {
-		req.RouteSelectionExpression = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("target"); ok {
-		req.Target = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("version"); ok {
-		req.Version = aws.String(v.(string))
+		input.RouteSelectionExpression = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 API: %s", req)
-	resp, err := conn.CreateApi(req)
+	if v, ok := d.GetOk(names.AttrTarget); ok {
+		input.Target = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrVersion); ok {
+		input.Version = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateApi(ctx, &input)
+
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ApiId))
+	d.SetId(aws.ToString(output.ApiId))
 
-	err = resourceImportOpenAPI(d, meta)
-	if err != nil {
-		return err
+	if err := reimportOpenAPIDefinition(ctx, d, meta); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceAPIRead(d, meta)
+	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
-		ApiId: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	output, err := findAPIByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
-	d.Set("api_endpoint", resp.ApiEndpoint)
-	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
-	apiArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
-	}.String()
-	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenCORSConfiguration(resp.CorsConfiguration)); err != nil {
-		return fmt.Errorf("error setting cors_configuration: %s", err)
+	d.Set("api_endpoint", output.ApiEndpoint)
+	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	if err := d.Set("cors_configuration", flattenCORS(output.CorsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
-	d.Set("description", resp.Description)
-	d.Set("disable_execute_api_endpoint", resp.DisableExecuteApiEndpoint)
-	executionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", executionArn)
-	d.Set("name", resp.Name)
-	d.Set("protocol_type", resp.ProtocolType)
-	d.Set("route_selection_expression", resp.RouteSelectionExpression)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrIPAddressType, output.IpAddressType)
+	d.Set(names.AttrName, output.Name)
+	d.Set("protocol_type", output.ProtocolType)
+	d.Set("route_selection_expression", output.RouteSelectionExpression)
+	d.Set(names.AttrVersion, output.Version)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-	d.Set("version", resp.Version)
-
-	return nil
+	return diags
 }
 
-func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	deleteCorsConfiguration := false
+	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
-		v := d.Get("cors_configuration")
-		if len(v.([]interface{})) == 0 {
-			deleteCorsConfiguration = true
-
-			log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
-			_, err := conn.DeleteCorsConfiguration(&apigatewayv2.DeleteCorsConfigurationInput{
+		if v := d.Get("cors_configuration"); len(v.([]any)) == 0 {
+			corsConfigurationDeleted = true
+			input := apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.DeleteCorsConfiguration(ctx, &input)
+
 			if err != nil {
-				return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s) CORS configuration: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChanges("api_key_selection_expression", "description", "disable_execute_api_endpoint", "name", "route_selection_expression", "version") ||
-		(d.HasChange("cors_configuration") && !deleteCorsConfiguration) {
-		req := &apigatewayv2.UpdateApiInput{
+	if d.HasChanges("api_key_selection_expression", names.AttrDescription, "disable_execute_api_endpoint", names.AttrIPAddressType, names.AttrName, "route_selection_expression", names.AttrVersion) ||
+		(d.HasChange("cors_configuration") && !corsConfigurationDeleted) {
+		input := apigatewayv2.UpdateApiInput{
 			ApiId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("api_key_selection_expression") {
-			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
+			input.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
 		}
+
 		if d.HasChange("cors_configuration") {
-			req.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
+			input.CorsConfiguration = expandCORS(d.Get("cors_configuration").([]any))
 		}
-		if d.HasChange("description") {
-			req.Description = aws.String(d.Get("description").(string))
+
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
+
 		if d.HasChange("disable_execute_api_endpoint") {
-			req.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
+			input.DisableExecuteApiEndpoint = aws.Bool(d.Get("disable_execute_api_endpoint").(bool))
 		}
-		if d.HasChange("name") {
-			req.Name = aws.String(d.Get("name").(string))
+
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
 		}
+
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
 		if d.HasChange("route_selection_expression") {
-			req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
-		}
-		if d.HasChange("version") {
-			req.Version = aws.String(d.Get("version").(string))
+			input.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
-		_, err := conn.UpdateApi(req)
+		if d.HasChange(names.AttrVersion) {
+			input.Version = aws.String(d.Get(names.AttrVersion).(string))
+		}
+
+		_, err := conn.UpdateApi(ctx, &input)
+
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("body") {
-		err := resourceImportOpenAPI(d, meta)
-		if err != nil {
-			return err
+		if err := reimportOpenAPIDefinition(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceAPIRead(d, meta)
+	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
-	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
+	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
+	input := apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
 	}
+	_, err := conn.DeleteApi(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 API (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta any) error {
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
+
+	if body, ok := d.GetOk("body"); ok {
+		body := body.(string)
+		configuredCORSConfiguration := d.Get("cors_configuration")
+		configuredDescription := d.Get(names.AttrDescription).(string)
+		configuredName := d.Get(names.AttrName).(string)
+		configuredVersion := d.Get(names.AttrVersion).(string)
+
+		inputRA := apigatewayv2.ReimportApiInput{
+			ApiId: aws.String(d.Id()),
+			Body:  aws.String(body),
+		}
+
+		if value, ok := d.GetOk("fail_on_warnings"); ok {
+			inputRA.FailOnWarnings = aws.Bool(value.(bool))
+		}
+
+		_, err := conn.ReimportApi(ctx, &inputRA)
+
+		if err != nil {
+			return fmt.Errorf("reimporting API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
+		}
+
+		if diags := resourceAPIRead(ctx, d, meta); diags.HasError() {
+			return sdkdiag.DiagnosticsError(diags)
+		}
+
+		m, err := decodeOpenAPIDefinition(body)
+
+		if err != nil {
+			return fmt.Errorf("decoding API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
+		}
+
+		// Don't ovewrite the configured values if they are not present in the OpenAPI definition.
+		description := configuredDescription
+		name := configuredName
+		version := configuredVersion
+		if m, ok := m["info"].(map[string]any); ok {
+			if _, ok := m[names.AttrDescription]; ok {
+				description = d.Get(names.AttrDescription).(string)
+			}
+			if _, ok := m["title"]; ok {
+				name = d.Get(names.AttrName).(string)
+			}
+			if _, ok := m[names.AttrVersion]; ok {
+				version = d.Get(names.AttrVersion).(string)
+			}
+		}
+
+		inputUA := apigatewayv2.UpdateApiInput{
+			ApiId:       aws.String(d.Id()),
+			Description: aws.String(description),
+			Name:        aws.String(name),
+			Version:     aws.String(version),
+		}
+
+		if !reflect.DeepEqual(configuredCORSConfiguration, d.Get("cors_configuration")) {
+			if len(configuredCORSConfiguration.([]any)) == 0 {
+				input := apigatewayv2.DeleteCorsConfigurationInput{
+					ApiId: aws.String(d.Id()),
+				}
+
+				_, err := conn.DeleteCorsConfiguration(ctx, &input)
+
+				if err != nil {
+					return fmt.Errorf("deleting API Gateway v2 API (%s) CORS configuration: %w", d.Id(), err)
+				}
+			} else {
+				inputUA.CorsConfiguration = expandCORS(configuredCORSConfiguration.([]any))
+			}
+		}
+
+		_, err = conn.UpdateApi(ctx, &inputUA)
+
+		if err != nil {
+			return fmt.Errorf("updating API Gateway v2 API (%s): %w", d.Id(), err)
+		}
 	}
 
 	return nil
 }
 
-func expandCORSConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
-	configuration := &apigatewayv2.Cors{}
-
-	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
-		return configuration
-	}
-	mConfiguration := vConfiguration[0].(map[string]interface{})
-
-	if vAllowCredentials, ok := mConfiguration["allow_credentials"].(bool); ok {
-		configuration.AllowCredentials = aws.Bool(vAllowCredentials)
-	}
-	if vAllowHeaders, ok := mConfiguration["allow_headers"].(*schema.Set); ok {
-		configuration.AllowHeaders = flex.ExpandStringSet(vAllowHeaders)
-	}
-	if vAllowMethods, ok := mConfiguration["allow_methods"].(*schema.Set); ok {
-		configuration.AllowMethods = flex.ExpandStringSet(vAllowMethods)
-	}
-	if vAllowOrigins, ok := mConfiguration["allow_origins"].(*schema.Set); ok {
-		configuration.AllowOrigins = flex.ExpandStringSet(vAllowOrigins)
-	}
-	if vExposeHeaders, ok := mConfiguration["expose_headers"].(*schema.Set); ok {
-		configuration.ExposeHeaders = flex.ExpandStringSet(vExposeHeaders)
-	}
-	if vMaxAge, ok := mConfiguration["max_age"].(int); ok {
-		configuration.MaxAge = aws.Int64(int64(vMaxAge))
+func findAPIByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetApiOutput, error) {
+	input := &apigatewayv2.GetApiInput{
+		ApiId: aws.String(id),
 	}
 
-	return configuration
+	return findAPI(ctx, conn, input)
 }
 
-func flattenCORSConfiguration(configuration *apigatewayv2.Cors) []interface{} {
-	if configuration == nil {
-		return []interface{}{}
+func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
+	output, err := conn.GetApi(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return []interface{}{map[string]interface{}{
-		"allow_credentials": aws.BoolValue(configuration.AllowCredentials),
-		"allow_headers":     flattenCaseInsensitiveStringSet(configuration.AllowHeaders),
-		"allow_methods":     flattenCaseInsensitiveStringSet(configuration.AllowMethods),
-		"allow_origins":     flattenCaseInsensitiveStringSet(configuration.AllowOrigins),
-		"expose_headers":    flattenCaseInsensitiveStringSet(configuration.ExposeHeaders),
-		"max_age":           int(aws.Int64Value(configuration.MaxAge)),
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandCORS(tfList []any) *awstypes.Cors {
+	apiObject := &awstypes.Cors{}
+
+	if len(tfList) == 0 || tfList[0] == nil {
+		return apiObject
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["allow_credentials"].(bool); ok {
+		apiObject.AllowCredentials = aws.Bool(v)
+	}
+	if v, ok := tfMap["allow_headers"].(*schema.Set); ok {
+		apiObject.AllowHeaders = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["allow_methods"].(*schema.Set); ok {
+		apiObject.AllowMethods = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["allow_origins"].(*schema.Set); ok {
+		apiObject.AllowOrigins = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["expose_headers"].(*schema.Set); ok {
+		apiObject.ExposeHeaders = flex.ExpandStringValueSet(v)
+	}
+	if v, ok := tfMap["max_age"].(int); ok {
+		apiObject.MaxAge = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenCORS(apiObject *awstypes.Cors) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	return []any{map[string]any{
+		"allow_credentials": aws.ToBool(apiObject.AllowCredentials),
+		"allow_headers":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowHeaders),
+		"allow_methods":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowMethods),
+		"allow_origins":     flex.FlattenStringValueSetCaseInsensitive(apiObject.AllowOrigins),
+		"expose_headers":    flex.FlattenStringValueSetCaseInsensitive(apiObject.ExposeHeaders),
+		"max_age":           aws.ToInt32(apiObject.MaxAge),
 	}}
+}
+
+func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", "/apis/"+apiID)
+}
+
+func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARN(ctx, "execute-api", apiID)
+}
+
+func decodeOpenAPIDefinition(v string) (map[string]any, error) {
+	var output map[string]any
+
+	err := json.DecodeFromString(v, &output)
+
+	if err != nil {
+		err = yaml.DecodeFromString(v, &output)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

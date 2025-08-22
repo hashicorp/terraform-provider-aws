@@ -1,30 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},
@@ -32,34 +38,35 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},
 	})
 }
 
-func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstanceTypeOfferingsInput{
-		MaxResults: aws.Int64(5),
+	input := ec2.DescribeInstanceTypeOfferingsInput{
+		MaxResults: aws.Int32(5),
 	}
 
-	_, err := conn.DescribeInstanceTypeOfferings(input)
+	_, err := conn.DescribeInstanceTypeOfferings(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -82,7 +89,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 }
 
 func testAccInstanceTypeOfferingsDataSourceConfig_location() string {
-	return acctest.ConfigAvailableAZsNoOptIn() + `
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
     name   = "location"
@@ -91,5 +98,5 @@ data "aws_ec2_instance_type_offerings" "test" {
 
   location_type = "availability-zone"
 }
-`
+`)
 }

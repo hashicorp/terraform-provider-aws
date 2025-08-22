@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -13,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_location_tracker_associations", name="Tracker Associations")
 func DataSourceTrackerAssociations() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrackerAssociationsRead,
+		ReadWithoutTimeout: dataSourceTrackerAssociationsRead,
 
 		Schema: map[string]*schema.Schema{
 			"consumer_arns": {
@@ -36,39 +40,33 @@ const (
 	DSNameTrackerAssociations = "Tracker Associations Data Source"
 )
 
-func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	name := d.Get("tracker_name").(string)
 
-	in := &locationservice.ListTrackerConsumersInput{
+	in := &location.ListTrackerConsumersInput{
 		TrackerName: aws.String(name),
 	}
 
 	var arns []string
 
-	err := conn.ListTrackerConsumersPagesWithContext(ctx, in, func(page *locationservice.ListTrackerConsumersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := location.NewListTrackerConsumersPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return create.AppendDiagError(diags, names.Location, create.ErrActionReading, DSNameTrackerAssociations, name, err)
 		}
 
-		for _, arn := range page.ConsumerArns {
-			if arn == nil {
-				continue
-			}
-
-			arns = append(arns, aws.StringValue(arn))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, DSNameTrackerAssociations, name, err)
+		arns = append(arns, page.ConsumerArns...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("consumer_arns", arns)
 
-	return nil
+	return diags
 }

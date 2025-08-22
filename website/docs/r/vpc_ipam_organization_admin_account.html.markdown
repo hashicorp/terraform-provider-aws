@@ -15,24 +15,30 @@ Enables the IPAM Service and promotes a delegated administrator.
 Basic usage:
 
 ```terraform
-data "aws_caller_identity" "delegated" {
-  provider = "awsalternate"
-}
-
 resource "aws_vpc_ipam_organization_admin_account" "example" {
   delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
+}
+
+data "aws_caller_identity" "delegated" {
+  provider = aws.ipam_delegate_account
+}
+
+provider "aws" {
+  alias = "ipam_delegate_account"
+
+  # authentication arguments omitted
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delegated_admin_account_id` - (Required)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Organizations ARN for the delegate account.
 * `id` - The Organizations member account ID that you want to enable as the IPAM account.
@@ -42,8 +48,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IPAMs can be imported using the `delegate account id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the delegate account `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_organization_admin_account.example
+  id = "12345678901"
+}
 ```
-$ terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
+
+Using `terraform import`, import IPAMs using the delegate account `id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_organization_admin_account.example 12345678901
 ```

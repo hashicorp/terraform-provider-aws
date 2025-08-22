@@ -1,42 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_route_table_propagation", name="Transit Gateway Route Table Propagation")
+func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayRouteTablePropagationCreate,
-		Read:   resourceTransitGatewayRouteTablePropagationRead,
-		Delete: resourceTransitGatewayRouteTablePropagationDelete,
+		CreateWithoutTimeout: resourceTransitGatewayRouteTablePropagationCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayRouteTablePropagationRead,
+		DeleteWithoutTimeout: resourceTransitGatewayRouteTablePropagationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"transit_gateway_route_table_id": {
@@ -46,104 +54,142 @@ func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
+		CustomizeDiff: customdiff.Sequence(
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				if !d.HasChange(names.AttrTransitGatewayAttachmentID) {
+					return nil
+				}
+
+				// See https://github.com/hashicorp/terraform-provider-aws/issues/30085
+				// In all cases, changes should force new except:
+				//   o is not empty string AND
+				//   n is empty string AND
+				//   plan is unknown AND
+				//   state is known
+				o, n := d.GetChange(names.AttrTransitGatewayAttachmentID)
+				if o.(string) == "" || n.(string) != "" {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				rawPlan := d.GetRawPlan()
+				plan := rawPlan.GetAttr(names.AttrTransitGatewayAttachmentID)
+				if plan.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				rawState := d.GetRawState()
+				if rawState.IsNull() || !rawState.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				state := rawState.GetAttr(names.AttrTransitGatewayAttachmentID)
+				if !state.IsKnown() {
+					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
-func resourceTransitGatewayRouteTablePropagationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
-	id := TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	_, err := conn.EnableTransitGatewayRouteTablePropagation(input)
+	_, err := conn.EnableTransitGatewayRouteTablePropagation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway Route Table Propagation (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route Table Propagation (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := WaitTransitGatewayRouteTablePropagationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", d.Id(), err)
+	if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayRouteTablePropagationRead(d, meta)
+	return append(diags, resourceTransitGatewayRouteTablePropagationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteTablePropagationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTablePropagationParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	transitGatewayPropagation, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Route Table Propagation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_id", transitGatewayPropagation.ResourceId)
-	d.Set("resource_type", transitGatewayPropagation.ResourceType)
-	d.Set("transit_gateway_attachment_id", transitGatewayPropagation.TransitGatewayAttachmentId)
+	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
+	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayRouteTablePropagationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTablePropagationParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table Propagation: %s", d.Id())
-	_, err = conn.DisableTransitGatewayRouteTablePropagation(&ec2.DisableTransitGatewayRouteTablePropagationInput{
+	input := ec2.DisableTransitGatewayRouteTablePropagationInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DisableTransitGatewayRouteTablePropagation(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeTransitGatewayRouteTablePropagationNotFound) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway Route Table Propagation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayRouteTablePropagationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %w", d.Id(), err)
+	if err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // transitGatewayRouteTablePropagationUpdate is used by Transit Gateway attachment resources to modify their route table propagations.
 // The route table ID may be empty (e.g. when the Transit Gateway itself has default route table propagation disabled).
-func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, enable bool) error {
+func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string, enable bool) error {
 	if transitGatewayRouteTableID == "" {
 		// Do nothing if no route table was specified.
 		return nil
 	}
 
-	id := TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
-	_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 	if tfresource.NotFound(err) {
 		if enable {
@@ -152,11 +198,11 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 				TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 			}
 
-			if _, err := conn.EnableTransitGatewayRouteTablePropagation(input); err != nil {
+			if _, err := conn.EnableTransitGatewayRouteTablePropagation(ctx, input); err != nil {
 				return fmt.Errorf("creating EC2 Transit Gateway Route Table Propagation (%s): %w", id, err)
 			}
 
-			if _, err := WaitTransitGatewayRouteTablePropagationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 				return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", id, err)
 			}
 		}
@@ -170,7 +216,7 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 
 	if !enable {
 		// Disabling must be done only on already enabled state.
-		if _, err := WaitTransitGatewayRouteTablePropagationCreated(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", id, err)
 		}
 
@@ -179,11 +225,11 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 			TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 		}
 
-		if _, err := conn.DisableTransitGatewayRouteTablePropagation(input); err != nil {
+		if _, err := conn.DisableTransitGatewayRouteTablePropagation(ctx, input); err != nil {
 			return fmt.Errorf("deleting EC2 Transit Gateway Route Table Propagation (%s): %w", id, err)
 		}
 
-		if _, err := WaitTransitGatewayRouteTablePropagationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		if err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %w", id, err)
 		}
 	}
@@ -193,14 +239,14 @@ func transitGatewayRouteTablePropagationUpdate(conn *ec2.EC2, transitGatewayRout
 
 const transitGatewayRouteTablePropagationIDSeparator = "_"
 
-func TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID string) string {
+func transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID string) string {
 	parts := []string{transitGatewayRouteTableID, transitGatewayAttachmentID}
 	id := strings.Join(parts, transitGatewayRouteTablePropagationIDSeparator)
 
 	return id
 }
 
-func TransitGatewayRouteTablePropagationParseResourceID(id string) (string, string, error) {
+func transitGatewayRouteTablePropagationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, transitGatewayRouteTablePropagationIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

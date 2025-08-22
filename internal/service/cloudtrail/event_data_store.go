@@ -1,40 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEventDataStore() *schema.Resource {
+// @SDKResource("aws_cloudtrail_event_data_store", name="Event Data Store")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+func resourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,
 		ReadWithoutTimeout:   resourceEventDataStoreRead,
 		UpdateWithoutTimeout: resourceEventDataStoreUpdate,
 		DeleteWithoutTimeout: resourceEventDataStoreDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			"advanced_event_selector": {
@@ -70,7 +77,7 @@ func ResourceEventDataStore() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -119,7 +126,7 @@ func ResourceEventDataStore() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -128,16 +135,27 @@ func ResourceEventDataStore() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"billing_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.BillingModeExtendableRetentionPricing,
+				ValidateDiagFunc: enum.Validate[types.BillingMode](),
+			},
+			names.AttrKMSKeyID: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"multi_region_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -148,7 +166,7 @@ func ResourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  2555,
@@ -156,8 +174,13 @@ func ResourceEventDataStore() *schema.Resource {
 					validation.IntBetween(7, 2555),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"suspend": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -167,166 +190,347 @@ func ResourceEventDataStore() *schema.Resource {
 	}
 }
 
-func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
+		BillingMode:                  types.BillingMode(d.Get("billing_mode").(string)),
+		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
-		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
+		RetentionPeriod:              aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
+		TagsList:                     getTagsIn(ctx),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
-		RetentionPeriod:              aws.Int64(int64(d.Get("retention_period").(int))),
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
-		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
 	}
 
-	if len(tags) > 0 {
-		input.TagsList = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Event Data Store: %s", input)
-	output, err := conn.CreateEventDataStoreWithContext(ctx, input)
+	if v, ok := d.GetOk("suspend"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			input.StartIngestion = aws.Bool(!v)
+		}
+	}
+
+	output, err := conn.CreateEventDataStore(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating CloudTrail Event Data Store (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudTrail Event Data Store (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.EventDataStoreArn))
+	d.SetId(aws.ToString(output.EventDataStoreArn))
 
-	if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be created: %s", name, err)
+	if _, err := waitEventDataStoreCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) create: %s", name, err)
 	}
 
-	return resourceEventDataStoreRead(ctx, d, meta)
+	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	eventDataStore, err := FindEventDataStoreByARN(ctx, conn, d.Id())
+	output, err := findEventDataStoreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudTrail Event Data Store (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(eventDataStore.AdvancedEventSelectors)); err != nil {
-		return diag.Errorf("error setting advanced_event_selector: %s", err)
+	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(output.AdvancedEventSelectors)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting advanced_event_selector: %s", err)
 	}
-	d.Set("arn", eventDataStore.EventDataStoreArn)
-	d.Set("multi_region_enabled", eventDataStore.MultiRegionEnabled)
-	d.Set("name", eventDataStore.Name)
-	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
-	d.Set("retention_period", eventDataStore.RetentionPeriod)
-	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
+	d.Set(names.AttrARN, output.EventDataStoreArn)
+	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
+	d.Set("billing_mode", output.BillingMode)
+	d.Set("multi_region_enabled", output.MultiRegionEnabled)
+	d.Set(names.AttrName, output.Name)
+	d.Set("organization_enabled", output.OrganizationEnabled)
+	d.Set(names.AttrRetentionPeriod, output.RetentionPeriod)
+	d.Set("termination_protection_enabled", output.TerminationProtectionEnabled)
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("error listing tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for CloudTrail Event Data Store (%s): %s", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("suspend", names.AttrTags, names.AttrTagsAll) {
 		input := &cloudtrail.UpdateEventDataStoreInput{
 			EventDataStore: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange("advanced_event_selector") {
+			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]any))
+		}
+
+		if d.HasChange("billing_mode") {
+			input.BillingMode = types.BillingMode(d.Get("billing_mode").(string))
 		}
 
 		if d.HasChange("multi_region_enabled") {
 			input.MultiRegionEnabled = aws.Bool(d.Get("multi_region_enabled").(bool))
 		}
 
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
+		}
+
 		if d.HasChange("organization_enabled") {
 			input.OrganizationEnabled = aws.Bool(d.Get("organization_enabled").(bool))
 		}
 
-		if d.HasChange("retention_period") {
-			input.RetentionPeriod = aws.Int64(int64(d.Get("retention_period").(int)))
+		if d.HasChange(names.AttrRetentionPeriod) {
+			input.RetentionPeriod = aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int)))
 		}
 
 		if d.HasChange("termination_protection_enabled") {
 			input.TerminationProtectionEnabled = aws.Bool(d.Get("termination_protection_enabled").(bool))
 		}
 
-		if d.HasChange("advanced_event_selector") {
-			input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
-		}
-
-		log.Printf("[DEBUG] Updating CloudTrail Event Data Store: %s", input)
-		_, err := conn.UpdateEventDataStoreWithContext(ctx, input)
+		_, err := conn.UpdateEventDataStore(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudTrail Event Data Store (%s): %s", d.Id(), err)
 		}
 
-		if err := waitEventDataStoreAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be modified: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
+		if _, err := waitEventDataStoreUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEventDataStoreRead(ctx, d, meta)
+	if d.HasChange("suspend") {
+		v := d.Get("suspend")
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			if v {
+				if err := stopEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			} else {
+				if err := startEventDataStoreIngestion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
+		}
+	}
+
+	return append(diags, resourceEventDataStoreRead(ctx, d, meta)...)
 }
 
-func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: (%s)", d.Id())
-	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{
+	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
+	input := cloudtrail.DeleteEventDataStoreInput{
 		EventDataStore: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEventDataStore(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeEventDataStoreNotFoundException) {
-		return nil
+	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting CloudTrail Event Data Store (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudTrail Event Data Store (%s): %s", d.Id(), err)
 	}
 
-	if err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for CloudTrail Event Data Store (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitEventDataStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudTrail Event Data Store (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findEventDataStoreByARN(ctx context.Context, conn *cloudtrail.Client, arn string) (*cloudtrail.GetEventDataStoreOutput, error) {
+	input := cloudtrail.GetEventDataStoreInput{
+		EventDataStore: aws.String(arn),
+	}
+
+	output, err := findEventDataStore(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == types.EventDataStoreStatusPendingDeletion {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.GetEventDataStoreInput) (*cloudtrail.GetEventDataStoreOutput, error) {
+	output, err := conn.GetEventDataStore(ctx, input)
+
+	if errs.IsA[*types.EventDataStoreNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findEventDataStoreByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func startEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) error {
+	input := cloudtrail.StartEventDataStoreIngestionInput{
+		EventDataStore: aws.String(arn),
+	}
+
+	_, err := conn.StartEventDataStoreIngestion(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("starting CloudTrail Event Data Store (%s) ingestion: %w", arn, err)
+	}
+
+	if _, err := waitEventDataStoreIngestionStarted(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudTrail Event Data Store (%s) ingestion start: %w", arn, err)
 	}
 
 	return nil
+}
+
+func stopEventDataStoreIngestion(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) error {
+	input := cloudtrail.StopEventDataStoreIngestionInput{
+		EventDataStore: aws.String(arn),
+	}
+
+	_, err := conn.StopEventDataStoreIngestion(ctx, &input)
+
+	if err != nil {
+		return fmt.Errorf("stopping CloudTrail Event Data Store (%s) ingestion: %w", arn, err)
+	}
+
+	if _, err := waitEventDataStoreIngestionStopped(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudTrail Event Data Store (%s) ingestion stop: %w", arn, err)
+	}
+
+	return nil
+}
+
+func waitEventDataStoreCreated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusCreated),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled, types.EventDataStoreStatusStoppedIngestion),
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreUpdated(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusCreated),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreDeleted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusCreated, types.EventDataStoreStatusEnabled),
+		Target:  []string{},
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreIngestionStarted(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusStartingIngestion),
+		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventDataStoreIngestionStopped(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.EventDataStoreStatusStoppingIngestion),
+		Target:  enum.Slice(types.EventDataStoreStatusStoppedIngestion),
+		Refresh: statusEventDataStore(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudtrail.GetEventDataStoreOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

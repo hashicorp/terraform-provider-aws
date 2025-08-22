@@ -1,22 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccWorkSpacesDataSource_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Bundle": {
-			"basic":                   testAccWorkspaceBundleDataSource_basic,
+			acctest.CtBasic:           testAccWorkspaceBundleDataSource_basic,
 			"bundleIDAndNameConflict": testAccWorkspaceBundleDataSource_bundleIDAndNameConflict,
 			"byOwnerName":             testAccWorkspaceBundleDataSource_byOwnerName,
+			"byOwnerNameMultiple":     testAccWorkspaceBundleDataSource_byOwnerNameMultiple,
 			"privateOwner":            testAccWorkspaceBundleDataSource_privateOwner,
 		},
 		"Directory": {
-			"basic": testAccDirectoryDataSource_basic,
+			acctest.CtBasic: testAccDirectoryDataSource_basic,
 		},
 		"Image": {
-			"basic": testAccImageDataSource_basic,
+			acctest.CtBasic: testAccImageDataSource_basic,
 		},
 		"Workspace": {
 			"byWorkspaceID":                     testAccWorkspaceDataSource_byWorkspaceID,
@@ -25,15 +33,5 @@ func TestAccWorkSpacesDataSource_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

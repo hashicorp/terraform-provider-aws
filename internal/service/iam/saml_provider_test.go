@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -5,44 +8,45 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMSAMLProvider_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	idpEntityIdModified := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSAMLProviderDestroy,
+		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				Config: testAccSAMLProviderConfig_update(rName, idpEntityIdModified),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 				),
 			},
@@ -56,22 +60,23 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 }
 
 func TestAccIAMSAMLProvider_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSAMLProviderDestroy,
+		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key1", "value1"),
+				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -80,20 +85,20 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSAMLProviderConfig_tags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSAMLProviderConfig_tags2(rName, idpEntityId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key2", "value2"),
+				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -101,21 +106,22 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 }
 
 func TestAccIAMSAMLProvider_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSAMLProviderDestroy,
+		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSAMLProviderExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSAMLProvider(), resourceName),
+					testAccCheckSAMLProviderExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSAMLProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,44 +129,42 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSAMLProviderDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckSAMLProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_saml_provider" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_saml_provider" {
+				continue
+			}
+
+			_, err := tfiam.FindSAMLProviderByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IAM SAML Provider %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IAM SAML Provider %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSAMLProviderExists(n string) resource.TestCheckFunc {
+func testAccCheckSAMLProviderExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not Found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM SAML Provider ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
-
-		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfiam.FindSAMLProviderByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

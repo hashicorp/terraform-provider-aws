@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Remove [Computed](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#computed) from `lambda_config.custom_email_sender` and `lambda_config.custom_sms_sender` allowing their values to be removed
+```

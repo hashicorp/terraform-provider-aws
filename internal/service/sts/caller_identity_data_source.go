@@ -1,54 +1,98 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sts
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceCallerIdentity() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceCallerIdentityRead,
+// @FrameworkDataSource("aws_caller_identity", name="Caller Identity")
+func newCallerIdentityDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &callerIdentityDataSource{}
 
-		Schema: map[string]*schema.Schema{
-			"account_id": {
-				Type:     schema.TypeString,
+	return d, nil
+}
+
+type callerIdentityDataSource struct {
+	framework.DataSourceWithModel[callerIdentityDataSourceModel]
+}
+
+func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Computed: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
-
-			"user_id": {
-				Type:     schema.TypeString,
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"user_id": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).STSConn
-
-	log.Printf("[DEBUG] Reading Caller Identity")
-	res, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-
-	if err != nil {
-		return fmt.Errorf("getting Caller Identity: %w", err)
+func (d *callerIdentityDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data callerIdentityDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	log.Printf("[DEBUG] Received Caller Identity: %s", res)
+	conn := d.Meta().STSClient(ctx)
 
-	d.SetId(aws.StringValue(res.Account))
-	d.Set("account_id", res.Account)
-	d.Set("arn", res.Arn)
-	d.Set("user_id", res.UserId)
+	output, err := findCallerIdentity(ctx, conn)
 
-	return nil
+	if err != nil {
+		response.Diagnostics.AddError("reading STS Caller Identity", err.Error())
+
+		return
+	}
+
+	accountID := aws.ToString(output.Account)
+	data.AccountID = types.StringValue(accountID)
+	data.ARN = flex.StringToFrameworkLegacy(ctx, output.Arn)
+	data.ID = types.StringValue(accountID)
+	data.UserID = flex.StringToFrameworkLegacy(ctx, output.UserId)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func findCallerIdentity(ctx context.Context, conn *sts.Client) (*sts.GetCallerIdentityOutput, error) {
+	input := &sts.GetCallerIdentityInput{}
+
+	output, err := conn.GetCallerIdentity(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+type callerIdentityDataSourceModel struct {
+	AccountID types.String `tfsdk:"account_id"`
+	ARN       types.String `tfsdk:"arn"`
+	ID        types.String `tfsdk:"id"`
+	UserID    types.String `tfsdk:"user_id"`
 }

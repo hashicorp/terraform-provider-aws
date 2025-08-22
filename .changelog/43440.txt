@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add `postgres_settings.authentication_method` and `postgres_settings.service_access_role_arn` arguments
+```
+
+```release-note:enhancement
+data-source/aws_dms_endpoint: Add `postgres_settings.authentication_method` and `postgres_settings.service_access_role_arn` attributes
+```
+
+```release-note:enhancement
+resource/aws_dms_endpoint: Add plan-time validation of `postgres_settings.database_mode`, `postgres_settings.map_long_varchar_as`, and `postgres_settings.plugin_name` arguments
+```

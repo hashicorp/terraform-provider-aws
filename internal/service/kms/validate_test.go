@@ -1,11 +1,19 @@
-package kms
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package kms_test
 
 import (
 	"strings"
 	"testing"
+
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidGrantName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"123",
 		"Abc",
@@ -14,7 +22,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validGrantName(s, "name")
+		_, errors := tfkms.ValidGrantName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q AWS KMS Grant Name should have been valid: %v", s, errors)
 		}
@@ -28,7 +36,7 @@ func TestValidGrantName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validGrantName(s, "name")
+		_, errors := tfkms.ValidGrantName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid AWS KMS Grant Name", s)
 		}
@@ -36,6 +44,8 @@ func TestValidGrantName(t *testing.T) {
 }
 
 func TestValidNameForDataSource(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -67,7 +77,7 @@ func TestValidNameForDataSource(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validNameForDataSource(tc.Value, "name")
+		_, errors := tfkms.ValidNameForDataSource(tc.Value, names.AttrName)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}
@@ -75,6 +85,8 @@ func TestValidNameForDataSource(t *testing.T) {
 }
 
 func TestValidNameForResource(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -106,56 +118,135 @@ func TestValidNameForResource(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validNameForResource(tc.Value, "name")
+		_, errors := tfkms.ValidNameForResource(tc.Value, names.AttrName)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}
 	}
 }
 
-func TestValidKey(t *testing.T) {
+func TestValidateKeyOrAlias(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
+		valid    bool
 	}{
 		{
-			Value:    "arbitrary-uuid-1234",
+			Value:    "57ff7a43-341d-46b6-aee3-a450c9de6dc8",
 			ErrCount: 0,
+			valid:    true,
 		},
 		{
-			Value:    "arn:aws:kms:us-west-2:111122223333:key/arbitrary-uuid-1234", //lintignore:AWSAT003,AWSAT005
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/57ff7a43-341d-46b6-aee3-a450c9de6dc8", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
+			valid:    true,
 		},
 		{
 			Value:    "alias/arbitrary-key",
 			ErrCount: 0,
+			valid:    true,
 		},
 		{
 			Value:    "alias/arbitrary/key",
 			ErrCount: 0,
+			valid:    true,
+		},
+		{
+			Value:    "mrk-f827515944fb43f9b902a09d2c8b554f",
+			ErrCount: 0,
+			valid:    true,
+		},
+		{
+			Value:    "arn:aws:kms:us-west-2:111122223333:key/mrk-a835af0b39c94b86a21a8fc9535df681", //lintignore:AWSAT003,AWSAT005
+			ErrCount: 0,
+			valid:    true,
 		},
 		{
 			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary-key", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
+			valid:    true,
 		},
 		{
 			Value:    "arn:aws:kms:us-west-2:111122223333:alias/arbitrary/key", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 0,
+			valid:    true,
 		},
 		{
 			Value:    "$%wrongkey",
 			ErrCount: 1,
+			valid:    false,
 		},
 		{
 			Value:    "arn:aws:lamda:foo:bar:key/xyz", //lintignore:AWSAT003,AWSAT005
 			ErrCount: 1,
+			valid:    false,
 		},
 	}
 
 	for _, tc := range cases {
-		_, errors := validKey(tc.Value, "key_id")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("%q validation failed: %v", tc.Value, errors)
-		}
+		t.Run(tc.Value, func(t *testing.T) {
+			t.Parallel()
+
+			_, errors := tfkms.ValidateKeyOrAlias(tc.Value, names.AttrKeyID)
+			if (len(errors) == 0) != tc.valid {
+				t.Errorf("%q ValidateKMSKeyOrAlias failed: %v", tc.Value, errors)
+			}
+		})
+	}
+}
+
+func TestValidateKeyARN(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[string]struct {
+		in    any
+		valid bool
+	}{
+		"kms key id": {
+			in:    "arn:aws:kms:us-west-2:123456789012:key/57ff7a43-341d-46b6-aee3-a450c9de6dc8", // lintignore:AWSAT003,AWSAT005
+			valid: true,
+		},
+		"kms mrk key id": {
+			in:    "arn:aws:kms:us-west-2:111122223333:key/mrk-a835af0b39c94b86a21a8fc9535df681", // lintignore:AWSAT003,AWSAT005
+			valid: true,
+		},
+		"kms non-key id": {
+			in:    "arn:aws:kms:us-west-2:123456789012:something/else", // lintignore:AWSAT003,AWSAT005
+			valid: false,
+		},
+		"non-kms arn": {
+			in:    "arn:aws:iam::123456789012:user/David", // lintignore:AWSAT005
+			valid: false,
+		},
+		"not an arn": {
+			in:    "not an arn",
+			valid: false,
+		},
+		"not a string": {
+			in:    123,
+			valid: false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			aWs, aEs := tfkms.ValidateKeyARN(testcase.in, names.AttrField)
+			if len(aWs) != 0 {
+				t.Errorf("expected no warnings, got %v", aWs)
+			}
+			if testcase.valid {
+				if len(aEs) != 0 {
+					t.Errorf("expected no errors, got %v", aEs)
+				}
+			} else {
+				if len(aEs) == 0 {
+					t.Error("expected errors, got none")
+				}
+			}
+		})
 	}
 }

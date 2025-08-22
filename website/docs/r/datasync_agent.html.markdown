@@ -23,7 +23,7 @@ resource "aws_datasync_agent" "example" {
 
 ## Example Usage with VPC Endpoints
 
-```hcl
+```terraform
 resource "aws_datasync_agent" "example" {
   ip_address            = "1.2.3.4"
   security_group_arns   = [aws_security_group.example.arn]
@@ -36,7 +36,7 @@ resource "aws_datasync_agent" "example" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "example" {
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
+  service_name       = "com.amazonaws.${data.aws_region.current.region}.datasync"
   vpc_id             = aws_vpc.example.id
   security_group_ids = [aws_security_group.example.id]
   subnet_ids         = [aws_subnet.example.id]
@@ -50,8 +50,9 @@ data "aws_network_interface" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the DataSync Agent.
 * `activation_key` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
@@ -61,9 +62,9 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_endpoint_id` - (Optional) The ID of the VPC (virtual private cloud) endpoint that the agent has access to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Agent.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Agent.
@@ -71,14 +72,23 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 
 ## Import
 
-`aws_datasync_agent` can be imported by using the DataSync Agent Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_agent.example
+  id = "arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
+
+Using `terraform import`, import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567
 ```

@@ -42,7 +42,7 @@ resource "aws_iam_role" "example" {
 }
 
 resource "aws_s3_bucket" "example" {
-  bucket = "example_bucket"
+  bucket = "example-bucket"
 }
 
 resource "aws_redshift_cluster" "example" {
@@ -81,8 +81,9 @@ resource "aws_appflow_connector_profile" "example" {
 
 ## Argument Reference
 
-The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
 * `connector_label` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `CustomConnector` connector type.
@@ -186,6 +187,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `access_token` (Optional) - The credentials used to access protected Salesforce resources.
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
+* `jwt_token` (Optional) - A JSON web token (JWT) that authorizes access to Salesforce records.
+* `oauth2_grant_type` (Optional) - The OAuth 2.0 grant type used when requesting an access token from Salesforce. Valid values are `CLIENT_CREDENTIALS`, `AUTHORIZATION_CODE`, and `JWT_BEARER`.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 
@@ -277,13 +280,17 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 * `bucket_name` (Required) - A name for the associated Amazon S3 bucket.
 * `bucket_prefix` (Optional) - The object key for the destination bucket in which Amazon AppFlow places the files.
+* `cluster_identifier` (Optional) - The unique ID that's assigned to an Amazon Redshift cluster.
+* `database_name` (Optional) - The name of an Amazon Redshift database.
 * `database_url` (Required) - The JDBC URL of the Amazon Redshift cluster.
+* `data_api_role_arn` (Optional) - ARN of the IAM role that permits AppFlow to access the database through Data API.
 * `role_arn` (Required) - ARN of the IAM role.
 
 #### Salesforce Connector Profile Properties
 
 * `instance_url` (Optional) - The location of the Salesforce resource.
 * `is_sandbox_environment` (Optional) - Indicates whether the connector profile applies to a sandbox or production environment.
+* `use_privatelink_for_metadata_and_authorization` (Optional) - Indicates whether Amazon AppFlow uses the private network to send metadata and authorization calls to Salesforce. Amazon AppFlow sends private calls through AWS PrivateLink. These calls travel through AWS infrastructure without being exposed to the public internet.
 
 #### SAPOData Connector Profile Properties
 
@@ -308,21 +315,29 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `stage` (Required) - Name of the Amazon S3 stage that was created while setting up an Amazon S3 stage in the Snowflake account. This is written in the following format: `<Database>.<Schema>.<Stage Name>`.
 * `warehouse` (Required) - The name of the Snowflake warehouse.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connector profile.
 * `credentials_arn` - ARN of the connector profile credentials.
 
 ## Import
 
-AppFlow Connector Profile can be imported using the connector profile `arn`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFlow Connector Profile using the connector profile `name`. For example:
 
+```terraform
+import {
+  to = aws_appflow_connector_profile.example
+  id = "example-profile"
+}
 ```
-$ terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west-2:123456789012:connectorprofile/example-profile
+
+Using `terraform import`, import AppFlow Connector Profile using the connector profile `name`. For example:
+
+```console
+% terraform import aws_appflow_connector_profile.example example-profile
 ```
 
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
-

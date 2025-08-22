@@ -22,17 +22,18 @@ resource "aws_keyspaces_keyspace" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the keyspace to be created.
-
-The following arguments are optional:
-
+* `replication_specification` - (Optional) The replication specification of the keyspace.
+    * `region_list` - (Optional) Replication regions. If `replication_strategy` is `MULTI_REGION`, `region_list` requires the current Region and at least one additional AWS Region where the keyspace is going to be replicated in.
+    * `replication_strategy` - (Required) Replication strategy. Valid values: `SINGLE_REGION` and `MULTI_REGION`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the keyspace.
 * `arn` - The ARN of the keyspace.
@@ -40,15 +41,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `1m`)
 - `delete` - (Default `1m`)
 
 ## Import
 
-Use the `name` to import a keyspace. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a keyspace using the `name`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_keyspace.example
+  id = "my_keyspace"
+}
 ```
-$ terraform import aws_keyspaces_keyspace.example my_keyspace
+
+Using `terraform import`, import a keyspace using the `name`. For example:
+
+```console
+% terraform import aws_keyspaces_keyspace.example my_keyspace
 ```

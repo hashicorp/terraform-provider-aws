@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `outpost_config` argument to support EKS local clusers on Outposts
+```

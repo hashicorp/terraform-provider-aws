@@ -12,7 +12,7 @@ Provides a list of Elastic IPs in a region.
 
 ## Example Usage
 
-The following shows outputing all Elastic IPs with the a specific tag value.
+The following shows outputting all Elastic IPs with the a specific tag value.
 
 ```terraform
 data "aws_eips" "example" {
@@ -34,6 +34,9 @@ output "public_ips" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IPs.
 
@@ -43,7 +46,9 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `values` - (Required) Set of values that are accepted for the given field. An Elastic IP will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `allocation_ids` - List of all the allocation IDs for address for use with EC2-VPC.
@@ -51,6 +56,6 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

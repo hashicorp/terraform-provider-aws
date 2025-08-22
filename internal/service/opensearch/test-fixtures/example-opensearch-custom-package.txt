@@ -1,0 +1,4 @@
+danish, croissant, pastry
+ice cream, gelato, frozen custard
+sneaker, tennis shoe, running shoe
+basketball shoe, hightop

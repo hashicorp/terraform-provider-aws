@@ -1,43 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "365",
-						"id":                "test",
-						"status":            s3control.ExpirationStatusEnabled,
+						names.AttrID:        "test",
+						names.AttrStatus:    string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},
@@ -51,20 +56,21 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,20 +79,21 @@ func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUpload_daysAfterInitiation(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUploadDaysAfterInitiation(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
 						"abort_incomplete_multipart_upload.0.days_after_initiation": "1",
@@ -101,8 +108,8 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUploadDaysAfterInitiation(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
 						"abort_incomplete_multipart_upload.0.days_after_initiation": "2",
@@ -114,22 +121,23 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 	date1 := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 	date2 := time.Now().AddDate(0, 0, 2).Format("2006-01-02")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDate(rName, date1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.date": date1,
@@ -144,8 +152,8 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDate(rName, date2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.date": date2,
@@ -157,20 +165,21 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDays(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "7",
@@ -185,8 +194,8 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDays(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
 						"expiration.0.days": "30",
@@ -199,23 +208,24 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDeleteMarker(t *testing.T) {
 	acctest.Skip(t, "S3 on Outposts does not error or save it in the API when receiving this parameter")
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "true",
+						"expiration.0.expired_object_delete_marker": acctest.CtTrue,
 					}),
 				),
 			},
@@ -227,11 +237,11 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "false",
+						"expiration.0.expired_object_delete_marker": acctest.CtFalse,
 					}),
 				),
 			},
@@ -240,20 +250,21 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterPrefix(rName, "test1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":        "1",
 						"filter.0.prefix": "test1/",
@@ -268,8 +279,8 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterPrefix(rName, "test2/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":        "1",
 						"filter.0.prefix": "test2/",
@@ -281,24 +292,25 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key1", "value1"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           "1",
 						"filter.0.tags.%":    "1",
-						"filter.0.tags.key1": "value1",
+						"filter.0.tags.key1": acctest.CtValue1,
 					}),
 				),
 			},
@@ -324,14 +336,14 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 			// 	),
 			// },
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key2", "value2"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           "1",
 						"filter.0.tags.%":    "1",
-						"filter.0.tags.key2": "value2",
+						"filter.0.tags.key2": acctest.CtValue2,
 					}),
 				),
 			},
@@ -340,22 +352,23 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test1",
+						names.AttrID: "test1",
 					}),
 				),
 			},
@@ -367,10 +380,10 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test2",
+						names.AttrID: "test2",
 					}),
 				),
 			},
@@ -379,22 +392,23 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 }
 
 func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, s3control.ExpirationStatusDisabled),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, string(types.ExpirationStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": s3control.ExpirationStatusDisabled,
+						names.AttrStatus: string(types.ExpirationStatusDisabled),
 					}),
 				),
 			},
@@ -404,12 +418,12 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, s3control.ExpirationStatusEnabled),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, string(types.ExpirationStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": s3control.ExpirationStatusEnabled,
+						names.AttrStatus: string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},
@@ -417,74 +431,52 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketLifecycleConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
+				continue
+			}
+
+			parsedArn, err := arn.Parse(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfs3control.FindBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Control Bucket Lifecycle Configuration %s still exists", rs.Primary.ID)
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
-		}
-
-		input := &s3control.GetBucketLifecycleConfigurationInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
-
-		_, err = conn.GetBucketLifecycleConfiguration(input)
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-			continue
-		}
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchLifecycleConfiguration") {
-			continue
-		}
-
-		if tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
-			continue
-		}
-
 		if err != nil {
 			return err
 		}
 
-		return fmt.Errorf("S3 Control Bucket Lifecycle Configuration (%s) still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckBucketLifecycleConfigurationExists(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no resource ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
-
-		parsedArn, err := arn.Parse(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", rs.Primary.ID, err)
-		}
-
-		input := &s3control.GetBucketLifecycleConfigurationInput{
-			AccountId: aws.String(parsedArn.AccountID),
-			Bucket:    aws.String(rs.Primary.ID),
-		}
-
-		_, err = conn.GetBucketLifecycleConfiguration(input)
+		_, err = tfs3control.FindBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, rs.Primary.ID)
 
 		return err
 	}

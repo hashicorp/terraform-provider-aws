@@ -1,64 +1,43 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package fis
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_fis_experiment_template", &resource.Sweeper{
-		Name: "aws_fis_experiment_template",
-		F:    sweepExperimentTemplates,
-	})
+func RegisterSweepers() {
+	awsv2.Register("aws_fis_experiment_template", sweepExperimentTemplates)
 }
 
-func sweepExperimentTemplates(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).FISConn
-	input := &fis.ListExperimentTemplatesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var sweeperErrs *multierror.Error
+func sweepExperimentTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.FISClient(ctx)
+	var input fis.ListExperimentTemplatesInput
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	pg := fis.NewListExperimentTemplatesPaginator(conn, input)
-
-	for pg.HasMorePages() {
-		page, err := pg.NextPage(context.Background())
+	pages := fis.NewListExperimentTemplatesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			sweeperErr := fmt.Errorf("error listing FIS Experiment Templates: %w", err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
+			return nil, err
 		}
 
-		for _, experimentTemplate := range page.ExperimentTemplates {
-			r := ResourceExperimentTemplate()
+		for _, v := range page.ExperimentTemplates {
+			r := resourceExperimentTemplate()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(experimentTemplate.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FIS Experiment Templates (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

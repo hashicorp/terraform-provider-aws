@@ -1,34 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_glue_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"catalog_id": {
+			"athena_properties": {
+				Type:      schema.TypeMap,
+				Computed:  true,
+				Sensitive: true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,11 +52,11 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +72,7 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -71,73 +81,49 @@ func DataSourceConnection() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	c := meta.(*conns.AWSClient)
+	conn := c.GlueClient(ctx)
 
-	id := d.Get("id").(string)
-	catalogID, connectionName, err := DecodeConnectionID(id)
+	id := d.Get(names.AttrID).(string)
+	catalogID, connectionName, err := connectionParseResourceID(id)
 	if err != nil {
-		return diag.Errorf("error decoding Glue Connection %s: %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "decoding Glue Connection %s: %s", id, err)
 	}
 
-	connection, err := FindConnectionByName(conn, connectionName, catalogID)
+	connection, err := findConnectionByTwoPartKey(ctx, conn, connectionName, catalogID)
 	if err != nil {
 		if tfresource.NotFound(err) {
-			return diag.Errorf("error Glue Connection (%s) not found", id)
+			return sdkdiag.AppendErrorf(diags, "Glue Connection (%s) not found", id)
 		}
-		return diag.Errorf("error reading Glue Connection (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", id, err)
 	}
 
 	d.SetId(id)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrARN, connectionARN(ctx, c, connectionName))
+	d.Set("athena_properties", connection.AthenaProperties)
+	d.Set(names.AttrCatalogID, catalogID)
+	d.Set("connection_properties", connection.ConnectionProperties)
 	d.Set("connection_type", connection.ConnectionType)
-	d.Set("name", connection.Name)
-	d.Set("description", connection.Description)
-
-	connectionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("connection/%s", connectionName),
-	}.String()
-	d.Set("arn", connectionArn)
-
-	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return diag.Errorf("error setting connection_properties: %s", err)
-	}
-
+	d.Set(names.AttrDescription, connection.Description)
+	d.Set("match_criteria", connection.MatchCriteria)
+	d.Set(names.AttrName, connection.Name)
 	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
-		return diag.Errorf("error setting physical_connection_requirements: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
-	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
-		return diag.Errorf("error setting match_criteria: %s", err)
-	}
-
-	tags, err := ListTags(conn, connectionArn)
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Glue Connection (%s): %s", connectionArn, err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	return nil
+	return diags
 }

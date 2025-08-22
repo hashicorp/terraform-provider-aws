@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_cloudtrail: Change `insight_selector` from `TypeList` to `TypeSet` as order is not significant

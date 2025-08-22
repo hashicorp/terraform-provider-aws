@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_ec2_client_vpn_network_association: The `security_groups` attribute has been removed
+```

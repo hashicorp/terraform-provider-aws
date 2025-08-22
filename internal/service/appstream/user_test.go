@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -5,19 +8,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppStreamUser_basic(t *testing.T) {
-	var userOutput appstream.User
+	ctx := acctest.Context(t)
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	domain := acctest.RandomDomainName()
@@ -25,20 +28,20 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
+					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -52,7 +55,8 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 }
 
 func TestAccAppStreamUser_disappears(t *testing.T) {
-	var userOutput appstream.User
+	ctx := acctest.Context(t)
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	domain := acctest.RandomDomainName()
@@ -60,17 +64,17 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUser(), resourceName),
+					testAccCheckUserExists(ctx, resourceName, &userOutput),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +83,8 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 }
 
 func TestAccAppStreamUser_complete(t *testing.T) {
-	var userOutput appstream.User
+	ctx := acctest.Context(t)
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	firstName := "John"
@@ -89,20 +94,20 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
+					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -114,92 +119,72 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 			{
 				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
+					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &userOutput),
+					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserExists(resourceName string, appStreamUser *appstream.User) resource.TestCheckFunc {
+func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appstream_user" {
+				continue
+			}
 
-		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+			_, err := tfappstream.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]))
 
-		user, err := tfappstream.FindUserByUserNameAndAuthType(context.Background(), conn, userName, authType)
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
-		}
-		if err != nil {
-			return err
-		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		*appStreamUser = *user
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("AppStream User %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
 }
 
-func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appstream_user" {
-			continue
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
-		resp, err := conn.DescribeUsersWithContext(context.Background(), &appstream.DescribeUsersInput{AuthenticationType: aws.String(authType)})
-
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			continue
-		}
+		output, err := tfappstream.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserName], awstypes.AuthenticationType(rs.Primary.Attributes["authentication_type"]))
 
 		if err != nil {
 			return err
 		}
 
-		found := false
+		*v = *output
 
-		for _, out := range resp.Users {
-			if aws.StringValue(out.UserName) == userName {
-				found = true
-			}
-		}
-
-		if found {
-			return fmt.Errorf("AppStream User %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccUserConfig_basic(authType, userName string) string {

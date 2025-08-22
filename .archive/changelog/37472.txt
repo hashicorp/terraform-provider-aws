@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table: Fix `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` errors on resource Read
+```

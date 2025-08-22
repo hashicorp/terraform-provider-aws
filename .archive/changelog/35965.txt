@@ -1,0 +1,8 @@
+```release-note:enhancement
+resource/aws_redshiftserverless_namespace:
+Add attributes `admin_password_secret_kms_key_id` and `manage_admin_password`
+```
+
+```release-note:bug
+data/aws_redshiftserverless_namespace: Properly set `iam_roles` attribute on read
+```

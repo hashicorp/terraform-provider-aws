@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_memorydb_cluster: Add `data_tiering` attribute
+```
+
+```release-note:enhancement
+data-source/aws_memorydb_cluster: Add `data_tiering` attribute
+```
+
+```release-note:bug
+resource/aws_memorydb_cluster: Allow more than one element in `snapshot_arns`
+```

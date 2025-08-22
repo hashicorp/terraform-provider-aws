@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpn_connection: Add `tunnel1_enable_tunnel_lifecycle_control` and `tunnel2_enable_tunnel_lifecycle_control` arguments
+```

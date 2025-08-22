@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -5,25 +8,32 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceFleetStackAssociation() *schema.Resource {
+// @SDKResource("aws_appstream_fleet_stack_association", name="Fleet Stack Association")
+func resourceFleetStackAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetStackAssociationCreate,
 		ReadWithoutTimeout:   resourceFleetStackAssociationRead,
 		DeleteWithoutTimeout: resourceFleetStackAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"fleet_name": {
 				Type:     schema.TypeString,
@@ -39,94 +49,154 @@ func ResourceFleetStackAssociation() *schema.Resource {
 	}
 }
 
-func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
-	input := &appstream.AssociateFleetInput{
-		FleetName: aws.String(d.Get("fleet_name").(string)),
-		StackName: aws.String(d.Get("stack_name").(string)),
+func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+
+	fleetName, stackName := d.Get("fleet_name").(string), d.Get("stack_name").(string)
+	id := fleetStackAssociationCreateResourceID(fleetName, stackName)
+	input := appstream.AssociateFleetInput{
+		FleetName: aws.String(fleetName),
+		StackName: aws.String(stackName),
 	}
 
-	err := resource.RetryContext(ctx, fleetOperationTimeout, func() *resource.RetryError {
-		_, err := conn.AssociateFleetWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	const (
+		timeout = 15 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.AssociateFleet(ctx, &input)
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateFleetWithContext(ctx, input)
-	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppStream Fleet Stack Association (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "creating AppStream Fleet Stack Association (%s): %s", id, err)
 	}
 
-	d.SetId(EncodeStackFleetID(d.Get("fleet_name").(string), d.Get("stack_name").(string)))
+	d.SetId(id)
 
-	return resourceFleetStackAssociationRead(ctx, d, meta)
+	return append(diags, resourceFleetStackAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	fleetName, stackName, err := DecodeStackFleetID(d.Id())
+	fleetName, stackName, err := fleetStackAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", d.Id(), err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindFleetStackAssociation(ctx, conn, fleetName, stackName)
+	err = findFleetStackAssociationByTwoPartKey(ctx, conn, fleetName, stackName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppStream Fleet Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading AppStream Fleet Stack Association (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading AppStream Fleet Stack Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("fleet_name", fleetName)
 	d.Set("stack_name", stackName)
 
-	return nil
+	return diags
 }
 
-func resourceFleetStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+func resourceFleetStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	fleetName, stackName, err := DecodeStackFleetID(d.Id())
+	fleetName, stackName, err := fleetStackAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", d.Id(), err))
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DisassociateFleetWithContext(ctx, &appstream.DisassociateFleetInput{
+	log.Printf("[DEBUG] Deleting AppStream Fleet Stack Association: %s", d.Id())
+	input := appstream.DisassociateFleetInput{
 		StackName: aws.String(stackName),
 		FleetName: aws.String(fleetName),
-	})
+	}
+	_, err = conn.DisassociateFleet(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream Fleet Stack Association (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const fleetStackAssociationResourceIDSeparator = "/"
+
+func fleetStackAssociationCreateResourceID(fleetName, stackName string) string {
+	parts := []string{fleetName, stackName}
+	id := strings.Join(parts, fleetStackAssociationResourceIDSeparator)
+
+	return id
+}
+
+func fleetStackAssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, fleetStackAssociationResourceIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FleetName%[2]sStackName", id, fleetStackAssociationResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findFleetStackAssociationByTwoPartKey(ctx context.Context, conn *appstream.Client, fleetName, stackName string) error {
+	input := appstream.ListAssociatedStacksInput{
+		FleetName: aws.String(fleetName),
+	}
+	_, err := findAssociatedStack(ctx, conn, &input, func(v string) bool {
+		return v == stackName
+	})
+
+	return err
+}
+
+func findAssociatedStack(ctx context.Context, conn *appstream.Client, input *appstream.ListAssociatedStacksInput, filter tfslices.Predicate[string]) (*string, error) {
+	output, err := findAssociatedStacks(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAssociatedStacks(ctx context.Context, conn *appstream.Client, input *appstream.ListAssociatedStacksInput, filter tfslices.Predicate[string]) ([]string, error) {
+	var output []string
+
+	err := listAssociatedStacksPages(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return diag.FromErr(fmt.Errorf("error deleting AppStream Fleet Stack Association (%s): %w", d.Id(), err))
-	}
-	return nil
-}
 
-func EncodeStackFleetID(fleetName, stackName string) string {
-	return fmt.Sprintf("%s/%s", fleetName, stackName)
-}
+		for _, v := range page.Names {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 
-func DecodeStackFleetID(id string) (string, string, error) {
-	idParts := strings.SplitN(id, "/", 2)
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("expected ID in format FleetName/StackName, received: %s", id)
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
-	return idParts[0], idParts[1], nil
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

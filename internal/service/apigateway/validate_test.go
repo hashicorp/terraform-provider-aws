@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidUsagePlanQuotaSettings(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Offset   int
 		Period   string
@@ -68,7 +73,7 @@ func TestValidUsagePlanQuotaSettings(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m["offset"] = tc.Offset
 		m["period"] = tc.Period
 

@@ -40,6 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `description` - (Optional) Description of the constraint.
 
@@ -77,16 +78,16 @@ The `type` you specify determines what must be included in the `parameters` JSON
 
 * `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Constraint identifier.
 * `owner` - Owner of the constraint.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `3m`)
 - `read` - (Default `10m`)
@@ -95,8 +96,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_constraint` using the constraint ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_constraint.example
+  id = "cons-nmdkb6cgxfcrs"
+}
 ```
-$ terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
+
+Using `terraform import`, import `aws_servicecatalog_constraint` using the constraint ID. For example:
+
+```console
+% terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
 ```

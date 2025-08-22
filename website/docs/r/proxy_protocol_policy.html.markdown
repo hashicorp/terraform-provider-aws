@@ -40,16 +40,17 @@ resource "aws_proxy_protocol_policy" "smtp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `load_balancer` - (Required) The load balancer to which the policy
   should be attached.
 * `instance_ports` - (Required) List of instance ports to which the policy
   should be applied. This can be specified if the protocol is SSL or TCP.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `load_balancer` - The load balancer to which the policy is attached.

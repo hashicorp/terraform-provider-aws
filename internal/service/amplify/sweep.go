@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package amplify
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_amplify_app", &resource.Sweeper{
 		Name: "aws_amplify_app",
 		F:    sweepApps,
@@ -23,43 +22,42 @@ func init() {
 }
 
 func sweepApps(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AmplifyConn
-	input := &amplify.ListAppsInput{}
-	var sweeperErrs *multierror.Error
+	conn := client.AmplifyClient(ctx)
+	var sweepResources []sweep.Sweepable
 
-	err = listAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := amplify.ListAppsInput{}
+	pages := amplify.NewListAppsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Amplify App sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, app := range page.Apps {
-			r := ResourceApp()
+		if err != nil {
+			return fmt.Errorf("error listing Amplify Apps: %w", err)
+		}
+
+		for _, v := range page.Apps {
+			r := resourceApp()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(app.AppId))
-			err = r.Delete(d, client)
+			d.SetId(aws.ToString(v.AppId))
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Amplify Apps sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Amplify Apps: %w", err))
+		return fmt.Errorf("error sweeping Amplify Apps (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

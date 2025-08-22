@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront web distribution data source.
 ---
 
-# Data source: aws_cloudfront_distribution
+# Data Source: aws_cloudfront_distribution
 
 Use this data source to retrieve information about a CloudFront distribution.
 
@@ -20,15 +20,19 @@ data "aws_cloudfront_distribution" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 * `aliases` - List that contains information about CNAMEs (alternate domain names), if any, for this distribution.
+
+* `anycast_ip_list_id` - ID of the Anycast static IP list that is associated with the distribution, if any.
 
 * `arn` - ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
 
@@ -50,3 +54,4 @@ The following attributes are exported:
 * `hosted_zone_id` - CloudFront Route 53 zone ID that can be used to
      route an [Alias Resource Record Set][7] to. This attribute is simply an
      alias for the zone ID `Z2FDTNDATAQYW2`.
+* `web_acl_id` AWS WAF web ACL associated with this distribution.

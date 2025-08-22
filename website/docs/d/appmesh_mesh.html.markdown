@@ -3,7 +3,7 @@ subcategory: "App Mesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_mesh"
 description: |-
-    Provides details about an App Mesh Mesh service mesh resource.
+    Terraform data source for managing an AWS App Mesh Mesh.
 ---
 
 # Data Source: aws_appmesh_mesh
@@ -12,13 +12,13 @@ The App Mesh Mesh data source allows details of an App Mesh Mesh to be retrieved
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_appmesh_mesh" "simple" {
   name = "simpleapp"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_mesh" "simple" {
@@ -29,26 +29,19 @@ data "aws_appmesh_mesh" "simple" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the service mesh.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service mesh.
 * `created_date` - Creation date of the service mesh.
 * `last_updated_date` - Last update date of the service mesh.
 * `resource_owner` - Resource owner's AWS account ID.
-* `spec` - Service mesh specification.
+* `spec` - Service mesh specification. See the [`aws_appmesh_mesh`](/docs/providers/aws/r/appmesh_mesh.html#spec) resource for details.
 * `tags` - Map of tags.
-
-### Spec
-
-* `egress_filter` - Egress filter rules for the service mesh.
-
-### Egress Filter
-
-* `type` - Egress filter type.

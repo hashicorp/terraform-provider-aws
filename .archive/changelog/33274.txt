@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `open_table_format_input` configuration block to support open table formats such as [Apache Iceberg](https://iceberg.apache.org/)
+```

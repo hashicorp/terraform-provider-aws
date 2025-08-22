@@ -28,32 +28,37 @@ resource "aws_vpc_endpoint_route_table_association" "private_s3" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoints.
-The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
-* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
 * `vpc_id` - (Optional) ID of the VPC in which the specific VPC Endpoint is used.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC endpoints.
+The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpoints.html).
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Endpoint will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above except `filter`, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
-* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
+* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. [DNS entry blocks are documented below](#dns_entry-block).
+* `dns_options` - DNS options for the VPC Endpoint. [DNS options blocks are documented below](#dns_options-block).
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
 * `owner_id` - ID of the AWS account that owns the VPC endpoint.
 * `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
@@ -62,16 +67,26 @@ In addition to all arguments above except `filter`, the following attributes are
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `service_region` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
+
+### `dns_entry` Block
 
 DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - DNS name.
 * `hosted_zone_id` - ID of the private hosted zone.
 
+### `dns_options` Block
+
+DNS options (for `dns_options`) support the following attributes:
+
+* `dns_record_ip_type` - The DNS records created for the endpoint.
+* `private_dns_only_for_inbound_resolver_endpoint` - Indicates whether to enable private DNS only for inbound endpoints.
+
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

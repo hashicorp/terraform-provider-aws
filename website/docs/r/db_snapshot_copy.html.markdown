@@ -18,7 +18,7 @@ resource "aws_db_instance" "example" {
   engine            = "mysql"
   engine_version    = "5.6.21"
   instance_class    = "db.t2.micro"
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 
@@ -28,7 +28,7 @@ resource "aws_db_instance" "example" {
 }
 
 resource "aws_db_snapshot" "example" {
-  db_instance_identifier = aws_db_instance.example.id
+  db_instance_identifier = aws_db_instance.example.identifier
   db_snapshot_identifier = "testsnapshot1234"
 }
 
@@ -40,22 +40,23 @@ resource "aws_db_snapshot_copy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destination_region` - (Optional) The Destination region to place snapshot copy.
 * `kms_key_id` - (Optional) KMS key ID.
 * `option_group_name`- (Optional) The name of an option group to associate with the copy of the snapshot.
 * `presigned_url` - (Optional) he URL that contains a Signature Version 4 signed request.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `source_db_snapshot_identifier` - (Required) Snapshot identifier of the source snapshot.
 * `target_custom_availability_zone` - (Optional) The external custom Availability Zone.
 * `target_db_snapshot_identifier` - (Required) The Identifier for the snapshot.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Snapshot Identifier.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
@@ -68,6 +69,7 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - The region that the DB snapshot was created in or copied from.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
@@ -76,14 +78,23 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `20m`)
 
 ## Import
 
-`aws_db_snapshot_copy` can be imported by using the snapshot identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_snapshot_copy` using the snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_db_snapshot_copy.example
+  id = "my-snapshot"
+}
 ```
-$ terraform import aws_db_snapshot_copy.example my-snapshot
+
+Using `terraform import`, import `aws_db_snapshot_copy` using the snapshot identifier. For example:
+
+```console
+% terraform import aws_db_snapshot_copy.example my-snapshot
 ```
