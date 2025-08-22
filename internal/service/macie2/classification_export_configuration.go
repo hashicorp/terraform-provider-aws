@@ -19,6 +19,7 @@ import (
 
 // @SDKResource("aws_macie2_classification_export_configuration", name="Classification Export Configuration")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
 // @Testing(generator=false)
 func resourceClassificationExportConfiguration() *schema.Resource {

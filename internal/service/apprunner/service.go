@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_apprunner_service", name="Service")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -462,7 +463,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.ObservabilityConfiguration = expandServiceObservabilityConfiguration(v.([]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateService(ctx, input)
 	}, "Error in assuming instance role")
 

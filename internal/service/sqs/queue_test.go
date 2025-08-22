@@ -967,7 +967,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			// SQS seems to be highly eventually consistent. Even if one connection reports that the queue is gone,
 			// another connection may still report it as present.
-			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func() (any, error) {
+			_, err := tfresource.RetryUntilNotFound(ctx, tfsqs.QueueDeletedTimeout, func(ctx context.Context) (any, error) {
 				return tfsqs.FindQueueAttributesByURL(ctx, conn, rs.Primary.ID)
 			})
 			if errors.Is(err, tfresource.ErrFoundResource) {
@@ -1317,7 +1317,7 @@ func testAccQueueConfig_managedEncryptionKMSDataKeyReusePeriodSeconds(rName stri
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   kms_data_key_reuse_period_seconds = "60"
-  max_message_size                  = "261244"
+  max_message_size                  = "1048576"
   message_retention_seconds         = "60"
   name                              = %[1]q
   sqs_managed_sse_enabled           = true
@@ -1371,7 +1371,7 @@ func testAccQueueConfig_noManagedEncryptionKMSDataKeyReusePeriodSeconds(rName st
 resource "aws_sqs_queue" "test" {
   fifo_queue                        = true
   kms_data_key_reuse_period_seconds = "60"
-  max_message_size                  = "261244"
+  max_message_size                  = "1048576"
   message_retention_seconds         = "60"
   name                              = "%[1]s.fifo"
   receive_wait_time_seconds         = "10"

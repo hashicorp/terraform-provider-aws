@@ -28,6 +28,7 @@ import (
 // @ArnIdentity("application_arn", identityDuplicateAttributes="id")
 // @ArnFormat(global=true)
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(v60RefreshError=true)
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
 }
@@ -38,7 +39,7 @@ const (
 
 type applicationAssignmentConfigurationResource struct {
 	framework.ResourceWithModel[applicationAssignmentConfigurationResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *applicationAssignmentConfigurationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

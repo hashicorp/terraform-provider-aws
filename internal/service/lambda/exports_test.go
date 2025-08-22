@@ -42,3 +42,8 @@ var (
 	ValidQualifier                  = validQualifier
 	ValidPolicyStatementID          = validPolicyStatementID
 )
+
+type (
+	Policy          = policy
+	PolicyStatement = policyStatement
+)

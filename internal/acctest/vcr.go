@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"gopkg.in/dnaeon/go-vcr.v4/pkg/cassette"
@@ -186,23 +186,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 			switch contentType := r.Header.Get("Content-Type"); contentType {
 			case "application/json", "application/x-amz-json-1.0", "application/x-amz-json-1.1":
 				// JSON might be the same, but reordered. Try parsing and comparing.
-				var requestJson, cassetteJson any
-
-				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]any{
-						"error": err,
-					})
-					return false
-				}
-
-				return reflect.DeepEqual(requestJson, cassetteJson)
+				return tfjson.EqualStrings(body, i.Body)
 
 			case "application/xml":
 				// XML might be the same, but reordered. Try parsing and comparing.
@@ -375,7 +359,7 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	defer providerMetas.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
@@ -385,6 +369,8 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 		}
 
 		delete(providerMetas, testName)
+	} else {
+		t.Log("provider meta not found for test", testName)
 	}
 
 	// Save the randomness seed.
@@ -393,7 +379,7 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	defer randomnessSources.Unlock()
 
 	if ok {
-		if !t.Failed() {
+		if !t.Failed() && !t.Skipped() {
 			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(vcr.Path(), t.Name())); err != nil {
 				t.Error(err)
@@ -401,6 +387,8 @@ func closeVCRRecorder(ctx context.Context, t *testing.T) {
 		}
 
 		delete(randomnessSources, testName)
+	} else {
+		t.Log("randomness source not found for test", testName)
 	}
 }
 
@@ -409,8 +397,12 @@ func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(ctx, t)
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.ParallelTest(t, c)
@@ -421,8 +413,12 @@ func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if vcr.IsEnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(ctx, t)
+		if c.ProtoV5ProviderFactories != nil {
+			c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+			defer closeVCRRecorder(ctx, t)
+		} else {
+			t.Skip("go-vcr is not currently supported for test step ProtoV5ProviderFactories")
+		}
 	}
 
 	resource.Test(t, c)

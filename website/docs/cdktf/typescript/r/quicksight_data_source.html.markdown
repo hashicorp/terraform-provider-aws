@@ -110,7 +110,7 @@ class MyConvertedCode extends TerraformStack {
                 "https://${" +
                   example.id +
                   "}.s3-${" +
-                  dataAwsRegionCurrent.name +
+                  dataAwsRegionCurrent.region +
                   "}.${" +
                   dataAwsPartitionCurrent.dnsSuffix +
                   "}",
@@ -199,9 +199,10 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional, Forces new resource) The ID for the AWS account that the data source is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `credentials` - (Optional) The credentials Amazon QuickSight uses to connect to your underlying source. See [Credentials](#credentials-argument-reference) below for more details.
 * `permission` - (Optional) A set of resource permissions on the data source. Maximum of 64 items. See [Permission](#permission-argument-reference) below for more details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `sslProperties` - (Optional) Secure Socket Layer (SSL) properties that apply when Amazon QuickSight connects to your underlying source. See [SSL Properties](#ssl_properties-argument-reference) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcConnectionProperties`- (Optional) Use this parameter only when you want Amazon QuickSight to use a VPC connection when connecting to your underlying source. See [VPC Connection Properties](#vpc_connection_properties-argument-reference) below for more details.
@@ -414,4 +415,4 @@ Using `terraform import`, import a QuickSight data source using the AWS account 
 % terraform import aws_quicksight_data_source.example 123456789123/my-data-source-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-39c44280e942ba61716c559b7b4651b6620fb727224eda3c89a529511b9790ff -->
+<!-- cache-key: cdktf-0.20.8 input-53ddfbdd005aa30074ea07a0d3cc85c54b0c81df9f3c87eb369eb252182d2107 -->

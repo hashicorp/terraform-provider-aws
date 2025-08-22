@@ -136,6 +136,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_installation_files_s3_bucket_name` - (Required) The name of the Amazon S3 bucket that contains the database installation files.
 * `database_installation_files_s3_prefix` - (Required) The prefix for the Amazon S3 bucket that contains the database installation files.
 * `description` - (Optional) The description of the CEV.
@@ -194,4 +195,4 @@ Using `terraform import`, import custom engine versions for Amazon RDS custom us
 % terraform import aws_rds_custom_db_engine_version.example custom-oracle-ee-cdb:19.cdb_cev1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dae41bd3880415fe2e096d70a45f580b6bfa6f14fe785ee0edae92bb5abec604 -->
+<!-- cache-key: cdktf-0.20.8 input-47313376c2661f0d293d3f12bd1abfff76b2fc61ddafcfd798e1b35c4ceb32b0 -->

@@ -76,26 +76,19 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleARN := d.Get(names.AttrRoleARN).(string)
 	id := instanceRoleAssociationCreateResourceID(dbInstanceIdentifier, roleARN)
-	input := &rds.AddRoleToDBInstanceInput{
+	input := rds.AddRoleToDBInstanceInput{
 		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
 		FeatureName:          aws.String(d.Get("feature_name").(string)),
 		RoleArn:              aws.String(roleARN),
 	}
 
-	_, err := conn.AddRoleToDBInstance(ctx, input)
-
-	// check if the instance is in a valid state to add the role association
-	if errs.IsA[*types.InvalidDBInstanceStateFault](err) {
-		if _, err := waitDBInstanceAvailable(ctx, conn, dbInstanceIdentifier, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) available: %s", dbInstanceIdentifier, err)
-		}
-
-		_, err = conn.AddRoleToDBInstance(ctx, input)
-	}
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return conn.AddRoleToDBInstance(ctx, &input)
+	})
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
-		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-			return conn.AddRoleToDBInstance(ctx, input)
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.AddRoleToDBInstance(ctx, &input)
 		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
 
@@ -150,10 +143,13 @@ func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Instance IAM Role Association: %s", d.Id())
-	_, err = conn.RemoveRoleFromDBInstance(ctx, &rds.RemoveRoleFromDBInstanceInput{
+	input := rds.RemoveRoleFromDBInstanceInput{
 		DBInstanceIdentifier: aws.String(dbInstanceIdentifier),
 		FeatureName:          aws.String(d.Get("feature_name").(string)),
 		RoleArn:              aws.String(roleARN),
+	}
+	_, err = tfresource.RetryWhenIsA[any, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.RemoveRoleFromDBInstance(ctx, &input)
 	})
 
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) || errs.IsA[*types.DBInstanceRoleNotFoundFault](err) {

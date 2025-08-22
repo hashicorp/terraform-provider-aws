@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `commitment_duration` - (Optional) Commitment duration requested for the Provisioned Throughput. For custom models, you can purchase on-demand Provisioned Throughput by omitting this argument. Valid values: `OneMonth`, `SixMonths`.
 * `model_arn` - (Required) ARN of the model to associate with this Provisioned Throughput.
 * `model_units` - (Required) Number of model units to allocate. A model unit delivers a specific throughput level for the specified model.
@@ -82,4 +83,4 @@ Using `terraform import`, import Provisioned Throughput using the `provisioned_m
 % terraform import aws_bedrock_provisioned_model_throughput.example arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ea5409b9dfeaf0566d6e29041a5ed1e5e9cc5decab840cfe258c07df81e14ad7 -->
+<!-- cache-key: cdktf-0.20.8 input-40ebdc15f78fbeef79d58a6dd67f830f1a83bce550db2622f392ddd0664ebb45 -->

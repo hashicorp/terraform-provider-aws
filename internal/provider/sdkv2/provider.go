@@ -708,18 +708,30 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			if len(resource.Identity.Attributes) > 0 {
 				r.Identity = newResourceIdentity(resource.Identity)
 
-				interceptors = append(interceptors, newIdentityInterceptor(resource.Identity.Attributes))
+				if resource.Identity.IsMutable {
+					r.ResourceBehavior.MutableIdentity = true
+				}
+
+				interceptors = append(interceptors, newIdentityInterceptor(&resource.Identity))
 			}
 
+			if resource.Import.CustomImport {
+				if r.Importer == nil || r.Importer.StateContext == nil {
+					errs = append(errs, fmt.Errorf("resource type %s: uses CustomImport but does not define an import function", typeName))
+					continue
+				}
+
+				customResourceImporter(r, &resource.Identity, &resource.Import)
+			}
 			if resource.Import.WrappedImport {
 				if r.Importer != nil && r.Importer.StateContext != nil {
 					errs = append(errs, fmt.Errorf("resource type %s: uses WrappedImport but defines an import function", typeName))
 					continue
 				}
 
-				if resource.Identity.ARN {
+				if resource.Identity.IsARN {
 					r.Importer = arnIdentityResourceImporter(resource.Identity)
-				} else if resource.Identity.Singleton {
+				} else if resource.Identity.IsSingleton {
 					r.Importer = singletonIdentityResourceImporter(resource.Identity)
 				} else {
 					r.Importer = newParameterizedIdentityImporter(resource.Identity, &resource.Import)

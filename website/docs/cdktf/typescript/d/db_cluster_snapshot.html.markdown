@@ -73,6 +73,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mostRecent` - (Optional) If more than one result is returned, use the most recent Snapshot.
 * `dbClusterIdentifier` - (Optional) Returns the list of snapshots created by the specific db_cluster
 * `dbClusterSnapshotIdentifier` - (Optional) Returns information on a specific snapshot_id.
@@ -102,10 +103,10 @@ This data source exports the following attributes in addition to the arguments a
 * `licenseModel` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
 * `snapshotCreateTime` - Time when the snapshot was taken, in Universal Coordinated Time (UTC).
-* `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `sourceDbClusterSnapshotIdentifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `status` - Status of this DB Cluster Snapshot.
 * `storageEncrypted` - Whether the DB cluster snapshot is encrypted.
 * `vpcId` - VPC ID associated with the DB cluster snapshot.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.8 input-a5847b6b7894b8bc81d561012d77e63802b11d4802ee1f24e4c51067e98ce60e -->
+<!-- cache-key: cdktf-0.20.8 input-cba4bad9cc90ba77a0dac1d30c48b643991f8cf9a3ebcd57cb34bfe86acc8b51 -->

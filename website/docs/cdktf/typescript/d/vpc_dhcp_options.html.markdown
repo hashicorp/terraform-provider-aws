@@ -71,6 +71,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dhcpOptionsId` - (Optional) EC2 DHCP Options ID.
 * `filter` - (Optional) List of custom filters as described below.
 
@@ -105,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-e7314c2cff15cb87983db9a1bb2f0d153cbe157521c531351e1fd08e0fdf9f55 -->
+<!-- cache-key: cdktf-0.20.8 input-836103c59ad6a6602d8a60f4658cd3862f82a32b05c1ce9a19b5934434cd6de5 -->

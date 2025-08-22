@@ -72,6 +72,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientVpnEndpointId` - (Required) The ID of the Client VPN endpoint.
 * `destinationCidrBlock` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
 * `description` - (Optional) A brief description of the route.
@@ -124,4 +125,4 @@ Using `terraform import`, import AWS Client VPN routes using the endpoint ID, ta
 % terraform import aws_ec2_client_vpn_route.example cvpn-endpoint-1234567890abcdef,subnet-9876543210fedcba,10.1.0.0/24
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-144efd2b6259f86199d398e7181456f408b908b3630ac4f3343668fe63a992b9 -->
+<!-- cache-key: cdktf-0.20.8 input-7888ecdac7b1150cd400f08556b6d788dd4245f5ecf2f9673278f2c8f2381a71 -->

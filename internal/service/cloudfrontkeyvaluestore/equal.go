@@ -12,3 +12,8 @@ import (
 func resourceKeyValuePairEqual(s1, s2 awstypes.ListKeysResponseListItem) bool {
 	return aws.ToString(s1.Key) == aws.ToString(s2.Key) && aws.ToString(s1.Value) == aws.ToString(s2.Value)
 }
+
+// resourceKeyValuePairKeyEqual determines whether two key value pairs have an equal key
+func resourceKeyValuePairKeyEqual(s1, s2 awstypes.ListKeysResponseListItem) bool {
+	return aws.ToString(s1.Key) == aws.ToString(s2.Key)
+}

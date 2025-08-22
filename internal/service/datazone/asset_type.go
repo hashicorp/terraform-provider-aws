@@ -165,7 +165,7 @@ func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetAssetTypeOutput, error) {
 		return findAssetTypeByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.Name.ValueString())
 	})
 	if err != nil {
@@ -176,7 +176,6 @@ func (r *assetTypeResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	output := outputRaw.(*datazone.GetAssetTypeOutput)
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan, flex.WithIgnoredFieldNamesAppend("OwningProjectId"))...)
 	if resp.Diagnostics.HasError() {
 		return

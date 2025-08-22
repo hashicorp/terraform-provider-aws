@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_glue_resource_policy", name="Resource Policy")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
 func resourceResourcePolicy() *schema.Resource {

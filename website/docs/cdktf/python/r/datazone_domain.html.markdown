@@ -79,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Domain.
 * `kms_key_identifier` - (Optional) ARN of the KMS key used to encrypt the Amazon DataZone domain, metadata and reporting data.
 * `single_sign_on` - (Optional) Single sign on options, used to [enable AWS IAM Identity Center](https://docs.aws.amazon.com/datazone/latest/userguide/enable-IAM-identity-center-for-datazone.html) for DataZone.
@@ -125,4 +126,4 @@ Using `terraform import`, import DataZone Domain using the `domain_id`. For exam
 % terraform import aws_datazone_domain.example domain-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9cf4fea64daacd2647e1dcda678fe26fafde57d1e729da86af348a0ae67767c3 -->
+<!-- cache-key: cdktf-0.20.8 input-01f1234d13ed2628920f633d9cc2fcc0aaf57daa2c43d55545cf2b4deb031250 -->

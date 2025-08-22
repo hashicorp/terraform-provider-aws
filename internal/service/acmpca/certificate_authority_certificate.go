@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_acmpca_certificate_authority_certificate", name="Certificate Authority Certificate")
 // @ArnIdentity("certificate_authority_arn")
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca;acmpca.GetCertificateAuthorityCertificateOutput")
 // @Testing(generator="acctest.RandomDomainName()")
 // @Testing(checkDestroyNoop=true)

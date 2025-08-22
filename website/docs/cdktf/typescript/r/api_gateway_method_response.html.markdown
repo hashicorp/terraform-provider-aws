@@ -144,6 +144,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) The string identifier of the associated REST API.
 * `resourceId` - (Required) The Resource identifier for the method resource.
 * `httpMethod` - (Required) The HTTP verb of the method resource (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`).
@@ -151,7 +152,7 @@ This resource supports the following arguments:
 * `responseModels` - (Optional) A map specifying the model resources used for the response's content type. Response models are represented as a key/value map, with a content type as the key and a Model name as the value.
 * `responseParameters` - (Optional) A map specifying required or optional response parameters that API Gateway can send back to the caller. A key defines a method response header name and the associated value is a boolean flag indicating whether the method response parameter is required. The method response header names must match the pattern of `method.response.header.{name}`, where `name` is a valid and unique header name.
 
-  The response parameter names defined here are available in the integration response to be mapped from an integration response header expressed in `integration.response.header.{name}`, a static value enclosed within a pair of single quotes (e.g., '`application/json'`), or a JSON expression from the back-end response payload in the form of `integration.response.body.{JSON-expression}`, where `JSON-expression` is a valid JSON expression without the `$` prefix.)
+The response parameter names defined here are available in the integration response to be mapped from an integration response header expressed in `integration.response.header.{name}`, a static value enclosed within a pair of single quotes (e.g., '`application/json'`), or a JSON expression from the back-end response payload in the form of `integration.response.body.{JSON-expression}`, where `JSON-expression` is a valid JSON expression without the `$` prefix.)
 
 ## Attribute Reference
 
@@ -189,4 +190,4 @@ Using `terraform import`, import `aws_api_gateway_method_response` using `REST-A
 % terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-149830828fe1f7738d24a10f77bd5873f7f2e0bf0e281fcd48746feef6702d97 -->
+<!-- cache-key: cdktf-0.20.8 input-99186c6c0499f61bb223e736bf1cfab300f9c32ba5c22b8fb08eac3ed80762d2 -->

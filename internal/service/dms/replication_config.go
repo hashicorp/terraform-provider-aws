@@ -32,6 +32,7 @@ import (
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
 // @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
 func resourceReplicationConfig() *schema.Resource {

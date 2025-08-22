@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_xray_encryption_config", name="Encryption Config")
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)

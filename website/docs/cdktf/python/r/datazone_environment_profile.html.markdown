@@ -134,6 +134,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `aws_account_id` - (Required) -  Id of the AWS account being used.
 * `aws_account_region` - (Required) -  Desired region for environment profile.
 * `domain_identifier` - (Required) -  Domain Identifier for environment profile.
@@ -179,4 +180,4 @@ Using `terraform import`, import DataZone Environment Profile using a comma-deli
 % terraform import aws_datazone_environment_profile.example environment_profile-id-12345678,domain-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da512e06f6b1d5cc7630bf5f84ef467972ae521b4e76a62c2a8a9a23e5a7f972 -->
+<!-- cache-key: cdktf-0.20.8 input-ff319ce2b46fccb99c06f719d5591f874bd44b72e14e06e09480ff93e2781cdf -->

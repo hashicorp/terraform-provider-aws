@@ -39,6 +39,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/paymentcryptography;paymentcryptography.GetKeyOutput")
 // @Testing(generator=false)
 // @Testing(importIgnore="deletion_window_in_days")
+// @Testing(preIdentityVersion="v5.100.0")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -56,7 +57,7 @@ const (
 
 type keyResource struct {
 	framework.ResourceWithModel[keyResourceModel]
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 

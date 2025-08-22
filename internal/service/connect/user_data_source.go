@@ -24,7 +24,7 @@ import (
 
 // @SDKDataSource("aws_connect_user", name="User")
 // @Tags
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 

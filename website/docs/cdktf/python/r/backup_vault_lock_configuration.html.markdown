@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
 * `changeable_for_days` - (Optional) The number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
 * `max_retention_days` - (Optional) The maximum retention period that the vault retains its recovery points.
@@ -75,4 +76,4 @@ Using `terraform import`, import Backup vault lock configuration using the `name
 % terraform import aws_backup_vault_lock_configuration.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7a6a16a744584530b702e520addc8fa4bab5b7a770b8ab9d13d1bbcb2f7c3f12 -->
+<!-- cache-key: cdktf-0.20.8 input-dfefc36be517f6f1b1c17c6054a83f113515b4ab6cd917f3e5e16b603ea0b6af -->

@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app` - (Required) The name of the application for valid values see https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html.
 * `appBundleArn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `authType` - (Required) The authorization type for the app authorization valid values are oauth2 and apiKey.
@@ -99,4 +100,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
-<!-- cache-key: cdktf-0.20.8 input-5e769b1223e88e96abfebe317ec0b00300b370da3c2f524bfc9c2220b75c40d7 -->
+<!-- cache-key: cdktf-0.20.8 input-b77bc7802a992d10c8b29b4cf234c915d28ca97dc0da49785cd0ca3eb3f0fcb7 -->

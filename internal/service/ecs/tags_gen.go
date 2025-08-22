@@ -3,8 +3,8 @@ package ecs
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -28,11 +28,11 @@ func findTag(ctx context.Context, conn *ecs.Client, identifier, key string, optF
 	listTags, err := listTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if !listTags.KeyExists(key) {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(nil))
 	}
 
 	return listTags.KeyValue(key), nil
@@ -49,14 +49,14 @@ func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns .
 	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
-		}
+		})
 	}
 
 	if err != nil {
-		return tftags.New(ctx, nil), err
+		return tftags.New(ctx, nil), smarterr.NewError(err)
 	}
 
 	return keyValueTags(ctx, output.Tags), nil
@@ -68,7 +68,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).ECSClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -155,7 +155,7 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -170,7 +170,7 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

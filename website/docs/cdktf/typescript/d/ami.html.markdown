@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `owners` - (Optional) List of AMI owners to limit search. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g., `amazon`, `aws-marketplace`, `microsoft`).
 * `mostRecent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -65,6 +66,10 @@ recent AMI.
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
+* `allowUnsafeFilter` - (Optional) If true, allow unsafe filter values. With unsafe
+filters and `mostRecent` set to `true`, a third party may introduce a new image which
+will be returned by this data source. Consider filtering by owner or image ID rather
+than setting this argument.
 * `nameRegex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
@@ -152,4 +157,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.20.8 input-a62b396dede0b1f299cc13f1e83c22aa9abe5fd44d9d3f1c9ddaa82dd03096cd -->
+<!-- cache-key: cdktf-0.20.8 input-bb5d7d662f9b4a8aa15b1c63d1ee7a13e07553335a38463929c9138cdcf1191a -->

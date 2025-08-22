@@ -74,8 +74,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `userGroupId` - (Required) ID of the user group.
 * `userId` - (Required) ID of the user to associated with the user group.
 
@@ -122,4 +123,4 @@ Using `terraform import`, import ElastiCache user group associations using the `
 % terraform import aws_elasticache_user_group_association.example userGoupId1,userId
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3339413e7f428981aaae7e8893e86bdecb98d0c269d68abccc1d0e2642de7dc7 -->
+<!-- cache-key: cdktf-0.20.8 input-61bb886c3996ca90a5ae3a09f7dbbd40efcc4c70cf2fccd78df71d85860744f3 -->

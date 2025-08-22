@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @ArnFormat("realtime-log-config/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
 func resourceRealtimeLogConfig() *schema.Resource {

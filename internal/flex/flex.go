@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -254,11 +255,11 @@ func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, 
 	idParts := strings.Split(id, ResourceIdSeparator)
 
 	if len(idParts) <= 1 {
-		return nil, fmt.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
+		return nil, smarterr.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
 	}
 
 	if len(idParts) != partCount {
-		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
+		return nil, smarterr.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
 	}
 
 	if !allowEmptyPart {
@@ -272,7 +273,7 @@ func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, 
 		}
 
 		if emptyPart {
-			return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
+			return nil, smarterr.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
 		}
 	}
 	return idParts, nil

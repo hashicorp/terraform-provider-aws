@@ -76,6 +76,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 * `version_id` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
 * `version_stage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
@@ -91,4 +92,4 @@ This data source exports the following attributes in addition to the arguments a
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `version_id` - Unique identifier of this version of the secret.
 
-<!-- cache-key: cdktf-0.20.8 input-922ae1eca9b4cf8eb0a93e5897b9017a10bb185c1ee76b3893ab53aafe35cb21 -->
+<!-- cache-key: cdktf-0.20.8 input-a07848bd8d2d1006ae852e0eda3bdf0f366fa0d55c1bcd7bad0d4870afb4175b -->

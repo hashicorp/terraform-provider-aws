@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -183,7 +183,7 @@ func (r *reservedCacheNodeResource) Read(ctx context.Context, request resource.R
 
 	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -246,8 +246,7 @@ func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id
 
 	if errs.IsA[*awstypes.ReservedCacheNodeNotFoundFault](err) {
 		return result, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -271,7 +270,7 @@ func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client,
 			reservedCacheNodeStatePaymentPending,
 		},
 		Target:         []string{reservedCacheNodeStateActive},
-		Refresh:        statusReservedCacheNode(ctx, conn, id),
+		Refresh:        statusReservedCacheNode(conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
 		MinTimeout:     10 * time.Second,
@@ -283,11 +282,11 @@ func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client,
 	return err
 }
 
-func statusReservedCacheNode(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReservedCacheNode(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReservedCacheNodeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

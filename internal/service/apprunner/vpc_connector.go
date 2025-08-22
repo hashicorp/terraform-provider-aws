@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_apprunner_vpc_connector", name="VPC Connector")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,

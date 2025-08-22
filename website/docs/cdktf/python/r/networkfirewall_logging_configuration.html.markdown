@@ -106,8 +106,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Network Firewall firewall.
-
 * `logging_configuration` - (Required) A configuration block describing how AWS Network Firewall performs logging for a firewall. See [Logging Configuration](#logging-configuration) below for details.
 
 ### Logging Configuration
@@ -160,4 +160,4 @@ Using `terraform import`, import Network Firewall Logging Configurations using t
 % terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c1ca4a531ee558bf009a8f04edb7b5c0ad4e10aa4663b4384059581de195d942 -->
+<!-- cache-key: cdktf-0.20.8 input-ed809601f50b74f3052d544fbc0165235fb387d6ab18503f38dcc42e7878f854 -->

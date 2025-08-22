@@ -67,6 +67,16 @@ func ConfigMultipleAccountProvider(t *testing.T, accounts int) string {
 			),
 		)
 	}
+	if accounts == 4 {
+		config.WriteString(
+			ConfigNamedAccountProvider(
+				ProviderNameFourth,
+				os.Getenv(envvar.FourthAccessKeyId),
+				os.Getenv(envvar.FourthProfile),
+				os.Getenv(envvar.FourthSecretAccessKey),
+			),
+		)
+	}
 
 	return config.String()
 }
@@ -95,8 +105,12 @@ func ConfigMultipleRegionProvider(regions int) string {
 
 	config.WriteString(ConfigNamedRegionalProvider(ProviderNameAlternate, AlternateRegion()))
 
-	if regions >= 3 {
+	if regions == 3 {
 		config.WriteString(ConfigNamedRegionalProvider(ProviderNameThird, ThirdRegion()))
+	}
+
+	if regions == 4 {
+		config.WriteString(ConfigNamedRegionalProvider(ProviderNameFourth, FourthRegion()))
 	}
 
 	return config.String()
@@ -509,9 +523,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 
 resource "aws_subnet" "subnet_for_lambda" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -523,9 +539,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
   vpc_id                          = aws_vpc.vpc_for_lambda.id
-  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
   availability_zone               = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
+  cidr_block      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -656,9 +674,10 @@ resource "aws_subnet" "test" {
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  cidr_block      = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+
   assign_ipv6_address_on_creation = true
 
   tags = {
@@ -829,6 +848,7 @@ resource "null_resource" "db_setup" {
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
       psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
+      psql -h ${aws_rds_cluster.test.endpoint} -U ${aws_rds_cluster.test.master_username} -d ${aws_rds_cluster.test.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING gin (to_tsvector('simple', chunks));"
     EOT
   }
 }

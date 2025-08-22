@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_ce_anomaly_monitor", name="Anomaly Monitor")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalyMonitor")
 func resourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{

@@ -8,35 +8,33 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsIndexPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := "/aws/testacc/index-policy-" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyDocument := `{"Fields":["eventName"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -52,23 +50,23 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 
 func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := "/aws/testacc/index-policy-" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyDocument := `{"Fields":["eventName"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceIndexPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,31 +77,31 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 
 func TestAccLogsIndexPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	logGroupName := "/aws/testacc/index-policy-" + acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	policyDocument1 := `{"Fields":["eventName"]}`
 	policyDocument2 := `{"Fields": ["eventName", "requestId"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument1),
 				),
 			},
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument2),
 				),
 			},
@@ -111,9 +109,9 @@ func TestAccLogsIndexPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIndexPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_index_policy" {
@@ -122,7 +120,7 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -137,14 +135,14 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckIndexPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckIndexPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
 

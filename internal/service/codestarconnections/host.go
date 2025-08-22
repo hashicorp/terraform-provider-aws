@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_codestarconnections_host", name="Host")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections;codestarconnections.GetHostOutput")
 func resourceHost() *schema.Resource {
 	return &schema.Resource{

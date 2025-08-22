@@ -106,6 +106,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `behaviorOnMxFailure` - (Optional) The action that you want Amazon SES to take if it cannot successfully read the required MX record when you send an email. Defaults to `UseDefaultValue`. See the [SES API documentation](https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityMailFromDomain.html) for more information.
 
 ## Attribute Reference
@@ -142,4 +143,4 @@ Using `terraform import`, import MAIL FROM domain using the `domain` attribute. 
 % terraform import aws_ses_domain_mail_from.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cca74ce9256128a7d6ff8310ec22a5ff479d41f4dbdb04a2e94b2f5957898ed1 -->
+<!-- cache-key: cdktf-0.20.8 input-6cb51ec00d6ec9cf605631af95f90be26eaa26bb5f013a1303cc4949fa2d2d58 -->

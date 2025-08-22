@@ -36,7 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -48,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `password` - Password decoded from the authorization token.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.20.8 input-405142b3fcbfcb7d78b40aadc780f14dd06a37b96d4181b4650c2ff388624bad -->
+<!-- cache-key: cdktf-0.20.8 input-ece012b6e5ae8de14ec6e3b09c22a4ad28d8fd3bcdd6e268233938cf36886aa0 -->

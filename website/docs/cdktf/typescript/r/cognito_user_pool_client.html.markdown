@@ -229,10 +229,10 @@ class MyConvertedCode extends TerraformStack {
     new CognitoUserPoolClient(this, "userpool_client", {
       explicitAuthFlows: ["ADMIN_NO_SRP_AUTH"],
       name: "client",
-      refresh_token_rotation: [
+      refreshTokenRotation: [
         {
           feature: "ENABLED",
-          retry_grace_period_seconds: 10,
+          retryGracePeriodSeconds: 10,
         },
       ],
       userPoolId: pool.id,
@@ -251,6 +251,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessTokenValidity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
 * `allowedOauthFlowsUserPoolClient` - (Optional) Whether the client is allowed to use OAuth 2.0 features. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure the following arguments: `callbackUrls`, `logoutUrls`, `allowedOauthScopes` and `allowedOauthFlows`.
 * `allowedOauthFlows` - (Optional) List of allowed OAuth flows, including `code`, `implicit`, and `client_credentials`. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure this option.
@@ -267,7 +268,7 @@ The following arguments are optional:
 * `logoutUrls` - (Optional) List of allowed logout URLs for the identity providers. `allowedOauthFlowsUserPoolClient` must be set to `true` before you can configure this option.
 * `preventUserExistenceErrors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
 * `readAttributes` - (Optional) List of user pool attributes that the application client can read from.
-* `refresh_token_rotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
+* `refreshTokenRotation` - (Optional) A block that specifies the configuration of refresh token rotation. [Detailed below](#refresh_token_rotation).
 * `refreshTokenValidity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
 * `supportedIdentityProviders` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `providerName` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `tokenValidityUnits` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
@@ -286,7 +287,7 @@ Either `applicationArn` or `applicationId` is required.
 ### refresh_token_rotation
 
 * `feature` - (Required) The state of refresh token rotation for the current app client. Valid values are `ENABLED` or `DISABLED`.
-* `retry_grace_period_seconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
+* `retryGracePeriodSeconds` - (Optional) A period of time in seconds that the user has to use the old refresh token before it is invalidated. Valid values are between `0` and `60`.
 
 ### token_validity_units
 
@@ -335,4 +336,4 @@ Using `terraform import`, import Cognito User Pool Clients using the `id` of the
 % terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a9c0bb17375caaed839a69432aa5e85713ff4dadbb1d322112e50c25d12e16a1 -->
+<!-- cache-key: cdktf-0.20.8 input-d1a394d73b0a087acf5e418fb0d8c8e608a58d64886c462e83fcbbe2799898ee -->

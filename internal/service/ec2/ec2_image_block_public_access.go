@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +24,7 @@ import (
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
 // @Region(global=true)
 // @SingletonIdentity
+// @V60SDKv2Fix
 // @NoImport
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
@@ -57,7 +58,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 
 	if slices.Contains(imageBlockPublicAccessEnabledState_Values(), state) {
 		input := ec2.EnableImageBlockPublicAccessInput{
-			ImageBlockPublicAccessState: types.ImageBlockPublicAccessEnabledState(state),
+			ImageBlockPublicAccessState: awstypes.ImageBlockPublicAccessEnabledState(state),
 		}
 
 		_, err := conn.EnableImageBlockPublicAccess(ctx, &input)
@@ -108,11 +109,11 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 }
 
 func imageBlockPublicAccessDisabledState_Values() []string {
-	return enum.Values[types.ImageBlockPublicAccessDisabledState]()
+	return enum.Values[awstypes.ImageBlockPublicAccessDisabledState]()
 }
 
 func imageBlockPublicAccessEnabledState_Values() []string {
-	return enum.Values[types.ImageBlockPublicAccessEnabledState]()
+	return enum.Values[awstypes.ImageBlockPublicAccessEnabledState]()
 }
 
 func imageBlockPublicAccessState_Values() []string {

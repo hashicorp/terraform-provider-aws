@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `manifestJson` - (Required) The manifest JSON file is a text file that describes your AWS resources. For examples, review [Launch your landing zone](https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch).
 * `version` - (Required) The landing zone version.
 * `tags` - (Optional) Tags to apply to the landing zone. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -97,4 +98,4 @@ Using `terraform import`, import a Control Tower Landing Zone using the `id`. Fo
 % terraform import aws_controltower_landing_zone.example 1A2B3C4D5E6F7G8H
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-53c9533366773a62ee4316ca527ffa720a89c80117625816a27bb368ff0fcd82 -->
+<!-- cache-key: cdktf-0.20.8 input-04ee7c479623d05340f6bce0d0999c3ded94f4c559d353acc831cc58472fa3d2 -->

@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required) ID of the AppConfig application to which this configuration profile belongs.
 * `configurationProfileId` - (Required) ID of the Configuration Profile.
 
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
     * `content` - Either the JSON Schema content or the ARN of an AWS Lambda function.
     * `type` - Type of validator. Valid values: JSON_SCHEMA and LAMBDA.
 
-<!-- cache-key: cdktf-0.20.8 input-812d16f674999964ab6b67e20ad1395ac161f98caaa88682a62205246057f321 -->
+<!-- cache-key: cdktf-0.20.8 input-c28435865aba7b79cedbab88ebd9bf1673d870a45c919a23b6172925da51a6d0 -->

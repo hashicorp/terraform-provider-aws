@@ -35,6 +35,7 @@ import (
 // @IdentityAttribute("key_value_store_arn")
 // @IdentityAttribute("key")
 // @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
+// @Testing(preIdentityVersion="6.0.0")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -43,7 +44,7 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 
 type keyResource struct {
 	framework.ResourceWithModel[keyResourceModel]
-	framework.WithImportByParameterizedIdentity
+	framework.WithImportByIdentity
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

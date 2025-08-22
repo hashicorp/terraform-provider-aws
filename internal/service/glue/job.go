@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -235,11 +236,11 @@ func resourceJob() *schema.Resource {
 				Optional: true,
 			},
 			"worker_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ConflictsWith:    []string{names.AttrMaxCapacity},
-				ValidateDiagFunc: enum.Validate[awstypes.WorkerType](),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
+				ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
 			},
 		},
 	}
@@ -686,4 +687,8 @@ func flattenSourceControlDetails(sourceControlDetails *awstypes.SourceControlDet
 	}
 
 	return []map[string]any{m}
+}
+
+func workerType_Values() []string {
+	return tfslices.AppendUnique(enum.Values[awstypes.WorkerType](), "G.12X", "G.16X", "R.1X", "R.2X", "R.4X", "R.8X")
 }

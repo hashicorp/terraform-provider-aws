@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
 // @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
 // @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
 func resourceSourceCredential() *schema.Resource {

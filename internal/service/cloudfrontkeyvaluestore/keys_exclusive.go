@@ -124,7 +124,8 @@ func (r *keysExclusiveResource) syncKeyValuePairs(ctx context.Context, plan *key
 		return diags
 	}
 
-	put, del, _ := intflex.DiffSlices(have, want, resourceKeyValuePairEqual)
+	put, del, modify, _ := intflex.DiffSlicesWithModify(have, want, resourceKeyValuePairEqual, resourceKeyValuePairKeyEqual)
+	put = append(put, modify...)
 
 	// We need to perform a batched operation in the event of many Key Value Pairs
 	// to stay within AWS service limits
@@ -295,7 +296,6 @@ func FindResourceKeyValuePairsForKeyValueStore(ctx context.Context, conn *cloudf
 	paginator := cloudfrontkeyvaluestore.NewListKeysPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-
 		if err != nil {
 			return nil, nil, err
 		}
@@ -324,7 +324,8 @@ func expandDeleteKeyRequestListItem(delete []awstypes.ListKeysResponseListItem) 
 	out := []awstypes.DeleteKeyRequestListItem{}
 	for _, r := range delete {
 		out = append(out, awstypes.DeleteKeyRequestListItem{
-			Key: r.Key})
+			Key: r.Key,
+		})
 	}
 
 	return out

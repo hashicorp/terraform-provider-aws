@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_codeartifact_repository_permissions_policy", name="Repository Permissions Policy")
 // @ArnIdentity("resource_arn")
+// @V60SDKv2Fix
 // @Testing(serialize=true)
 func resourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{

@@ -117,40 +117,45 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 
 // GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
 func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
-	return c.GlobalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+	return c.arn(ctx, service, "", c.AccountID(ctx), resource)
 }
 
 // GlobalARNNoAccount returns a global (no Region) ARN for the specified service namespace and resource without AWS account ID.
 func (c *AWSClient) GlobalARNNoAccount(ctx context.Context, service, resource string) string {
-	return c.GlobalARNWithAccount(ctx, service, "", resource)
+	return c.arn(ctx, service, "", "", resource)
 }
 
 // GlobalARNWithAccount returns a global (no Region) ARN for the specified service namespace, resource and account ID.
 func (c *AWSClient) GlobalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   service,
-		AccountID: accountID,
-		Resource:  resource,
-	}.String()
+	return c.arn(ctx, service, "", accountID, resource)
 }
 
 // RegionalARN returns a regional ARN for the specified service namespace and resource.
 func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
-	return c.RegionalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+	return c.arn(ctx, service, c.Region(ctx), c.AccountID(ctx), resource)
 }
 
 // RegionalARNNoAccount returns a regional ARN for the specified service namespace and resource without AWS account ID.
 func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource string) string {
-	return c.RegionalARNWithAccount(ctx, service, "", resource)
+	return c.arn(ctx, service, c.Region(ctx), "", resource)
 }
 
 // RegionalARNWithAccount returns a regional ARN for the specified service namespace, resource and account ID.
 func (c *AWSClient) RegionalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
+	return c.arn(ctx, service, c.Region(ctx), accountID, resource)
+}
+
+// RegionalARNWithRegion returns a regional ARN for the specified service namespace, resource and account ID.
+func (c *AWSClient) RegionalARNWithRegion(ctx context.Context, service, region, resource string) string {
+	return c.arn(ctx, service, region, c.AccountID(ctx), resource)
+}
+
+// arn returns an ARN for the specified service namespace, region, account ID and resource.
+func (c *AWSClient) arn(ctx context.Context, service, region, accountID, resource string) string {
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		Region:    c.Region(ctx),
+		Region:    region,
 		AccountID: accountID,
 		Resource:  resource,
 	}.String()

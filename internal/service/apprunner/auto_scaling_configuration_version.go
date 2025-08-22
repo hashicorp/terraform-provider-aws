@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_apprunner_auto_scaling_configuration_version", name="AutoScaling Configuration Version")
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
+// @V60SDKv2Fix
 func resourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,

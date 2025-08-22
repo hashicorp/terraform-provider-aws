@@ -62,6 +62,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoConfigEnabled` - (Optional)  Indicates whether Application Insights automatically configures unmonitored resources in the resource group.
 * `autoCreate` - (Optional) Configures all of the resources in the resource group by applying the recommended configurations.
 * `cweMonitorEnabled` - (Optional)  Indicates whether Application Insights can listen to CloudWatch events for the application resources, such as instance terminated, failed deployment, and others.
@@ -110,4 +111,4 @@ Using `terraform import`, import ApplicationInsights Applications using the `res
 % terraform import aws_applicationinsights_application.some some-application
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-30b40f9adb8f133c3e275766d86e95f547219ce5038fa7751ad75a6d3c0db957 -->
+<!-- cache-key: cdktf-0.20.8 input-a3578485c4b122989096dcdb59526e6a55541b740bc08b2b4dd73147144d9fa1 -->
