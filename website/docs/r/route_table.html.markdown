@@ -189,6 +189,7 @@ resource "aws_route_table" "example" {
   ### Configuration omitted for brevity ###
 }
 ```
+
 ### Identity Schema
 
 #### Required
