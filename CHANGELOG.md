@@ -2,7 +2,7 @@
 
 ENHANCEMENTS:
 
-* data-source/aws_network_interfaces: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* data-source/aws_network_interface: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
 * data-source/aws_vpc_ipam: Add `metered_account` attribute ([#43967](https://github.com/hashicorp/terraform-provider-aws/issues/43967))
 * resource/aws_inspector2_filter: Support `code_repository_project_name`, `code_repository_provider_type`, `ecr_image_in_use_count`, and `ecr_image_last_in_use_at` in `filter_criteria` ([#43950](https://github.com/hashicorp/terraform-provider-aws/issues/43950))
 * resource/aws_mwaa_environment: Add `worker_replacement_strategy` argument ([#43946](https://github.com/hashicorp/terraform-provider-aws/issues/43946))
