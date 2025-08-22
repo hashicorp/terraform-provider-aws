@@ -501,6 +501,28 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_checkPolicyTypeTargetTagsConsistency(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccLifecyclePolicyConfig_withoutTargetTags(rName),
+				ExpectError: regexache.MustCompile(`target_tags must be specified for policy_type EBS_SNAPSHOT_MANAGEMENT`),
+			},
+			{
+				Config:      testAccLifecyclePolicyConfig_eventWithTargetTags(rName),
+				ExpectError: regexache.MustCompile(`target_tags must not be specified for policy_type EVENT_BASED_POLICY`),
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -1233,4 +1255,78 @@ resource "aws_dlm_lifecycle_policy" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccLifecyclePolicyConfig_withoutTargetTags(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_eventWithTargetTags(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy" "test" {
+  name = "AWSDataLifecycleManagerServiceRole"
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.id
+  policy_arn = data.aws_iam_policy.test.arn
+}
+
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+    policy_type = "EVENT_BASED_POLICY"
+
+    action {
+      name = "tf-acc-basic"
+      cross_region_copy {
+        encryption_configuration {}
+        retain_rule {
+          interval      = 15
+          interval_unit = "MONTHS"
+        }
+
+        target = %[1]q
+      }
+    }
+
+    event_source {
+      type = "MANAGED_CWE"
+      parameters {
+        description_regex = "^.*Created for policy: policy-1234567890abcdef0.*$"
+        event_type        = "shareSnapshot"
+        snapshot_owner    = [data.aws_caller_identity.current.account_id]
+      }
+    }
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`, acctest.AlternateRegion()))
 }

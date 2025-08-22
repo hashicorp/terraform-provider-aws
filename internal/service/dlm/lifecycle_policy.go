@@ -5,6 +5,7 @@ package dlm
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -213,6 +214,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						"policy_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							ForceNew:         true,
 							Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
 							ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
 						},
@@ -478,6 +480,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: checkPolicyTypeTargetTagsConsistencyCustomizeDiff,
 	}
 }
 
@@ -1285,4 +1288,23 @@ func flattenParameters(parameters *awstypes.Parameters) []map[string]any {
 	}
 
 	return []map[string]any{result}
+}
+
+func checkPolicyTypeTargetTagsConsistencyCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	policyDetails := expandPolicyDetails(d.Get("policy_details").([]any))
+	if policyDetails == nil {
+		return nil
+	}
+
+	switch policyDetails.PolicyType {
+	case awstypes.PolicyTypeValuesEbsSnapshotManagement, awstypes.PolicyTypeValuesImageManagement:
+		if len(policyDetails.TargetTags) == 0 {
+			return fmt.Errorf("target_tags must be specified for policy_type %s", policyDetails.PolicyType)
+		}
+	case awstypes.PolicyTypeValuesEventBasedPolicy:
+		if len(policyDetails.TargetTags) > 0 {
+			return fmt.Errorf("target_tags must not be specified for policy_type %s", policyDetails.PolicyType)
+		}
+	}
+	return nil
 }
