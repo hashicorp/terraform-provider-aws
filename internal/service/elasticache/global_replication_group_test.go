@@ -1229,7 +1229,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1266,7 +1266,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1312,7 +1312,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1359,7 +1359,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1401,7 +1401,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "5.0.6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
@@ -1444,7 +1444,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_NoVersio
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
@@ -1478,7 +1478,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_MinorUpg
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
@@ -2069,7 +2069,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, numNodeGroups, globalNumNodeGroups)
 }
 
-func testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, repGroupEngineVersion string) string {
+func testAccGlobalReplicationGroupConfig_Redis_engineVersionInherit(rName, primaryReplicationGroupId, repGroupEngineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
