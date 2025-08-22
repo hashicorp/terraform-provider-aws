@@ -368,7 +368,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
-			return smerr.Append(ctx, diags, err, smerr.ID)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	} else {
 		d.Set("compute_resources", nil)
@@ -376,7 +376,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	if computeEnvironment.EksConfiguration != nil {
 		if err := d.Set("eks_configuration", []any{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
-			return smerr.Append(ctx, diags, err, smerr.ID)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	} else {
 		d.Set("eks_configuration", nil)
@@ -387,7 +387,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	setTagsOut(ctx, computeEnvironment.Tags)

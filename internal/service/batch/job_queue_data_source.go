@@ -125,7 +125,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta an
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("compute_environment_order", tfList); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	tfList = make([]any, 0)
@@ -138,7 +138,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta an
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("job_state_time_limit_action", tfList); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)

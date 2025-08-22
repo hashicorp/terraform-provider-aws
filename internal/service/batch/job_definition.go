@@ -754,7 +754,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("container_properties"); ok {
 			props, err := expandContainerProperties(v.(string))
 			if err != nil {
-				return smerr.Append(ctx, diags, err, smerr.ID)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
@@ -764,7 +764,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("ecs_properties"); ok {
 			props, err := expandECSProperties(v.(string))
 			if err != nil {
-				return smerr.Append(ctx, diags, err, smerr.ID)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			for _, taskProps := range props.TaskProperties {
@@ -799,7 +799,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("node_properties"); ok {
 			props, err := expandJobNodeProperties(v.(string))
 			if err != nil {
-				return smerr.Append(ctx, diags, err, smerr.ID)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			for _, node := range props.NodeRangeProperties {
@@ -863,31 +863,31 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set("container_properties", containerProperties)
 	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set("ecs_properties", ecsProperties)
 	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 	if err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set(names.AttrParameters, jobDefinition.Parameters)
 	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
 	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return smerr.Append(ctx, diags, err, smerr.ID)
+			return smerr.Append(ctx, diags, err, smerr.ID, arn)
 		}
 	} else {
 		d.Set("retry_strategy", nil)
@@ -896,7 +896,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 	if jobDefinition.Timeout != nil {
 		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return smerr.Append(ctx, diags, err, smerr.ID)
+			return smerr.Append(ctx, diags, err, smerr.ID, arn)
 		}
 	} else {
 		d.Set(names.AttrTimeout, nil)
@@ -926,7 +926,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("container_properties"); ok {
 				props, err := expandContainerProperties(v.(string))
 				if err != nil {
-					return smerr.Append(ctx, diags, err, smerr.ID)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
@@ -936,7 +936,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("ecs_properties"); ok {
 				props, err := expandECSProperties(v.(string))
 				if err != nil {
-					return smerr.Append(ctx, diags, err, smerr.ID)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				for _, taskProps := range props.TaskProperties {
@@ -961,7 +961,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("node_properties"); ok {
 				props, err := expandJobNodeProperties(v.(string))
 				if err != nil {
-					return smerr.Append(ctx, diags, err, smerr.ID)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				for _, node := range props.NodeRangeProperties {

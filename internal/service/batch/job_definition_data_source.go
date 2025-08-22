@@ -137,7 +137,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		output, err := findJobDefinition(ctx, conn, input)
 
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID)
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 

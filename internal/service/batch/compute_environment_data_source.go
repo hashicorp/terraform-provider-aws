@@ -99,7 +99,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	setTagsOut(ctx, computeEnvironment.Tags)

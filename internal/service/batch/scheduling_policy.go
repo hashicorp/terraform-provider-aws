@@ -132,7 +132,7 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrARN, sp.Arn)
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	d.Set(names.AttrName, sp.Name)
 

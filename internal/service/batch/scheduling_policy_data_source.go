@@ -81,7 +81,7 @@ func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(schedulingPolicy.Arn))
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
-		return smerr.Append(ctx, diags, err, smerr.ID)
+		return smerr.Append(ctx, diags, err, smerr.ID, schedulingPolicy.Arn)
 	}
 	d.Set(names.AttrName, schedulingPolicy.Name)
 
