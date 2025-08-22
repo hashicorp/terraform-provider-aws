@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -307,20 +308,14 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 			names.AttrKey: aws.ToString(v.Key),
 		}
 
-		var va any
-		err := v.Value.UnmarshalSmithyDocument(&va)
+		va, err := tfsmithy.DocumentToJSONString(v.Value)
 
 		if err != nil {
 			log.Printf("[WARN] Error unmarshalling control parameter value: %s", err)
 			return nil, err
 		}
 
-		out, err := json.Marshal(va)
-		if err != nil {
-			return nil, err
-		}
-
-		val[names.AttrValue] = string(out)
+		val[names.AttrValue] = va
 		output = append(output, val)
 	}
 

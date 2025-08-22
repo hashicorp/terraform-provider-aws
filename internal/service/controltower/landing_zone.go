@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -96,7 +96,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
+	manifest, err := tfsmithy.DocumentFromJSONString(d.Get("manifest_json").(string), document.NewLazyDocument)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -153,7 +153,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 	if landingZone.Manifest != nil {
-		v, err := json.SmithyDocumentToString(landingZone.Manifest)
+		v, err := tfsmithy.DocumentToJSONString(landingZone.Manifest)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -173,7 +173,7 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
+		manifest, err := tfsmithy.DocumentFromJSONString(d.Get("manifest_json").(string), document.NewLazyDocument)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

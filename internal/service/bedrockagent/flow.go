@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1684,7 +1684,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			json, err := smithyjson.SmithyDocumentToString(t.Value.AdditionalModelRequestFields)
+			json, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalModelRequestFields)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
@@ -1733,7 +1733,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 
 		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
 		if !additionalFields.IsNull() {
-			json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Decoding JSON",
