@@ -140,11 +140,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
+				Required:    true,
 			},
 			"snapshot_arns_to_restore": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfARNType,
