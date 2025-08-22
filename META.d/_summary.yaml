@@ -6,9 +6,9 @@ schema: 1.1
 
 partition: tf-ecosystem
 
-summary:
+summary: 
   owner: team-tf-aws
   description: |
-    The Terraform AWS provider is a plugin that enables Terraform to manage AWS resources.
+    The Terraform AWS provider trying to do commit few changes.
 
   visibility: external
