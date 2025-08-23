@@ -74,7 +74,7 @@ func sweepAccessPolicies(region string) error {
 			name := aws.ToString(ap.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Access Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, ap.Type),
@@ -119,7 +119,7 @@ func sweepCollections(region string) error {
 			id := aws.ToString(collection.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Collection: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newCollectionResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -164,7 +164,7 @@ func sweepSecurityConfigs(region string) error {
 			id := aws.ToString(sc.Id)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityConfig, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityConfigResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}
@@ -209,7 +209,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),
@@ -236,7 +236,7 @@ func sweepSecurityPolicies(region string) error {
 			name := aws.ToString(sp.Name)
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceSecurityPolicy, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newSecurityPolicyResource, client,
 				framework.NewAttribute(names.AttrID, name),
 				framework.NewAttribute(names.AttrName, name),
 				framework.NewAttribute(names.AttrType, sp.Type),

@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         FinspaceKxVolume(self, "example",
-            availability_zones=Token.as_list("use1-az2"),
+            availability_zones=["use1-az2"],
             az_mode="SINGLE",
             environment_id=Token.as_string(aws_finspace_kx_environment_example.id),
             name="my-tf-kx-volume",
@@ -55,6 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `nas1_configuration` - (Optional) Specifies the configuration for the Network attached storage (`NAS_1`) file system volume. This parameter is required when `volume_type` is `NAS_1`. See [`nas1_configuration` Argument Reference](#nas1_configuration-argument-reference) below.
 * `description` - (Optional) Description of the volume.
 * `tags` - (Optional) A list of key-value pairs to label the volume. You can add up to 50 tags to a volume
@@ -73,15 +74,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) identifier of the KX volume.
 * `created_timestamp` - The timestamp at which the volume was created in FinSpace. The value is determined as epoch time in milliseconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000000.
 * `status` - The status of volume creation.
-    * `CREATING` – The volume creation is in progress.
-    * `CREATE_FAILED` – The volume creation has failed.
-    * `ACTIVE` – The volume is active.
-    * `UPDATING` – The volume is in the process of being updated.
-    * `UPDATE_FAILED` – The update action failed.
-    * `UPDATED` – The volume is successfully updated.
-    * `DELETING` – The volume is in the process of being deleted.
-    * `DELETE_FAILED` – The system failed to delete the volume.
-    * `DELETED` – The volume is successfully deleted.
+    * `CREATING` - The volume creation is in progress.
+    * `CREATE_FAILED` - The volume creation has failed.
+    * `ACTIVE` - The volume is active.
+    * `UPDATING` - The volume is in the process of being updated.
+    * `UPDATE_FAILED` - The update action failed.
+    * `UPDATED` - The volume is successfully updated.
+    * `DELETING` - The volume is in the process of being deleted.
+    * `DELETE_FAILED` - The system failed to delete the volume.
+    * `DELETED` - The volume is successfully deleted.
 * `status_reason` - The error message when a failed state occurs.
 * `last_modified_timestamp` - Last timestamp at which the volume was updated in FinSpace. Value determined as epoch time in seconds. For example, the value for Monday, November 1, 2021 12:00:00 PM UTC is specified as 1635768000.
 
@@ -118,4 +119,4 @@ Using `terraform import`, import an AWS FinSpace Kx Volume using the `id` (envir
 % terraform import aws_finspace_kx_volume.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-volume
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-636eade803991dcf3e75b89fb561a207ff33ee38a93e6482363e8aafe174b7ed -->
+<!-- cache-key: cdktf-0.20.8 input-03d78e0a49b4f304834b1f272f954b51b31b5ea72f8d0ddafeb63e7d45625a6d -->

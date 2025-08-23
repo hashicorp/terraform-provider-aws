@@ -221,6 +221,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the DB parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required, Forces new resource) The family of the DB parameter group.
@@ -272,4 +273,4 @@ Using `terraform import`, import DB Parameter groups using the `name`. For examp
 % terraform import aws_db_parameter_group.rds_pg rds-pg
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-803229548c69fc3ed52058c1ecec0fce7b5e76e4a6e7e6b8a02242e20b5f22d5 -->
+<!-- cache-key: cdktf-0.20.8 input-3a4ec1af7e42130855aa69be616eaaf9dc3a146a7ea700adeb1193dbad15d92b -->

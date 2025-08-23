@@ -30,7 +30,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
@@ -54,32 +54,6 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_identitystore_user.test"
-	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSourceConfig_filterUserName(name, email),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
@@ -97,7 +71,7 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_uniqueAttributeUserName(name, email),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
@@ -123,7 +97,7 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_email(name, email),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
@@ -149,7 +123,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_id(name, email),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 				),
@@ -238,19 +212,6 @@ data "aws_identitystore_user" "test" {
 `, name, email)
 }
 
-func testAccUserDataSourceConfig_filterUserName(name, email string) string {
-	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
-data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
-}
-`)
-}
-
 func testAccUserDataSourceConfig_uniqueAttributeUserName(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
@@ -285,11 +246,6 @@ func testAccUserDataSourceConfig_id(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
 
   user_id = aws_identitystore_user.test.user_id
 }

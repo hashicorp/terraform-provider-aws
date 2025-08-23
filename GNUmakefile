@@ -235,7 +235,7 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find internal -name "*.go" -type f -exec goimports -w {} \;
+	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
@@ -383,6 +383,9 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+quick-fix: fmt testacc-lint-fix fix-imports modern-fix semgrep-fix ## Some quick fixes
+	@echo "make: Quick fixes..."
+
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
 	@docker run --rm \
@@ -501,8 +504,7 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-test-constants-temp.yml
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -574,6 +576,14 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+semgrep-vcr: ## Enable VCR support with Semgrep --autofix
+	@echo "make: Enable VCR support with Semgrep --autofix"
+	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
+	@echo "this target may need to be run twice."
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config internal/vcr/.semgrep-vcr.yml
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -620,7 +630,7 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m -vet=off
+	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -698,7 +708,11 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
+		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
@@ -716,6 +730,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
+	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
@@ -737,6 +752,12 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -868,45 +889,45 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	changelog-misspell \
-	ci-quick \
 	ci \
+	ci-quick \
+	clean \
 	clean-go \
 	clean-make-tests \
 	clean-tidy \
-	clean \
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
-	docs-lint-fix \
 	docs-lint \
+	docs-lint-fix \
 	docs-markdown-lint \
 	docs-misspell \
-	docs \
 	examples-tflint \
 	fix-constants \
 	fix-imports \
-	fmt-check \
 	fmt \
+	fmt-check \
 	fumpt \
-	gen-check \
 	gen \
+	gen-check \
 	generate-changelog \
 	gh-workflows-lint \
 	go-build \
 	go-misspell \
+	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
-	golangci-lint \
 	help \
 	import-lint \
 	install \
-	lint-fix \
 	lint \
+	lint-fix \
 	misspell \
 	modern-check \
 	modern-fix \
@@ -914,51 +935,54 @@ yamllint: ## [CI] YAML Linting / yamllint
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	quick-fix \
 	sane \
 	sanity \
+	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
-	semgrep-naming-cae \
 	semgrep-naming \
+	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep \
-	skaff-check-compile \
+	semgrep-vcr \
 	skaff \
+	skaff-check-compile \
 	smoke \
 	sweep \
+	sweeper \
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
-	sweeper \
 	t \
-	test-compile \
 	test \
-	testacc-lint-fix \
+	test-compile \
+	testacc \
 	testacc-lint \
+	testacc-lint-fix \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
-	testacc \
 	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \
 	ts \
 	update \
+	vcr-enable \
+	website \
+	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \
-	website-link-check \
-	website-lint-fix \
 	website-lint \
+	website-lint-fix \
 	website-markdown-lint \
 	website-misspell \
 	website-terrafmt \
 	website-tflint \
-	website \
 	yamllint

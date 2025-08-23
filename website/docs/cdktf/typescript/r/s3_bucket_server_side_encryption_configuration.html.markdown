@@ -57,6 +57,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required, Forces new resource) ID (name) of the bucket.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `rule` - (Required) Set of server-side encryption configuration rules. [See below](#rule). Currently, only a single rule is supported.
@@ -147,4 +148,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->
+<!-- cache-key: cdktf-0.20.8 input-d98a4edce276a961b6fe38ceeebe1b352cb69782f0cc02b8bee1cee1c38d51c4 -->

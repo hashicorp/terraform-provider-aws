@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -440,6 +441,11 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -451,6 +457,11 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -473,10 +484,22 @@ func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVPCEndpointConfig_newOrderPolicy(rName),
-				PlanOnly: true,
+				Config: testAccVPCEndpointConfig_newOrderPolicy(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -1157,7 +1180,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 `, rName)
 }
@@ -1185,7 +1208,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   route_table_ids = [
     aws_route_table.test.id,
@@ -1251,7 +1274,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   route_table_ids = []
 
@@ -1304,7 +1327,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 }
 `, rName)
@@ -1324,7 +1347,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   private_dns_enabled = false
   vpc_endpoint_type   = "Interface"
 }
@@ -1347,7 +1370,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "gateway" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -1356,7 +1379,7 @@ resource "aws_vpc_endpoint" "gateway" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.s3"
   private_dns_enabled = true
   vpc_endpoint_type   = "Interface"
   ip_address_type     = "ipv4"
@@ -1395,7 +1418,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "gateway" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     Name = %[1]q
@@ -1404,7 +1427,7 @@ resource "aws_vpc_endpoint" "gateway" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.s3"
   private_dns_enabled = local.private_dns_enabled
   vpc_endpoint_type   = "Interface"
   ip_address_type     = "ipv4"
@@ -1443,7 +1466,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.s3"
   private_dns_enabled = true
   vpc_endpoint_type   = "Interface"
   ip_address_type     = "ipv4"
@@ -1564,7 +1587,7 @@ func testAccVPCEndpointConfig_interfaceSubnet(rName string) string {
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
 
@@ -1590,7 +1613,7 @@ func testAccVPCEndpointConfig_interfaceSubnetModified(rName string) string {
 		fmt.Sprintf(`
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = aws_vpc.test.id
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name        = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
@@ -1669,7 +1692,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.athena"
   vpc_endpoint_type = "Interface"
   ip_address_type   = "dualstack"
 
@@ -1700,7 +1723,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   subnet_configuration {
@@ -1754,7 +1777,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.athena"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.athena"
   vpc_endpoint_type = "Interface"
   ip_address_type   = "ipv6"
 
@@ -1791,7 +1814,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     %[2]q = %[3]q
@@ -1814,7 +1837,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
 
   tags = {
     %[2]q = %[3]q

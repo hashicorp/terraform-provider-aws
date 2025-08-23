@@ -52,7 +52,7 @@ func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, 
 }
 
 type knowledgeBaseResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[knowledgeBaseResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -628,7 +628,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 
@@ -788,6 +788,7 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 }
 
 type knowledgeBaseResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
 	Description                types.String                                                     `tfsdk:"description"`
 	FailureReasons             fwtypes.ListValueOf[types.String]                                `tfsdk:"failure_reasons"`

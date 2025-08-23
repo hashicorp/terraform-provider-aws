@@ -32,6 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
 	"github.com/aws/aws-sdk-go-v2/service/billing"
 	"github.com/aws/aws-sdk-go-v2/service/budgets"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
@@ -130,8 +131,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/aws/aws-sdk-go-v2/service/invoicing"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
-	"github.com/aws/aws-sdk-go-v2/service/iotanalytics"
-	"github.com/aws/aws-sdk-go-v2/service/iotevents"
 	"github.com/aws/aws-sdk-go-v2/service/ivs"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -173,9 +172,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
-	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
@@ -213,6 +212,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
+	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
@@ -254,7 +254,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	"github.com/aws/aws-sdk-go-v2/service/wellarchitected"
-	"github.com/aws/aws-sdk-go-v2/service/worklink"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/aws/aws-sdk-go-v2/service/xray"
@@ -372,6 +371,10 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock.Client {
 
 func (c *AWSClient) BedrockAgentClient(ctx context.Context) *bedrockagent.Client {
 	return errs.Must(client[*bedrockagent.Client](ctx, c, names.BedrockAgent, make(map[string]any)))
+}
+
+func (c *AWSClient) BedrockAgentCoreClient(ctx context.Context) *bedrockagentcorecontrol.Client {
+	return errs.Must(client[*bedrockagentcorecontrol.Client](ctx, c, names.BedrockAgentCore, make(map[string]any)))
 }
 
 func (c *AWSClient) BillingClient(ctx context.Context) *billing.Client {
@@ -770,14 +773,6 @@ func (c *AWSClient) IoTClient(ctx context.Context) *iot.Client {
 	return errs.Must(client[*iot.Client](ctx, c, names.IoT, make(map[string]any)))
 }
 
-func (c *AWSClient) IoTAnalyticsClient(ctx context.Context) *iotanalytics.Client {
-	return errs.Must(client[*iotanalytics.Client](ctx, c, names.IoTAnalytics, make(map[string]any)))
-}
-
-func (c *AWSClient) IoTEventsClient(ctx context.Context) *iotevents.Client {
-	return errs.Must(client[*iotevents.Client](ctx, c, names.IoTEvents, make(map[string]any)))
-}
-
 func (c *AWSClient) KMSClient(ctx context.Context) *kms.Client {
 	return errs.Must(client[*kms.Client](ctx, c, names.KMS, make(map[string]any)))
 }
@@ -934,6 +929,10 @@ func (c *AWSClient) NotificationsContactsClient(ctx context.Context) *notificati
 	return errs.Must(client[*notificationscontacts.Client](ctx, c, names.NotificationsContacts, make(map[string]any)))
 }
 
+func (c *AWSClient) ODBClient(ctx context.Context) *odb.Client {
+	return errs.Must(client[*odb.Client](ctx, c, names.ODB, make(map[string]any)))
+}
+
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam.Client {
 	return errs.Must(client[*oam.Client](ctx, c, names.ObservabilityAccessManager, make(map[string]any)))
 }
@@ -948,10 +947,6 @@ func (c *AWSClient) OpenSearchIngestionClient(ctx context.Context) *osis.Client 
 
 func (c *AWSClient) OpenSearchServerlessClient(ctx context.Context) *opensearchserverless.Client {
 	return errs.Must(client[*opensearchserverless.Client](ctx, c, names.OpenSearchServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) OpsWorksClient(ctx context.Context) *opsworks.Client {
-	return errs.Must(client[*opsworks.Client](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
 func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations.Client {
@@ -1096,6 +1091,10 @@ func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
 
 func (c *AWSClient) S3TablesClient(ctx context.Context) *s3tables.Client {
 	return errs.Must(client[*s3tables.Client](ctx, c, names.S3Tables, make(map[string]any)))
+}
+
+func (c *AWSClient) S3VectorsClient(ctx context.Context) *s3vectors.Client {
+	return errs.Must(client[*s3vectors.Client](ctx, c, names.S3Vectors, make(map[string]any)))
 }
 
 func (c *AWSClient) SESClient(ctx context.Context) *ses.Client {
@@ -1260,10 +1259,6 @@ func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2.Client {
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected.Client {
 	return errs.Must(client[*wellarchitected.Client](ctx, c, names.WellArchitected, make(map[string]any)))
-}
-
-func (c *AWSClient) WorkLinkClient(ctx context.Context) *worklink.Client {
-	return errs.Must(client[*worklink.Client](ctx, c, names.WorkLink, make(map[string]any)))
 }
 
 func (c *AWSClient) WorkSpacesClient(ctx context.Context) *workspaces.Client {

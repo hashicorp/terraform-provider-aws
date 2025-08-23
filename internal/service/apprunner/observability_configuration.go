@@ -25,17 +25,14 @@ import (
 
 // @SDKResource("aws_apprunner_observability_configuration", name="Observability Configuration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 func resourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
 		ReadWithoutTimeout:   resourceObservabilityConfigurationRead,
 		UpdateWithoutTimeout: resourceObservabilityConfigurationUpdate,
 		DeleteWithoutTimeout: resourceObservabilityConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

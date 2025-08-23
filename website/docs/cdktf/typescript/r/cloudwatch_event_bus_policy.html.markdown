@@ -206,6 +206,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) The text of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `eventBusName` - (Optional) The name of the event bus to set the permissions on.
   If you omit this, the permissions are set on the `default` event bus.
@@ -248,4 +249,4 @@ Using `terraform import`, import an EventBridge policy using the `eventBusName`.
 % terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b6476505d32147a32c03008e7b743c18a490cc62090f10d3a60ec4e064ba9614 -->
+<!-- cache-key: cdktf-0.20.8 input-c931d558b28d1c396a88d8e9111b8e257a2bcbf59ff24c1465493eab5e078a6a -->

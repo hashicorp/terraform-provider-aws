@@ -37,16 +37,14 @@ const (
 // @SDKResource("aws_iam_policy", name="Policy")
 // @Tags(identifierAttribute="arn", resourceType="Policy")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
 		UpdateWithoutTimeout: resourcePolicyUpdate,
 		DeleteWithoutTimeout: resourcePolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -164,7 +162,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		policy        *awstypes.Policy
 		policyVersion *awstypes.PolicyVersion
 	}
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*policyWithVersion, error) {
 		iamPolicy := &policyWithVersion{}
 
 		if v, err := findPolicyByARN(ctx, conn, d.Id()); err == nil {
@@ -192,9 +190,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*policyWithVersion)
 	policy := output.policy
-
 	d.Set(names.AttrARN, policy.Arn)
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set(names.AttrDescription, policy.Description)
@@ -467,13 +463,22 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.Client, arn string) 
 	return output, nil
 }
 
-func policyTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListPolicyTags(ctx, &iam.ListPolicyTagsInput{
+func policyTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListPolicyTagsInput{
 		PolicyArn: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListPolicyTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

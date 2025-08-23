@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainId` - (Required) The ID of the associated Domain.
 * `ownershipSettings` - (Optional) A collection of ownership settings. Required if `spaceSharingSettings` is set. See [`ownershipSettings` Block](#ownership_settings-block) below.
 * `spaceDisplayName` - (Optional) The name of the space that appears in the SageMaker AI Studio UI.
@@ -206,4 +207,4 @@ Using `terraform import`, import SageMaker AI Spaces using the `id`. For example
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-21350076da09ef97944b692500285f4cff9600db11ad67a014bb6ab86df29678 -->
+<!-- cache-key: cdktf-0.20.8 input-cbf60946746ae860aa9966f7895ecaf3061b95181f98ae665f1c401000044e56 -->

@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `send_email_notification` - (Optional) Whether a welcome email is sent to a user after the user is created in the user pool.
 
 ## Attribute Reference
@@ -90,4 +91,4 @@ Using `terraform import`, import AppStream User Stack Association using the `use
 % terraform import aws_appstream_user_stack_association.example userName/auhtenticationType/stackName
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6159c43dc4b863c969b8ab2f6ce472794478e51eb12d2094df23655fbcbc10e5 -->
+<!-- cache-key: cdktf-0.20.8 input-5c09fa2ab069ec17693b12585ca2a841eb905c2c9a458adaba3a9a4a97026df1 -->

@@ -29,6 +29,7 @@ resource "aws_devicefarm_network_profile" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description of the network profile.
 * `downlink_bandwidth_bits` - (Optional) The data throughput rate in bits per second, as an integer from `0` to `104857600`. Default value is `104857600`.
 * `downlink_delay_ms` - (Optional) Delay time for all packets to destination in milliseconds as an integer from `0` to `2000`.

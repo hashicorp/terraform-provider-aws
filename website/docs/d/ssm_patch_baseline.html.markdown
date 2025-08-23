@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `default_baseline` - (Optional) Filters the results against the baselines default_baseline field.
 * `name_prefix` - (Optional) Filter results by the baseline name prefix.
 * `operating_system` - (Optional) Specified OS for the baseline. Valid values: `AMAZON_LINUX`, `AMAZON_LINUX_2`, `UBUNTU`, `REDHAT_ENTERPRISE_LINUX`, `SUSE`, `CENTOS`, `ORACLE_LINUX`, `DEBIAN`, `MACOS`, `RASPBIAN` and `ROCKY_LINUX`.
@@ -60,6 +61,7 @@ This data source exports the following attributes in addition to the arguments a
     * `patch_filter` - Patch filter group that defines the criteria for the rule.
         * `key` - Key for the filter.
         * `values` - Value for the filter.
+* `available_security_updates_compliance_status` - Indicates the compliance status of managed nodes for which security-related patches are available but were not approved. Supported for Windows Server managed nodes only.
 * `global_filter` - Set of global filters used to exclude patches from the baseline.
     * `key` - Key for the filter.
     * `values` - Value for the filter.

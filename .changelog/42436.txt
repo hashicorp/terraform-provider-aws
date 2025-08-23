@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_guardduty_detector: Deprecates `datasources`. Use `aws_guardduty_detector_feature` resources instead.
+```
+
+```release-note:enhancement
+resource/aws_guardduty_detector: Adds validation to `finding_publishing_frequency`.
+```

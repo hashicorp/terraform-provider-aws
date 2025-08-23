@@ -3,8 +3,8 @@ package evidently
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -66,7 +66,7 @@ func updateTags(ctx context.Context, conn *evidently.Client, identifier string, 
 		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -81,7 +81,7 @@ func updateTags(ctx context.Context, conn *evidently.Client, identifier string, 
 		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

@@ -30,6 +30,9 @@ func TestAccLakeFormationResourceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(dataSourceName, "hybrid_access_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "with_federation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "with_privileged_access", acctest.CtFalse),
 				),
 			},
 		},

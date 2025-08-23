@@ -131,6 +131,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the response plan.
 * `incidentTemplate` - (Required) The `incidentTemplate` configuration block is required and supports the following arguments:
     * `title` - (Required) The title of a generated incident.
@@ -206,4 +207,4 @@ Using `terraform import`, import an Incident Manager response plan using the res
 % terraform import aws_ssmincidents_response_plan.responsePlanName ARNValue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7c6618b7e59001213d682216c5f894f522d43442da327f87babfed4c0496feff -->
+<!-- cache-key: cdktf-0.20.8 input-86bfb1208d28a313aea7035eff8f46797a526ad3fe513fb64e426e0e2b854a7a -->

@@ -23,6 +23,7 @@ data "aws_kendra_experience" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `experience_id` - (Required) Identifier of the Experience.
 * `index_id` - (Required) Identifier of the index that contains the Experience.
 

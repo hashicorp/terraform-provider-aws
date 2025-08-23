@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_identifier` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - The auth policy. The policy string in JSON must not contain newlines or blank lines.
 * `state` - The state of the auth policy. The auth policy is only active when the auth type is set to AWS_IAM. If you provide a policy, then authentication and authorization decisions are made based on this policy and the client's IAM policy. If the Auth type is NONE, then, any auth policy you provide will remain inactive.
 
-<!-- cache-key: cdktf-0.20.8 input-1a9e7f339073e21595c69c5c150562d38d28dfc83382761a10ef529f50b9408a -->
+<!-- cache-key: cdktf-0.20.8 input-ead7dbabdd4ccaac304be7eb81db1ad26d20d97c37e20b521d8a8c31a6f67775 -->

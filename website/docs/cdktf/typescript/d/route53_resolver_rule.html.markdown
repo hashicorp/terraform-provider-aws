@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolverRuleId`.
 * `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolverRuleId`.
 * `resolverEndpointId` (Optional) ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolverRuleId`.
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 * `tags` - Map of tags assigned to the resolver rule.
 
-<!-- cache-key: cdktf-0.20.8 input-631ebccec822a7c33d14ddd2cb13a58e05c08ba4c5117b2d071091d389479769 -->
+<!-- cache-key: cdktf-0.20.8 input-1dec6a0066ef4a7d985eb0ac85f7063884898b4458965d8bcc04e694c01958c7 -->

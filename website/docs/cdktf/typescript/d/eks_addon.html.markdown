@@ -42,9 +42,10 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `addonName` – (Required) Name of the EKS add-on. The name must match one of
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addonName` - (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `clusterName` – (Required) Name of the EKS Cluster.
+* `clusterName` - (Required) Name of the EKS Cluster.
 
 ## Attribute Reference
 
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `createdAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modifiedAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.20.8 input-283a9517c061cf8893497ac7b465e98e931d12116efb57459c6f4011b27bcecc -->
+<!-- cache-key: cdktf-0.20.8 input-b54fac47241325647b80ddbccc7121f84a56ba2cb0b4ea76c643cf130a17f237 -->

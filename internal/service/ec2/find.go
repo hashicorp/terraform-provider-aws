@@ -1704,6 +1704,22 @@ func findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, con
 	}))
 }
 
+func findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) (*awstypes.NatGatewayAddress, error) {
+	output, err := findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if v := output.Status; v != awstypes.NatGatewayAddressStatusSucceeded {
+		return nil, &retry.NotFoundError{
+			Message: string(v),
+		}
+	}
+
+	return output, nil
+}
+
 func findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) (*awstypes.NatGatewayAddress, error) {
 	output, err := findNATGatewayByID(ctx, conn, natGatewayID)
 
@@ -2088,6 +2104,44 @@ func findSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.Clie
 	return findSecurityGroupRules(ctx, conn, &input)
 }
 
+func findSecurityGroupVPCAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, groupID, vpcID string) (*awstypes.SecurityGroupVpcAssociation, error) {
+	input := ec2.DescribeSecurityGroupVpcAssociationsInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"group-id": groupID,
+			"vpc-id":   vpcID,
+		}),
+	}
+
+	return findSecurityGroupVPCAssociation(ctx, conn, &input)
+}
+
+func findSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) (*awstypes.SecurityGroupVpcAssociation, error) {
+	output, err := findSecurityGroupVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSecurityGroupVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupVpcAssociationsInput) ([]awstypes.SecurityGroupVpcAssociation, error) {
+	var output []awstypes.SecurityGroupVpcAssociation
+
+	pages := ec2.NewDescribeSecurityGroupVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecurityGroupVpcAssociations...)
+	}
+
+	return output, nil
+}
+
 func findNetworkInterfacePermissions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) ([]awstypes.NetworkInterfacePermission, error) {
 	var output []awstypes.NetworkInterfacePermission
 
@@ -2240,7 +2294,17 @@ func findNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.Client, i
 		}),
 	}
 
-	return findNetworkInterface(ctx, conn, &input)
+	output, err := findNetworkInterface(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.Client, networkInterfaceID string, securityGroupID string) (*awstypes.GroupIdentifier, error) {
@@ -3223,7 +3287,9 @@ func findVPCPeeringConnection(ctx context.Context, conn *ec2.Client, input *ec2.
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool { return v.Status != nil })
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.VpcPeeringConnection) bool {
+		return v.AccepterVpcInfo != nil && v.RequesterVpcInfo != nil && v.Status != nil
+	})
 }
 
 func findVPCPeeringConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) ([]awstypes.VpcPeeringConnection, error) {
@@ -4521,6 +4587,9 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 		return nil, err
 	}
 
+	// Explicitly don't check for awstypes.TransitGatewayAttachmentStateDeleted.
+	// Caller must handle all states.
+
 	// Eventual consistency check.
 	if aws.ToString(output.TransitGatewayAttachmentId) != id {
 		return nil, &retry.NotFoundError{
@@ -4529,6 +4598,27 @@ func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id 
 	}
 
 	return output, nil
+}
+
+func findTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx context.Context, conn *ec2.Client, tgwID, dxGatewayID string) (*awstypes.TransitGatewayAttachment, error) {
+	input := ec2.DescribeTransitGatewayAttachmentsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-type"),
+				Values: enum.Slice(awstypes.TransitGatewayAttachmentResourceTypeDirectConnectGateway),
+			},
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{dxGatewayID},
+			},
+			{
+				Name:   aws.String("transit-gateway-id"),
+				Values: []string{tgwID},
+			},
+		},
+	}
+
+	return findTransitGatewayAttachment(ctx, conn, &input)
 }
 
 func findTransitGatewayConnect(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) (*awstypes.TransitGatewayConnect, error) {

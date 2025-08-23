@@ -32,6 +32,8 @@ func ResourceProject() *schema.Resource {
 		UpdateWithoutTimeout: resourceProjectUpdate,
 		DeleteWithoutTimeout: resourceProjectDelete,
 
+		DeprecationMessage: "This resource is deprecated. Use AWS AppConfig feature flags instead.",
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

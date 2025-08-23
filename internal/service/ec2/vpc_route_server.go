@@ -47,7 +47,7 @@ func newVPCRouteServerResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type vpcRouteServerResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcRouteServerResourceModel]
 	framework.WithTimeouts
 }
 
@@ -280,6 +280,7 @@ func routeServerPersistRoutesStateToRouteServerPersistRoutesAction(state awstype
 }
 
 type vpcRouteServerResourceModel struct {
+	framework.WithRegionModel
 	AmazonSideASN           types.Int64                                                 `tfsdk:"amazon_side_asn"`
 	ARN                     types.String                                                `tfsdk:"arn"`
 	PersistRoutes           fwtypes.StringEnum[awstypes.RouteServerPersistRoutesAction] `tfsdk:"persist_routes"`

@@ -36,7 +36,6 @@ var (
 	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}, nil}
 )
 
-// TODO Replace with Go 1.24 generic type alias when available.
 func SetOfStringEnumType[T enum.Valueser[T]]() setTypeOf[StringEnum[T]] {
 	return setTypeOf[StringEnum[T]]{basetypes.SetType{ElemType: StringEnumType[T]()}, validateStringEnumSlice[T]}
 }
@@ -112,8 +111,9 @@ type SetValueOf[T attr.Value] struct {
 }
 
 type (
-	SetOfString = SetValueOf[basetypes.StringValue]
-	SetOfARN    = SetValueOf[ARN]
+	SetOfString                         = SetValueOf[basetypes.StringValue]
+	SetOfARN                            = SetValueOf[ARN]
+	SetOfStringEnum[T enum.Valueser[T]] = SetValueOf[StringEnum[T]]
 )
 
 func (v SetValueOf[T]) Equal(o attr.Value) bool {

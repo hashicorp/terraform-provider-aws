@@ -27,6 +27,10 @@ The following arguments are required:
 * `route_server_id` - (Required) The unique identifier for the route server to be associated.
 * `vpc_id` - (Required) The ID of the VPC to associate with the route server.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports no additional attributes.

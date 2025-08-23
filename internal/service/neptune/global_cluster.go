@@ -152,7 +152,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	var output *neptune.CreateGlobalClusterOutput
 	var err error
-	for r := backoff.NewRetryLoop(d.Timeout(schema.TimeoutCreate)); r.Continue(ctx); {
+	for l := backoff.NewLoop(d.Timeout(schema.TimeoutCreate)); l.Continue(ctx); {
 		output, err = conn.CreateGlobalCluster(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, errCodeInvalidGlobalClusterStateFault, "in progress") {
@@ -262,7 +262,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Neptune Global Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidGlobalClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &neptune.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})

@@ -35,7 +35,7 @@ func newChannelAssociationResource(_ context.Context) (resource.ResourceWithConf
 }
 
 type channelAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[channelAssociationResourceModel]
 	framework.WithNoUpdate
 }
 

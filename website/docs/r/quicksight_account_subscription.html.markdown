@@ -37,7 +37,7 @@ The following arguments are optional:
 * `active_directory_name` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `admin_group` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. This field is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
 * `author_group` - (Optional) Author group associated with your Active Directory or IAM Identity Center account.
-* `aws_account_id` - (Optional) AWS account ID hosting the QuickSight account. Default to provider account.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `contact_number` - (Optional) A 10-digit phone number for the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `directory_id` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `email_address` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
@@ -46,6 +46,7 @@ The following arguments are optional:
 * `last_name` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `reader_group` - (Optional) Reader group associated with your Active Directory or IAM Identity Center account.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -62,4 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-You cannot import this resource.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Account Subscription using `aws_account_id`. For example:
+
+```terraform
+import {
+  to = aws_quicksight_account_subscription.example
+  id = "012345678901"
+}
+```
+
+Using `terraform import`, import a QuickSight Account Subscription using `aws_account_id`. For example:
+
+```console
+% terraform import aws_quicksight_account_subscription.example "012345678901"
+```

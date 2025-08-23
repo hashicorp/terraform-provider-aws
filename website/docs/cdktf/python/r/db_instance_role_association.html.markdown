@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_instance_identifier` - (Required) DB Instance Identifier to associate with the IAM Role.
 * `feature_name` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Instance.
@@ -88,4 +89,4 @@ Using `terraform import`, import `aws_db_instance_role_association` using the DB
 % terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c34db82964ab3bf0f638d220b644c559759ab610787f629522f52a04104e2938 -->
+<!-- cache-key: cdktf-0.20.8 input-a7692f7428c122ec043b9ce50fed5c1d97556dfc48e3be3794431181768713db -->

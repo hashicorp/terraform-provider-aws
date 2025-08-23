@@ -324,7 +324,10 @@ resource "aws_bedrock_provisioned_model_throughput" "test" {
 }
 
 func testAccAgentAliasConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), testAccAgentAliasConfig_alias(rName))
+	return acctest.ConfigCompose(
+		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentAliasConfig_alias(rName),
+	)
 }
 
 func testAccAgentAliasConfig_alias(rName string) string {

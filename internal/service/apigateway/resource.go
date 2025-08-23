@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -63,6 +64,12 @@ func resourceResource() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		CustomizeDiff: customdiff.All(
+			customdiff.ComputedIf(names.AttrPath, func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
+				return diff.HasChange("path_part")
+			}),
+		),
 	}
 }
 

@@ -30,7 +30,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../internal/provider/provider_gen.go`
+		filename = `../../../internal/provider/sdkv2/provider_gen.go`
 	)
 	g := common.NewGenerator()
 

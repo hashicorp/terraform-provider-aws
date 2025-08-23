@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `thingName` - (Required) The name of the thing to add to a group.
 * `thingGroupName` - (Required) The name of the group to which you are adding a thing.
 * `overrideDynamicGroup` - (Optional) Override dynamic thing groups with static thing groups when 10-group limit is reached. If a thing belongs to 10 thing groups, and one or more of those groups are dynamic thing groups, adding a thing to a static group removes the thing from the last dynamic group.
@@ -82,4 +83,4 @@ Using `terraform import`, import IoT Thing Group Membership using the thing grou
 % terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e2d16dd780dca918e6d58cd378469987c897a60c29e3263b0918bd5f1a27e384 -->
+<!-- cache-key: cdktf-0.20.8 input-e5acd60d3d66e7479f9f716ada620a4541a30a812e521ab0bee28b1df6f188c5 -->

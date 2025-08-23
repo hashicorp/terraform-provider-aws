@@ -29,7 +29,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
-func ResourceIPSet() *schema.Resource {
+func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
@@ -106,7 +106,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): waiting for completion: %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
+	d.SetId(fmt.Sprintf("%s:%s", detectorID, aws.ToString(resp.IpSetId)))
 
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }

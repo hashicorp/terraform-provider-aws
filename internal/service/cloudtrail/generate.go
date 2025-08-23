@@ -3,6 +3,7 @@
 
 //go:generate go run ../../generate/tags/main.go -ListTags -ListTagsOp=ListTags -ListTagsOpPaginated -ListTagsInIDElem=ResourceIdList -ListTagsInIDNeedValueSlice -ListTagsOutTagsElem=ResourceTagList[0].TagsList -ServiceTagsSlice -TagOp=AddTags -TagInIDElem=ResourceId -TagInTagsElem=TagsList -UntagOp=RemoveTags -UntagInNeedTagType -UntagInTagsElem=TagsList -UpdateTags
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/identitytests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package cloudtrail

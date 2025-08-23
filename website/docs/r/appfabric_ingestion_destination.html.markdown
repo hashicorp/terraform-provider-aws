@@ -42,6 +42,7 @@ resource "aws_appfabric_ingestion_destination" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
 * `destination_configuration` - (Required) Contains information about the destination of ingested data.

@@ -87,6 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_replicate_new_disks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
 * `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 
@@ -141,4 +142,4 @@ Using `terraform import`, import DRS Replication Configuration Template using th
 % terraform import aws_drs_replication_configuration_template.example templateid
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c7144def5aa325908378081a73e1cd9addf54c053efcde66a3f8e6186ff92574 -->
+<!-- cache-key: cdktf-0.20.8 input-dee126f30e4a14dba110538299426855959f9b711786ddac39da32700eeeb735 -->

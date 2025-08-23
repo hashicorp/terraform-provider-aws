@@ -322,13 +322,13 @@ rules:
       include:
         - internal/service/ec2
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)EC2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
   - id: ec2-in-const-name
     languages:

@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -206,6 +207,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 func testAccUser_UserName_Validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_user.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -222,9 +224,12 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserConfig_nameValidation(rName, sdkacctest.RandString(33)),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccUserConfig_nameValidation(rName, sdkacctest.RandString(33)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config:      testAccUserConfig_nameValidation(rName, sdkacctest.RandString(101)),
@@ -235,9 +240,12 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserConfig_nameValidation(rName, "valid_username"),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccUserConfig_nameValidation(rName, "valid_username"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})

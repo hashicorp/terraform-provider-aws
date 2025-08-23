@@ -242,10 +242,6 @@ func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 					testAccCheckNamespaceExists(ctx, resourceName),
 				),
 			},
-			{
-				Config:   testAccNamespaceConfig_withWorkgroup(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }

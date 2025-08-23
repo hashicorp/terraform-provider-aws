@@ -50,7 +50,7 @@ func sweepRotations(region string) error {
 			id := aws.ToString(v.RotationArn)
 
 			log.Printf("[INFO] Deleting SSMContacts Rotation: %s", id)
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceRotation, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newRotationResource, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

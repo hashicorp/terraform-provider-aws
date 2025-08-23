@@ -48,7 +48,7 @@ func newWorkspaceConfigurationResource(_ context.Context) (resource.ResourceWith
 }
 
 type workspaceConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceConfigurationResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
@@ -227,7 +227,7 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, request res
 }
 
 func (r *workspaceConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("workspace_id"), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("workspace_id"), request, response)
 }
 
 func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id string) (*awstypes.WorkspaceConfigurationDescription, error) {
@@ -290,6 +290,7 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 }
 
 type workspaceConfigurationResourceModel struct {
+	framework.WithRegionModel
 	LimitsPerLabelSet     fwtypes.ListNestedObjectValueOf[limitsPerLabelSetModel] `tfsdk:"limits_per_label_set"`
 	RetentionPeriodInDays types.Int32                                             `tfsdk:"retention_period_in_days"`
 	Timeouts              timeouts.Value                                          `tfsdk:"timeouts"`

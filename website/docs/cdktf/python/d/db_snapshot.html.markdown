@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Snapshot.
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance
@@ -100,4 +101,4 @@ This data source exports the following attributes in addition to the arguments a
 * `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
 * `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.20.8 input-ad94ffd13e4fb8aeb714df247a1165a99db7e06b216bb424a87d108519cb28c3 -->
+<!-- cache-key: cdktf-0.20.8 input-12aac62838e5f54c5bfdb6d1fef69863950942daba6c81aed2882527b5e1b82e -->

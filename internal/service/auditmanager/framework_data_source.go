@@ -5,48 +5,47 @@ package auditmanager
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_auditmanager_framework", name="Framework")
-func newDataSourceFramework(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceFramework{}, nil
+// @Tags
+func newFrameworkDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &frameworkDataSource{}, nil
 }
 
-type dataSourceFramework struct {
-	framework.DataSourceWithConfigure
+type frameworkDataSource struct {
+	framework.DataSourceWithModel[frameworkDataSourceModel]
 }
 
-func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *frameworkDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Computed: true,
 			},
+			"control_sets": framework.DataSourceComputedListOfObjectAttribute[controlSetModel](ctx),
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"framework_type": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.FrameworkType](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.FrameworkType](),
+				Required:   true,
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
@@ -54,116 +53,97 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
-		Blocks: map[string]schema.Block{
-			"control_sets": schema.SetNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrID: framework.IDAttribute(),
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"controls": schema.SetNestedBlock{
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									names.AttrID: schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
-func (d *dataSourceFramework) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().AuditManagerClient(ctx)
-
-	var data dataSourceFrameworkData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *frameworkDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data frameworkDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	frameworkMetadata, err := FindFrameworkByName(ctx, conn, data.Name.ValueString(), data.FrameworkType.ValueString())
+	conn := d.Meta().AuditManagerClient(ctx)
+
+	frameworkMetadata, err := findFrameworkByTwoPartKey(ctx, conn, data.Name.ValueString(), data.Type.ValueEnum())
+
 	if err != nil {
-		resp.Diagnostics.AddError("finding framework by name", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Framework (%s)", data.Name.ValueString()), err.Error())
+
 		return
 	}
 
 	// Framework metadata from the ListFrameworks API does not contain all information available
 	// about a framework. Use framework ID to get complete information.
-	framework, err := FindFrameworkByID(ctx, conn, aws.ToString(frameworkMetadata.Id))
+	id := aws.ToString(frameworkMetadata.Id)
+	framework, err := findFrameworkByID(ctx, conn, id)
+
 	if err != nil {
-		resp.Diagnostics.AddError("finding framework by ID", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Framework (%s)", id), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(data.refreshFromOutput(ctx, d.Meta(), framework)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, framework, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ID = fwflex.StringValueToFramework(ctx, id)
+	setTagsOut(ctx, framework.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func FindFrameworkByName(ctx context.Context, conn *auditmanager.Client, name, frameworkType string) (*awstypes.AssessmentFrameworkMetadata, error) {
-	in := &auditmanager.ListAssessmentFrameworksInput{
-		FrameworkType: awstypes.FrameworkType(frameworkType),
+func findFrameworkByTwoPartKey(ctx context.Context, conn *auditmanager.Client, name string, frameworkType awstypes.FrameworkType) (*awstypes.AssessmentFrameworkMetadata, error) {
+	input := auditmanager.ListAssessmentFrameworksInput{
+		FrameworkType: frameworkType,
 	}
-	pages := auditmanager.NewListAssessmentFrameworksPaginator(conn, in)
 
+	return findFramework(ctx, conn, &input, func(v *awstypes.AssessmentFrameworkMetadata) bool {
+		return aws.ToString(v.Name) == name
+	})
+}
+
+func findFramework(ctx context.Context, conn *auditmanager.Client, input *auditmanager.ListAssessmentFrameworksInput, filter tfslices.Predicate[*awstypes.AssessmentFrameworkMetadata]) (*awstypes.AssessmentFrameworkMetadata, error) {
+	output, err := findFrameworks(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFrameworks(ctx context.Context, conn *auditmanager.Client, input *auditmanager.ListAssessmentFrameworksInput, filter tfslices.Predicate[*awstypes.AssessmentFrameworkMetadata]) ([]awstypes.AssessmentFrameworkMetadata, error) {
+	var output []awstypes.AssessmentFrameworkMetadata
+
+	pages := auditmanager.NewListAssessmentFrameworksPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
-		for _, framework := range page.FrameworkMetadataList {
-			if name == aws.ToString(framework.Name) {
-				return &framework, nil
+		for _, v := range page.FrameworkMetadataList {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	return nil, &retry.NotFoundError{
-		LastRequest: in,
-	}
+	return output, nil
 }
 
-type dataSourceFrameworkData struct {
-	ARN            types.String `tfsdk:"arn"`
-	ComplianceType types.String `tfsdk:"compliance_type"`
-	ControlSets    types.Set    `tfsdk:"control_sets"`
-	Description    types.String `tfsdk:"description"`
-	FrameworkType  types.String `tfsdk:"framework_type"`
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	Tags           tftags.Map   `tfsdk:"tags"`
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *awstypes.Framework) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	rd.ID = types.StringValue(aws.ToString(out.Id))
-	rd.Name = types.StringValue(aws.ToString(out.Name))
-	cs, d := flattenFrameworkControlSets(ctx, out.ControlSets)
-	diags.Append(d...)
-	rd.ControlSets = cs
-
-	rd.ComplianceType = flex.StringToFramework(ctx, out.ComplianceType)
-	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
-	rd.ARN = flex.StringToFramework(ctx, out.Arn)
-
-	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
-
-	return diags
+type frameworkDataSourceModel struct {
+	framework.WithRegionModel
+	ARN            types.String                                     `tfsdk:"arn"`
+	ComplianceType types.String                                     `tfsdk:"compliance_type"`
+	ControlSets    fwtypes.ListNestedObjectValueOf[controlSetModel] `tfsdk:"control_sets"`
+	Description    types.String                                     `tfsdk:"description"`
+	ID             types.String                                     `tfsdk:"id"`
+	Name           types.String                                     `tfsdk:"name"`
+	Tags           tftags.Map                                       `tfsdk:"tags"`
+	Type           fwtypes.StringEnum[awstypes.FrameworkType]       `tfsdk:"framework_type"`
 }

@@ -208,7 +208,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func(ctx context.Context) (any, error) {
 		return findDBClusterParameterGroupByName(ctx, conn, d.Id())
 	})
 

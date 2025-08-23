@@ -76,6 +76,7 @@ The following arguments are optional:
 * `add_on` - (Optional) Add-on configuration for the instance. [See below](#add_on).
 * `ip_address_type` - (Optional) IP address type of the Lightsail Instance. Valid values: `dualstack`, `ipv4`, `ipv6`. Default: `dualstack`.
 * `key_pair_name` - (Optional) Name of your key pair. Created in the Lightsail console (cannot use `aws_key_pair` at this time).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_data` - (Optional) Single lined launch script as a string to configure server with additional user data.
 

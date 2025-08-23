@@ -78,6 +78,7 @@ resource "aws_rds_cluster_endpoint" "static" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required, Forces new resources) The cluster identifier.
 * `cluster_endpoint_identifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
 * `custom_endpoint_type` - (Required) The type of the endpoint. One of: READER , ANY .

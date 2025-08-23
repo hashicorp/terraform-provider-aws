@@ -27,12 +27,13 @@ resource "aws_eks_access_policy_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `policy_arn` – (Required) The ARN of the access policy that you're associating.
-* `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
-* `access_scope` – (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `policy_arn` - (Required) The ARN of the access policy that you're associating.
+* `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ### `access_scope` Block
 

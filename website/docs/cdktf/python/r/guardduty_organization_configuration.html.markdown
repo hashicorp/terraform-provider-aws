@@ -62,8 +62,9 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
-* `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `auto_enable_organization_members` - (Required) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization.
+  Valid values are `ALL`, `NEW`, `NONE`.
 * `detector_id` - (Required) The detector ID of the GuardDuty account.
 * `datasources` - (Optional) Configuration for the collected datasources. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_organization_configuration_feature` resources](guardduty_organization_configuration_feature.html).
 
@@ -118,9 +119,7 @@ The `ebs_volumes` block supports the following:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - Identifier of the GuardDuty Detector.
+This resource exports no additional attributes.
 
 ## Import
 
@@ -147,4 +146,4 @@ Using `terraform import`, import GuardDuty Organization Configurations using the
 % terraform import aws_guardduty_organization_configuration.example 00b00fd5aecc0ab60a708659477e9617
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-46b26e8eab57017d5bc7c41661cfe293223b302a477ab0dbbf755274b6093cfe -->
+<!-- cache-key: cdktf-0.20.8 input-2847ef5247177108ce9a99cf77f498c80f311a4abd2fcc8ed71e0138270162e2 -->

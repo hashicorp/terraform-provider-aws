@@ -51,7 +51,7 @@ func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) 
 }
 
 type domainResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[domainResourceModel]
 	framework.WithTimeouts
 }
 
@@ -647,7 +647,10 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 
 		// expiration_date is newly computed if duration_in_years is changed.
 		if newDurationInYears.ValueInt64() != oldDurationInYears.ValueInt64() {
-			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), timetypes.NewRFC3339Unknown())
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("expiration_date"), timetypes.NewRFC3339Unknown())...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		} else {
 			var expirationDate timetypes.RFC3339
 			response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("expiration_date"), &expirationDate)...)
@@ -655,7 +658,10 @@ func (r *domainResource) ModifyPlan(ctx context.Context, request resource.Modify
 				return
 			}
 
-			response.Plan.SetAttribute(ctx, path.Root("expiration_date"), expirationDate)
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("expiration_date"), expirationDate)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }

@@ -18,10 +18,11 @@ import (
 
 func TestAccWorkSpacesWebUserSettings_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -199,10 +200,11 @@ func TestAccWorkSpacesWebUserSettings_tags(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -260,10 +262,11 @@ func TestAccWorkSpacesWebUserSettings_tags_null(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -309,10 +312,11 @@ func TestAccWorkSpacesWebUserSettings_tags_EmptyMap(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -387,10 +391,11 @@ func TestAccWorkSpacesWebUserSettings_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -476,10 +481,11 @@ func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -613,10 +619,11 @@ func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy:             testAccCheckUserSettingsDestroy(ctx),
@@ -701,10 +708,11 @@ func TestAccWorkSpacesWebUserSettings_tags_EmptyTag_OnUpdate_Replace(t *testing.
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -881,10 +889,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_providerOnly(t *testing.T
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1040,10 +1049,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nonOverlapping(t *testing
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1215,10 +1225,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_overlapping(t *testing.T)
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1303,10 +1314,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_updateToProviderOnly(t *t
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1390,10 +1402,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_updateToResourceOnly(t *t
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1455,10 +1468,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_emptyResourceTag(t *testi
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1512,10 +1526,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_emptyProviderOnlyTag(t *t
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1580,10 +1595,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nullOverlappingResourceTa
 
 func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1650,10 +1666,11 @@ func TestAccWorkSpacesWebUserSettings_tags_DefaultTags_nullNonOverlappingResourc
 
 func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1704,10 +1721,11 @@ func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnCreate(t *testing.T) {
 
 func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1799,10 +1817,11 @@ func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnUpdate_Add(t *testing.T
 
 func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1884,10 +1903,11 @@ func TestAccWorkSpacesWebUserSettings_tags_ComputedTag_OnUpdate_Replace(t *testi
 
 func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -1917,7 +1937,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -1965,7 +1985,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
@@ -2013,7 +2033,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *test
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 					})),
@@ -2042,10 +2062,11 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_DefaultTag(t *test
 
 func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v types.UserSettings
 	resourceName := "aws_workspacesweb_user_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		CheckDestroy: testAccCheckUserSettingsDestroy(ctx),
@@ -2074,7 +2095,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2131,7 +2152,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -2187,7 +2208,7 @@ func TestAccWorkSpacesWebUserSettings_tags_IgnoreTags_Overlap_ResourceTag(t *tes
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),
-					expectFullResourceTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+					expectFullResourceTags(ctx, resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 					})),

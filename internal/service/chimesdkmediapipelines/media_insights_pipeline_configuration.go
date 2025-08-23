@@ -42,17 +42,16 @@ var (
 
 // @SDKResource("aws_chimesdkmediapipelines_media_insights_pipeline_configuration", name="Media Insights Pipeline Configuration")
 // @Tags(identifierAttribute="arn")
-func ResourceMediaInsightsPipelineConfiguration() *schema.Resource {
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types;awstypes;awstypes.MediaInsightsPipelineConfiguration")
+func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 	return &schema.Resource{
 
 		CreateWithoutTimeout: resourceMediaInsightsPipelineConfigurationCreate,
 		ReadWithoutTimeout:   resourceMediaInsightsPipelineConfigurationRead,
 		UpdateWithoutTimeout: resourceMediaInsightsPipelineConfigurationUpdate,
 		DeleteWithoutTimeout: resourceMediaInsightsPipelineConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		// Resource creation/update/deletion is atomic and synchronous with the API calls. The timeouts for
 		// create and update are dominated by timeout waiting for IAM role changes to propagate.
@@ -529,7 +528,7 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
-	out, err := FindMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
+	out, err := findMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
@@ -611,7 +610,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
 	// eventual consistency may cause an initial failure
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func(ctx context.Context) (any, error) {
 		return conn.DeleteMediaInsightsPipelineConfiguration(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
 			Identifier: aws.String(d.Id()),
 		})
@@ -628,7 +627,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	return diags
 }
 
-func FindMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.Client, id string) (*awstypes.MediaInsightsPipelineConfiguration, error) {
+func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.Client, id string) (*awstypes.MediaInsightsPipelineConfiguration, error) {
 	in := &chimesdkmediapipelines.GetMediaInsightsPipelineConfigurationInput{
 		Identifier: aws.String(id),
 	}

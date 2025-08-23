@@ -70,6 +70,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transitGatewayId` - (Optional) Identifier of the EC2 Transit Gateway.
 * `vpnConnectionId` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
@@ -95,4 +96,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-88b75ea1f3920ded56d1eddbe0d74b036502601096fcc354c6675666bea832df -->
+<!-- cache-key: cdktf-0.20.8 input-6897f04d7f299486741d5c9684455accb2adb160209dc26052331e311d914e8e -->

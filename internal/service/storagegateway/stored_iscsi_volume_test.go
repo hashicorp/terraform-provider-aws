@@ -320,8 +320,11 @@ resource "aws_storagegateway_stored_iscsi_volume" "test" {
 func testAccStorediSCSIVolumeConfig_kmsEncrypted(rName string) string {
 	return acctest.ConfigCompose(testAccStorediSCSIVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-  policy      = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

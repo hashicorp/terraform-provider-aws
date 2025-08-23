@@ -235,7 +235,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta a
 		// Maximum amount of time to wait for Backup changes to propagate.
 		timeout = 2 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findSelectionByTwoPartKey(ctx, conn, planID, d.Id())
 	})
 

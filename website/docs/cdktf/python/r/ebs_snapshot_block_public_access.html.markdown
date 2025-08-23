@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `state` - (Required) The mode in which to enable "Block public access for snapshots" for the region. Allowed values are `block-all-sharing`, `block-new-sharing`, `unblocked`.
 
 ## Attribute Reference
@@ -68,4 +69,4 @@ Using `terraform import`, import the state. For example:
 % terraform import aws_ebs_snapshot_block_public_access.example default
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3091c271e6e796cd7ab1e28d8099f15494e0d2efa5b27ce8f6bc37e000b03ec0 -->
+<!-- cache-key: cdktf-0.20.8 input-51aa72099cb0e336848256f8800378b9f610c285c7d89e00a8484a75a94435eb -->

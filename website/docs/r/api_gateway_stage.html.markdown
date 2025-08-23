@@ -103,6 +103,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) ID of the associated REST API
 * `stage_name` - (Required) Name of the stage
 * `deployment_id` - (Required) ID of the deployment that the stage points to
@@ -112,8 +113,8 @@ This resource supports the following arguments:
 * `canary_settings` - (Optional) Configuration settings of a canary deployment. See [Canary Settings](#canary-settings) below.
 * `client_certificate_id` - (Optional) Identifier of a client certificate for the stage.
 * `description` - (Optional) Description of the stage.
-* `documentation_version` - (Optional) Version of the associated API documentation
-* `variables` - (Optional) Map that defines the stage variables
+* `documentation_version` - (Optional) Version of the associated API documentation.
+* `variables` - (Optional) Map that defines the stage variables.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 

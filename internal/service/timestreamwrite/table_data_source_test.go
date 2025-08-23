@@ -345,6 +345,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   description             = %[2]q
 }
 
