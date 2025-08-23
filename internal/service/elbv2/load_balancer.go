@@ -290,7 +290,7 @@ func resourceLoadBalancer() *schema.Resource {
 			"secondary_ips_auto_assigned_per_subnet": {
 				Type:             schema.TypeInt,
 				Optional:         true,
-				Default:          0,
+				Computed:         true,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
 				ValidateFunc:     validation.IntBetween(0, 7),
 			},
