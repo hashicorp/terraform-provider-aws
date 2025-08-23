@@ -82,12 +82,12 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 		RoleArn:              aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AddRoleToDBInstance(ctx, &input)
 	})
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
-		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.AddRoleToDBInstance(ctx, &input)
 		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
@@ -148,7 +148,7 @@ func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.Resour
 		FeatureName:          aws.String(d.Get("feature_name").(string)),
 		RoleArn:              aws.String(roleARN),
 	}
-	_, err = tfresource.RetryWhenIsA[*types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *types.InvalidDBInstanceStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.RemoveRoleFromDBInstance(ctx, &input)
 	})
 

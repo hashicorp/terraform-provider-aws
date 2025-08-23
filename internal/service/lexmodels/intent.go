@@ -334,7 +334,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.PutIntent(ctx, input)
 	})
 
@@ -498,7 +498,7 @@ func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Lex Model Intent: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteIntent(ctx, &lexmodelbuildingservice.DeleteIntentInput{
 			Name: aws.String(d.Id()),
 		})
