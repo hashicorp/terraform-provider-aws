@@ -81,7 +81,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 		Tags:                              getTagsIn(ctx),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateReplicationSubnetGroup(ctx, input)
 	})
 	if err != nil {

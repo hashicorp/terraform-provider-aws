@@ -236,7 +236,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta any
 			Tags:       getTagsIn(ctx),
 		}
 
-		_, err := tfresource.RetryWhenIsA[*types.InsufficientPermissionsException](ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *types.InsufficientPermissionsException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutConfigRule(ctx, input)
 		})
 
@@ -303,7 +303,7 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Config Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteConfigRule(ctx, &configservice.DeleteConfigRuleInput{
 			ConfigRuleName: aws.String(d.Id()),
 		})

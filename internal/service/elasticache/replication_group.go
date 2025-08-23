@@ -1082,7 +1082,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		timeout = 10 * time.Minute // 10 minutes should give any creating/deleting cache clusters or snapshots time to complete.
 	)
 	log.Printf("[INFO] Deleting ElastiCache Replication Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteReplicationGroup(ctx, input)
 	})
 
@@ -1114,7 +1114,7 @@ func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		ReplicationGroupRegion:   aws.String(region),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DisassociateGlobalReplicationGroup(ctx, input)
 	})
 
