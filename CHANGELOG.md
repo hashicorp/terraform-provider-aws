@@ -1,15 +1,105 @@
-## 6.9.0 (Unreleased)
+## 6.11.0 (Unreleased)
 
 ENHANCEMENTS:
 
+* data-source/aws_network_interface: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* data-source/aws_vpc_ipam: Add `metered_account` attribute ([#43967](https://github.com/hashicorp/terraform-provider-aws/issues/43967))
+* resource/aws_inspector2_filter: Support `code_repository_project_name`, `code_repository_provider_type`, `ecr_image_in_use_count`, and `ecr_image_last_in_use_at` in `filter_criteria` ([#43950](https://github.com/hashicorp/terraform-provider-aws/issues/43950))
+* resource/aws_mwaa_environment: Add `worker_replacement_strategy` argument ([#43946](https://github.com/hashicorp/terraform-provider-aws/issues/43946))
+* resource/aws_network_interface: Add `attachment.network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* resource/aws_network_interface_attachment: Add `network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* resource/aws_s3_bucket_cors_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_logging: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_notification: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_ownership_controls: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_policy: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_public_access_block: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_versioning: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_website_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_vpc_ipam: Add `metered_account` argument ([#43967](https://github.com/hashicorp/terraform-provider-aws/issues/43967))
+
+BUG FIXES:
+
+* data-source/aws_glue_catalog_table: Add `partition_keys.parameters` attribute ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
+* resource/aws_glue_catalog_table: Add `partition_keys.parameters` argument, fixing `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
+* resource/aws_imagebuilder_image_recipe: Increase upper limit of `block_device_mapping.ebs.iops` from `10000` to `100000` ([#43981](https://github.com/hashicorp/terraform-provider-aws/issues/43981))
+
+## 6.10.0 (August 21, 2025)
+
+NOTES:
+
+* resource/aws_instance: The `network_interface` block has been deprecated. Use `primary_network_interface` for the primary network interface and `aws_network_interface_attachment` resources for other network interfaces. ([#43953](https://github.com/hashicorp/terraform-provider-aws/issues/43953))
+* resource/aws_spot_instance_request: The `network_interface` block has been deprecated. Use `primary_network_interface` for the primary network interface and `aws_network_interface_attachment` resources for other network interfaces. ([#43953](https://github.com/hashicorp/terraform-provider-aws/issues/43953))
+
+ENHANCEMENTS:
+
+* data-source/aws_ecr_repository: Add `image_tag_mutability_exclusion_filter` attribute ([#43886](https://github.com/hashicorp/terraform-provider-aws/issues/43886))
+* data-source/aws_ecr_repository_creation_template: Add `image_tag_mutability_exclusion_filter` attribute ([#43886](https://github.com/hashicorp/terraform-provider-aws/issues/43886))
+* resource/aws_cloudwatch_event_target: Add resource identity support ([#43984](https://github.com/hashicorp/terraform-provider-aws/issues/43984))
+* resource/aws_ecr_repository_creation_template: Add `image_tag_mutability_exclusion_filter` configuration block ([#43886](https://github.com/hashicorp/terraform-provider-aws/issues/43886))
+* resource/aws_glue_job: Support `G.12X`, `G.16X`, `R.1X`, `R.2X`, `R.4X`, and `R.8X` as valid values for `worker_type` ([#43988](https://github.com/hashicorp/terraform-provider-aws/issues/43988))
+* resource/aws_lambda_permission: Add resource identity support ([#43954](https://github.com/hashicorp/terraform-provider-aws/issues/43954))
+* resource/aws_lightsail_static_ip_attachment: Support resource import ([#43874](https://github.com/hashicorp/terraform-provider-aws/issues/43874))
+* resource/aws_s3_bucket_cors_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_logging: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_notification: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_ownership_controls: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_policy: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_public_access_block: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_server_side_encryption_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_versioning: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_s3_bucket_website_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_secretsmanager_secret: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+* resource/aws_secretsmanager_secret_policy: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+* resource/aws_secretsmanager_secret_rotation: Add resource identity support ([#43872](https://github.com/hashicorp/terraform-provider-aws/issues/43872))
+* resource/aws_sqs_queue: Add resource identity support ([#43918](https://github.com/hashicorp/terraform-provider-aws/issues/43918))
+* resource/aws_sqs_queue_policy: Add resource identity support ([#43918](https://github.com/hashicorp/terraform-provider-aws/issues/43918))
+* resource/aws_sqs_queue_redrive_allow_policy: Add resource identity support ([#43918](https://github.com/hashicorp/terraform-provider-aws/issues/43918))
+* resource/aws_sqs_queue_redrive_policy: Add resource identity support ([#43918](https://github.com/hashicorp/terraform-provider-aws/issues/43918))
+
+BUG FIXES:
+
+* resource/aws_batch_compute_environment: Allow in-place updates of compute environments that have the `SPOT_PRICE_CAPACITY_OPTIMIZED` strategy ([#40148](https://github.com/hashicorp/terraform-provider-aws/issues/40148))
+* resource/aws_imagebuilder_lifecycle_policy: Fix `Provider produced inconsistent result after apply` error when `policy_detail.exclusion_rules.amis.is_public` is omitted ([#43925](https://github.com/hashicorp/terraform-provider-aws/issues/43925))
+* resource/aws_instance: Adds `primary_network_interface` to allow importing resources with custom primary network interface. ([#43953](https://github.com/hashicorp/terraform-provider-aws/issues/43953))
+* resource/aws_rds_cluster: Fixes the behavior when enabling database_insights_mode="advanced" without changing performance insights retention window ([#43919](https://github.com/hashicorp/terraform-provider-aws/issues/43919))
+* resource/aws_rds_cluster: Fixes the behavior when modifying `database_insights_mode` when using custom KMS key ([#43942](https://github.com/hashicorp/terraform-provider-aws/issues/43942))
+* resource/aws_spot_instance_request: Adds `primary_network_interface` to allow importing resources with custom primary network interface. ([#43953](https://github.com/hashicorp/terraform-provider-aws/issues/43953))
+
+## 6.9.0 (August 14, 2025)
+
+FEATURES:
+
+* **New Resource:** `aws_appsync_api` ([#43787](https://github.com/hashicorp/terraform-provider-aws/issues/43787))
+* **New Resource:** `aws_appsync_channel_namespace` ([#43787](https://github.com/hashicorp/terraform-provider-aws/issues/43787))
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `deletion_protection` attribute ([#43779](https://github.com/hashicorp/terraform-provider-aws/issues/43779))
+* resource/aws_cloudwatch_event_rule: Add resource identity support ([#43758](https://github.com/hashicorp/terraform-provider-aws/issues/43758))
+* resource/aws_cloudwatch_metric_alarm: Add resource identity support ([#43759](https://github.com/hashicorp/terraform-provider-aws/issues/43759))
 * resource/aws_dynamodb_table: Add `replica.deletion_protection_enabled` argument ([#43240](https://github.com/hashicorp/terraform-provider-aws/issues/43240))
+* resource/aws_eks_cluster: Add `deletion_protection` argument ([#43779](https://github.com/hashicorp/terraform-provider-aws/issues/43779))
+* resource/aws_lambda_function: Add resource identity support ([#43821](https://github.com/hashicorp/terraform-provider-aws/issues/43821))
+* resource/aws_sns_topic_data_protection_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
+* resource/aws_sns_topic_policy: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
+* resource/aws_sns_topic_subscription: Add resource identity support ([#43830](https://github.com/hashicorp/terraform-provider-aws/issues/43830))
+* resource/aws_subnet: Add resource identity support ([#43833](https://github.com/hashicorp/terraform-provider-aws/issues/43833))
 
 BUG FIXES:
 
 * data-source/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
+* data-source/aws_networkfirewall_firewall_policy: Add missing schema definition for `firewall_policy.stateful_engine_options.flow_timeouts` ([#43852](https://github.com/hashicorp/terraform-provider-aws/issues/43852))
 * resource/aws_cognito_risk_configuration: Make `account_takeover_risk_configuration.notify_configuration` optional ([#33624](https://github.com/hashicorp/terraform-provider-aws/issues/33624))
+* resource/aws_ecs_service: Fix tagging failure after upgrading to v6 provider ([#43816](https://github.com/hashicorp/terraform-provider-aws/issues/43816))
+* resource/aws_ecs_service: Fix refreshing `service_connect_configuration` when deleted outside of Terraform ([#43871](https://github.com/hashicorp/terraform-provider-aws/issues/43871))
 * resource/aws_lambda_function: Fix missing value for `reserved_concurrent_executions` attribute when a published version exists. This functionality requires the `lambda:GetFunctionConcurrency` IAM permission ([#43753](https://github.com/hashicorp/terraform-provider-aws/issues/43753))
+* resource/aws_s3tables_table: Fix `runtime error: invalid memory address or nil pointer dereference` panics when `GetTableMaintenanceConfiguration` returns an error ([#43764](https://github.com/hashicorp/terraform-provider-aws/issues/43764))
+* resource/aws_sagemaker_user_profile: Fix incomplete regex for `user_profile_name` ([#43807](https://github.com/hashicorp/terraform-provider-aws/issues/43807))
 * resource/aws_servicequotas_service_quota: Add validation, during `create`, to check if new value is less than current value of quota ([#43545](https://github.com/hashicorp/terraform-provider-aws/issues/43545))
+* resource/aws_storagegateway_gateway: Handle `InvalidGatewayRequestException: The specified gateway is not connected` errors during Read by using the [`ListGateways` API](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_ListGateways.html) to return minimal information about a disconnected gateway. This functionality requires the `storagegateway:ListGateways` IAM permission ([#43819](https://github.com/hashicorp/terraform-provider-aws/issues/43819))
+* resource/aws_vpc_ipam_pool_cidr: Fix `netmask_length` not being saved and diffed correctly ([#43262](https://github.com/hashicorp/terraform-provider-aws/issues/43262))
 
 ## 6.8.0 (August 7, 2025)
 

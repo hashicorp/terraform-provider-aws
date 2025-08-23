@@ -24,16 +24,14 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
+// @IdentityAttribute("bucket")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
 		ReadWithoutTimeout:   resourceBucketOwnershipControlsRead,
 		UpdateWithoutTimeout: resourceBucketOwnershipControlsUpdate,
 		DeleteWithoutTimeout: resourceBucketOwnershipControlsDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
