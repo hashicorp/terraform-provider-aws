@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up {{ .GoV2Package }} endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up {{ .GoV2Package }} endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

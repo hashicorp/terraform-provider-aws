@@ -81,7 +81,7 @@ func resourceComputeEnvironment() *schema.Resource {
 			"compute_resources": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -269,17 +269,21 @@ func resourceComputeEnvironment() *schema.Resource {
 			"update_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
+					// https://docs.aws.amazon.com/batch/latest/APIReference/API_UpdatePolicy.html
 					Schema: map[string]*schema.Schema{
 						"job_execution_timeout_minutes": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 360),
 						},
 						"terminate_jobs_on_update": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -576,7 +580,7 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, _ any) error {
 	if computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string)); computeEnvironmentType == string(awstypes.CETypeUnmanaged) {
 		// UNMANAGED compute environments can have no compute_resources configured.
 		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -665,6 +669,19 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 			if diff.HasChange("compute_resources.0.launch_template.#") {
 				if err := diff.ForceNew("compute_resources.0.launch_template.#"); err != nil {
 					return err
+				}
+			}
+
+			// If the launch template version is unknown, set new value to ForceNew.
+			if v := diff.GetRawPlan().GetAttr("compute_resources"); v.IsKnown() && v.LengthInt() == 1 {
+				if v := v.AsValueSlice()[0].GetAttr(names.AttrLaunchTemplate); v.IsKnown() && v.LengthInt() == 1 {
+					if v := v.AsValueSlice()[0].GetAttr(names.AttrVersion); !v.IsKnown() {
+						out := expandComputeResource(ctx, diff.Get("compute_resources").([]any)[0].(map[string]any))
+						out.LaunchTemplate.Version = aws.String(" ") // set version to a new empty value  to trigger a replacement
+						if err := diff.SetNew("compute_resources", []any{flattenComputeResource(ctx, out)}); err != nil {
+							return err
+						}
+					}
 				}
 			}
 
@@ -876,7 +893,11 @@ func isUpdatableAllocationStrategyDiff(diff *schema.ResourceDiff) bool {
 }
 
 func isUpdatableAllocationStrategy(allocationStrategy awstypes.CRAllocationStrategy) bool {
-	return allocationStrategy == awstypes.CRAllocationStrategyBestFitProgressive || allocationStrategy == awstypes.CRAllocationStrategySpotCapacityOptimized
+	switch allocationStrategy {
+	case awstypes.CRAllocationStrategyBestFitProgressive, awstypes.CRAllocationStrategySpotCapacityOptimized, awstypes.CRAllocationStrategySpotPriceCapacityOptimized:
+		return true
+	}
+	return false
 }
 
 func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.ComputeResource {
