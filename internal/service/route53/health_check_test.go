@@ -162,7 +162,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 				Config: testAccHealthCheckConfig_childs(1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "type", string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
 					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "1"),
 				),
 			},
@@ -175,7 +175,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecks(t *testing.T) {
 				Config: testAccHealthCheckConfig_childs(0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "type", string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
 					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "0"),
 				),
 			},
@@ -198,7 +198,7 @@ func TestAccRoute53HealthCheck_withChildHealthChecksThresholdZero(t *testing.T) 
 				Config: testAccHealthCheckConfig_childs(0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "type", string(awstypes.HealthCheckTypeCalculated)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.HealthCheckTypeCalculated)),
 					resource.TestCheckResourceAttr(resourceName, "child_health_threshold", "0"),
 				),
 			},
