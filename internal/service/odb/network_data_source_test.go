@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,30 +6,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type odbNetworkDataSourceTestCase struct {
+type odbNetworkDataSourceTest struct {
 }
 
-var odbNetDSTest = odbNetworkDataSourceTestCase{}
+var odbNetworkDataSourceTestEntity = odbNetworkDataSourceTest{}
 
-func TestAccODBOdbNetworkDataSource_basic(t *testing.T) {
+func TestAccODBNetworkDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -41,14 +41,14 @@ func TestAccODBOdbNetworkDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			odbNetDSTest.testAccOdbNetworkDataSourcePreCheck(ctx, t)
+			odbNetworkDataSourceTestEntity.testAccOdbNetworkDataSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             odbNetDSTest.testAccCheckOdbNetworkDataSourceDestroyed(ctx),
+		CheckDestroy:             odbNetworkDataSourceTestEntity.testAccCheckOdbNetworkDataSourceDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: odbNetDSTest.basicOdbNetworkDataSource(rName),
+				Config: odbNetworkDataSourceTestEntity.basicOdbNetworkDataSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(networkResource, "id", networkDataSource, "id"),
 				),
@@ -57,7 +57,7 @@ func TestAccODBOdbNetworkDataSource_basic(t *testing.T) {
 	})
 }
 
-func (odbNetworkDataSourceTestCase) testAccCheckOdbNetworkDataSourceDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (odbNetworkDataSourceTest) testAccCheckOdbNetworkDataSourceDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
@@ -65,7 +65,7 @@ func (odbNetworkDataSourceTestCase) testAccCheckOdbNetworkDataSourceDestroyed(ct
 			if rs.Type != "aws_odb_network" {
 				continue
 			}
-			_, err := odbNetDSTest.findOdbNetwork(ctx, conn, rs.Primary.ID)
+			_, err := odbNetworkDataSourceTestEntity.findOdbNetwork(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -80,7 +80,7 @@ func (odbNetworkDataSourceTestCase) testAccCheckOdbNetworkDataSourceDestroyed(ct
 	}
 }
 
-func (odbNetworkDataSourceTestCase) findOdbNetwork(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
+func (odbNetworkDataSourceTest) findOdbNetwork(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
 	input := odb.GetOdbNetworkInput{
 		OdbNetworkId: aws.String(id),
 	}
@@ -104,19 +104,21 @@ func (odbNetworkDataSourceTestCase) findOdbNetwork(ctx context.Context, conn *od
 	return out.OdbNetwork, nil
 }
 
-func (odbNetworkDataSourceTestCase) basicOdbNetworkDataSource(rName string) string {
+func (odbNetworkDataSourceTest) basicOdbNetworkDataSource(rName string) string {
 	networkRes := fmt.Sprintf(`
 
 
+
+
 resource "aws_odb_network" "test_resource" {
-  display_name          = %[1]q
+  display_name         = %[1]q
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access = "DISABLED"
-  zero_etl_access = "DISABLED"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
   tags = {
-    "env"= "dev"
+    "env" = "dev"
   }
 }
 
@@ -125,10 +127,11 @@ data "aws_odb_network" "test" {
   id = aws_odb_network.test_resource.id
 }
 
+
 `, rName)
 	return networkRes
 }
-func (odbNetworkDataSourceTestCase) testAccOdbNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {
+func (odbNetworkDataSourceTest) testAccOdbNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
 	input := &odb.ListOdbNetworksInput{}

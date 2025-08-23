@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -6,7 +6,7 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,11 +16,11 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"time"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_network", name="Network")
+// @Tags(identifierAttribute="arn")
 func newDataSourceNetwork(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNetwork{}, nil
 }
@@ -32,8 +32,6 @@ const (
 type dataSourceNetwork struct {
 	framework.DataSourceWithModel[odbNetworkDataSourceModel]
 }
-
-var OdbNetworkDataSource dataSourceNetwork
 
 func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	statusType := fwtypes.StringEnumType[odbtypes.ResourceStatus]()
@@ -112,61 +110,19 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the ODB network was created.",
 			},
-			"managed_services": schema.ObjectAttribute{
+			"managed_services": schema.ListAttribute{
 				Computed:    true,
-				CustomType:  fwtypes.NewObjectTypeOf[odbNetworkManagedServicesDataSourceModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNetworkManagedServicesDataSourceModel](ctx),
 				Description: "The managed services configuration for the ODB network.",
-				AttributeTypes: map[string]attr.Type{
-					"service_network_arn":  types.StringType,
-					"resource_gateway_arn": types.StringType,
-					"managed_service_ipv4_cidrs": types.ListType{
-						ElemType: types.StringType,
-					},
-					"service_network_endpoint": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"vpc_endpoint_id":   types.StringType,
-							"vpc_endpoint_type": fwtypes.StringEnumType[odbtypes.VpcEndpointType](),
-						},
-					},
-					"managed_s3_backup_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ResourceStatus](),
-							"ipv4_addresses": types.ListType{
-								ElemType: types.StringType,
-							},
-						},
-					},
-					"zero_tl_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ManagedResourceStatus](),
-							"cidr":   types.StringType,
-						},
-					},
-					"s3_access": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"status": fwtypes.StringEnumType[odbtypes.ManagedResourceStatus](),
-							"ipv4_addresses": types.ListType{
-								ElemType: types.StringType,
-							},
-							"domain_name":        types.StringType,
-							"s3_policy_document": types.StringType,
-						},
-					},
-				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"oci_dns_forwarding_configs": schema.ListAttribute{
 				Computed:    true,
-				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[odbNwkOciDnsForwardingConfigDataSourceModel](ctx),
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"domain_name":         types.StringType,
-						"oci_dns_listener_ip": types.StringType,
-					},
-				},
+				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
 			},
 		},
 	}
@@ -192,13 +148,10 @@ func (d *dataSourceNetwork) Read(ctx context.Context, req datasource.ReadRequest
 		)
 		return
 	}
-
-	data.CreatedAt = types.StringValue(out.OdbNetwork.CreatedAt.Format(time.RFC3339))
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.OdbNetwork, &data, flex.WithIgnoredFieldNamesAppend("CreatedAt"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.OdbNetwork, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -223,8 +176,8 @@ type odbNetworkDataSourceModel struct {
 	PercentProgress         types.Float64                                                                `tfsdk:"percent_progress"`
 	Status                  fwtypes.StringEnum[odbtypes.ResourceStatus]                                  `tfsdk:"status"`
 	StatusReason            types.String                                                                 `tfsdk:"status_reason"`
-	CreatedAt               types.String                                                                 `tfsdk:"created_at"`
-	ManagedServices         fwtypes.ObjectValueOf[odbNetworkManagedServicesDataSourceModel]              `tfsdk:"managed_services"`
+	CreatedAt               timetypes.RFC3339                                                            `tfsdk:"created_at"`
+	ManagedServices         fwtypes.ListNestedObjectValueOf[odbNetworkManagedServicesDataSourceModel]    `tfsdk:"managed_services"`
 	Tags                    tftags.Map                                                                   `tfsdk:"tags"`
 }
 
@@ -234,13 +187,13 @@ type odbNwkOciDnsForwardingConfigDataSourceModel struct {
 }
 
 type odbNetworkManagedServicesDataSourceModel struct {
-	ServiceNetworkArn        types.String                                                           `tfsdk:"service_network_arn"`
-	ResourceGatewayArn       types.String                                                           `tfsdk:"resource_gateway_arn"`
-	ManagedServicesIpv4Cidrs fwtypes.ListOfString                                                   `tfsdk:"managed_service_ipv4_cidrs"`
-	ServiceNetworkEndpoint   fwtypes.ObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel] `tfsdk:"service_network_endpoint"`
-	ManagedS3BackupAccess    fwtypes.ObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]  `tfsdk:"managed_s3_backup_access"`
-	ZeroEtlAccess            fwtypes.ObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]          `tfsdk:"zero_tl_access"`
-	S3Access                 fwtypes.ObjectValueOf[s3AccessOdbNetworkDataSourceModel]               `tfsdk:"s3_access"`
+	ServiceNetworkArn        types.String                                                                     `tfsdk:"service_network_arn"`
+	ResourceGatewayArn       types.String                                                                     `tfsdk:"resource_gateway_arn"`
+	ManagedServicesIpv4Cidrs fwtypes.ListOfString                                                             `tfsdk:"managed_service_ipv4_cidrs"`
+	ServiceNetworkEndpoint   fwtypes.ListNestedObjectValueOf[serviceNetworkEndpointOdbNetworkDataSourceModel] `tfsdk:"service_network_endpoint"`
+	ManagedS3BackupAccess    fwtypes.ListNestedObjectValueOf[managedS3BackupAccessOdbNetworkDataSourceModel]  `tfsdk:"managed_s3_backup_access"`
+	ZeroEtlAccess            fwtypes.ListNestedObjectValueOf[zeroEtlAccessOdbNetworkDataSourceModel]          `tfsdk:"zero_tl_access"`
+	S3Access                 fwtypes.ListNestedObjectValueOf[s3AccessOdbNetworkDataSourceModel]               `tfsdk:"s3_access"`
 }
 
 type serviceNetworkEndpointOdbNetworkDataSourceModel struct {
