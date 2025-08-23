@@ -651,7 +651,7 @@ resource "aws_route53_health_check" "child1" {
 
 resource "aws_route53_health_check" "test" {
   type                   = "CALCULATED"
-  child_health_threshold = %d
+  child_health_threshold = %[1]d
   child_healthchecks     = [aws_route53_health_check.child1.id]
 
   tags = {
