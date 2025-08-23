@@ -336,7 +336,6 @@ func resourceCluster() *schema.Resource {
 			"remote_network_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ForceNew:      false,
 				MaxItems:      1,
 				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
@@ -351,7 +350,6 @@ func resourceCluster() *schema.Resource {
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: false,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -373,7 +371,6 @@ func resourceCluster() *schema.Resource {
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										ForceNew: false,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -816,6 +813,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
+	if d.HasChanges("remote_network_config.0.remote_node_networks", "remote_network_config.0.remote_pod_networks") {
+		input := eks.UpdateClusterConfigInput{
+			Name:                aws.String(d.Id()),
+			RemoteNetworkConfig: expandUpdateRemoteNetworkConfigRequest(d.Get("remote_network_config").([]any)),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) remote network config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) remote network config update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
 	if d.HasChange("upgrade_policy") {
 		input := eks.UpdateClusterConfigInput{
 			Name:          aws.String(d.Id()),
@@ -887,27 +903,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) zonal shift config update (%s): %s", d.Id(), updateID, err)
-		}
-	}
-
-	if d.HasChanges("remote_network_config.0.remote_node_networks", "remote_network_config.0.remote_pod_networks") {
-		remoteNetworkConfig := expandUpdateRemoteNetworkConfigRequest(d.Get("remote_network_config").([]any))
-
-		input := &eks.UpdateClusterConfigInput{
-			Name:                aws.String(d.Id()),
-			RemoteNetworkConfig: remoteNetworkConfig,
-		}
-
-		output, err := conn.UpdateClusterConfig(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) remote network config: %s", d.Id(), err)
-		}
-
-		updateID := aws.ToString(output.Update.Id)
-
-		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) remote network config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
