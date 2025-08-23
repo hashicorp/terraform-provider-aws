@@ -243,6 +243,10 @@ func ResourceCanary() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -746,6 +750,10 @@ func flattenCanaryVPCConfig(canaryVpcOutput *awstypes.VpcConfigOutput) []any {
 		names.AttrVPCID:            aws.ToString(canaryVpcOutput.VpcId),
 	}
 
+	if canaryVpcOutput.Ipv6AllowedForDualStack != nil {
+		m["ipv6_allowed_for_dual_stack"] = aws.ToBool(canaryVpcOutput.Ipv6AllowedForDualStack)
+	}
+
 	return []any{m}
 }
 
@@ -759,6 +767,10 @@ func expandCanaryVPCConfig(l []any) *awstypes.VpcConfigInput {
 	codeConfig := &awstypes.VpcConfigInput{
 		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
+	}
+
+	if v, ok := m["ipv6_allowed_for_dual_stack"]; ok {
+		codeConfig.Ipv6AllowedForDualStack = aws.Bool(v.(bool))
 	}
 
 	return codeConfig

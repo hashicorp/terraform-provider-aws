@@ -91,6 +91,7 @@ This data source exports the following attributes in addition to the arguments a
     * `patchFilter` - Patch filter group that defines the criteria for the rule.
         * `key` - Key for the filter.
         * `values` - Value for the filter.
+* `availableSecurityUpdatesComplianceStatus` - Indicates the compliance status of managed nodes for which security-related patches are available but were not approved. Supported for Windows Server managed nodes only.
 * `globalFilter` - Set of global filters used to exclude patches from the baseline.
     * `key` - Key for the filter.
     * `values` - Value for the filter.
@@ -105,4 +106,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - Name specified to identify the patch source.
     * `products` - Specific operating system versions a patch repository applies to.
 
-<!-- cache-key: cdktf-0.20.8 input-5e13df7683cd868966f5625ac1ba408149e6795097ce730b91ec70fd500b398a -->
+<!-- cache-key: cdktf-0.20.8 input-86c142313f82590db73389cac99b221c89d65c61ae8d87aab57384add5cb359b -->

@@ -691,6 +691,8 @@ class MyConvertedCode extends TerraformStack {
 * `unhealthyNodeReplacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visibleToAllUsers` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
+   **NOTE:** As per the [Amazon EMR API Reference](https://docs.aws.amazon.com/emr/latest/APIReference/API_RunJobFlow.html#EMR-RunJobFlow-request-VisibleToAllUsers), this argument is no longer supported. Do not set this argument, particularly to `false`, as it would lead to perpetual differences.
+
 ### bootstrap_action
 
 * `args` - (Optional) List of command line arguments to pass to the bootstrap action script.
@@ -857,7 +859,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `releaseLabel` - Release label for the Amazon EMR release.
 * `serviceRole` - IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `visibleToAllUsers` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 
 ## Import
 
@@ -919,4 +920,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4188112f4451b512696c3b7465017051554f88a1acfde57b32f8caaab22e186f -->
+<!-- cache-key: cdktf-0.20.8 input-90852b52eabd9d589f9a9d6ed5eb5e30d5d6b1fa7161b288cea83118f5a64c75 -->

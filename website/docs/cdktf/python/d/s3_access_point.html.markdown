@@ -56,7 +56,8 @@ This data source exports the following attributes in addition to the arguments a
     * `block_public_policy` - Whether Amazon S3 blocks public bucket policies for buckets in this account.
     * `ignore_public_acls` - Whether Amazon S3 ignores public ACLs for buckets in this account.
     * `restrict_public_buckets` - Whether Amazon S3 restricts public bucket policies for buckets in this account.
+* `tags` - Tags assigned to the access point.
 * `vpc_configuration` - VPC configuration for the access point.
     * `vpc_id` - Access point will only allow connections from this VPC.
 
-<!-- cache-key: cdktf-0.20.8 input-dda5dd3eb560e938b9fe640b172736e1c77771b1c9a7b6a5c6619c1aae12e48e -->
+<!-- cache-key: cdktf-0.20.8 input-026d8a379ee0ad0a3d73d4f5bc3e6c45122c561d36e04b20e806d194ea1881d8 -->
