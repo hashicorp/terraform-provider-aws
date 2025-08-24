@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -86,13 +87,23 @@ func resourceExternalKey() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"key_spec": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.KeySpecSymmetricDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
+			},
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.KeyUsageTypeEncryptDecrypt,
+				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
 				Type:     schema.TypeBool,
@@ -118,7 +129,8 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		KeyUsage:                       awstypes.KeyUsageTypeEncryptDecrypt,
+		KeyUsage:                       awstypes.KeyUsageType(d.Get("key_usage").(string)),
+		KeySpec:                        awstypes.KeySpec(d.Get("key_spec").(string)),
 		Origin:                         awstypes.OriginTypeExternal,
 		Tags:                           getTagsIn(ctx),
 	}
