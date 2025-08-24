@@ -280,7 +280,7 @@ func resourceBotAliasDelete(ctx context.Context, d *schema.ResourceData, meta an
 	botAliasName, botName := d.Get(names.AttrName).(string), d.Get("bot_name").(string)
 
 	log.Printf("[DEBUG] Deleting Lex Model Bot Alias: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteBotAlias(ctx, &lexmodelbuildingservice.DeleteBotAliasInput{
 			BotName: aws.String(botName),
 			Name:    aws.String(botAliasName),

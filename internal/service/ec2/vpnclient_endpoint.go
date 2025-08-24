@@ -373,8 +373,8 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {

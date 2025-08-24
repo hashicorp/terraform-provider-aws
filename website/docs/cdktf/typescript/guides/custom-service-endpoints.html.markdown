@@ -143,6 +143,7 @@ class MyConvertedCode extends TerraformStack {
 |BCM Data Exports|`bcmdataexports`|`AWS_ENDPOINT_URL_BCM_DATA_EXPORTS`|`bcm_data_exports`|
 |Bedrock|`bedrock`|`AWS_ENDPOINT_URL_BEDROCK`|`bedrock`|
 |Bedrock Agents|`bedrockagent`|`AWS_ENDPOINT_URL_BEDROCK_AGENT`|`bedrock_agent`|
+|Bedrock AgentCore|`bedrockagentcore`|`AWS_ENDPOINT_URL_BEDROCK_AGENTCORE_CONTROL`|`bedrock_agentcore_control`|
 |Billing|`billing`|`AWS_ENDPOINT_URL_BILLING`|`billing`|
 |Web Services Budgets|`budgets`|`AWS_ENDPOINT_URL_BUDGETS`|`budgets`|
 |CE (Cost Explorer)|`ce`(or `costexplorer`)|`AWS_ENDPOINT_URL_COST_EXPLORER`|`cost_explorer`|
@@ -282,6 +283,7 @@ class MyConvertedCode extends TerraformStack {
 |User Notifications|`notifications`|`AWS_ENDPOINT_URL_NOTIFICATIONS`|`notifications`|
 |User Notifications Contacts|`notificationscontacts`|`AWS_ENDPOINT_URL_NOTIFICATIONSCONTACTS`|`notificationscontacts`|
 |CloudWatch Observability Access Manager|`oam`(or `cloudwatchobservabilityaccessmanager`)|`AWS_ENDPOINT_URL_OAM`|`oam`|
+|Oracle Database@AWS|`odb`|`AWS_ENDPOINT_URL_ODB`|`odb`|
 |OpenSearch|`opensearch`(or `opensearchservice`)|`AWS_ENDPOINT_URL_OPENSEARCH`|`opensearch`|
 |OpenSearch Serverless|`opensearchserverless`|`AWS_ENDPOINT_URL_OPENSEARCHSERVERLESS`|`opensearchserverless`|
 |Organizations|`organizations`|`AWS_ENDPOINT_URL_ORGANIZATIONS`|`organizations`|
@@ -321,6 +323,7 @@ class MyConvertedCode extends TerraformStack {
 |S3 Control|`s3Control`|`AWS_ENDPOINT_URL_S3_CONTROL`|`s3_control`|
 |S3 on Outposts|`s3Outposts`|`AWS_ENDPOINT_URL_S3OUTPOSTS`|`s3Outposts`|
 |S3 Tables|`s3Tables`|`AWS_ENDPOINT_URL_S3TABLES`|`s3Tables`|
+|S3 Vectors|`s3Vectors`|`AWS_ENDPOINT_URL_S3VECTORS`|`s3Vectors`|
 |SageMaker AI|`sagemaker`|`AWS_ENDPOINT_URL_SAGEMAKER`|`sagemaker`|
 |EventBridge Scheduler|`scheduler`|`AWS_ENDPOINT_URL_SCHEDULER`|`scheduler`|
 |EventBridge Schemas|`schemas`|`AWS_ENDPOINT_URL_SCHEMAS`|`schemas`|
@@ -472,4 +475,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7a47e42bbb4a9158aaec4ecb5fa52437ae8285a712c7cfb40b7f737ca462976e -->
+<!-- cache-key: cdktf-0.20.8 input-a78f3598f8f5681bb9608091eb346e5b7070f7c49bcaaa27785ecb5952584aca -->
