@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_kms_external_key: Add key_spec and key_usage attributes
+```
