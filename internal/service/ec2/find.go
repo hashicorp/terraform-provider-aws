@@ -2228,7 +2228,7 @@ func findEBSVolumeByID(ctx context.Context, conn *ec2.Client, id string) (*awsty
 		return nil, err
 	}
 
-	if state := output.State; state == awstypes.VolumeStateDeleted {
+	if state := output.State; state == awstypes.VolumeStateDeleted || state == awstypes.VolumeStateDeleting {
 		return nil, &retry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
