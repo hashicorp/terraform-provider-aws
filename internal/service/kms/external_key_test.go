@@ -438,7 +438,7 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 	})
 }
 
-func TestAccKMSExternalKey_Usages(t *testing.T) {
+func TestAccKMSExternalKey_Usage(t *testing.T) {
 	ctx := acctest.Context(t)
 	var key1, key2 awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -451,19 +451,47 @@ func TestAccKMSExternalKey_Usages(t *testing.T) {
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExternalKeyConfig_usages(rName, "ENCRYPT_DECRYPT", "SYMMETRIC_DEFAULT"),
+				Config: testAccExternalKeyConfig_usage(rName, "ENCRYPT_DECRYPT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
 				),
 			},
 			{
-				Config: testAccExternalKeyConfig_usages(rName, "SIGN_VERIFY", "RSA_2048"),
+				Config: testAccExternalKeyConfig_usage(rName, "SIGN_VERIFY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
+				),
+			},
+		}})
+}
+
+func TestAccKMSExternalKey_Spec(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key1, key2 awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_external_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExternalKeyConfig_spec(rName, "RSA_2048"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "key_spec", "RSA_2048"),
+				),
+			},
+			{
+				Config: testAccExternalKeyConfig_spec(rName, "SYMMETRIC_DEFAULT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
+					testAccCheckExternalKeyRecreated(&key1, &key2),
+					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
 				),
 			},
 		}})
@@ -661,13 +689,22 @@ resource "aws_kms_external_key" "test" {
 `, rName, validTo)
 }
 
-func testAccExternalKeyConfig_usages(rName, usages, spec string) string {
+func testAccExternalKeyConfig_usage(rName, usage string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   description 			  = %[1]q
   deletion_window_in_days = 7
   key_usage     		  = %[2]q
-  key_spec                = %[3]q
 }
-`, rName, usages, spec)
+`, rName, usage)
+}
+
+func testAccExternalKeyConfig_spec(rName, spec string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_external_key" "test" {
+  description 			  = %[1]q
+  deletion_window_in_days = 7
+  key_spec	     		  = %[2]q
+}
+`, rName, spec)
 }
