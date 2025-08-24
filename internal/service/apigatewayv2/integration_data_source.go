@@ -32,18 +32,6 @@ type dataSourceIntegration struct {
 
 func (d *dataSourceIntegration) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		// Blocks: map[string]schema.Block{
-		// 	"tls_config": schema.ListNestedBlock{
-		// 		CustomType: fwtypes.NewListNestedObjectTypeOf[tlsConfigModel](ctx),
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"server_name_to_verify": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
 		Attributes: map[string]schema.Attribute{
 			"api_id": schema.StringAttribute{
 				Optional: true,
@@ -108,7 +96,7 @@ func (d *dataSourceIntegration) Schema(ctx context.Context, req datasource.Schem
 			"template_selection_expression": schema.StringAttribute{
 				Computed: true,
 			},
-			"timeout_milliseconds": schema.Int64Attribute{
+			"timeout_milliseconds": schema.Int32Attribute{
 				Computed: true,
 			},
 			"tls_config": framework.DataSourceComputedListOfObjectAttribute[tlsConfigModel](ctx),
@@ -170,9 +158,9 @@ type dataSourceIntegrationModel struct {
 	PayloadFormatVersion                   types.String                                             `tfsdk:"payload_format_version"`
 	RequestParameters                      fwtypes.MapOfString                                      `tfsdk:"request_parameters"`
 	RequestTemplates                       fwtypes.MapOfString                                      `tfsdk:"request_templates"`
-	ResponseParameters                     fwtypes.ListNestedObjectValueOf[responseParametersModel] `tfsdk:"response_parameters"`
+	ResponseParameters                     fwtypes.ListNestedObjectValueOf[responseParametersModel] `tfsdk:"response_parameters" autoflex:"-"`
 	TemplateSelectionExpression            types.String                                             `tfsdk:"template_selection_expression"`
-	TimeoutMilliseconds                    types.Int64                                              `tfsdk:"timeout_milliseconds"`
+	TimeoutInMillis                        types.Int32                                              `tfsdk:"timeout_milliseconds"`
 	TLSConfig                              fwtypes.ListNestedObjectValueOf[tlsConfigModel]          `tfsdk:"tls_config"`
 }
 
