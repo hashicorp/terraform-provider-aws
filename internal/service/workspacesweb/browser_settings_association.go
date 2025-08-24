@@ -33,6 +33,7 @@ func newBrowserSettingsAssociationResource(_ context.Context) (resource.Resource
 
 type browserSettingsAssociationResource struct {
 	framework.ResourceWithModel[browserSettingsAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *browserSettingsAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
