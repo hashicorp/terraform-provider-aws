@@ -89,8 +89,8 @@ func resourceExternalKey() *schema.Resource {
 			"key_spec": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ForceNew:         true,
-				Default:          awstypes.KeySpecSymmetricDefault,
 				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
 			},
 			"key_state": {
@@ -100,8 +100,8 @@ func resourceExternalKey() *schema.Resource {
 			"key_usage": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true,
 				ForceNew:         true,
-				Default:          awstypes.KeyUsageTypeEncryptDecrypt,
 				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
@@ -128,14 +128,20 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		KeyUsage:                       awstypes.KeyUsageType(d.Get("key_usage").(string)),
-		KeySpec:                        awstypes.KeySpec(d.Get("key_spec").(string)),
 		Origin:                         awstypes.OriginTypeExternal,
 		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_spec"); ok {
+		input.KeySpec = awstypes.KeySpec(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_usage"); ok {
+		input.KeyUsage = awstypes.KeyUsageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("multi_region"); ok {
