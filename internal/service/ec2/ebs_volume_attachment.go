@@ -174,11 +174,12 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 			// if the volume was replaced (new source due to undatafy), it means the new
 			// volume is now the source volume, and we need to set the "new" values from aws
 			if datafyVolume.ReplacedBy != "" {
-				diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", datafyVolume.ReplacedBy, volumeID)
-
 				d.SetId(volumeAttachmentID(deviceName, datafyVolume.ReplacedBy, instanceID))
 				d.Set("volume_id", datafyVolume.ReplacedBy)
-				return resourceVolumeAttachmentRead(ctx, d, meta)
+				return append(
+					sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", datafyVolume.ReplacedBy, volumeID),
+					resourceVolumeAttachmentRead(ctx, d, meta)...,
+				)
 			}
 		} else if datafy.NotFound(datafyErr) {
 			log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
@@ -217,18 +218,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
 	if datafyVolume, datafyErr := dc.GetVolume(volumeID); datafyErr == nil {
 		if datafyVolume.IsManaged {
-			dvo, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
-				Filters: []awstypes.Filter{
-					{
-						Name:   aws.String(fmt.Sprintf("tag:%s", datafy.ManagedByTagKey)),
-						Values: []string{datafy.ManagedByTagValue},
-					},
-					{
-						Name:   aws.String(fmt.Sprintf("tag:%s", datafy.SourceVolumeTagKey)),
-						Values: []string{volumeID},
-					},
-				},
-			})
+			dvo, err := conn.DescribeVolumes(ctx, datafy.DescribeDatafiedVolumesInput(d.Id()))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s) Attachement (%s): %s", volumeID, d.Id(), err)
 			} else if len(dvo.Volumes) == 0 {
@@ -246,11 +236,12 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 		if datafyVolume.ReplacedBy != "" {
-			diags = sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", datafyVolume.ReplacedBy, volumeID)
-
 			d.SetId(volumeAttachmentID(deviceName, datafyVolume.ReplacedBy, instanceID))
 			d.Set("volume_id", datafyVolume.ReplacedBy)
-			return resourceVolumeAttachmentDelete(ctx, d, meta)
+			return append(
+				sdkdiag.AppendWarningf(diags, "new EBS Volume (%s) has been created to replace the undatafied EBS Volume (%s)", datafyVolume.ReplacedBy, volumeID),
+				resourceVolumeAttachmentDelete(ctx, d, meta)...,
+			)
 		}
 	} else if !datafy.NotFound(datafyErr) {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, d.Id(), datafyErr)
