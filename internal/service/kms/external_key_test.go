@@ -453,9 +453,9 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 	})
 }
 
-func TestAccKMSExternalKey_Usage(t *testing.T) {
+func TestAccKMSExternalKey_keyUsage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var key1, key2 awstypes.KeyMetadata
+	var key awstypes.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_external_key.test"
 
@@ -466,18 +466,32 @@ func TestAccKMSExternalKey_Usage(t *testing.T) {
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExternalKeyConfig_usage(rName, "ENCRYPT_DECRYPT"),
+				Config: testAccExternalKeyConfig_keyUsage(rName, "RSA_4096", "ENCRYPT_DECRYPT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					testAccCheckExternalKeyExists(ctx, resourceName, &key),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_usage"), tfknownvalue.StringExact(awstypes.KeyUsageTypeEncryptDecrypt)),
+				},
 			},
 			{
-				Config: testAccExternalKeyConfig_usage(rName, "SIGN_VERIFY"),
+				Config: testAccExternalKeyConfig_keyUsage(rName, "RSA_4096", "SIGN_VERIFY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
+					testAccCheckExternalKeyExists(ctx, resourceName, &key),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("key_usage"), tfknownvalue.StringExact(awstypes.KeyUsageTypeSignVerify)),
+				},
 			},
 		}})
 }
@@ -707,14 +721,15 @@ resource "aws_kms_external_key" "test" {
 `, rName, validTo)
 }
 
-func testAccExternalKeyConfig_usage(rName, usage string) string {
+func testAccExternalKeyConfig_keyUsage(rName, spec, usage string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-  key_usage               = %[2]q
+  key_spec                = %[2]q
+  key_usage               = %[3]q
 }
-`, rName, usage)
+`, rName, spec, usage)
 }
 
 func testAccExternalKeyConfig_keySpec(rName, spec string) string {
