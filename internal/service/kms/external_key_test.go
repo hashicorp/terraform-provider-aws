@@ -691,9 +691,9 @@ resource "aws_kms_external_key" "test" {
 func testAccExternalKeyConfig_usage(rName, usage string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
-  description 			  = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
-  key_usage     		  = %[2]q
+  key_usage               = %[2]q
 }
 `, rName, usage)
 }
@@ -701,9 +701,9 @@ resource "aws_kms_external_key" "test" {
 func testAccExternalKeyConfig_spec(rName, spec string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
-  description 			  = %[1]q
+  description             = %[1]q
   deletion_window_in_days = 7
-  key_spec	     		  = %[2]q
+  key_spec                = %[2]q
 }
 `, rName, spec)
 }
