@@ -50,10 +50,6 @@ func newPortalResource(_ context.Context) (resource.ResourceWithConfigure, error
 	return r, nil
 }
 
-const (
-	ResNamePortal = "Portal"
-)
-
 type portalResource struct {
 	framework.ResourceWithModel[portalResourceModel]
 	framework.WithTimeouts
@@ -79,8 +75,9 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 			"browser_settings_arn": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -174,6 +171,8 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"trust_store_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -192,8 +191,6 @@ func (r *portalResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -234,11 +231,10 @@ func (r *portalResource) Create(ctx context.Context, request resource.CreateRequ
 	data.PortalARN = fwflex.StringToFramework(ctx, output.PortalArn)
 	data.PortalEndpoint = fwflex.StringToFramework(ctx, output.PortalEndpoint)
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	// Wait for portal to be created
-	portal, err := waitPortalCreated(ctx, conn, data.PortalARN.ValueString(), createTimeout)
+	portal, err := waitPortalCreated(ctx, conn, data.PortalARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) creation", data.PortalARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) create", data.PortalARN.ValueString()), err.Error())
 		return
 	}
 
@@ -316,9 +312,8 @@ func (r *portalResource) Update(ctx context.Context, request resource.UpdateRequ
 			return
 		}
 
-		updateTimeout := r.CreateTimeout(ctx, new.Timeouts)
 		// Wait for portal to be updated
-		portal, err := waitPortalUpdated(ctx, conn, new.PortalARN.ValueString(), updateTimeout)
+		portal, err := waitPortalUpdated(ctx, conn, new.PortalARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) update", new.PortalARN.ValueString()), err.Error())
 			return
@@ -356,11 +351,10 @@ func (r *portalResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	// Wait for portal to be deleted
-	_, err = waitPortalDeleted(ctx, conn, data.PortalARN.ValueString(), deleteTimeout)
+	_, err = waitPortalDeleted(ctx, conn, data.PortalARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) deletion", data.PortalARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for WorkSpacesWeb Portal (%s) delete", data.PortalARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -376,7 +370,6 @@ func waitPortalCreated(ctx context.Context, conn *workspacesweb.Client, arn stri
 		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
 		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -394,7 +387,6 @@ func waitPortalUpdated(ctx context.Context, conn *workspacesweb.Client, arn stri
 		Target:                    enum.Slice(awstypes.PortalStatusIncomplete, awstypes.PortalStatusActive),
 		Refresh:                   statusPortal(ctx, conn, arn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -445,6 +437,7 @@ func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string
 	}
 
 	output, err := conn.GetPortal(ctx, &input)
+
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
@@ -468,7 +461,7 @@ type portalResourceModel struct {
 	framework.WithRegionModel
 	AdditionalEncryptionContext  fwtypes.MapOfString                             `tfsdk:"additional_encryption_context"`
 	AuthenticationType           fwtypes.StringEnum[awstypes.AuthenticationType] `tfsdk:"authentication_type"`
-	BrowserSettingsARN           types.String                                    `tfsdk:"browser_settings_arn"`
+	BrowserSettingsARN           fwtypes.ARN                                     `tfsdk:"browser_settings_arn"`
 	BrowserType                  fwtypes.StringEnum[awstypes.BrowserType]        `tfsdk:"browser_type"`
 	CreationDate                 timetypes.RFC3339                               `tfsdk:"creation_date"`
 	CustomerManagedKey           types.String                                    `tfsdk:"customer_managed_key"`

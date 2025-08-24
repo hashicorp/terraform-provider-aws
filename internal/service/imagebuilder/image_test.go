@@ -733,29 +733,102 @@ resource "aws_iam_role" "test_execute" {
   name = join("-", [%[1]q, "execute"])
 }
 
-data "aws_iam_policy" "AWSServiceRoleForImageBuilder" {
-  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/aws-service-role/AWSServiceRoleForImageBuilder"
-}
-
-resource "aws_iam_policy" "test_execute_service_policy" {
-  name   = join("-", [%[1]q, "execute-service"])
-  policy = data.aws_iam_policy.AWSServiceRoleForImageBuilder.policy
-}
-
-resource "aws_iam_role_policy_attachment" "test_execute_service" {
-  policy_arn = aws_iam_policy.test_execute_service_policy.arn
-  role       = aws_iam_role.test_execute.name
-}
-
 resource "aws_iam_policy" "test_execute" {
   name = join("-", [%[1]q, "execute"])
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action   = "ssm:SendCommand"
-      Effect   = "Allow"
-      Resource = "arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.id}::document/AWS-UpdateSSMAgent"
-    }]
+    Statement = [
+      {
+        Sid    = "EC2Lifecycle"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateImage",
+          "ec2:CreateTags",
+          "ec2:DescribeInstances",
+          "ec2:DescribeImages",
+          "ec2:DescribeTags",
+          "ec2:DescribeInstanceStatus",
+          "ec2:DescribeInstanceTypeOfferings",
+          "ec2:RunInstances",
+          "ec2:StopInstances",
+          "ec2:TerminateInstances"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "SSMExecution"
+        Effect = "Allow"
+        Action = [
+          "ssm:AddTagsToResource",
+          "ssm:CreateAssociation",
+          "ssm:DeleteAssociation",
+          "ssm:DescribeAssociationExecutions",
+          "ssm:DescribeDocument",
+          "ssm:DescribeInstanceAssociationsStatus",
+          "ssm:DescribeInstanceInformation",
+          "ssm:GetAutomationExecution",
+          "ssm:GetCommandInvocation",
+          "ssm:GetDocument",
+          "ssm:ListCommands",
+          "ssm:ListCommandInvocations",
+          "ssm:ListInventoryEntries",
+          "ssm:SendAutomationSignal",
+          "ssm:SendCommand",
+          "ssm:StopAutomationExecution"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ImageBuilderCore"
+        Effect = "Allow"
+        Action = [
+          "imagebuilder:GetComponent",
+          "imagebuilder:GetImage",
+          "imagebuilder:GetImageRecipe",
+          "imagebuilder:ListComponents",
+          "imagebuilder:ListImageBuildVersions",
+          "imagebuilder:ListImagePackages",
+          "imagebuilder:ListImagePipelineImages",
+          "imagebuilder:ListImageRecipes"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ImageScanFindings"
+        Effect = "Allow"
+        Action = [
+          "inspector2:BatchGet*",
+          "inspector2:Get*",
+          "inspector2:List*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "CloudWatchLogging"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "PassRole"
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = [
+              "ec2.amazonaws.com",
+              "ec2.amazonaws.com.cn",
+              "vmie.amazonaws.com"
+            ]
+          }
+        }
+      }
+    ]
   })
 }
 
@@ -785,8 +858,7 @@ resource "aws_imagebuilder_image" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.test_execute,
-    aws_iam_role_policy_attachment.test_execute_service
+    aws_iam_role_policy_attachment.test_execute
   ]
 }
 `, rName),

@@ -852,7 +852,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBClusterFromSnapshot(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -1361,7 +1361,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateDBCluster(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
@@ -1615,6 +1615,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if d.HasChange("database_insights_mode") {
 			input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 			input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+			if v, ok := d.Get("performance_insights_kms_key_id").(string); ok && v != "" {
+				input.PerformanceInsightsKMSKeyId = aws.String(v)
+			}
+			input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
 		}
 
 		if d.HasChange("db_cluster_instance_class") {
