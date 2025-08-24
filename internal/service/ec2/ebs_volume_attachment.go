@@ -218,7 +218,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	dc := meta.(*conns.AWSClient).DatafyClient(ctx)
 	if datafyVolume, datafyErr := dc.GetVolume(volumeID); datafyErr == nil {
 		if datafyVolume.IsManaged {
-			dvo, err := conn.DescribeVolumes(ctx, datafy.DescribeDatafiedVolumesInput(d.Id()))
+			dvo, err := conn.DescribeVolumes(ctx, datafy.DescribeDatafiedVolumesInput(volumeID))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "can't find datafy volumes of EBS volume (%s) Attachement (%s): %s", volumeID, d.Id(), err)
 			} else if len(dvo.Volumes) == 0 {
