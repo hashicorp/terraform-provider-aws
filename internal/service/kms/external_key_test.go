@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -437,6 +438,37 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 	})
 }
 
+func TestAccKMSExternalKey_Usages(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key1, key2 awstypes.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_external_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExternalKeyConfig_usages(rName, "ENCRYPT_DECRYPT", "SYMMETRIC_DEFAULT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
+				),
+			},
+			{
+				Config: testAccExternalKeyConfig_usages(rName, "SIGN_VERIFY", "RSA_2048"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "SIGN_VERIFY"),
+					resource.TestCheckResourceAttr(resourceName, "key_spec", "RSA_2048"),
+				),
+			},
+		}})
+}
+
 func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -627,4 +659,15 @@ resource "aws_kms_external_key" "test" {
   valid_to                = %[2]q
 }
 `, rName, validTo)
+}
+
+func testAccExternalKeyConfig_usages(rName, usages, spec string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_external_key" "test" {
+  description 			  = %[1]q
+  deletion_window_in_days = 7
+  key_usage     		  = %[2]q
+  key_spec                = %[3]q
+}
+`, rName, usages, spec)
 }
