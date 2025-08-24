@@ -4,7 +4,6 @@ package odb_test
 
 import (
 	"fmt"
-
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,9 +16,7 @@ func TestAccODBDbSystemShapesListDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	dataSourceName := "data.aws_odb_db_system_shapes_list.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)

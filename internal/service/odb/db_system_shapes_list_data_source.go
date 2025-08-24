@@ -4,11 +4,7 @@ package odb
 
 import (
 	"context"
-	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-
 	"github.com/aws/aws-sdk-go-v2/service/odb"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,51 +34,19 @@ func (d *dataSourceDbSystemShapesList) Schema(ctx context.Context, req datasourc
 		Attributes: map[string]schema.Attribute{
 			"availability_zone_id": schema.StringAttribute{
 				Optional:    true,
-				Description: "The physical ID of the AZ, for example, use1-az4. This ID persists across accounts",
+				Description: "The physical ID of the AZ, for example, use1-az4. This ID persists across accounts.",
 			},
 			"db_system_shapes": schema.ListAttribute{
 				Computed:   true,
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dbSystemShapeDataSourceModel](ctx),
-				Description: fmt.Sprint("The list of shapes and their properties.\n\n" +
-					"(structure)\n" +
-					"Information about a hardware system model (shape) that's\n " +
-					"available for an Exadata infrastructure. The shape determines\n" +
-					"resources, such as CPU cores, memory, and storage, to allocate to\n " +
-					"the Exadata infrastructure.\n"),
-				ElementType: types.ObjectType{
-
-					AttrTypes: map[string]attr.Type{
-						"available_core_count":                     types.Int32Type,
-						"available_core_count_per_node":            types.Int32Type,
-						"available_data_storage_in_tbs":            types.Int32Type,
-						"available_data_storage_per_server_in_tbs": types.Int32Type,
-						"available_db_node_per_node_in_gbs":        types.Int32Type,
-						"available_db_node_storage_in_gbs":         types.Int32Type,
-						"available_memory_in_gbs":                  types.Int32Type,
-						"available_memory_per_node_in_gbs":         types.Int32Type,
-						"core_count_increment":                     types.Int32Type,
-						"max_storage_count":                        types.Int32Type,
-						"maximum_node_count":                       types.Int32Type,
-						"min_core_count_per_node":                  types.Int32Type,
-						"min_data_storage_in_tbs":                  types.Int32Type,
-						"min_db_node_storage_per_node_in_gbs":      types.Int32Type,
-						"min_memory_per_node_in_gbs":               types.Int32Type,
-						"min_storage_count":                        types.Int32Type,
-						"minimum_core_count":                       types.Int32Type,
-						"minimum_node_count":                       types.Int32Type,
-						"name":                                     types.StringType,
-						"runtime_minimum_core_count":               types.Int32Type,
-						"shape_family":                             types.StringType,
-						"shape_type":                               types.StringType,
-					},
-				},
+				Description: "The list of shapes and their properties. Information about a hardware system model (shape) that's available for an Exadata infrastructure." +
+					"The shape determines resources, such as CPU cores, memory, and storage, to allocate to the Exadata infrastructure.",
 			},
 		},
 	}
 }
 
 func (d *dataSourceDbSystemShapesList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().ODBClient(ctx)
 
 	var data dbSystemShapesListDataSourceModel

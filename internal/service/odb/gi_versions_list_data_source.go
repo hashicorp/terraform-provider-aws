@@ -4,10 +4,7 @@ package odb
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/odb"
-
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -39,38 +36,22 @@ func (d *dataSourceGiVersionsList) Schema(ctx context.Context, req datasource.Sc
 				Optional:    true,
 				Description: "The system shape.",
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"gi_versions": schema.ListNestedBlock{
-				Description: fmt.Sprint(" (structure)\n " +
-					"Information about a specific version of Oracle Grid\n" +
-					"Infrastructure (GI) software that can be installed on a VM\n " +
-					"cluster.\n\n " +
-					"version -> (string)\n " +
-					"The GI software version."),
-				CustomType: fwtypes.NewListNestedObjectTypeOf[giVersionSummaryModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"version": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
+			"gi_versions": schema.ListAttribute{
+				Computed:    true,
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[giVersionSummaryModel](ctx),
+				Description: "Information about a specific version of Oracle Grid Infrastructure (GI) software that can be installed on a VM cluster.",
 			},
 		},
 	}
 }
 
 func (d *dataSourceGiVersionsList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().ODBClient(ctx)
-
 	var data giVersionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	var input odb.ListGiVersionsInput
 	if !data.Shape.IsNull() {
 		input.Shape = data.Shape.ValueStringPointer()
@@ -83,12 +64,10 @@ func (d *dataSourceGiVersionsList) Read(ctx context.Context, req datasource.Read
 		)
 		return
 	}
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
