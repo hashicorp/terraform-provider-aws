@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,10 +31,6 @@ func newBrowserSettingsAssociationResource(_ context.Context) (resource.Resource
 	return &browserSettingsAssociationResource{}, nil
 }
 
-const (
-	ResNameBrowserSettingsAssociation = "Browser Settings Association"
-)
-
 type browserSettingsAssociationResource struct {
 	framework.ResourceWithModel[browserSettingsAssociationResourceModel]
 }
@@ -43,13 +39,15 @@ func (r *browserSettingsAssociationResource) Schema(ctx context.Context, request
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"browser_settings_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"portal_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +73,7 @@ func (r *browserSettingsAssociationResource) Create(ctx context.Context, request
 	_, err := conn.AssociateBrowserSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameBrowserSettingsAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Browser Settings Association", err.Error())
 		return
 	}
 
@@ -100,7 +98,7 @@ func (r *browserSettingsAssociationResource) Read(ctx context.Context, request r
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameBrowserSettingsAssociation, data.BrowserSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Browser Settings Association (%s)", data.BrowserSettingsARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +110,6 @@ func (r *browserSettingsAssociationResource) Read(ctx context.Context, request r
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *browserSettingsAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *browserSettingsAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +132,7 @@ func (r *browserSettingsAssociationResource) Delete(ctx context.Context, request
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameBrowserSettingsAssociation, data.BrowserSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Browser Settings Association (%s)", data.BrowserSettingsARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +158,6 @@ func (r *browserSettingsAssociationResource) ImportState(ctx context.Context, re
 
 type browserSettingsAssociationResourceModel struct {
 	framework.WithRegionModel
-	BrowserSettingsARN types.String `tfsdk:"browser_settings_arn"`
-	PortalARN          types.String `tfsdk:"portal_arn"`
+	BrowserSettingsARN fwtypes.ARN `tfsdk:"browser_settings_arn"`
+	PortalARN          fwtypes.ARN `tfsdk:"portal_arn"`
 }
