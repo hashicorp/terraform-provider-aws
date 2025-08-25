@@ -472,7 +472,7 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 	const (
 		timeout = 2 * time.Minute
 	)
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (any, error) {
+	output, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateUserPoolClient(ctx, &input)
 	})
 

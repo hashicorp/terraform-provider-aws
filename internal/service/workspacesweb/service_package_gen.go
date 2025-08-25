@@ -34,11 +34,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newBrowserSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_browser_settings_association",
+			Name:     "Browser Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataProtectionSettingsResource,
 			TypeName: "aws_workspacesweb_data_protection_settings",
 			Name:     "Data Protection Settings",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "data_protection_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataProtectionSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_data_protection_settings_association",
+			Name:     "Data Protection Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newIdentityProviderResource,
+			TypeName: "aws_workspacesweb_identity_provider",
+			Name:     "Identity Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "identity_provider_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
@@ -52,11 +73,35 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newIPAccessSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_ip_access_settings_association",
+			Name:     "IP Access Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newNetworkSettingsResource,
 			TypeName: "aws_workspacesweb_network_settings",
 			Name:     "Network Settings",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "network_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newPortalResource,
+			TypeName: "aws_workspacesweb_portal",
+			Name:     "Portal",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "portal_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newTrustStoreResource,
+			TypeName: "aws_workspacesweb_trust_store",
+			Name:     "Trust Store",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "trust_store_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

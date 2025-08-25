@@ -473,7 +473,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidParameterException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.SetTopicAttributes(ctx, input)
 	})
 

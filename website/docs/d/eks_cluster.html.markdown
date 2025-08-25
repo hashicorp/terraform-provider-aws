@@ -50,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch time stamp in seconds for when the cluster was created.
+* `deletion_protection` - Whether deletion protection for the cluster is enabled.
 * `enabled_cluster_log_types` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
