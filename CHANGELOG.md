@@ -1,5 +1,10 @@
 ## 6.11.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_workspacesweb_portal` ([#43444](https://github.com/hashicorp/terraform-provider-aws/issues/43444))
+* **New Resource:** `aws_workspacesweb_trust_store` ([#43408](https://github.com/hashicorp/terraform-provider-aws/issues/43408))
+
 ENHANCEMENTS:
 
 * data-source/aws_network_interface: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
@@ -15,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_mwaa_environment: Add `worker_replacement_strategy` argument ([#43946](https://github.com/hashicorp/terraform-provider-aws/issues/43946))
 * resource/aws_network_interface: Add `attachment.network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
 * resource/aws_network_interface_attachment: Add `network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* resource/aws_route_table: Add resource identity support ([#43990](https://github.com/hashicorp/terraform-provider-aws/issues/43990))
 * resource/aws_s3_bucket_cors_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_logging: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_notification: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
