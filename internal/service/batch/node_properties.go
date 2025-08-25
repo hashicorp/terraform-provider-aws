@@ -6,6 +6,7 @@ package batch
 import (
 	_ "unsafe" // Required for go:linkname
 
+	"github.com/YakDriver/smarterr"
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
@@ -79,7 +80,7 @@ func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) 
 	apiObject := &awstypes.NodeProperties{}
 
 	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return apiObject, nil

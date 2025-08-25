@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -118,7 +119,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 
 func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data jobDefinitionDataSourceModel
-	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Config.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -136,8 +137,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		output, err := findJobDefinition(ctx, conn, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s)", arn), err.Error())
-
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, arn)
 			return
 		}
 
@@ -160,8 +160,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		}
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definitions (%s/%s)", name, status), err.Error())
-
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name, status)
 			return
 		}
 
@@ -179,8 +178,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			})
 
 			if i == -1 {
-				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError(input).Error())
-
+				smerr.AddError(ctx, &response.Diagnostics, tfresource.NewEmptyResultError(input), smerr.ID, name, status, revision)
 				return
 			}
 
@@ -188,7 +186,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		}
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jd, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, jd, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -198,7 +196,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	setTagsOut(ctx, jd.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.ConfigValidator {

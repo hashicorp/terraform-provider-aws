@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,7 +54,7 @@ func resourceJobDefinition() *schema.Resource {
 				identity := importer.IdentitySpec(ctx)
 
 				if err := importer.RegionalARN(ctx, rd, identity); err != nil {
-					return nil, err
+					return nil, smarterr.NewError(err)
 				}
 
 				rd.Set("deregister_on_new_revision", true)
@@ -752,7 +754,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("container_properties"); ok {
 			props, err := expandContainerProperties(v.(string))
 			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
@@ -762,7 +764,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		if v, ok := d.GetOk("ecs_properties"); ok {
 			props, err := expandECSProperties(v.(string))
 			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			for _, taskProps := range props.TaskProperties {
@@ -785,19 +787,19 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	case awstypes.JobDefinitionTypeMultinode:
 		if v, ok := d.GetOk("container_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No `container_properties` can be specified when `type` is %q", jobDefinitionType), smerr.ID, name)
 		}
 		if v, ok := d.GetOk("ecs_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `ecs_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No ecs_properties can be specified when type is %q", jobDefinitionType), smerr.ID, name)
 		}
 		if v, ok := d.GetOk("eks_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `eks_properties` can be specified when `type` is %q", jobDefinitionType)
+			return smerr.Append(ctx, diags, fmt.Errorf("No eks_properties can be specified when type is %q", jobDefinitionType), smerr.ID, name)
 		}
 
 		if v, ok := d.GetOk("node_properties"); ok {
 			props, err := expandJobNodeProperties(v.(string))
 			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+				return smerr.Append(ctx, diags, err, smerr.ID, name)
 			}
 
 			for _, node := range props.NodeRangeProperties {
@@ -832,7 +834,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.RegisterJobDefinition(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(aws.ToString(output.JobDefinitionArn))
@@ -853,7 +855,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
@@ -861,31 +863,31 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set("container_properties", containerProperties)
 	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set("ecs_properties", ecsProperties)
 	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, arn)
 	}
 	d.Set(names.AttrParameters, jobDefinition.Parameters)
 	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
 	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []any{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, arn)
 		}
 	} else {
 		d.Set("retry_strategy", nil)
@@ -894,7 +896,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 	if jobDefinition.Timeout != nil {
 		if err := d.Set(names.AttrTimeout, []any{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, arn)
 		}
 	} else {
 		d.Set(names.AttrTimeout, nil)
@@ -924,7 +926,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("container_properties"); ok {
 				props, err := expandContainerProperties(v.(string))
 				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
@@ -934,7 +936,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("ecs_properties"); ok {
 				props, err := expandECSProperties(v.(string))
 				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				for _, taskProps := range props.TaskProperties {
@@ -959,7 +961,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			if v, ok := d.GetOk("node_properties"); ok {
 				props, err := expandJobNodeProperties(v.(string))
 				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
+					return smerr.Append(ctx, diags, err, smerr.ID, name)
 				}
 
 				for _, node := range props.NodeRangeProperties {
@@ -996,7 +998,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		jd, err := conn.RegisterJobDefinition(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
+			return smerr.Append(ctx, diags, err, smerr.ID, name)
 		}
 
 		// arn contains revision which is used in the Read call
@@ -1014,7 +1016,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
+				return smerr.Append(ctx, diags, err, smerr.ID, currentARN)
 			}
 		}
 	}
@@ -1035,7 +1037,7 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	jds, err := findJobDefinitions(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definitions (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	for i := range jds {
@@ -1048,7 +1050,7 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.DeregisterJobDefinition(ctx, &input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)
+			return smerr.Append(ctx, diags, err, smerr.ID, arn)
 		}
 	}
 
@@ -1066,14 +1068,14 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 	output, err := findJobDefinition(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
-		}
+		})
 	}
 
 	return output, nil
@@ -1083,10 +1085,10 @@ func findJobDefinition(ctx context.Context, conn *batch.Client, input *batch.Des
 	output, err := findJobDefinitions(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]awstypes.JobDefinition, error) {
@@ -1097,7 +1099,7 @@ func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.De
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		output = append(output, page.JobDefinitions...)

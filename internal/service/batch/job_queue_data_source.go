@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -104,7 +104,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta an
 	jobQueue, err := findJobQueueByID(ctx, conn, d.Get(names.AttrName).(string))
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Batch Job Queue", err))
+		return smerr.Append(ctx, diags, tfresource.SingularDataSourceFindError("Batch Job Queue", err))
 	}
 
 	arn := aws.ToString(jobQueue.JobQueueArn)
@@ -125,7 +125,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta an
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("compute_environment_order", tfList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	tfList = make([]any, 0)
@@ -138,7 +138,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta an
 		tfList = append(tfList, tfMap)
 	}
 	if err := d.Set("job_state_time_limit_action", tfList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting job_state_time_limit_action: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)
