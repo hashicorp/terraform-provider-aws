@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account` - (Required) The Amazon Web Services account ID to grant access to.
 * `clusterIdentifier` - (Required) The cluster identifier of the cluster to grant access to.
 * `forceDelete` - (Optional) Indicates whether to force the revoke action. If true, the Redshift-managed VPC endpoints associated with the endpoint authorization are also deleted. Default value is `false`.
@@ -88,4 +89,4 @@ Using `terraform import`, import Redshift endpoint authorization using the `id`.
 % terraform import aws_redshift_endpoint_authorization.example 01234567910:cluster-example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b9e5ce4e1f7abe40dbf21f61540bacd5f31c67c081dc3bdd6f2ce8318ce44e5e -->
+<!-- cache-key: cdktf-0.20.8 input-761e84dac610556704615c0c053c69805bee16661ae464f54b6d77ed3878c04d -->

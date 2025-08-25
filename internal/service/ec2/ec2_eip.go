@@ -13,7 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -86,7 +86,7 @@ func resourceEIP() *schema.Resource {
 				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.DomainType](),
+				ValidateDiagFunc: enum.Validate[awstypes.DomainType](),
 			},
 			"instance": {
 				Type:     schema.TypeString,
@@ -147,7 +147,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := ec2.AllocateAddressInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, types.ResourceTypeElasticIp),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeElasticIp),
 	}
 
 	if v, ok := d.GetOk(names.AttrAddress); ok {
@@ -159,7 +159,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	if v := d.Get(names.AttrDomain); v != nil && v.(string) != "" {
-		input.Domain = types.DomainType(v.(string))
+		input.Domain = awstypes.DomainType(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
@@ -182,7 +182,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(aws.ToString(output.AllocationId))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	})
 
@@ -192,7 +192,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	if instanceID, eniID := d.Get("instance").(string), d.Get("network_interface").(string); instanceID != "" || eniID != "" {
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
 
@@ -209,10 +209,10 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	address, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Address, error) {
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -226,7 +226,6 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s): %s", d.Id(), err)
 	}
 
-	address := outputRaw.(*types.Address)
 	allocationID := aws.ToString(address.AllocationId)
 	d.Set("allocation_id", allocationID)
 	d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
@@ -253,7 +252,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.
-	if address.Domain == types.DomainTypeVpc && net.ParseIP(d.Id()) != nil {
+	if address.Domain == awstypes.DomainTypeVpc && net.ParseIP(d.Id()) != nil {
 		d.SetId(aws.ToString(address.AllocationId))
 	}
 
@@ -304,7 +303,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, awstypes.DomainTypeStandard)
 	}
 
 	// If we are attached to an instance or interface, detach first.
@@ -339,7 +338,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		const (
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
-		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 
@@ -432,7 +431,7 @@ func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
 }
 
-func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]types.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]awstypes.IpamPoolAllocation, error) {
 	input := ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(ipamPoolID),
 	}
@@ -443,8 +442,8 @@ func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPo
 		return nil, err
 	}
 
-	output = tfslices.Filter(output, func(v types.IpamPoolAllocation) bool {
-		return v.ResourceType == types.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
+	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
+		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
 	})
 
 	if len(output) == 0 {

@@ -140,7 +140,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	user, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.User, error) {
 		return findUserByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -153,8 +153,6 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): %s", d.Id(), err)
 	}
-
-	user := outputRaw.(*awstypes.User)
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrName, user.UserName)

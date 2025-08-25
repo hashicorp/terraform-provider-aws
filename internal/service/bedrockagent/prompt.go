@@ -1084,8 +1084,8 @@ func (m *systemContentBlockModel) Flatten(ctx context.Context, v any) diag.Diagn
 }
 
 type toolConfigurationModel struct {
-	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 	ToolChoice fwtypes.ListNestedObjectValueOf[toolChoiceModel] `tfsdk:"tool_choice"`
+	Tools      fwtypes.ListNestedObjectValueOf[toolModel]       `tfsdk:"tool"`
 }
 
 type toolModel struct {

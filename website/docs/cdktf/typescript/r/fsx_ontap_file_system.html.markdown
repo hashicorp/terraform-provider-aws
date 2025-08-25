@@ -118,6 +118,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storageCapacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608` for file systems with deployment_type `SINGLE_AZ_1` and `MULTI_AZ_1`. Valid values are between `1024` and `524288` for `MULTI_AZ_2`. Valid values between `1024` (`1024` per ha pair) and `1048576` for file systems with deployment_type `SINGLE_AZ_2`. For `SINGLE_AZ_2`, the `1048576` (1PB) maximum is only supported when using 2 or more ha_pairs, the maximum is `524288` (512TB) when using 1 ha_pair.
 * `subnetIds` - (Required) A list of IDs for the subnets that the file system will be accessible from. Up to 2 subnets can be provided.
 * `preferredSubnetId` - (Required) The ID for a subnet. A subnet is a range of IP addresses in your virtual private cloud (VPC).
@@ -242,4 +243,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-49e2c4086b95a691bba1cbde96e79635e0a6640ebbc9aec02bd642986523522a -->
+<!-- cache-key: cdktf-0.20.8 input-2aec9dc9903e968d1eab661850508bedca88493cb8d8833b4ada988b28869664 -->

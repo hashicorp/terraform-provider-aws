@@ -82,14 +82,13 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Name of the region whose AWS ELB account ID is desired.
-  Defaults to the region from the AWS provider configuration.
+* `region` - (Optional) Name of the Region whose AWS ELB account ID is desired. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the AWS ELB service account in the selected region.
-* `arn` - ARN of the AWS ELB service account in the selected region.
+* `id` - ID of the AWS ELB service account in the selected Region.
+* `arn` - ARN of the AWS ELB service account in the selected Region.
 
-<!-- cache-key: cdktf-0.20.8 input-64a94a6942df7853525def2ee452a38e65c6060dbece598a35a77071499b6ade -->
+<!-- cache-key: cdktf-0.20.8 input-01a71108609340c3588beda0cccbdc783ff0ddaa21967ddf223431df9f4dcc81 -->

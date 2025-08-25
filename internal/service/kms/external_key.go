@@ -344,7 +344,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.GetParametersForImport(ctx, &inputGPFI)
 	})
 
@@ -387,7 +387,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.ImportKeyMaterial(ctx, &inputIKM)
 	})
 
@@ -419,7 +419,7 @@ func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (
 }
 
 func waitKeyValidToPropagated(ctx context.Context, conn *kms.Client, id string, validTo string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

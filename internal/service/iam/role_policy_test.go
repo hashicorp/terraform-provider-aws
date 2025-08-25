@@ -240,7 +240,7 @@ func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
 }
 
 // Resource Identity was added in v6.1
-func TestAccIAMRolePolicy_Identity_ExistingResource(t *testing.T) {
+func TestAccIAMRolePolicy_Identity_old(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rolePolicy string
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

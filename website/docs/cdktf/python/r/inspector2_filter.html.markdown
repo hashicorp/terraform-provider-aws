@@ -52,6 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description
 * `reason` - (Optional) Reason for creating the filter
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -178,10 +179,10 @@ class MyConvertedCode(TerraformStack):
         Inspector2Filter.generate_config_for_import(self, "example", "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678")
 ```
 
-Using `terraform import`, import Inspector Filter using the `example_id_arg`. For example:
+Using `terraform import`, import Inspector Filter using the `arn`. For example:
 
 ```console
 % terraform import aws_inspector2_filter.example "arn:aws:inspector2:us-east-1:111222333444:owner/111222333444/filter/abcdefgh12345678"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d16187b3467414ed44b1e92f921749e94002269c71b6785de2b070618914b42e -->
+<!-- cache-key: cdktf-0.20.8 input-8931d6ebeb6fc5a42c0e0673c61437a6bb8b0d5b80625beec92e0ec3c179cecf -->

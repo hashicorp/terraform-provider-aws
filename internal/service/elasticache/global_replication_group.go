@@ -20,12 +20,12 @@ import (
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -400,7 +400,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -648,7 +648,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
 	})
 
@@ -696,8 +696,7 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 
 		if errs.IsA[*awstypes.GlobalReplicationGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -715,11 +714,11 @@ func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, 
 	return output, nil
 }
 
-func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalReplicationGroup(conn *elasticache.Client, globalReplicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -750,7 +749,7 @@ func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupStatusCreating, globalReplicationGroupStatusModifying},
 		Target:     []string{globalReplicationGroupStatusAvailable, globalReplicationGroupStatusPrimaryOnly},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -774,7 +773,7 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 			globalReplicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
+		Refresh:    statusGlobalReplicationGroup(conn, globalReplicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -811,11 +810,11 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -835,7 +834,7 @@ func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elastic
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID),
+		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

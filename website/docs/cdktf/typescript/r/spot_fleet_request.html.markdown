@@ -291,6 +291,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `iamFleetRole` - (Required) Grants the Spot fleet permission to terminate
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
@@ -538,4 +539,4 @@ Using `terraform import`, import Spot Fleet Requests using `id`. For example:
 % terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e26359c3eceb469e6f1a81f4598b65761d0418d8c29d2c95a606f8e9bc02ea90 -->
+<!-- cache-key: cdktf-0.20.8 input-e5a0aaa40315b2f21a986dcce9eff39fdf899798174374e9f12ea429ece4c06f -->

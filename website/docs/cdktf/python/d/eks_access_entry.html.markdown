@@ -39,8 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
 
 ## Attribute Reference
 
@@ -48,10 +49,10 @@ This data source exports the following attributes in addition to the arguments a
 
 * `access_entry_arn` - Amazon Resource Name (ARN) of the Access Entry.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
-* `kubernetes_groups` – List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
+* `kubernetes_groups` - List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 * `user_name` - Defaults to principal ARN if user is principal else defaults to assume-role/session-name is role is used.
 * `type` - Defaults to STANDARD which provides the standard workflow. EC2_LINUX, EC2_WINDOWS, FARGATE_LINUX types disallow users to input a username or groups, and prevent associations.
 * `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.20.8 input-4fa212fde63055eb523af1a4546bb034582c5e2ed4553f8c08b8842ad4f16aa2 -->
+<!-- cache-key: cdktf-0.20.8 input-438079fb251c5377a358eab6cd2e1803f62a912fa392536d95770ed31cf0b6d0 -->

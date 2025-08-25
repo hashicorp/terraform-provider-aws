@@ -28,13 +28,14 @@ import (
 // @SingletonIdentity(identityDuplicateAttributes="id")
 // @Testing(generator=false)
 // @Testing(hasExistsFunction=false, checkDestroyNoop=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAccountRegistrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &accountRegistrationResource{}, nil
 }
 
 type accountRegistrationResource struct {
 	framework.ResourceWithModel[accountRegistrationResourceModel]
-	framework.WithImportRegionalSingleton
+	framework.WithImportByIdentity
 }
 
 func (r *accountRegistrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

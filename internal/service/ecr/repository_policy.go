@@ -65,7 +65,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		RepositoryName: aws.String(repositoryName),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.SetRepositoryPolicy(ctx, input)
 	}, "Principal not found")
 
@@ -84,7 +84,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetRepositoryPolicyOutput, error) {
 		return findRepositoryPolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -97,8 +97,6 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetRepositoryPolicyOutput)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyText))
 	if err != nil {

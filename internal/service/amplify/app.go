@@ -423,7 +423,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Repository = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.BadRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateApp(ctx, &input)
 	}, "role provided cannot be assumed")
 
@@ -460,7 +460,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	} else {
 		d.Set("auto_branch_creation_config", nil)
 	}
-	d.Set("auto_branch_creation_patterns", aws.StringSlice(app.AutoBranchCreationPatterns))
+	d.Set("auto_branch_creation_patterns", app.AutoBranchCreationPatterns)
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
 	if app.CacheConfig != nil {

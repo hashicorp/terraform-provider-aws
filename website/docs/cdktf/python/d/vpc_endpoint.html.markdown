@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
 * `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
@@ -102,4 +103,4 @@ DNS options (for `dns_options`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-56935e7a0435d6765a401fa5191c954fcbfe6c8041bf5971023fcb60a88357f5 -->
+<!-- cache-key: cdktf-0.20.8 input-a605677c0f64c9d8f492b0f541857e95c65d914e7e5207ca844a206a7f53aeb2 -->

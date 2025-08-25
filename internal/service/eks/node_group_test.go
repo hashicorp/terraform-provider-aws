@@ -549,7 +549,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.27"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion130),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", ssmParameterDataSourceName, names.AttrValue),
@@ -561,7 +561,7 @@ func TestAccEKSNodeGroup_releaseVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_releaseVersion(rName, "1.28"),
+				Config: testAccNodeGroupConfig_releaseVersion(rName, clusterVersion131),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
@@ -1092,6 +1092,14 @@ func testAccNodeGroupConfig_iamAndVPCBase(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
+data "aws_service_principal" "eks_nodegroup" {
+  service_name = "eks-nodegroup"
+}
+
 resource "aws_iam_role" "cluster" {
   name = "%[1]s-cluster"
 
@@ -1101,8 +1109,8 @@ resource "aws_iam_role" "cluster" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "eks.${data.aws_partition.current.dns_suffix}",
-          "eks-nodegroup.${data.aws_partition.current.dns_suffix}",
+          data.aws_service_principal.eks.name,
+          data.aws_service_principal.eks_nodegroup.name,
         ]
       }
     }]
@@ -1115,6 +1123,10 @@ resource "aws_iam_role_policy_attachment" "cluster-AmazonEKSClusterPolicy" {
   role       = aws_iam_role.cluster.name
 }
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_iam_role" "node" {
   name = "%[1]s-node"
 
@@ -1123,7 +1135,7 @@ resource "aws_iam_role" "node" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.ec2.name
       }
     }]
     Version = "2012-10-17"
@@ -1142,6 +1154,11 @@ resource "aws_iam_role_policy_attachment" "node-AmazonEKS_CNI_Policy" {
 
 resource "aws_iam_role_policy_attachment" "node-AmazonEC2ContainerRegistryReadOnly" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.node.name
+}
+
+resource "aws_iam_role_policy_attachment" "node-AmazonEKSWorkerNodeMinimalPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
   role       = aws_iam_role.node.name
 }
 
@@ -1228,9 +1245,11 @@ func testAccNodeGroupConfig_base(rName string) string {
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
+  version  = %[2]q
 
   vpc_config {
-    subnet_ids = aws_subnet.test[*].id
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
   }
 
   depends_on = [
@@ -1238,7 +1257,7 @@ resource "aws_eks_cluster" "test" {
     aws_main_route_table_association.test,
   ]
 }
-`, rName))
+`, rName, clusterDefaultVersion))
 }
 
 func testAccNodeGroupConfig_versionBase(rName string, version string) string {
@@ -1280,6 +1299,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1302,6 +1322,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `)
@@ -1325,6 +1346,7 @@ resource "aws_eks_node_group" "test" {
     "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
     "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
     "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy",
   ]
 }
 `, namePrefix))
@@ -1349,6 +1371,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, amiType))
@@ -1373,6 +1396,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, capacityType))
@@ -1397,6 +1421,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, diskSize))
@@ -1422,6 +1447,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1450,6 +1476,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, instanceTypes, rName))
@@ -1485,6 +1512,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1512,6 +1540,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, labelKey1, labelValue1))
@@ -1540,6 +1569,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, labelKey1, labelValue1, labelKey2, labelValue2))
@@ -1558,6 +1588,8 @@ resource "aws_launch_template" "test1" {
   instance_type = "t3.medium"
   name          = "%[1]s-1"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_launch_template" "test2" {
@@ -1565,6 +1597,8 @@ resource "aws_launch_template" "test2" {
   instance_type = "t3.medium"
   name          = "%[1]s-2"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1588,6 +1622,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1606,6 +1641,8 @@ resource "aws_launch_template" "test1" {
   instance_type = "t3.medium"
   name          = "%[1]s-1"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_launch_template" "test2" {
@@ -1613,6 +1650,8 @@ resource "aws_launch_template" "test2" {
   instance_type = "t3.medium"
   name          = "%[1]s-2"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1636,6 +1675,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1654,6 +1694,8 @@ resource "aws_launch_template" "test1" {
   instance_type = "t3.medium"
   name          = "%[1]s-1"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_launch_template" "test2" {
@@ -1661,6 +1703,8 @@ resource "aws_launch_template" "test2" {
   instance_type = "t3.medium"
   name          = "%[1]s-2"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1684,6 +1728,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1702,6 +1747,8 @@ resource "aws_launch_template" "test1" {
   instance_type = "t3.medium"
   name          = "%[1]s-1"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_launch_template" "test2" {
@@ -1709,6 +1756,8 @@ resource "aws_launch_template" "test2" {
   instance_type = "t3.medium"
   name          = "%[1]s-2"
   user_data     = base64encode(templatefile("testdata/node-group-launch-template-user-data.sh.tmpl", { cluster_name = aws_eks_cluster.test.name }))
+
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_eks_node_group" "test" {
@@ -1732,6 +1781,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1774,6 +1824,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1816,6 +1867,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1845,6 +1897,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -1877,6 +1930,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, publicKey))
@@ -1910,6 +1964,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, publicKey))
@@ -1933,6 +1988,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, desiredSize, maxSize, minSize))
@@ -1960,6 +2016,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, tagKey1, tagValue1))
@@ -1988,6 +2045,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
@@ -2017,6 +2075,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, taintKey1, taintValue1, taintEffect1))
@@ -2052,6 +2111,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
@@ -2079,6 +2139,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -2106,6 +2167,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -2133,6 +2195,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))
@@ -2157,6 +2220,7 @@ resource "aws_eks_node_group" "test" {
     aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
   ]
 }
 `, rName))

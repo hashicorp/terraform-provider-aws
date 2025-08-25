@@ -2430,7 +2430,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta any)
 
 func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDBInstanceReadReplica(ctx, input)
 		},
 		errCodeInvalidParameterValue, "ENHANCED_MONITORING")

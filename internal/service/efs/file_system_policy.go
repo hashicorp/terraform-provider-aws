@@ -67,7 +67,7 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		Policy:                         aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidPolicyException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutFileSystemPolicy(ctx, input)
 	}, "Policy contains invalid Principal block")
 

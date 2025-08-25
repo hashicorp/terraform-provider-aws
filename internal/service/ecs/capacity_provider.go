@@ -206,7 +206,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 		const (
 			timeout = 10 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.UpdateInProgressException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateCapacityProvider(ctx, input)
 		})
 
@@ -386,7 +386,7 @@ func expandAutoScalingGroupProviderCreate(configured any) *awstypes.AutoScalingG
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
@@ -413,7 +413,7 @@ func expandAutoScalingGroupProviderUpdate(configured any) *awstypes.AutoScalingG
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
@@ -438,7 +438,7 @@ func expandManagedScaling(configured any) *awstypes.ManagedScaling {
 		return nil
 	}
 
-	if configured.([]any) == nil || len(configured.([]any)) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 

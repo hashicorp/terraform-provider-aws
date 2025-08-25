@@ -287,7 +287,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteBackupPlan(ctx, &backup.DeleteBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 		})

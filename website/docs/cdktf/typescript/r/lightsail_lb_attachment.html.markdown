@@ -82,6 +82,10 @@ The following arguments are required:
 * `instanceName` - (Required) Name of the instance to attach to the load balancer.
 * `lbName` - (Required) Name of the Lightsail load balancer.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -120,4 +124,4 @@ Using `terraform import`, import `aws_lightsail_lb_attachment` using the name at
 % terraform import aws_lightsail_lb_attachment.example example-load-balancer,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ed231a9dd45b98f30e16e0c30d816f33e81f23a794720d0c166c563a6d1bd742 -->
+<!-- cache-key: cdktf-0.20.8 input-7bceaf6112d577dbf6588349f889c9bb636869950018e438e7116cea4b02d43e -->

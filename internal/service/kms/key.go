@@ -350,7 +350,7 @@ type kmsKeyInfo struct {
 
 func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResource bool) (*kmsKeyInfo, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	return tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*kmsKeyInfo, error) {
 		var err error
 		var key kmsKeyInfo
 
@@ -394,12 +394,6 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 
 		return &key, nil
 	}, isNewResource)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return outputRaw.(*kmsKeyInfo), nil
 }
 
 func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...func(*kms.Options)) (*awstypes.KeyMetadata, error) {
@@ -532,7 +526,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -554,7 +548,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -572,7 +566,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return err
 	}
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 		input := kms.PutKeyPolicyInput{
 			BypassPolicyLockoutSafetyCheck: bypassPolicyLockoutSafetyCheck,
@@ -586,7 +580,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.MalformedPolicyDocumentException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("updating %s (%s) policy: %w", resourceTypeName, keyID, err)
 	}
 
@@ -601,7 +595,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.Client, resourceTypeName, ke
 func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool, rotationPeriod int) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -626,7 +620,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsOneOf2[*awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsOneOf2[any, *awstypes.NotFoundException, *awstypes.DisabledException](ctx, keyRotationUpdatedTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s) rotation: %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -655,7 +649,7 @@ func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.S
 }
 
 func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID string, description string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
@@ -700,7 +694,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 }
 
 func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, policy string) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
 		if tfresource.NotFound(err) {
@@ -731,7 +725,7 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 }
 
 func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool, rotationPeriodWant int) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {
@@ -757,7 +751,7 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 }
 
 func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string, enabled bool) error {
-	checkFunc := func() (bool, error) {
+	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
 		if tfresource.NotFound(err) {

@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workgroup_name` - (Required) The name of the workgroup associated with the database.
 
 ## Attribute Reference
@@ -72,4 +73,4 @@ This data source exports the following attributes in addition to the arguments a
 * `private_ip_address` - The IPv4 address of the network interface within the subnet.
 * `subnet_id` - The unique identifier of the subnet.
 
-<!-- cache-key: cdktf-0.20.8 input-525b6cf8edcb8c6c707ae1198ae8971be0919721f57c6dfd1a0302674bf07546 -->
+<!-- cache-key: cdktf-0.20.8 input-694cd55672591c32871dd2095116e69edec959f297502c13cb90376417ca136b -->

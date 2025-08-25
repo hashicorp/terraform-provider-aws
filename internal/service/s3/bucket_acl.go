@@ -172,7 +172,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.AccessControlPolicy = expandAccessControlPolicy(v.([]any))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketAcl(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -186,7 +186,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findBucketACL(ctx, conn, bucket, expectedBucketOwner)
 	})
 

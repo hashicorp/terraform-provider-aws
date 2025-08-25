@@ -40,6 +40,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
+// @Testing(preIdentityVersion="v5.100.0")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 
@@ -53,7 +54,7 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 type jobQueueResource struct {
 	framework.ResourceWithModel[jobQueueResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByARN
+	framework.WithImportByIdentity
 }
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

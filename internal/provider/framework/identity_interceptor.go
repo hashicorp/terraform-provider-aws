@@ -7,10 +7,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,11 +16,10 @@ import (
 var _ resourceCRUDInterceptor = identityInterceptor{}
 
 type identityInterceptor struct {
-	attributes []string
+	attributes []inttypes.IdentityAttribute
 }
 
-func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions[resource.CreateRequest, resource.CreateResponse]) {
 	awsClient := opts.c
 
 	switch response, when := opts.response, opts.when; when {
@@ -32,40 +29,37 @@ func (r identityInterceptor) create(ctx context.Context, opts interceptorOptions
 			break
 		}
 
-		for _, attrName := range r.attributes {
-			switch attrName {
+		for _, att := range r.attributes {
+			switch att.Name() {
 			case names.AttrAccountID:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.AccountID(ctx))...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
 			case names.AttrRegion:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.Region(ctx))...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
 			default:
 				var attrVal attr.Value
-				diags.Append(response.State.GetAttribute(ctx, path.Root(attrName), &attrVal)...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), attrVal)...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 			}
 		}
 	}
-
-	return diags
 }
 
-func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[resource.ReadRequest, resource.ReadResponse]) {
 	awsClient := opts.c
 
 	switch response, when := opts.response, opts.when; when {
@@ -78,52 +72,44 @@ func (r identityInterceptor) read(ctx context.Context, opts interceptorOptions[r
 			break
 		}
 
-		for _, attrName := range r.attributes {
-			switch attrName {
+		for _, att := range r.attributes {
+			switch att.Name() {
 			case names.AttrAccountID:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.AccountID(ctx))...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
 			case names.AttrRegion:
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), awsClient.Region(ctx))...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
 			default:
 				var attrVal attr.Value
-				diags.Append(response.State.GetAttribute(ctx, path.Root(attrName), &attrVal)...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(response.State.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 
-				diags.Append(identity.SetAttribute(ctx, path.Root(attrName), attrVal)...)
-				if diags.HasError() {
-					return diags
+				opts.response.Diagnostics.Append(identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
+				if opts.response.Diagnostics.HasError() {
+					return
 				}
 			}
 		}
 	}
-
-	return diags
 }
 
-func (r identityInterceptor) update(ctx context.Context, opts interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func (r identityInterceptor) update(ctx context.Context, opts interceptorOptions[resource.UpdateRequest, resource.UpdateResponse]) {
 }
 
-func (r identityInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func (r identityInterceptor) delete(ctx context.Context, opts interceptorOptions[resource.DeleteRequest, resource.DeleteResponse]) {
 }
 
 func newIdentityInterceptor(attributes []inttypes.IdentityAttribute) identityInterceptor {
 	return identityInterceptor{
-		attributes: tfslices.ApplyToAll(attributes, func(v inttypes.IdentityAttribute) string {
-			return v.Name
-		}),
+		attributes: attributes,
 	}
 }

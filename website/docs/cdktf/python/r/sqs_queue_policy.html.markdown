@@ -119,6 +119,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policy` - (Required) JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Ensure that `Version = "2012-10-17"` is set in the policy or AWS may hang in creating the queue.
 * `queue_url` - (Required) URL of the SQS Queue to which to attach the policy.
 
@@ -151,4 +152,4 @@ Using `terraform import`, import SQS Queue Policies using the queue URL. For exa
 % terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5555f36627fbd1f1a3309a2c61f2ac45b3b761e494b6220f2cc708242288f543 -->
+<!-- cache-key: cdktf-0.20.8 input-41d7cdd0aa2ee685d98b35400cbcb10a4428854398d408a975df8b488858c1f0 -->

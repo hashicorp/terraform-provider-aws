@@ -35,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupVpcAssociation")
 // @Testing(importStateIdFunc=testAccSecurityGroupVPCAssociationImportStateIDFunc)
 // @Testing(importStateIdAttribute="vpc_id")
+// @Testing(preIdentityVersion="6.0.0")
 func newSecurityGroupVPCAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupVPCAssociationResource{}
 
@@ -53,7 +54,7 @@ type securityGroupVPCAssociationResource struct {
 	framework.ResourceWithModel[securityGroupVPCAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
-	framework.WithImportByParameterizedIdentity
+	framework.WithImportByIdentity
 }
 
 func (r *securityGroupVPCAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

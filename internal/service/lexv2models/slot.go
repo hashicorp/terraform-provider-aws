@@ -478,7 +478,7 @@ func (r *slotResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 
 	subSlotSettingLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotSettingData](ctx, fwtypes.WithSemanticEqualityFunc(subSlotSettingEqualityFunc)),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				names.AttrExpression: schema.StringAttribute{
@@ -489,10 +489,13 @@ func (r *slotResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				"slot_specification": slotSpecificationsLNB,
 			},
 		},
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
 	}
 
 	valueElicitationSettingLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ValueElicitationSettingData](ctx, fwtypes.WithSemanticEqualityFunc(valueElicitationSettingEqualityFunc)),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtMost(1),

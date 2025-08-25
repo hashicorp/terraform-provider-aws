@@ -8,19 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,12 +24,11 @@ func TestAccSSOAdminTrustedTokenIssuer_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:             testAccSSOAdminTrustedTokenIssuer_basic,
-		acctest.CtDisappears:        testAccSSOAdminTrustedTokenIssuer_disappears,
-		"update":                    testAccSSOAdminTrustedTokenIssuer_update,
-		"tags":                      testAccSSOAdminTrustedTokenIssuer_tags,
-		"Identity":                  testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
-		"Identity_ExistingResource": testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource,
+		acctest.CtBasic:      testAccSSOAdminTrustedTokenIssuer_basic,
+		acctest.CtDisappears: testAccSSOAdminTrustedTokenIssuer_disappears,
+		"update":             testAccSSOAdminTrustedTokenIssuer_update,
+		"tags":               testAccSSOAdminTrustedTokenIssuer_tags,
+		"Identity":           testAccSSOAdminTrustedTokenIssuer_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -180,86 +172,6 @@ func testAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-		},
-	})
-}
-
-func testAccSSOAdminTrustedTokenIssuer_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var application ssoadmin.DescribeTrustedTokenIssuerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_trusted_token_issuer.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckTrustedTokenIssuerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccTrustedTokenIssuerConfigBase_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccTrustedTokenIssuerConfigBase_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN:    tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/.+`)),
-						names.AttrRegion: knownvalue.StringExact(acctest.Region()),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccTrustedTokenIssuerConfigBase_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrARN:    tfknownvalue.GlobalARNRegexp("sso", regexache.MustCompile(`trustedTokenIssuer/.+`)),
-						names.AttrRegion: knownvalue.StringExact(acctest.Region()),
-					}),
-				},
 			},
 		},
 	})

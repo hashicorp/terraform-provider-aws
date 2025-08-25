@@ -6,7 +6,6 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -349,52 +349,42 @@ func testAccCheckImageVersionDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			name := rs.Primary.Attributes["image_name"]
-			version, err := strconv.Atoi(rs.Primary.Attributes[names.AttrVersion])
-			if err != nil {
-				return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
-			}
-
-			_, err = tfsagemaker.FindImageVersionByTwoPartKey(ctx, conn, name, version)
+			version := flex.StringValueToInt32Value(rs.Primary.Attributes[names.AttrVersion])
+			_, err := tfsagemaker.FindImageVersionByTwoPartKey(ctx, conn, name, version)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			return fmt.Errorf("SageMaker AI Image Version %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Image Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckImageVersionExists(ctx context.Context, n string, image *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
+func testAccCheckImageVersionExists(ctx context.Context, n string, v *sagemaker.DescribeImageVersionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		name := rs.Primary.Attributes["image_name"]
-		version, err := strconv.Atoi(rs.Primary.Attributes[names.AttrVersion])
-		if err != nil {
-			return fmt.Errorf("reading SageMaker AI Image Version (%s): %w", rs.Primary.ID, err)
-		}
-
-		if name == "" || version == 0 {
-			return fmt.Errorf("image_name or version not set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
-		resp, err := tfsagemaker.FindImageVersionByTwoPartKey(ctx, conn, name, version)
+
+		name := rs.Primary.Attributes["image_name"]
+		version := flex.StringValueToInt32Value(rs.Primary.Attributes[names.AttrVersion])
+		output, err := tfsagemaker.FindImageVersionByTwoPartKey(ctx, conn, name, version)
+
 		if err != nil {
 			return err
 		}
 
-		*image = *resp
+		*v = *output
 
 		return nil
 	}

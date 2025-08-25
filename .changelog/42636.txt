@@ -1,7 +1,3 @@
 ```release-note:enhancement
-resource/aws_elasticache_global_replication_group: Support `engine` attribute for Valkey
-```
-
-```release-note:bug
-resource/aws_elasticache_replication_group: Correctly set Valkey engine on secondary replication groups using global datastores
+resource/aws_elasticache_global_replication_group: Change `engine` to Optional and Computed
 ```

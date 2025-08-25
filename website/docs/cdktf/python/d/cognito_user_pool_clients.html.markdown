@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `user_pool_id` - (Required) Cognito user pool ID.
 
 ## Attribute Reference
@@ -44,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `client_ids` - List of Cognito user pool client IDs.
 * `client_names` - List of Cognito user pool client names.
 
-<!-- cache-key: cdktf-0.20.8 input-5d46d65117330e50b9ad16de4543c28f81a268a8030a29be87a54c31e4e826fb -->
+<!-- cache-key: cdktf-0.20.8 input-d1ba1437862a2086df286ecf7153bdcd9533d4b31910b01561b6365f1c050020 -->

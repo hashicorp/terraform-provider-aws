@@ -34,7 +34,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -45,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
     * `modelArn` - The ARN of the custom model.
     * `modelName` - The name of the custom model.
 
-<!-- cache-key: cdktf-0.20.8 input-5a092b76015697e2ea6a65880a8c04a9699ca462fc5ea1d0e41140b038f713d5 -->
+<!-- cache-key: cdktf-0.20.8 input-d1881da909ccef9d20a5abcf45953e62ae3452378c09b7199e1bfa66d79334e5 -->

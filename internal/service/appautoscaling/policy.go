@@ -307,7 +307,7 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) di
 	id := d.Get(names.AttrName).(string)
 	input := expandPutScalingPolicyInput(d)
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutScalingPolicy(ctx, &input)
 	})
 
@@ -326,7 +326,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 	})
 
@@ -371,7 +371,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 		ServiceNamespace:  awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.FailedResourceAccessException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteScalingPolicy(ctx, &input)
 	})
 
