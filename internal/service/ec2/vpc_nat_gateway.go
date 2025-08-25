@@ -384,14 +384,16 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
 		}
 
-		if diff.Id() != "" && diff.HasChange("secondary_allocation_ids") {
-			if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
-				return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
-			}
+		if diff.Id() != "" {
+			if v := diff.GetRawConfig().GetAttr("secondary_allocation_ids"); diff.HasChange("secondary_allocation_ids") || !v.IsWhollyKnown() {
+				if err := diff.SetNewComputed("secondary_private_ip_address_count"); err != nil {
+					return fmt.Errorf("setting secondary_private_ip_address_count to computed: %s", err)
+				}
 
-			if v := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses"); !v.IsKnown() || v.IsNull() {
-				if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
-					return fmt.Errorf("setting secondary_private_ip_addresses to computed: %s", err)
+				if v := diff.GetRawConfig().GetAttr("secondary_private_ip_addresses"); !v.IsKnown() || v.IsNull() {
+					if err := diff.SetNewComputed("secondary_private_ip_addresses"); err != nil {
+						return fmt.Errorf("setting secondary_private_ip_addresses to computed: %s", err)
+					}
 				}
 			}
 		}

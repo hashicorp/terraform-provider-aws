@@ -23,7 +23,6 @@ func TestAccWorkSpacesWebTrustStore_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
-	//caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -64,7 +63,6 @@ func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store.test"
-	//caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -110,7 +108,6 @@ func TestAccWorkSpacesWebTrustStore_multipleCerts(t *testing.T) {
 func TestAccWorkSpacesWebTrustStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trustStore awstypes.TrustStore
-	//caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -138,7 +135,6 @@ func TestAccWorkSpacesWebTrustStore_disappears(t *testing.T) {
 func TestAccWorkSpacesWebTrustStore_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var trustStore awstypes.TrustStore
-	//caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_workspacesweb_trust_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
