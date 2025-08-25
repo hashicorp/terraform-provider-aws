@@ -97,6 +97,7 @@ Relates #42984
 - Ensure template files are in the correct location (`testdata/tmpl`)
 - Verify template file names match the resource name
 - If identity tests are not generated, verify that the `identitytests` generator is being called within the service's `generate.go` file. If it isn't, add the following line to `generate.go` next to the existing `go:generate` directives.
+- If a generated test does not reference the `var.rName` variable, add an `// @Testing(generator=false)` annotation to remove it from the generated configuration.
 
 ```go
 //go:generate go run ../../generate/identitytests/main.go
