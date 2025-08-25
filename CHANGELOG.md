@@ -1,13 +1,26 @@
 ## 6.11.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_workspacesweb_portal` ([#43444](https://github.com/hashicorp/terraform-provider-aws/issues/43444))
+* **New Resource:** `aws_workspacesweb_trust_store` ([#43408](https://github.com/hashicorp/terraform-provider-aws/issues/43408))
+
 ENHANCEMENTS:
 
 * data-source/aws_network_interface: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* data-source/aws_signer_signing_profile: Add `signing_material` and `signing_parameters` attributes ([#43921](https://github.com/hashicorp/terraform-provider-aws/issues/43921))
 * data-source/aws_vpc_ipam: Add `metered_account` attribute ([#43967](https://github.com/hashicorp/terraform-provider-aws/issues/43967))
+* resource/aws_dynamodb_contributor_insights: Add `mode` argument in support of [CloudWatch contributor insights modes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/contributorinsights_HowItWorks.html#contributorinsights_HowItWorks.Modes) ([#43914](https://github.com/hashicorp/terraform-provider-aws/issues/43914))
+* resource/aws_eks_cluster: Allow `remote_network_config` to be updated in-place, enabling support for EKS hybrid nodes on existing clusters ([#42928](https://github.com/hashicorp/terraform-provider-aws/issues/42928))
 * resource/aws_inspector2_filter: Support `code_repository_project_name`, `code_repository_provider_type`, `ecr_image_in_use_count`, and `ecr_image_last_in_use_at` in `filter_criteria` ([#43950](https://github.com/hashicorp/terraform-provider-aws/issues/43950))
+* resource/aws_iot_thing_principal_attachment: Add `thing_principal_type` argument ([#43916](https://github.com/hashicorp/terraform-provider-aws/issues/43916))
+* resource/aws_kms_external_key: Add `key_spec` argument ([#44011](https://github.com/hashicorp/terraform-provider-aws/issues/44011))
+* resource/aws_kms_external_key: Change `key_usage` to Optional and Computed ([#44011](https://github.com/hashicorp/terraform-provider-aws/issues/44011))
+* resource/aws_lb: Add `secondary_ips_auto_assigned_per_subnet` argument for Network Load Balancers ([#43699](https://github.com/hashicorp/terraform-provider-aws/issues/43699))
 * resource/aws_mwaa_environment: Add `worker_replacement_strategy` argument ([#43946](https://github.com/hashicorp/terraform-provider-aws/issues/43946))
 * resource/aws_network_interface: Add `attachment.network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
 * resource/aws_network_interface_attachment: Add `network_card_index` argument ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
+* resource/aws_route_table: Add resource identity support ([#43990](https://github.com/hashicorp/terraform-provider-aws/issues/43990))
 * resource/aws_s3_bucket_cors_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_logging: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_notification: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
@@ -17,13 +30,18 @@ ENHANCEMENTS:
 * resource/aws_s3_bucket_server_side_encryption_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_versioning: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
 * resource/aws_s3_bucket_website_configuration: Add resource identity support ([#43976](https://github.com/hashicorp/terraform-provider-aws/issues/43976))
+* resource/aws_signer_signing_profile: Add `signing_parameters` argument ([#43921](https://github.com/hashicorp/terraform-provider-aws/issues/43921))
+* resource/aws_synthetics_canary: Add `vpc_config.ipv6_allowed_for_dual_stack` argument ([#43989](https://github.com/hashicorp/terraform-provider-aws/issues/43989))
 * resource/aws_vpc_ipam: Add `metered_account` argument ([#43967](https://github.com/hashicorp/terraform-provider-aws/issues/43967))
 
 BUG FIXES:
 
 * data-source/aws_glue_catalog_table: Add `partition_keys.parameters` attribute ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
+* resource/aws_cognito_user_pool: Fixed to accept an empty `email_mfa_configuration` block ([#43926](https://github.com/hashicorp/terraform-provider-aws/issues/43926))
+* resource/aws_dx_hosted_connection: Fix `DescribeHostedConnections failed for connection dxcon-xxxx doesn't exist` by pointing to the correct connection ID when doing the describe. ([#43499](https://github.com/hashicorp/terraform-provider-aws/issues/43499))
 * resource/aws_glue_catalog_table: Add `partition_keys.parameters` argument, fixing `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
 * resource/aws_imagebuilder_image_recipe: Increase upper limit of `block_device_mapping.ebs.iops` from `10000` to `100000` ([#43981](https://github.com/hashicorp/terraform-provider-aws/issues/43981))
+* resource/aws_nat_gateway: Fix inconsistent final plan for `secondary_private_ip_addresses` ([#43708](https://github.com/hashicorp/terraform-provider-aws/issues/43708))
 
 ## 6.10.0 (August 21, 2025)
 

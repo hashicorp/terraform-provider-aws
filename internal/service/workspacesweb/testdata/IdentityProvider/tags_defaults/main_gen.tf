@@ -7,10 +7,6 @@ provider "aws" {
   }
 }
 
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
 resource "aws_workspacesweb_identity_provider" "test" {
   identity_provider_name = "test"
   identity_provider_type = "SAML"
@@ -22,6 +18,10 @@ resource "aws_workspacesweb_identity_provider" "test" {
 
   tags = var.resource_tags
 
+}
+
+resource "aws_workspacesweb_portal" "test" {
+  display_name = "test"
 }
 
 variable "resource_tags" {

@@ -3,10 +3,6 @@
 
 provider "null" {}
 
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
 resource "aws_workspacesweb_identity_provider" "test" {
   identity_provider_name = "test"
   identity_provider_type = "SAML"
@@ -20,6 +16,10 @@ resource "aws_workspacesweb_identity_provider" "test" {
     (var.unknownTagKey) = null_resource.test.id
   }
 
+}
+
+resource "aws_workspacesweb_portal" "test" {
+  display_name = "test"
 }
 
 resource "null_resource" "test" {}
