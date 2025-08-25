@@ -4,7 +4,6 @@
 package apigatewayv2_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -13,12 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayV2IntegrationsDataSource_id(t *testing.T) {
+func TestAccAPIGatewayV2IntegrationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSource1Name := "data.aws_apigatewayv2_integrations.test1"
-	// rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSource1Name := "data.aws_apigatewayv2_integrations.test"
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -27,79 +24,43 @@ func TestAccAPIGatewayV2IntegrationsDataSource_id(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIIntegrationsDataSourceConfig_id(),
+				Config: testAccAPIIntegrationsDataSourceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "2"),
-				),
-			},
-			{
-				Config: testAccAPIIntegrationsDataSourceConfig_no_ids(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "3"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAPIIntegrationsBaseDataSourceConfig() string {
-	apiName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "api" {
-  name          = %[1]q
-  protocol_type = "HTTP"
-}
-
-resource "aws_apigatewayv2_integration" "test1" {
-  api_id             = aws_apigatewayv2_api.api.id
-  integration_type   = "HTTP_PROXY"
-  integration_method = "ANY"
-  integration_uri    = "https://example.com"
-}
-
+func testAccAPIIntegrationsBaseDataSourceConfig_moreIntegrations() string {
+	return `
 resource "aws_apigatewayv2_integration" "test2" {
-  api_id             = aws_apigatewayv2_api.api.id
-  integration_type   = "HTTP_PROXY"
-  integration_method = "ANY"
-  integration_uri    = "https://example.com"
+  api_id           = aws_apigatewayv2_api.test.id
+  integration_type = "MOCK"
 }
 
-`, apiName)
+resource "aws_apigatewayv2_integration" "test3" {
+  api_id           = aws_apigatewayv2_api.test.id
+  integration_type = "MOCK"
 }
 
-func testAccAPIIntegrationsDataSourceConfig_id() string {
+`
+}
+
+func testAccAPIIntegrationsDataSourceConfig_basic(rName1 string) string {
 	return acctest.ConfigCompose(
-		testAccAPIIntegrationsBaseDataSourceConfig(),
+		testAccIntegrationConfig_basic(rName1),
+		testAccAPIIntegrationsBaseDataSourceConfig_moreIntegrations(),
 		`
-data "aws_apigatewayv2_integrations" "test1" {
-  api_id = aws_apigatewayv2_api.api.id
+data "aws_apigatewayv2_integrations" "test" {
+  api_id = aws_apigatewayv2_api.test.id
 
   depends_on = [
-    aws_apigatewayv2_integration.test1,
+    aws_apigatewayv2_integration.test,
     aws_apigatewayv2_integration.test2,
+	aws_apigatewayv2_integration.test3,
   ]
-}
-
-`)
-}
-
-func testAccAPIIntegrationsNoIntegrationsDataSourceConfig() string {
-	apiName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "api" {
-  name          = %[1]q
-  protocol_type = "HTTP"
-}
-
-`, apiName)
-}
-
-func testAccAPIIntegrationsDataSourceConfig_no_ids() string {
-	return acctest.ConfigCompose(
-		testAccAPIIntegrationsNoIntegrationsDataSourceConfig(),
-		`
-data "aws_apigatewayv2_integrations" "test1" {
-  api_id = aws_apigatewayv2_api.api.id
 }
 
 `)

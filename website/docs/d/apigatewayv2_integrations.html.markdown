@@ -5,16 +5,6 @@ page_title: "AWS: aws_apigatewayv2_integrations"
 description: |-
   Provides details about integrations in an AWS API Gateway V2 API.
 ---
-<!---
-Documentation guidelines:
-- Begin data source descriptions with "Provides details about..."
-- Use simple language and avoid jargon
-- Focus on brevity and clarity
-- Use present tense and active voice
-- Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
-- Boolean arguments should begin with "Whether to"
-- Use "example" instead of "test" in examples
---->
 
 # Data Source: aws_apigatewayv2_integrations
 

@@ -63,7 +63,6 @@ func (d *dataSourceIntegrations) Read(ctx context.Context, request datasource.Re
 	ids := []string{}
 
 	for _, integration := range integrations {
-
 		ids = append(ids, aws.ToString(integration.IntegrationId))
 	}
 
