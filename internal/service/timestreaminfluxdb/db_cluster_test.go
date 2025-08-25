@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -139,9 +138,13 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -191,11 +194,15 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -281,9 +288,13 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 				Config: testAccDBClusterConfig_port(rName, port2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -478,9 +489,13 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeNoFailover)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
-					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeNoFailover)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -553,19 +568,6 @@ func testAccPreCheckDBClusters(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckDBClusterNotRecreated(before, after *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if beforeID, afterID := aws.ToString(before.Id), aws.ToString(after.Id); beforeID != afterID {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingNotRecreated,
-				tftimestreaminfluxdb.ResNameDBCluster,
-				fmt.Sprintf("before: %s, after: %s", beforeID, afterID),
-				errors.New("resource was recreated when it should have been updated in-place"))
-		}
-
-		return nil
 	}
 }
 
