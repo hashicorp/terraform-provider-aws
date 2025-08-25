@@ -1,0 +1,2 @@
+```release-note:bug
+resource/aws_route53_resolver_endpoint: Fix deduplication of multiple auto-assigned IPs in the same subnet by switching `ip_address` from TypeSet to TypeList and adding a state upgrader.
