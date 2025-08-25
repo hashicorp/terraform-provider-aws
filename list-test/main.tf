@@ -1,8 +1,12 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+provider "aws" {
+ 	region = "us-west-2"
+    profile = "provider5"
+}
 
 resource "aws_batch_job_queue" "test" {
-  name     = var.rName
+  count = 3
+
+  name     = "list-test-${count.index}"
   priority = 1
   state    = "DISABLED"
 
@@ -13,7 +17,7 @@ resource "aws_batch_job_queue" "test" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  name         = var.rName
+  name         = "list-test"
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
 
@@ -23,7 +27,7 @@ resource "aws_batch_compute_environment" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "batch_service" {
-  name = "${var.rName}-batch-service"
+  name = "list-test-batch-service"
 
   assume_role_policy = <<EOF
 {
@@ -47,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "batch_service" {
 }
 
 resource "aws_iam_role" "ecs_instance" {
-  name = "${var.rName}-ecs-instance"
+  name = "list-test-ecs-instance"
 
   assume_role_policy = <<EOF
 {
@@ -57,7 +61,7 @@ resource "aws_iam_role" "ecs_instance" {
         "Action": "sts:AssumeRole",
         "Effect": "Allow",
         "Principal": {
-          "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
         }
     }
   ]
@@ -74,19 +78,3 @@ resource "aws_iam_instance_profile" "ecs_instance" {
   name = aws_iam_role.ecs_instance.name
   role = aws_iam_role_policy_attachment.ecs_instance.role
 }
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "6.0.0"
-    }
-  }
-}
-
-provider "aws" {}

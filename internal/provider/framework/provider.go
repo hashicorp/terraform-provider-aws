@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	empemeralschema "github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -44,6 +46,7 @@ var (
 	_ provider.Provider                       = &frameworkProvider{}
 	_ provider.ProviderWithFunctions          = &frameworkProvider{}
 	_ provider.ProviderWithEphemeralResources = &frameworkProvider{}
+	_ provider.ProviderWithListResources      = &frameworkProvider{}
 )
 
 type frameworkProvider struct {
@@ -344,6 +347,7 @@ func (p *frameworkProvider) Configure(ctx context.Context, request provider.Conf
 	response.DataSourceData = v
 	response.ResourceData = v
 	response.EphemeralResourceData = v
+	response.ListResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -380,6 +384,24 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
+	}
+}
+
+func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
+	spec := &inttypes.ServicePackageFrameworkListResource{
+		TypeName: "aws_batch_job_queue",
+		Factory:  batch.JobQueueResourceAsListResource,
+		Name:     "Job Queue",
+		Tags: unique.Make(inttypes.ServicePackageResourceTags{
+			IdentifierAttribute: names.AttrARN,
+		}),
+		Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+	}
+	return []func() list.ListResource{
+		func() list.ListResource {
+			return newWrappedListResource(spec, names.Batch)
+		},
 	}
 }
 
