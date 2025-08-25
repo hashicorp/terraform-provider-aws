@@ -4,7 +4,6 @@
 package apigatewayv2_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -28,7 +27,7 @@ func TestAccAPIGatewayV2IntegrationDataSource_basicWebsocket(t *testing.T) {
 				Config: testAccIntegrationsDataSourceConfig_basicWebsocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_id", resourceName, "api_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "integration_id", resourceName, "integration_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "integration_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckNoResourceAttr(dataSourceName, names.AttrConnectionID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_type", resourceName, "connection_type"),
@@ -198,22 +197,22 @@ func TestAccAPIGatewayV2IntegrationDataSource_tlsConfig(t *testing.T) {
 			{
 				Config: testAccIntegrationsDataSourceConfig_tlsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr(dataSourceName, names.AttrConnectionID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrConnectionID, resourceName, names.AttrConnectionID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connection_type", resourceName, "connection_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "content_handling_strategy", resourceName, "content_handling_strategy"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "content_handling_strategy"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "credentials_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "integration_method", resourceName, "integration_method"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "integration_response_selection_expression", resourceName, "integration_response_selection_expression"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "integration_response_selection_expression"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "integration_subtype"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "integration_type", resourceName, "integration_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "integration_uri", resourceName, "integration_uri"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "passthrough_behavior", resourceName, "passthrough_behavior"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "passthrough_behavior"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "payload_format_version", resourceName, "payload_format_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "request_parameters.%", resourceName, "request_parameters.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "request_templates.%", resourceName, "request_templates.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "response_parameters.#", resourceName, "response_parameters.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "template_selection_expression", resourceName, "template_selection_expression"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "template_selection_expression"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "timeout_milliseconds", resourceName, "timeout_milliseconds"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tls_config.#", resourceName, "tls_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tls_config.0.server_name_to_verify", resourceName, "tls_config.0.server_name_to_verify"),
@@ -221,26 +220,6 @@ func TestAccAPIGatewayV2IntegrationDataSource_tlsConfig(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccIntegrationsConfig_tlsConfig() string {
-	apiName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "test" {
-  name          = %[1]q
-  protocol_type = "HTTP"
-}
-resource "aws_apigatewayv2_integration" "test" {
-  api_id             = aws_apigatewayv2_api.test.id
-  integration_type   = "HTTP_PROXY"
-  integration_method = "ANY"
-  integration_uri    = "https://example.com"
-
-  tls_config {
-    server_name_to_verify = "www.example.com"
-  }
-}
-`, apiName)
 }
 
 func testAccIntegrationsDataSourceConfig_basicWebsocket(rName string) string {
@@ -287,7 +266,7 @@ data "aws_apigatewayv2_integration" "test" {
 
 func testAccIntegrationsDataSourceConfig_serviceIntegration(rName string, queueIndex int) string {
 	return acctest.ConfigCompose(
-		testAccIntegrationsConfig_tlsConfig(),
+		testAccIntegrationConfig_sqs(rName, queueIndex),
 		`
 data "aws_apigatewayv2_integration" "test" {
   api_id         = aws_apigatewayv2_api.test.id
@@ -301,7 +280,7 @@ data "aws_apigatewayv2_integration" "test" {
 
 func testAccIntegrationsDataSourceConfig_tlsConfig(rName string) string {
 	return acctest.ConfigCompose(
-		testAccIntegrationConfig_typeHTTP(rName),
+		testAccIntegrationConfig_vpcLinkHTTP(rName),
 		`
 data "aws_apigatewayv2_integration" "test" {
   api_id         = aws_apigatewayv2_api.test.id
