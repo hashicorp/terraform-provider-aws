@@ -5,17 +5,28 @@ package workspacesweb
 
 // Exports for use in tests only.
 var (
-	ResourceBrowserSettings           = newBrowserSettingsResource
-	ResourceDataProtectionSettings    = newDataProtectionSettingsResource
-	ResourceIPAccessSettings          = newIPAccessSettingsResource
-	ResourceNetworkSettings           = newNetworkSettingsResource
-	ResourceUserAccessLoggingSettings = newUserAccessLoggingSettingsResource
-	ResourceUserSettings              = newUserSettingsResource
+	ResourceBrowserSettings                   = newBrowserSettingsResource
+	ResourceBrowserSettingsAssociation        = newBrowserSettingsAssociationResource
+	ResourceDataProtectionSettings            = newDataProtectionSettingsResource
+	ResourceDataProtectionSettingsAssociation = newDataProtectionSettingsAssociationResource
+	ResourceIdentityProvider                  = newIdentityProviderResource
+	ResourceIPAccessSettings                  = newIPAccessSettingsResource
+	ResourceIPAccessSettingsAssociation       = newIPAccessSettingsAssociationResource
+	ResourceNetworkSettings                   = newNetworkSettingsResource
+	ResourcePortal                            = newPortalResource
+	ResourceTrustStore                        = newTrustStoreResource
+	ResourceUserAccessLoggingSettings         = newUserAccessLoggingSettingsResource
+	ResourceUserSettings                      = newUserSettingsResource
 
 	FindBrowserSettingsByARN           = findBrowserSettingsByARN
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
+	FindIdentityProviderByARN          = findIdentityProviderByARN
 	FindIPAccessSettingsByARN          = findIPAccessSettingsByARN
 	FindNetworkSettingsByARN           = findNetworkSettingsByARN
+	FindPortalByARN                    = findPortalByARN
+	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN
+
+	PortalARNFromIdentityProviderARN = portalARNFromIdentityProviderARN
 )
