@@ -95,6 +95,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+* `ipv6_allowed_for_dual_stack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 
@@ -144,4 +145,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5ba61d97d04060659c662468fa6285cd55a53f407ec55e6c642320edb2dcdc19 -->
+<!-- cache-key: cdktf-0.20.8 input-026340903bae3faf7869b7878802b7c7db736e1427732b3237fa083e62ad79a3 -->
