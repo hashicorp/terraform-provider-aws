@@ -292,7 +292,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	output, err := tfresource.RetryGWhen(ctx, propagationTimeout,
-		func() (*cloudformation.CreateStackInstancesOutput, error) {
+		func(ctx context.Context) (*cloudformation.CreateStackInstancesOutput, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
 			return conn.CreateStackInstances(ctx, input)
