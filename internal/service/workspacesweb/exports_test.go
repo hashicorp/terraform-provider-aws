@@ -7,15 +7,23 @@ package workspacesweb
 var (
 	ResourceBrowserSettings           = newBrowserSettingsResource
 	ResourceDataProtectionSettings    = newDataProtectionSettingsResource
+	ResourceIdentityProvider          = newIdentityProviderResource
 	ResourceIPAccessSettings          = newIPAccessSettingsResource
 	ResourceNetworkSettings           = newNetworkSettingsResource
+	ResourcePortal                    = newPortalResource
+	ResourceSessionLogger             = newSessionLoggerResource
+	ResourceTrustStore                = newTrustStoreResource
 	ResourceUserAccessLoggingSettings = newUserAccessLoggingSettingsResource
 	ResourceUserSettings              = newUserSettingsResource
 
 	FindBrowserSettingsByARN           = findBrowserSettingsByARN
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
+	FindIdentityProviderByARN          = findIdentityProviderByARN
 	FindIPAccessSettingsByARN          = findIPAccessSettingsByARN
 	FindNetworkSettingsByARN           = findNetworkSettingsByARN
+	FindPortalByARN                    = findPortalByARN
+	FindSessionLoggerByARN             = findSessionLoggerByARN
+	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN
 )
