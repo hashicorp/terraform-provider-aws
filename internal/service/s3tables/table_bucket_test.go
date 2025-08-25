@@ -5,7 +5,6 @@ package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -21,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -379,42 +377,39 @@ func testAccCheckTableBucketDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfs3tables.FindTableBucket(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			_, err := tfs3tables.FindTableBucketByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTableBucket, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTableBucket, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table Bucket %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTableBucketExists(ctx context.Context, name string, tablebucket *s3tables.GetTableBucketOutput) resource.TestCheckFunc {
+func testAccCheckTableBucketExists(ctx context.Context, n string, v *s3tables.GetTableBucketOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucket, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucket, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindTableBucket(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfs3tables.FindTableBucketByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTableBucket, rs.Primary.ID, err)
+			return err
 		}
 
-		if tablebucket != nil {
-			*tablebucket = *resp
-		}
+		*v = *output
 
 		return nil
 	}
