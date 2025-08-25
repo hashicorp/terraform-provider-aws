@@ -4,14 +4,10 @@ package odb
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -19,11 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_cloud_autonomous_vm_cluster", name="Cloud Autonomous Vm Cluster")
+// @Tags(identifierAttribute="arn")
 func newDataSourceCloudAutonomousVmCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudAutonomousVmCluster{}, nil
 }
@@ -91,6 +89,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			},
 			"created_at": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the Autonomous VM cluster was created.",
 			},
 			"data_storage_size_in_gbs": schema.Float64Attribute{
@@ -212,21 +211,23 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "The shape of the Exadata infrastructure for the Autonomous VM cluster.",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  status,
 				Computed:    true,
 				Description: "The status of the Autonomous VM cluster.",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the current status of the Autonomous VM cluster.",
 			},
 			"time_database_ssl_certificate_expires": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The expiration date and time of the database SSL certificate.",
 			},
 			"time_ords_certificate_expires": schema.StringAttribute{
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 				Description: "The expiration date and time of the Oracle REST Data Services (ORDS)certificate .",
 			},
 			"time_zone": schema.StringAttribute{
@@ -237,33 +238,16 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"maintenance_window": schema.ObjectAttribute{
+			"maintenance_window": schema.ListAttribute{
 				Computed:    true,
-				CustomType:  fwtypes.NewObjectTypeOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel](ctx),
 				Description: "The maintenance window for the Autonomous VM cluster.",
-				AttributeTypes: map[string]attr.Type{
-					"days_of_week": types.SetType{
-						ElemType: fwtypes.StringEnumType[odbtypes.DayOfWeekName](),
-					},
-					"hours_of_day": types.SetType{
-						ElemType: types.Int32Type,
-					},
-					"lead_time_in_weeks": types.Int32Type,
-					"months": types.SetType{
-						ElemType: fwtypes.StringEnumType[odbtypes.MonthName](),
-					},
-					"preference": fwtypes.StringEnumType[odbtypes.PreferenceType](),
-					"weeks_of_month": types.SetType{
-						ElemType: types.Int32Type,
-					},
-				},
 			},
 		},
 	}
 }
 
 func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().ODBClient(ctx)
 
 	var data cloudAutonomousVmClusterDataSourceModel
@@ -283,31 +267,6 @@ func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datas
 		)
 		return
 	}
-	data.CreatedAt = types.StringValue(out.CloudAutonomousVmCluster.CreatedAt.Format(time.RFC3339))
-	if out.CloudAutonomousVmCluster.TimeOrdsCertificateExpires != nil {
-		data.TimeOrdsCertificateExpires = types.StringValue(out.CloudAutonomousVmCluster.TimeOrdsCertificateExpires.Format(time.RFC3339))
-	} else {
-		data.TimeOrdsCertificateExpires = types.StringValue(NotAvailableValues)
-	}
-	if out.CloudAutonomousVmCluster.TimeDatabaseSslCertificateExpires != nil {
-		data.TimeDatabaseSslCertificateExpires = types.StringValue(out.CloudAutonomousVmCluster.TimeDatabaseSslCertificateExpires.Format(time.RFC3339))
-	} else {
-		data.TimeDatabaseSslCertificateExpires = types.StringValue(NotAvailableValues)
-	}
-	tagsRead, err := listTags(ctx, conn, *out.CloudAutonomousVmCluster.CloudAutonomousVmClusterArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameCloudAutonomousVmCluster, data.CloudAutonomousVmClusterId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	if tagsRead != nil {
-		data.Tags = tftags.FlattenStringValueMap(ctx, tagsRead.Map())
-	}
-
-	data.MaintenanceWindow = d.flattenMaintenanceWindow(ctx, out.CloudAutonomousVmCluster.MaintenanceWindow)
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.CloudAutonomousVmCluster, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -316,118 +275,71 @@ func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datas
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (d *dataSourceCloudAutonomousVmCluster) flattenMaintenanceWindow(ctx context.Context, avmcMW *odbtypes.MaintenanceWindow) fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] {
-	//days of week
-	daysOfWeek := make([]attr.Value, 0, len(avmcMW.DaysOfWeek))
-	for _, dayOfWeek := range avmcMW.DaysOfWeek {
-		dayOfWeekStringValue := fwtypes.StringEnumValue(dayOfWeek.Name).StringValue
-		daysOfWeek = append(daysOfWeek, dayOfWeekStringValue)
-	}
-	setValueOfDaysOfWeek, _ := basetypes.NewSetValue(types.StringType, daysOfWeek)
-	daysOfWeekRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]]{
-		SetValue: setValueOfDaysOfWeek,
-	}
-	//hours of the day
-	hoursOfTheDay := make([]attr.Value, 0, len(avmcMW.HoursOfDay))
-	for _, hourOfTheDay := range avmcMW.HoursOfDay {
-		daysOfWeekInt32Value := types.Int32Value(hourOfTheDay)
-		hoursOfTheDay = append(hoursOfTheDay, daysOfWeekInt32Value)
-	}
-	setValuesOfHoursOfTheDay, _ := basetypes.NewSetValue(types.Int32Type, hoursOfTheDay)
-	hoursOfTheDayRead := fwtypes.SetValueOf[types.Int32]{
-		SetValue: setValuesOfHoursOfTheDay,
-	}
-	//monts
-	months := make([]attr.Value, 0, len(avmcMW.Months))
-	for _, month := range avmcMW.Months {
-		monthStringValue := fwtypes.StringEnumValue(month.Name).StringValue
-		months = append(months, monthStringValue)
-	}
-	setValuesOfMonth, _ := basetypes.NewSetValue(types.StringType, months)
-	monthsRead := fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]{
-		SetValue: setValuesOfMonth,
-	}
-	//weeks of month
-	weeksOfMonth := make([]attr.Value, 0, len(avmcMW.WeeksOfMonth))
-	for _, weekOfMonth := range avmcMW.WeeksOfMonth {
-		weeksOfMonthInt32Value := types.Int32Value(weekOfMonth)
-		weeksOfMonth = append(weeksOfMonth, weeksOfMonthInt32Value)
-	}
-	setValuesOfWeekOfMonth, _ := basetypes.NewSetValue(types.Int32Type, weeksOfMonth)
-	weeksOfMonthRead := fwtypes.SetValueOf[types.Int32]{
-		SetValue: setValuesOfWeekOfMonth,
-	}
-
-	computedMW := cloudAutonomousVmClusterMaintenanceWindowDataSourceModel{
-		DaysOfWeek:      daysOfWeekRead,
-		HoursOfDay:      hoursOfTheDayRead,
-		LeadTimeInWeeks: types.Int32PointerValue(avmcMW.LeadTimeInWeeks),
-		Months:          monthsRead,
-		Preference:      fwtypes.StringEnumValue(avmcMW.Preference),
-		WeeksOfMonth:    weeksOfMonthRead,
-	}
-	result, _ := fwtypes.NewObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel](ctx, &computedMW)
-	return result
-}
-
 type cloudAutonomousVmClusterDataSourceModel struct {
 	framework.WithRegionModel
-	CloudAutonomousVmClusterArn                  types.String                                                                    `tfsdk:"arn"`
-	CloudAutonomousVmClusterId                   types.String                                                                    `tfsdk:"id"`
-	CloudExadataInfrastructureId                 types.String                                                                    `tfsdk:"cloud_exadata_infrastructure_id"`
-	AutonomousDataStoragePercentage              types.Float32                                                                   `tfsdk:"autonomous_data_storage_percentage"`
-	AutonomousDataStorageSizeInTBs               types.Float64                                                                   `tfsdk:"autonomous_data_storage_size_in_tbs"`
-	AvailableAutonomousDataStorageSizeInTBs      types.Float64                                                                   `tfsdk:"available_autonomous_data_storage_size_in_tbs"`
-	AvailableContainerDatabases                  types.Int32                                                                     `tfsdk:"available_container_databases"`
-	AvailableCpus                                types.Float32                                                                   `tfsdk:"available_cpus"`
-	ComputeModel                                 fwtypes.StringEnum[odbtypes.ComputeModel]                                       `tfsdk:"compute_model"`
-	CpuCoreCount                                 types.Int32                                                                     `tfsdk:"cpu_core_count"`
-	CpuCoreCountPerNode                          types.Int32                                                                     `tfsdk:"cpu_core_count_per_node"`
-	CpuPercentage                                types.Float32                                                                   `tfsdk:"cpu_percentage"`
-	CreatedAt                                    types.String                                                                    `tfsdk:"created_at" autoflex:",noflatten"`
-	DataStorageSizeInGBs                         types.Float64                                                                   `tfsdk:"data_storage_size_in_gbs"`
-	DataStorageSizeInTBs                         types.Float64                                                                   `tfsdk:"data_storage_size_in_tbs"`
-	DbNodeStorageSizeInGBs                       types.Int32                                                                     `tfsdk:"odb_node_storage_size_in_gbs"`
-	DbServers                                    fwtypes.SetValueOf[types.String]                                                `tfsdk:"db_servers"`
-	Description                                  types.String                                                                    `tfsdk:"description"`
-	DisplayName                                  types.String                                                                    `tfsdk:"display_name"`
-	Domain                                       types.String                                                                    `tfsdk:"domain"`
-	ExadataStorageInTBsLowestScaledValue         types.Float64                                                                   `tfsdk:"exadata_storage_in_tbs_lowest_scaled_value"`
-	Hostname                                     types.String                                                                    `tfsdk:"hostname"`
-	IsMtlsEnabledVmCluster                       types.Bool                                                                      `tfsdk:"is_mtls_enabled_vm_cluster"`
-	LicenseModel                                 fwtypes.StringEnum[odbtypes.LicenseModel]                                       `tfsdk:"license_model"`
-	MaxAcdsLowestScaledValue                     types.Int32                                                                     `tfsdk:"max_acds_lowest_scaled_value"`
-	MemoryPerOracleComputeUnitInGBs              types.Int32                                                                     `tfsdk:"memory_per_oracle_compute_unit_in_gbs"`
-	MemorySizeInGBs                              types.Int32                                                                     `tfsdk:"memory_size_in_gbs"`
-	NodeCount                                    types.Int32                                                                     `tfsdk:"node_count"`
-	NonProvisionableAutonomousContainerDatabases types.Int32                                                                     `tfsdk:"non_provisionable_autonomous_container_databases"`
-	OciResourceAnchorName                        types.String                                                                    `tfsdk:"oci_resource_anchor_name"`
-	OciUrl                                       types.String                                                                    `tfsdk:"oci_url"`
-	Ocid                                         types.String                                                                    `tfsdk:"ocid"`
-	OdbNetworkId                                 types.String                                                                    `tfsdk:"odb_network_id"`
-	PercentProgress                              types.Float32                                                                   `tfsdk:"percent_progress"`
-	ProvisionableAutonomousContainerDatabases    types.Int32                                                                     `tfsdk:"provisionable_autonomous_container_databases"`
-	ProvisionedAutonomousContainerDatabases      types.Int32                                                                     `tfsdk:"provisioned_autonomous_container_databases"`
-	ProvisionedCpus                              types.Float32                                                                   `tfsdk:"provisioned_cpus"`
-	ReclaimableCpus                              types.Float32                                                                   `tfsdk:"reclaimable_cpus"`
-	ReservedCpus                                 types.Float32                                                                   `tfsdk:"reserved_cpus"`
-	ScanListenerPortNonTls                       types.Int32                                                                     `tfsdk:"scan_listener_port_non_tls"`
-	ScanListenerPortTls                          types.Int32                                                                     `tfsdk:"scan_listener_port_tls"`
-	Shape                                        types.String                                                                    `tfsdk:"shape"`
-	Status                                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                     `tfsdk:"status"`
-	StatusReason                                 types.String                                                                    `tfsdk:"status_reason"`
-	TimeDatabaseSslCertificateExpires            types.String                                                                    `tfsdk:"time_database_ssl_certificate_expires" autoflex:",noflatten"`
-	TimeOrdsCertificateExpires                   types.String                                                                    `tfsdk:"time_ords_certificate_expires" autoflex:",noflatten"`
-	TimeZone                                     types.String                                                                    `tfsdk:"time_zone"`
-	TotalContainerDatabases                      types.Int32                                                                     `tfsdk:"total_container_databases"`
-	MaintenanceWindow                            fwtypes.ObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" autoflex:",noflatten"`
-	Tags                                         tftags.Map                                                                      `tfsdk:"tags"`
+	CloudAutonomousVmClusterArn                  types.String                                                                              `tfsdk:"arn"`
+	CloudAutonomousVmClusterId                   types.String                                                                              `tfsdk:"id"`
+	CloudExadataInfrastructureId                 types.String                                                                              `tfsdk:"cloud_exadata_infrastructure_id"`
+	AutonomousDataStoragePercentage              types.Float32                                                                             `tfsdk:"autonomous_data_storage_percentage"`
+	AutonomousDataStorageSizeInTBs               types.Float64                                                                             `tfsdk:"autonomous_data_storage_size_in_tbs"`
+	AvailableAutonomousDataStorageSizeInTBs      types.Float64                                                                             `tfsdk:"available_autonomous_data_storage_size_in_tbs"`
+	AvailableContainerDatabases                  types.Int32                                                                               `tfsdk:"available_container_databases"`
+	AvailableCpus                                types.Float32                                                                             `tfsdk:"available_cpus"`
+	ComputeModel                                 fwtypes.StringEnum[odbtypes.ComputeModel]                                                 `tfsdk:"compute_model"`
+	CpuCoreCount                                 types.Int32                                                                               `tfsdk:"cpu_core_count"`
+	CpuCoreCountPerNode                          types.Int32                                                                               `tfsdk:"cpu_core_count_per_node"`
+	CpuPercentage                                types.Float32                                                                             `tfsdk:"cpu_percentage"`
+	CreatedAt                                    timetypes.RFC3339                                                                         `tfsdk:"created_at" `
+	DataStorageSizeInGBs                         types.Float64                                                                             `tfsdk:"data_storage_size_in_gbs"`
+	DataStorageSizeInTBs                         types.Float64                                                                             `tfsdk:"data_storage_size_in_tbs"`
+	DbNodeStorageSizeInGBs                       types.Int32                                                                               `tfsdk:"odb_node_storage_size_in_gbs"`
+	DbServers                                    fwtypes.SetValueOf[types.String]                                                          `tfsdk:"db_servers"`
+	Description                                  types.String                                                                              `tfsdk:"description"`
+	DisplayName                                  types.String                                                                              `tfsdk:"display_name"`
+	Domain                                       types.String                                                                              `tfsdk:"domain"`
+	ExadataStorageInTBsLowestScaledValue         types.Float64                                                                             `tfsdk:"exadata_storage_in_tbs_lowest_scaled_value"`
+	Hostname                                     types.String                                                                              `tfsdk:"hostname"`
+	IsMtlsEnabledVmCluster                       types.Bool                                                                                `tfsdk:"is_mtls_enabled_vm_cluster"`
+	LicenseModel                                 fwtypes.StringEnum[odbtypes.LicenseModel]                                                 `tfsdk:"license_model"`
+	MaxAcdsLowestScaledValue                     types.Int32                                                                               `tfsdk:"max_acds_lowest_scaled_value"`
+	MemoryPerOracleComputeUnitInGBs              types.Int32                                                                               `tfsdk:"memory_per_oracle_compute_unit_in_gbs"`
+	MemorySizeInGBs                              types.Int32                                                                               `tfsdk:"memory_size_in_gbs"`
+	NodeCount                                    types.Int32                                                                               `tfsdk:"node_count"`
+	NonProvisionableAutonomousContainerDatabases types.Int32                                                                               `tfsdk:"non_provisionable_autonomous_container_databases"`
+	OciResourceAnchorName                        types.String                                                                              `tfsdk:"oci_resource_anchor_name"`
+	OciUrl                                       types.String                                                                              `tfsdk:"oci_url"`
+	Ocid                                         types.String                                                                              `tfsdk:"ocid"`
+	OdbNetworkId                                 types.String                                                                              `tfsdk:"odb_network_id"`
+	PercentProgress                              types.Float32                                                                             `tfsdk:"percent_progress"`
+	ProvisionableAutonomousContainerDatabases    types.Int32                                                                               `tfsdk:"provisionable_autonomous_container_databases"`
+	ProvisionedAutonomousContainerDatabases      types.Int32                                                                               `tfsdk:"provisioned_autonomous_container_databases"`
+	ProvisionedCpus                              types.Float32                                                                             `tfsdk:"provisioned_cpus"`
+	ReclaimableCpus                              types.Float32                                                                             `tfsdk:"reclaimable_cpus"`
+	ReservedCpus                                 types.Float32                                                                             `tfsdk:"reserved_cpus"`
+	ScanListenerPortNonTls                       types.Int32                                                                               `tfsdk:"scan_listener_port_non_tls"`
+	ScanListenerPortTls                          types.Int32                                                                               `tfsdk:"scan_listener_port_tls"`
+	Shape                                        types.String                                                                              `tfsdk:"shape"`
+	Status                                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                               `tfsdk:"status"`
+	StatusReason                                 types.String                                                                              `tfsdk:"status_reason"`
+	TimeDatabaseSslCertificateExpires            timetypes.RFC3339                                                                         `tfsdk:"time_database_ssl_certificate_expires"`
+	TimeOrdsCertificateExpires                   timetypes.RFC3339                                                                         `tfsdk:"time_ords_certificate_expires" `
+	TimeZone                                     types.String                                                                              `tfsdk:"time_zone"`
+	TotalContainerDatabases                      types.Int32                                                                               `tfsdk:"total_container_databases"`
+	MaintenanceWindow                            fwtypes.ListNestedObjectValueOf[cloudAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"maintenance_window" `
+	Tags                                         tftags.Map                                                                                `tfsdk:"tags"`
 }
 type cloudAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
-	DaysOfWeek      fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.DayOfWeekName]] `tfsdk:"days_of_week"`
-	HoursOfDay      fwtypes.SetValueOf[types.Int32]                                `tfsdk:"hours_of_day"`
-	LeadTimeInWeeks types.Int32                                                    `tfsdk:"lead_time_in_weeks"`
-	Months          fwtypes.SetValueOf[fwtypes.StringEnum[odbtypes.MonthName]]     `tfsdk:"months"`
-	Preference      fwtypes.StringEnum[odbtypes.PreferenceType]                    `tfsdk:"preference"`
-	WeeksOfMonth    fwtypes.SetValueOf[types.Int32]                                `tfsdk:"weeks_of_month"`
+	DaysOfWeek      fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week"`
+	HoursOfDay      fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"hours_of_day"`
+	LeadTimeInWeeks types.Int32                                                                                    `tfsdk:"lead_time_in_weeks"`
+	Months          fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel]   `tfsdk:"months"`
+	Preference      fwtypes.StringEnum[odbtypes.PreferenceType]                                                    `tfsdk:"preference"`
+	WeeksOfMonth    fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"weeks_of_month"`
+}
+type dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
+	Name fwtypes.StringEnum[odbtypes.DayOfWeekName] `tfsdk:"name"`
+}
+
+type monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
+	Name fwtypes.StringEnum[odbtypes.MonthName] `tfsdk:"name"`
 }
