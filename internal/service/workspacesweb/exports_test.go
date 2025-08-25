@@ -24,4 +24,6 @@ var (
 	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN
+
+	PortalARNFromIdentityProviderARN = portalARNFromIdentityProviderARN
 )
