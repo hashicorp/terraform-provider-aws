@@ -1733,13 +1733,37 @@ func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		PreCheck: func() { acctest.PreCheck(ctx, t) },
+		//ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_s3Target(rName, "bucket1"),
+				// This config is the s3 target config, but with a description we can update
+				// this allows us to perform an "Update" operation instead of a Force Recreate
+				Config: acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+					resource "aws_s3_bucket" "test" {
+					bucket        = "%[1]s-%[2]s"
+					force_destroy = true
+					}
+
+					resource "aws_glue_catalog_database" "test" {
+					name = %[1]q
+					}
+
+					resource "aws_glue_crawler" "test" {
+					depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+					database_name = aws_glue_catalog_database.test.name
+					name          = %[1]q
+					description   = "test description"
+					role          = aws_iam_role.test.name
+
+					s3_target {
+						path = "s3://${aws_s3_bucket.test.bucket}"
+					}
+					}
+					`, rName, "bucket1")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
@@ -1762,10 +1786,30 @@ func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
 						t.Fatalf("Failed to start crawler, which is required to test run detection in the next step; err: %v", err)
 					}
 				},
-				// Change the name so the crawler gets updated. If no error was encountered, that means
-				// that the test passed, because it properly handled the fact that the crawler was running
-				// when the update happehed.
-				Config: testAccCrawlerConfig_s3Target(fmt.Sprintf("%s-change", rName), "bucket1"),
+				// Change the description to update the crawler
+				Config: acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+					resource "aws_s3_bucket" "test" {
+					bucket        = "%[1]s-%[2]s"
+					force_destroy = true
+					}
+
+					resource "aws_glue_catalog_database" "test" {
+					name = %[1]q
+					}
+
+					resource "aws_glue_crawler" "test" {
+					depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+					database_name = aws_glue_catalog_database.test.name
+					name          = %[1]q
+					description   = "test description - updated"
+					role          = aws_iam_role.test.name
+
+					s3_target {
+						path = "s3://${aws_s3_bucket.test.bucket}"
+					}
+					}
+					`, rName, "bucket1")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
