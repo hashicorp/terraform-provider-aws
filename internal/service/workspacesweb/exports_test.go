@@ -11,6 +11,7 @@ var (
 	ResourceDataProtectionSettingsAssociation = newDataProtectionSettingsAssociationResource
 	ResourceIdentityProvider                  = newIdentityProviderResource
 	ResourceIPAccessSettings                  = newIPAccessSettingsResource
+	ResourceIPAccessSettingsAssociation       = newIPAccessSettingsAssociationResource
 	ResourceNetworkSettings                   = newNetworkSettingsResource
 	ResourcePortal                            = newPortalResource
 	ResourceTrustStore                        = newTrustStoreResource
