@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newBrowserSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_browser_settings_association",
+			Name:     "Browser Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newDataProtectionSettingsResource,
 			TypeName: "aws_workspacesweb_data_protection_settings",
 			Name:     "Data Protection Settings",
@@ -41,6 +47,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: "data_protection_settings_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataProtectionSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_data_protection_settings_association",
+			Name:     "Data Protection Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newIdentityProviderResource,
