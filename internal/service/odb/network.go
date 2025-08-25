@@ -5,6 +5,7 @@ package odb
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -255,6 +256,7 @@ func (r *resourceNetwork) Create(ctx context.Context, req resource.CreateRequest
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitNetworkCreated(ctx, conn, *out.OdbNetworkId, createTimeout)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.OdbNetworkId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameNetwork, plan.DisplayName.String(), err),
