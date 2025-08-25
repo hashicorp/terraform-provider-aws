@@ -879,7 +879,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any))
 		}
 
-		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil {
+		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 {
 			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
 		}
 
@@ -1356,8 +1356,12 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 || tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)

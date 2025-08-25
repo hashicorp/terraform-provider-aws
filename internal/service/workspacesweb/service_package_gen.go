@@ -43,6 +43,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newIdentityProviderResource,
+			TypeName: "aws_workspacesweb_identity_provider",
+			Name:     "Identity Provider",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "identity_provider_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newIPAccessSettingsResource,
 			TypeName: "aws_workspacesweb_ip_access_settings",
 			Name:     "IP Access Settings",
@@ -57,6 +66,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Network Settings",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: "network_settings_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newPortalResource,
+			TypeName: "aws_workspacesweb_portal",
+			Name:     "Portal",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "portal_arn",
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newTrustStoreResource,
+			TypeName: "aws_workspacesweb_trust_store",
+			Name:     "Trust Store",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: "trust_store_arn",
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

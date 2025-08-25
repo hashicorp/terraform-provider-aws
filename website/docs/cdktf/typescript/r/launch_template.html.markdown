@@ -187,7 +187,7 @@ The `ebs` block supports the following:
 
 The `capacityReservationSpecification` block supports the following:
 
-* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacityReservationPreference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacityReservationId` or `capacityReservationResourceGroupArn` is specified in `capacityReservationTarget` block, either omit `capacityReservationPreference` or set it to `capacity-reservations-only`.
 * `capacityReservationTarget` - Used to target a specific Capacity Reservation:
 
 The `capacityReservationTarget` block supports the following:
@@ -523,4 +523,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4ffa57e8ec5beba3116c94160483bae640a9c25591c571d63feec060a7b15333 -->
+<!-- cache-key: cdktf-0.20.8 input-8de4cf46e46088518884d5fe05988220743f7365fab7bb723d6646edd42e5bf5 -->

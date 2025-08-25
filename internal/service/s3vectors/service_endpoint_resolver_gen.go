@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params s3vectors.Endpoi
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up s3vectors endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up s3vectors endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

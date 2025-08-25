@@ -526,7 +526,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -548,7 +548,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 

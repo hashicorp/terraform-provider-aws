@@ -319,7 +319,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
-	d.Set("admin_user_list", aws.StringSlice(fileshare.AdminUserList))
+	d.Set("admin_user_list", fileshare.AdminUserList)
 	d.Set(names.AttrARN, fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("authentication", fileshare.Authentication)
@@ -337,7 +337,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("file_share_name", fileshare.FileShareName)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
-	d.Set("invalid_user_list", aws.StringSlice(fileshare.InvalidUserList))
+	d.Set("invalid_user_list", fileshare.InvalidUserList)
 	d.Set("kms_encrypted", fileshare.KMSEncrypted) //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
@@ -349,7 +349,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
-	d.Set("valid_user_list", aws.StringSlice(fileshare.ValidUserList))
+	d.Set("valid_user_list", fileshare.ValidUserList)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
 	setTagsOut(ctx, fileshare.Tags)
