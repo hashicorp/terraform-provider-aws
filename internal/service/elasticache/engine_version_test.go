@@ -819,7 +819,7 @@ func (d *mockChangesDiffer) GetChange(key string) (any, any) {
 	return d.values[key].GetChange()
 }
 
-func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
+func TestParamGroupNameRequiresEngineOrMajorVersionUpgrade(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -918,7 +918,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				diff.id = "some id"
 			}
 
-			err := tfelasticache.ParamGroupNameRequiresMajorVersionUpgrade(diff)
+			err := tfelasticache.ParamGroupNameRequiresEngineOrMajorVersionUpgrade(diff)
 
 			if testcase.expectError == nil {
 				if err != nil {
