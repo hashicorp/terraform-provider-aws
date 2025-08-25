@@ -2335,7 +2335,7 @@ resource "aws_elasticache_global_replication_group" "test" {
   engine_version       = %[6]q
   parameter_group_name = %[7]q
 }
-  
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
