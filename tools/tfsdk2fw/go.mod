@@ -288,7 +288,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.34.2 // indirect
 	github.com/aws/smithy-go v1.22.5 // indirect
-	github.com/beevik/etree v1.5.1 // indirect
+	github.com/beevik/etree v1.6.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/cedar-policy/cedar-go v1.2.6 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
@@ -373,7 +373,6 @@ require (
 	google.golang.org/grpc v1.72.1 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.5 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/hashicorp/terraform-provider-aws => ../..
