@@ -82,7 +82,7 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 			},
 			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
 			// Validations needed:
-			// * iceberg_compaction.settings.target_file_size_mb:  int32validator.Between(64, 512)
+			// * iceberg_compaction.settings.target_file_size_mb: int32validator.Between(64, 512)
 			// * iceberg_snapshot_management.settings.max_snapshot_age_hours: int32validator.AtLeast(1)
 			// * iceberg_snapshot_management.settings.min_snapshots_to_keep:  int32validator.AtLeast(1)
 			"maintenance_configuration": schema.ObjectAttribute{
@@ -758,7 +758,8 @@ type tableMaintenanceConfigurationValueModel[T any] struct {
 }
 
 type icebergCompactionSettingsModel struct {
-	TargetFileSizeMB types.Int32 `tfsdk:"target_file_size_mb"`
+	Strategy         fwtypes.StringEnum[awstypes.IcebergCompactionStrategy] `tfsdk:"strategy"`
+	TargetFileSizeMB types.Int32                                            `tfsdk:"target_file_size_mb"`
 }
 
 type icebergSnapshotManagementSettingsModel struct {
