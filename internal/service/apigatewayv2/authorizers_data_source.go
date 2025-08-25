@@ -66,7 +66,6 @@ func (d *dataSourceAuthorizers) Read(ctx context.Context, request datasource.Rea
 	ids := []string{}
 
 	for _, authorizer := range authorizers {
-
 		ids = append(ids, aws.ToString(authorizer.AuthorizerId))
 	}
 
