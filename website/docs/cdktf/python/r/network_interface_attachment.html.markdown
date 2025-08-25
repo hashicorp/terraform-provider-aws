@@ -41,6 +41,7 @@ This resource supports the following arguments:
 * `instance_id` - (Required) Instance ID to attach.
 * `network_interface_id` - (Required) ENI ID to attach.
 * `device_index` - (Required) Network interface index (int).
+* `network_card_index` - (Optional) Index of the network card. Specify a value greater than 0 when using multiple network cards, which are supported by [some instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html#network-cards). The default is 0.
 
 ## Attribute Reference
 
@@ -76,4 +77,4 @@ Using `terraform import`, import Elastic network interface (ENI) Attachments usi
 % terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f67e360f200625105bd0a2b6ced2f63179ecb61e2d98bfdd1f5fa4445842aec9 -->
+<!-- cache-key: cdktf-0.20.8 input-ced4b788a66160f918b440c73c9bdf5288494747019c31a519a48d9743931dfb -->
