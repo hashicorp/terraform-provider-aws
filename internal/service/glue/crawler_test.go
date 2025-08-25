@@ -1739,31 +1739,7 @@ func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// This config is the s3 target config, but with a description we can update
-				// this allows us to perform an "Update" operation instead of a Force Recreate
-				Config: acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
-					resource "aws_s3_bucket" "test" {
-					bucket        = "%[1]s-%[2]s"
-					force_destroy = true
-					}
-
-					resource "aws_glue_catalog_database" "test" {
-					name = %[1]q
-					}
-
-					resource "aws_glue_crawler" "test" {
-					depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
-
-					database_name = aws_glue_catalog_database.test.name
-					name          = %[1]q
-					description   = "test description"
-					role          = aws_iam_role.test.name
-
-					s3_target {
-						path = "s3://${aws_s3_bucket.test.bucket}"
-					}
-					}
-					`, rName, "bucket1")),
+				Config: testAccCrawlerConfig_s3TargetWithDescription(rName, "bucket1", "testDescription"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
@@ -1787,29 +1763,7 @@ func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
 					}
 				},
 				// Change the description to update the crawler
-				Config: acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
-					resource "aws_s3_bucket" "test" {
-					bucket        = "%[1]s-%[2]s"
-					force_destroy = true
-					}
-
-					resource "aws_glue_catalog_database" "test" {
-					name = %[1]q
-					}
-
-					resource "aws_glue_crawler" "test" {
-					depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
-
-					database_name = aws_glue_catalog_database.test.name
-					name          = %[1]q
-					description   = "test description - updated"
-					role          = aws_iam_role.test.name
-
-					s3_target {
-						path = "s3://${aws_s3_bucket.test.bucket}"
-					}
-					}
-					`, rName, "bucket1")),
+				Config: testAccCrawlerConfig_s3TargetWithDescription(rName, "bucket1", "testDescriptionUpdated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
@@ -3558,6 +3512,32 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, policy))
+}
+
+func testAccCrawlerConfig_s3TargetWithDescription(rName, path, description string) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+bucket        = "%[1]s-%[2]s"
+force_destroy = true
+}
+
+resource "aws_glue_catalog_database" "test" {
+name = %[1]q
+}
+
+resource "aws_glue_crawler" "test" {
+depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+database_name = aws_glue_catalog_database.test.name
+name          = %[1]q
+description   = "%[3]s"
+role          = aws_iam_role.test.name
+
+s3_target {
+	path = "s3://${aws_s3_bucket.test.bucket}"
+}
+}
+`, rName, path, description))
 }
 
 func testAccCrawlerConfig_s3TargetSampleSize(rName string, size int) string {
