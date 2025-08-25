@@ -1733,8 +1733,8 @@ func TestAccGlueCrawler_updateRunningCrawler(t *testing.T) {
 	resourceName := "aws_glue_crawler.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(ctx, t) },
-		//ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
