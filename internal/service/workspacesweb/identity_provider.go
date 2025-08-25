@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -223,22 +224,42 @@ func (r *identityProviderResource) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root("identity_provider_arn"), request, response)
 }
 
+const (
+	arnResourceSeparator = "/"
+	arnService           = "workspaces-web"
+)
+
 func portalARNFromIdentityProviderARN(identityProviderARN string) (string, error) {
 	// Identity Provider ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
 	// Portal ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:portal/{PORTAL_ID}
-	parts := strings.Split(identityProviderARN, ":")
-	if len(parts) != 6 {
-		return "", fmt.Errorf("invalid identity provider ARN format: %s", identityProviderARN)
+	parsedARN, err := arn.Parse(identityProviderARN)
+
+	if err != nil {
+		return "", fmt.Errorf("parsing ARN (%s): %w", identityProviderARN, err)
 	}
 
-	resourcePart := parts[5] // identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
-	resourceParts := strings.Split(resourcePart, "/")
-	if len(resourceParts) != 3 || resourceParts[0] != "identityProvider" {
-		return "", fmt.Errorf("invalid identity provider ARN resource format: %s", identityProviderARN)
+	if actual, expected := parsedARN.Service, arnService; actual != expected {
+		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, identityProviderARN, actual)
 	}
 
-	portalID := resourceParts[1]
-	portalARN := fmt.Sprintf("%s:%s:%s:%s:%s:portal/%s", parts[0], parts[1], parts[2], parts[3], parts[4], portalID)
+	resourceParts := strings.Split(parsedARN.Resource, arnResourceSeparator)
+
+	if actual, expected := len(resourceParts), 3; actual != expected {
+		return "", fmt.Errorf("expected %d resource parts in ARN (%s), got: %d", expected, identityProviderARN, actual)
+	}
+
+	if actual, expected := resourceParts[0], "identityProvider"; actual != expected {
+		return "", fmt.Errorf("expected %s in ARN (%s), got: %s", expected, identityProviderARN, actual)
+	}
+
+	portalARN := arn.ARN{
+		Partition: parsedARN.Partition,
+		Service:   parsedARN.Service,
+		Region:    parsedARN.Region,
+		AccountID: parsedARN.AccountID,
+		Resource:  "portal" + arnResourceSeparator + resourceParts[1],
+	}.String()
+
 	return portalARN, nil
 }
 
