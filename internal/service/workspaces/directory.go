@@ -384,8 +384,8 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	const (
 		timeout = 2 * time.Minute
 	)
-	output, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
-		func() (any, error) {
+	output, err := tfresource.RetryWhenIsA[any, *types.InvalidResourceStateException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.RegisterWorkspaceDirectory(ctx, &input)
 		})
 
@@ -675,8 +675,8 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta a
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidResourceStateException](ctx, timeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidResourceStateException](ctx, timeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeregisterWorkspaceDirectory(ctx, &input)
 		})
 

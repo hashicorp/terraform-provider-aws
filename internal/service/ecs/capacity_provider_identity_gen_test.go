@@ -27,7 +27,7 @@ func TestAccECSCapacityProvider_Identity_Basic(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -113,7 +113,7 @@ func TestAccECSCapacityProvider_Identity_RegionOverride(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
@@ -235,7 +235,7 @@ func TestAccECSCapacityProvider_Identity_ExistingResource(t *testing.T) {
 	resourceName := "aws_ecs_capacity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

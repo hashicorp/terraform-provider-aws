@@ -133,11 +133,11 @@ func create(ctx context.Context, interceptor identityInterceptor, resourceSchema
 		when:     After,
 	}
 
-	diags := interceptor.create(ctx, opts)
-	if diags.HasError() {
-		return nil, diags
+	interceptor.create(ctx, opts)
+	if response.Diagnostics.HasError() {
+		return nil, response.Diagnostics
 	}
-	return response.Identity, diags
+	return response.Identity, response.Diagnostics
 }
 
 func read(ctx context.Context, interceptor identityInterceptor, resourceSchema schema.Schema, stateAttrs map[string]string, identity *tfsdk.ResourceIdentity, client awsClient) (*tfsdk.ResourceIdentity, diag.Diagnostics) {
@@ -156,11 +156,11 @@ func read(ctx context.Context, interceptor identityInterceptor, resourceSchema s
 		when:     After,
 	}
 
-	diags := interceptor.read(ctx, opts)
-	if diags.HasError() {
-		return nil, diags
+	interceptor.read(ctx, opts)
+	if response.Diagnostics.HasError() {
+		return nil, response.Diagnostics
 	}
-	return response.Identity, diags
+	return response.Identity, response.Diagnostics
 }
 
 func getIdentityAttributeValue(ctx context.Context, t *testing.T, identity *tfsdk.ResourceIdentity, path path.Path) string {
