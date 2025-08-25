@@ -41,11 +41,16 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `encryption_configuration` - (Optional, Forces new resource) Encryption configuration for the vector bucket.
-    * `kms_key_arn` - (Optional, Forces new resource) AWS KMS CMK ARN to use for the default encryption of the vector bucket. Allowed if and only if `sse_type` is set to `aws:kms`.
-    * `sse_type` - (Optional, Forces new resource) Server-side encryption type to use for the default encryption of the vector bucket. Valid values: `AES256`, `aws:kms`.
+* `encryption_configuration` - (Optional, Forces new resource) Encryption configuration for the vector bucket. See [Encryption Configuration](#encryption-configuration) below for more details.
 * `force_destroy` - (Optional, Default:`false`) Boolean that indicates all indexes and vectors should be deleted from the vector bucket *when the vector bucket is destroyed* so that the vector bucket can be destroyed without error. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the vector bucket or destroying the vector bucket, this flag will not work.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### Encryption Configuration
+
+The `encryption_configuration` block supports the following:
+
+* `kms_key_arn` - (Optional, Forces new resource) AWS KMS CMK ARN to use for the default encryption of the vector bucket. Allowed if and only if `sse_type` is set to `aws:kms`.
+* `sse_type` - (Optional, Forces new resource) Server-side encryption type to use for the default encryption of the vector bucket. Valid values: `AES256`, `aws:kms`.
 
 ## Attribute Reference
 
