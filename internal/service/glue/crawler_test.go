@@ -3517,25 +3517,25 @@ resource "aws_glue_crawler" "test" {
 func testAccCrawlerConfig_s3TargetWithDescription(rName, path, description string) string {
 	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-bucket        = "%[1]s-%[2]s"
-force_destroy = true
+  bucket        = "%[1]s-%[2]s"
+  force_destroy = true
 }
 
 resource "aws_glue_catalog_database" "test" {
-name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_glue_crawler" "test" {
-depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
 
-database_name = aws_glue_catalog_database.test.name
-name          = %[1]q
-description   = "%[3]s"
-role          = aws_iam_role.test.name
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  description   = "%[3]s"
+  role          = aws_iam_role.test.name
 
-s3_target {
-	path = "s3://${aws_s3_bucket.test.bucket}"
-}
+  s3_target {
+    path = "s3://${aws_s3_bucket.test.bucket}"
+  }
 }
 `, rName, path, description))
 }
