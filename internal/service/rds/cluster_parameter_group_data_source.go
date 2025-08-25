@@ -100,7 +100,7 @@ func (d *clusterParameterGroupDataSource) Read(ctx context.Context, request data
 
 	// Read parameters
 	input := &rds.DescribeDBClusterParametersInput{
-		DBClusterParameterGroupName: aws.String(data.Name.ValueString()),
+		DBClusterParameterGroupName: data.Name.ValueStringPointer(),
 	}
 
 	parameters, err := findDBClusterParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
