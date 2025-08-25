@@ -28,8 +28,7 @@ import (
 
 func TestAccS3TablesTableBucket_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var tablebucket s3tables.GetTableBucketOutput
+	var v s3tables.GetTableBucketOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket.test"
 
@@ -45,7 +44,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
@@ -78,8 +77,7 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 
 func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var tablebucket s3tables.GetTableBucketOutput
+	var v s3tables.GetTableBucketOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket.test"
 	resourceKeyOne := "aws_kms_key.test"
@@ -97,7 +95,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_encryptionConfiguration(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
@@ -121,7 +119,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_encryptionConfigurationUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
@@ -156,8 +154,7 @@ func TestAccS3TablesTableBucket_encryptionConfiguration(t *testing.T) {
 
 func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var tablebucket s3tables.GetTableBucketOutput
+	var v s3tables.GetTableBucketOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket.test"
 
@@ -173,7 +170,7 @@ func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTableBucket, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -184,8 +181,7 @@ func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 
 func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var tablebucket s3tables.GetTableBucketOutput
+	var v s3tables.GetTableBucketOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3tables_table_bucket.test"
 
@@ -201,7 +197,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_maintenanceConfiguration(rName, awstypes.MaintenanceStatusEnabled, 20, 6),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -226,7 +222,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_maintenanceConfiguration(rName, awstypes.MaintenanceStatusEnabled, 15, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -251,7 +247,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_maintenanceConfiguration(rName, awstypes.MaintenanceStatusDisabled, 15, 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("maintenance_configuration"), knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -279,6 +275,7 @@ func TestAccS3TablesTableBucket_maintenanceConfiguration(t *testing.T) {
 
 func TestAccS3TablesTableBucket_forceDestroy(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v s3tables.GetTableBucketOutput
 	resourceName := "aws_s3tables_table_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -294,7 +291,7 @@ func TestAccS3TablesTableBucket_forceDestroy(t *testing.T) {
 			{
 				Config: testAccTableBucketConfig_forceDestroy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, nil),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace1", "table1"),
 				),
@@ -305,6 +302,7 @@ func TestAccS3TablesTableBucket_forceDestroy(t *testing.T) {
 
 func TestAccS3TablesTableBucket_forceDestroyMultipleNamespacesAndTables(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v s3tables.GetTableBucketOutput
 	resourceName := "aws_s3tables_table_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -320,7 +318,7 @@ func TestAccS3TablesTableBucket_forceDestroyMultipleNamespacesAndTables(t *testi
 			{
 				Config: testAccTableBucketConfig_forceDestroy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableBucketExists(ctx, resourceName, nil),
+					testAccCheckTableBucketExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
 					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace1", "table1"),
 					testAccCheckTableBucketAddTables(ctx, resourceName, "namespace2", "table2", "table3"),
