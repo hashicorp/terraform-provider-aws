@@ -13,15 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,22 +30,22 @@ func TestAccTimestreamInfluxDBDBCluster_basic(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "timestream-influxdb", regexache.MustCompile(`db-cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
@@ -76,22 +74,22 @@ func TestAccTimestreamInfluxDBDBCluster_disappears(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,22 +110,22 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 	}
 
 	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxMedium)),
 				),
 			},
@@ -140,7 +138,7 @@ func TestAccTimestreamInfluxDBDBCluster_dbInstanceType(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_dbInstanceType(rName, string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
 					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", string(awstypes.DbInstanceTypeDbInfluxLarge)),
 				),
@@ -162,22 +160,22 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 	}
 
 	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.enabled", acctest.CtTrue),
@@ -192,7 +190,7 @@ func TestAccTimestreamInfluxDBDBCluster_logDeliveryConfiguration(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_logDeliveryConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
 					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.0.bucket_name", rName),
@@ -216,22 +214,22 @@ func TestAccTimestreamInfluxDBDBCluster_networkType(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_networkTypeIPV4(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
 				),
 			},
@@ -254,22 +252,22 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
 	port1 := "8086"
 	port2 := "8087"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_port(rName, port1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port1),
 				),
 			},
@@ -282,7 +280,7 @@ func TestAccTimestreamInfluxDBDBCluster_port(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_port(rName, port2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
 					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, port2),
 				),
@@ -305,22 +303,22 @@ func TestAccTimestreamInfluxDBDBCluster_allocatedStorage(t *testing.T) {
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
 	allocatedStorage := "20"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_allocatedStorage(rName, allocatedStorage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, allocatedStorage),
 				),
 			},
@@ -341,22 +339,22 @@ func TestAccTimestreamInfluxDBDBCluster_dbStorageType(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_dbStorageType(rName, string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 				),
 			},
@@ -377,22 +375,22 @@ func TestAccTimestreamInfluxDBDBCluster_publiclyAccessible(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_publiclyAccessible(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
@@ -415,22 +413,22 @@ func TestAccTimestreamInfluxDBDBCluster_deploymentType(t *testing.T) {
 	}
 
 	var dbCluster timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_deploymentType(rName, string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas)),
 				),
 			},
@@ -451,22 +449,22 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 	}
 
 	var dbCluster1, dbCluster2 timestreaminfluxdb.GetDbClusterOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDBClusters(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBClusterDestroy(ctx),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeAutomatic)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeAutomatic)),
 				),
 			},
@@ -479,7 +477,7 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 			{
 				Config: testAccDBClusterConfig_failoverMode(rName, string(awstypes.FailoverModeNoFailover)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster2),
 					testAccCheckDBClusterNotRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "failover_mode", string(awstypes.FailoverModeNoFailover)),
 				),
@@ -494,9 +492,9 @@ func TestAccTimestreamInfluxDBDBCluster_failoverMode(t *testing.T) {
 	})
 }
 
-func testAccCheckDBClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDBClusterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_timestreaminfluxdb_db_cluster" {
@@ -505,7 +503,7 @@ func testAccCheckDBClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tftimestreaminfluxdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -520,7 +518,7 @@ func testAccCheckDBClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDBClusterExists(ctx context.Context, name string, dbCluster *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
+func testAccCheckDBClusterExists(ctx context.Context, t *testing.T, name string, dbCluster *timestreaminfluxdb.GetDbClusterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -531,7 +529,7 @@ func testAccCheckDBClusterExists(ctx context.Context, name string, dbCluster *ti
 			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBCluster, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
 		resp, err := tftimestreaminfluxdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -545,7 +543,7 @@ func testAccCheckDBClusterExists(ctx context.Context, name string, dbCluster *ti
 }
 
 func testAccPreCheckDBClusters(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).TimestreamInfluxDBClient(ctx)
 
 	input := &timestreaminfluxdb.ListDbClustersInput{}
 	_, err := conn.ListDbClusters(ctx, input)

@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,6 +47,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 
@@ -442,7 +444,7 @@ func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	output, err := findDBClusterByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -450,7 +452,7 @@ func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBCluster, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionReading, ResNameDBCluster, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -585,7 +587,7 @@ func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
-		Refresh:                   statusDBCluster(ctx, conn, id),
+		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -603,7 +605,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(string(awstypes.ClusterStatusUpdating), string(awstypes.StatusUpdatingInstanceType)),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
-		Refresh:                   statusDBCluster(ctx, conn, id),
+		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -621,7 +623,7 @@ func waitDBClusterDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ClusterStatusDeleting, awstypes.ClusterStatusDeleted),
 		Target:  []string{},
-		Refresh: statusDBCluster(ctx, conn, id),
+		Refresh: statusDBCluster(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -634,10 +636,10 @@ func waitDBClusterDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	return nil, err
 }
 
-func statusDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBCluster(conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findDBClusterByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -657,8 +659,7 @@ func findDBClusterByID(ctx context.Context, conn *timestreaminfluxdb.Client, id 
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
