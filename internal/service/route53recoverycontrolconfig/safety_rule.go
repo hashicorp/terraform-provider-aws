@@ -320,13 +320,8 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange(names.AttrName) {
-		assertionRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
-	}
-
-	if d.HasChange("wait_period_ms") {
-		assertionRuleUpdate.WaitPeriodMs = aws.Int32(int32(d.Get("wait_period_ms").(int)))
-	}
+	assertionRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
+	assertionRuleUpdate.WaitPeriodMs = aws.Int64(int64(d.Get("wait_period_ms").(int)))
 
 	input := &r53rcc.UpdateSafetyRuleInput{
 		AssertionRuleUpdate: assertionRuleUpdate,
@@ -338,7 +333,7 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
 
-	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
+	return append(diags, sdkdiag.WrapDiagsf(resourceSafetyRuleRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
 }
 
 func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -349,13 +344,8 @@ func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange(names.AttrName) {
-		gatingRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
-	}
-
-	if d.HasChange("wait_period_ms") {
-		gatingRuleUpdate.WaitPeriodMs = aws.Int32(int32(d.Get("wait_period_ms").(int)))
-	}
+	gatingRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
+	gatingRuleUpdate.WaitPeriodMs = aws.Int64(int64(d.Get("wait_period_ms").(int)))
 
 	input := &r53rcc.UpdateSafetyRuleInput{
 		GatingRuleUpdate: gatingRuleUpdate,
@@ -367,7 +357,7 @@ func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
-	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Gating Rule")...)
+	return append(diags, sdkdiag.WrapDiagsf(resourceSafetyRuleRead(ctx, d, meta), "updating Route53 Recovery Control Config Gating Rule")...)
 }
 
 func findSafetyRuleByARN(ctx context.Context, conn *r53rcc.Client, arn string) (*r53rcc.DescribeSafetyRuleOutput, error) {
