@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_elasticache_global_replication_group: Change `engine` to Optional and Computed
 ```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: `engine` no longer has a default value
+```
