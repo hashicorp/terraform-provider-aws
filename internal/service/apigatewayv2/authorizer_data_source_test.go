@@ -4,7 +4,6 @@
 package apigatewayv2_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -15,8 +14,9 @@ import (
 
 func TestAccAPIGatewayV2AuthorizerDataSource_jwt(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSource1Name := "data.aws_apigatewayv2_authorizer.test1"
-	resourceName := "aws_apigatewayv2_authorizer.authorizer"
+	dataSourceName := "data.aws_apigatewayv2_authorizer.test"
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
@@ -24,14 +24,20 @@ func TestAccAPIGatewayV2AuthorizerDataSource_jwt(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIGatewayAuthorizerDataSourceConfig_jwt(),
+				Config: testAccAPIGatewayAuthorizerDataSourceConfig_jwt(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_type", resourceName, "authorizer_type"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "identity_sources.#", resourceName, "identity_sources.#"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "identity_sources.0", resourceName, "identity_sources.0"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "jwt_configuration.0.audience", resourceName, "jwt_configuration.0.audience"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "jwt_configuration.0.issuer", resourceName, "jwt_configuration.0.issuer"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_credentials_arn"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_payload_format_version"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_result_ttl_in_seconds"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_type", resourceName, "authorizer_type"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_uri"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "enable_simple_responses"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "identity_sources.#", resourceName, "identity_sources.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "identity_sources.0", resourceName, "identity_sources.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "jwt_configuration.#", resourceName, "jwt_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "jwt_configuration.0.audience", resourceName, "jwt_configuration.0.audience"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "jwt_configuration.0.issuer", resourceName, "jwt_configuration.0.issuer"),
 				),
 			},
 		},
@@ -40,8 +46,9 @@ func TestAccAPIGatewayV2AuthorizerDataSource_jwt(t *testing.T) {
 
 func TestAccAPIGatewayV2AuthorizerDataSource_request(t *testing.T) {
 	ctx := acctest.Context(t)
-	dataSource1Name := "data.aws_apigatewayv2_authorizer.test1"
-	resourceName := "aws_apigatewayv2_authorizer.authorizer"
+	dataSourceName := "data.aws_apigatewayv2_authorizer.test"
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
@@ -49,84 +56,79 @@ func TestAccAPIGatewayV2AuthorizerDataSource_request(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIGatewayAuthorizerDataSourceConfig_request(),
+				Config: testAccAPIGatewayAuthorizerDataSourceConfig_request(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_type", resourceName, "authorizer_type"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "identity_sources.#", resourceName, "identity_sources.#"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "identity_sources.0", resourceName, "identity_sources.0"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_credentials_arn", resourceName, "authorizer_credentials_arn"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_payload_format_version", resourceName, "authorizer_payload_format_version"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_result_ttl_in_seconds", resourceName, "authorizer_result_ttl_in_seconds"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "authorizer_uri", resourceName, "authorizer_uri"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "enable_simple_responses", resourceName, "enable_simple_responses"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_credentials_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_payload_format_version", resourceName, "authorizer_payload_format_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_result_ttl_in_seconds", resourceName, "authorizer_result_ttl_in_seconds"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_type", resourceName, "authorizer_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_uri", resourceName, "authorizer_uri"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "identity_sources.#", resourceName, "identity_sources.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enable_simple_responses", resourceName, "enable_simple_responses"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "jwt_configuration.#", resourceName, "jwt_configuration.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAPIGatewayAuthorizerDataSourceConfig_jwt() string {
-	apiName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "api" {
-  name          = %[1]q
-  protocol_type = "HTTP"
+func TestAccAPIGatewayV2AuthorizerDataSource_credentials(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_apigatewayv2_authorizer.test"
+	resourceName := "aws_apigatewayv2_authorizer.test"
+	iamRoleResourceName := "aws_iam_role.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIGatewayAuthorizerDataSourceConfig_credentials(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_credentials_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_payload_format_version"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "authorizer_result_ttl_in_seconds"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_type", resourceName, "authorizer_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "authorizer_uri", resourceName, "authorizer_uri"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "identity_sources.#", resourceName, "identity_sources.#"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "enable_simple_responses"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "jwt_configuration.#", resourceName, "jwt_configuration.#"),
+				),
+			},
+		},
+	})
 }
 
-resource "aws_cognito_user_pool" "pool" {
-  name = "testpool"
+func testAccAPIGatewayAuthorizerDataSourceConfig_jwt(rName string) string {
+	return acctest.ConfigCompose(testAccAuthorizerConfig_jwt(rName), `
+data "aws_apigatewayv2_authorizer" "test" {
+  api_id        = aws_apigatewayv2_api.test.id
+  authorizer_id = aws_apigatewayv2_authorizer.test.id
 }
 
-resource "aws_apigatewayv2_authorizer" "authorizer" {
-  api_id           = aws_apigatewayv2_api.api.id
-  authorizer_type  = "JWT"
-  identity_sources = ["$request.header.Authorization"]
-  name             = "example-authorizer"
-  jwt_configuration {
-    audience = ["https:/audience"]
-    issuer   = "https://${aws_cognito_user_pool.pool.endpoint}"
-  }
+`)
 }
 
-data "aws_apigatewayv2_authorizer" "test1" {
-  api_id = aws_apigatewayv2_api.api.id
-  authorizer_id = aws_apigatewayv2_authorizer.authorizer.id
+func testAccAPIGatewayAuthorizerDataSourceConfig_request(rName string) string {
+	return acctest.ConfigCompose(testAccAuthorizerConfig_httpAPILambdaRequest(rName), `
+data "aws_apigatewayv2_authorizer" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  authorizer_id = aws_apigatewayv2_authorizer.test.id
 }
 
-`, apiName)
+`)
 }
 
-func testAccAPIGatewayAuthorizerDataSourceConfig_request() string {
-	apiName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "api" {
-  name          = %[1]q
-  protocol_type = "HTTP"
+func testAccAPIGatewayAuthorizerDataSourceConfig_credentials(rName string) string {
+	return acctest.ConfigCompose(testAccAuthorizerConfig_credentials(rName), `
+data "aws_apigatewayv2_authorizer" "test" {
+  api_id = aws_apigatewayv2_api.test.id
+  authorizer_id = aws_apigatewayv2_authorizer.test.id
 }
 
-resource "aws_cognito_user_pool" "pool" {
-  name = "testpool"
-}
-
-data "aws_caller_identity" "current" {}
-
-resource "aws_apigatewayv2_authorizer" "authorizer" {
-  api_id           = aws_apigatewayv2_api.api.id
-  authorizer_type  = "REQUEST"
-  authorizer_credentials_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/apigAwsProxyRole"
-  authorizer_payload_format_version = "2.0"
-  authorizer_result_ttl_in_seconds = 300
-  authorizer_uri = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:HelloWorld/invocations"
-  enable_simple_responses = true
-  identity_sources = ["$request.header.Authorization"]
-  name             = "example-authorizer"
-}
-
-data "aws_apigatewayv2_authorizer" "test1" {
-  api_id = aws_apigatewayv2_api.api.id
-  authorizer_id = aws_apigatewayv2_authorizer.authorizer.id
-}
-
-`, apiName)
+`)
 }
