@@ -2330,17 +2330,19 @@ func testAccGlobalReplicationGroupConfig_engineParam(rName, primaryReplicationGr
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
   primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
   engine               = %[5]q
   engine_version       = %[6]q
   parameter_group_name = %[7]q
 }
+  
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
-  engine             = %[3]q
-  engine_version     = %[4]q
-  node_type          = "cache.m5.large"
-  num_cache_clusters = 1
+  engine               = %[3]q
+  engine_version       = %[4]q
+  node_type            = "cache.m5.large"
+  num_cache_clusters   = 1
 }
 `, rName, primaryReplicationGroupId, repGroupEngine, repGroupEngineVersion, globalEngine, globalEngineVersion, globalParamGroup)
 }
@@ -2351,16 +2353,19 @@ resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
   primary_replication_group_id       = aws_elasticache_replication_group.test.id
 }
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[2]q
   description          = "test"
-  engine             = "valkey"
-  engine_version     = "8.0"
-  node_type          = "cache.m5.large"
-  num_cache_clusters = 1
+  engine               = "valkey"
+  engine_version       = "8.0"
+  node_type            = "cache.m5.large"
+  num_cache_clusters   = 1
 }
+
 resource "aws_elasticache_replication_group" "secondary" {
   provider = awsalternate
+
   replication_group_id        = %[3]q
   description                 = "test secondary"
   global_replication_group_id = aws_elasticache_global_replication_group.test.id
