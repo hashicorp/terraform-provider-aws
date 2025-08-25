@@ -610,7 +610,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
 	// eventual consistency may cause an initial failure
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func(ctx context.Context) (any, error) {
 		return conn.DeleteMediaInsightsPipelineConfiguration(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
 			Identifier: aws.String(d.Id()),
 		})

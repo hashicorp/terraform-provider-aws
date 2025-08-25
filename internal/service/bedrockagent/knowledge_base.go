@@ -628,7 +628,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateKnowledgeBase(ctx, input)
 		}, errCodeValidationException, "cannot assume role")
 

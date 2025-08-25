@@ -282,7 +282,7 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 		ReplicationConfigurationTemplateID: data.ID.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.DeleteReplicationConfigurationTemplate(ctx, input)
 	}, "DependencyViolation")
 

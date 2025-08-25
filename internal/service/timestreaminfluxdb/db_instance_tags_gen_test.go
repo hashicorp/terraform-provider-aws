@@ -18,6 +18,7 @@ import (
 
 func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -212,6 +213,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -275,6 +277,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBInstance_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -326,6 +329,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyMap(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -409,6 +413,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -505,6 +510,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -650,6 +656,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 
 func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -743,6 +750,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -936,6 +944,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1105,6 +1114,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1290,6 +1300,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1383,6 +1394,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1475,6 +1487,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1544,6 +1557,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1605,6 +1619,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1675,6 +1690,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 
 func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1747,6 +1763,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 
 func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1805,6 +1822,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T)
 
 func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1905,6 +1923,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 
 func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1995,6 +2014,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 
 func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -2157,6 +2177,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 
 func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	var v timestreaminfluxdb.GetDbInstanceOutput
 	resourceName := "aws_timestreaminfluxdb_db_instance.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
