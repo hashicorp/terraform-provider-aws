@@ -3,32 +3,6 @@
 
 provider "null" {}
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
 resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                   = var.rName
   allocated_storage      = 20
@@ -45,6 +19,40 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
   }
+}
+
+# acctest.ConfigVPCWithSubnets(rName, 2)
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
 }
 
 resource "null_resource" "test" {}
