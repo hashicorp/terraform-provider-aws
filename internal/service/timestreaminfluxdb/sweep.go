@@ -16,7 +16,31 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_timestreaminfluxdb_db_cluster", sweepDBClusters)
 	awsv2.Register("aws_timestreaminfluxdb_db_instance", sweepDBInstances)
+}
+
+func sweepDBClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.TimestreamInfluxDBClient(ctx)
+	var input timestreaminfluxdb.ListDbClustersInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := timestreaminfluxdb.NewListDbClustersPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newDBClusterResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id)),
+			))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepDBInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
