@@ -3330,8 +3330,8 @@ func flattenHeader(apiObject *awstypes.ResponseInspectionHeader) []any {
 	}
 
 	m := map[string]any{
-		"name":           apiObject.Name,
 		"failure_values": apiObject.FailureValues,
+		"name":           apiObject.Name,
 		"success_values": apiObject.SuccessValues,
 	}
 
