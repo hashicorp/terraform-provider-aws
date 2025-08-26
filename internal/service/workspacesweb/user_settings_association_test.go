@@ -68,13 +68,10 @@ func TestAccWorkSpacesWebUserSettingsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebUserSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebUserSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userSettings1, userSettings2 awstypes.UserSettings
+	var userSettings awstypes.UserSettings
 	resourceName := "aws_workspacesweb_user_settings_association.test"
-	userSettingsResourceName1 := "aws_workspacesweb_user_settings.test"
-	userSettingsResourceName2 := "aws_workspacesweb_user_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -89,18 +86,10 @@ func TestAccWorkSpacesWebUserSettingsAssociation_update(t *testing.T) {
 			{
 				Config: testAccUserSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "user_settings_arn", userSettingsResourceName1, "user_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccUserSettingsAssociationConfig_updated(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserSettingsAssociationExists(ctx, resourceName, &userSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "user_settings_arn", userSettingsResourceName2, "user_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -190,35 +179,6 @@ resource "aws_workspacesweb_user_settings" "test" {
 
 resource "aws_workspacesweb_user_settings_association" "test" {
   user_settings_arn = aws_workspacesweb_user_settings.test.user_settings_arn
-  portal_arn        = aws_workspacesweb_portal.test.portal_arn
-}
-`
-}
-
-func testAccUserSettingsAssociationConfig_updated() string {
-	return `
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_user_settings" "test" {
-  copy_allowed     = "Enabled"
-  download_allowed = "Enabled"
-  paste_allowed    = "Enabled"
-  print_allowed    = "Enabled"
-  upload_allowed   = "Enabled"
-}
-
-resource "aws_workspacesweb_user_settings" "test2" {
-  copy_allowed     = "Disabled"
-  download_allowed = "Disabled"
-  paste_allowed    = "Disabled"
-  print_allowed    = "Disabled"
-  upload_allowed   = "Disabled"
-}
-
-resource "aws_workspacesweb_user_settings_association" "test" {
-  user_settings_arn = aws_workspacesweb_user_settings.test2.user_settings_arn
   portal_arn        = aws_workspacesweb_portal.test.portal_arn
 }
 `

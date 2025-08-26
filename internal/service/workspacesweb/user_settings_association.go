@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newUserSettingsAssociationResource(_ context.Context) (resource.ResourceWit
 	return &userSettingsAssociationResource{}, nil
 }
 
-const (
-	ResNameUserSettingsAssociation = "User Settings Association"
-)
-
 type userSettingsAssociationResource struct {
 	framework.ResourceWithModel[userSettingsAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *userSettingsAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"user_settings_arn": schema.StringAttribute{
-				Required: true,
+			"portal_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"portal_arn": schema.StringAttribute{
-				Required: true,
+			"user_settings_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *userSettingsAssociationResource) Create(ctx context.Context, request re
 	_, err := conn.AssociateUserSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameUserSettingsAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb User Settings Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *userSettingsAssociationResource) Read(ctx context.Context, request reso
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameUserSettingsAssociation, data.UserSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb User Settings Association (%s)", data.UserSettingsARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *userSettingsAssociationResource) Read(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *userSettingsAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *userSettingsAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *userSettingsAssociationResource) Delete(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameUserSettingsAssociation, data.UserSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb User Settings Association (%s)", data.UserSettingsARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *userSettingsAssociationResource) ImportState(ctx context.Context, reque
 
 type userSettingsAssociationResourceModel struct {
 	framework.WithRegionModel
-	UserSettingsARN types.String `tfsdk:"user_settings_arn"`
-	PortalARN       types.String `tfsdk:"portal_arn"`
+	PortalARN       fwtypes.ARN `tfsdk:"portal_arn"`
+	UserSettingsARN fwtypes.ARN `tfsdk:"user_settings_arn"`
 }
