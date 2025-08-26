@@ -1,14 +1,14 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "aws"
+layout: "AWS: aws_odb_network"
 page_title: "AWS: aws_odb_network"
 description: |-
-  Terraform resource for managing an Oracle Database@AWS.
+  Terraform data source to retrieve odb network for Oracle Database@AWS.
 ---
 
 # Data Source: aws_odb_network
 
-Terraform data source for managing Odb Network resource in AWS for Oracle Database@AWS.
+Terraform data source for to retrieve network resource in AWS for Oracle Database@AWS.
 
 
 ## Example Usage
@@ -24,11 +24,11 @@ data "aws_odb_network" "example" {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `id` - (Required)  Unique identifier of the odb network resource.
 
-The following argument is optional:
+The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 

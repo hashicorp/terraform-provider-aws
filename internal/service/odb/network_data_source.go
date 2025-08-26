@@ -4,6 +4,7 @@ package odb
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -41,7 +42,7 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Computed:    true,
 				Description: "Display name for the network resource.",
 			},
@@ -49,7 +50,7 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 				Description: "The AZ ID of the AZ where the ODB network is located.",
 			},
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
 				Description: "The availability zone where the ODB network is located.",
 			},
@@ -99,16 +100,16 @@ func (d *dataSourceNetwork) Schema(ctx context.Context, req datasource.SchemaReq
 				Computed:    true,
 				Description: "The list of CIDR ranges from the peered VPC that are allowed access to the ODB network. Please refer odb network peering documentation.",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  statusType,
 				Computed:    true,
 				Description: "The status of the network resource.",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the current status of the ODB network.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the ODB network was created.",

@@ -24,10 +24,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type odbNetworkDataSourceTest struct {
+type oracleDBNetworkDataSourceTest struct {
 }
 
-var odbNetworkDataSourceTestEntity = odbNetworkDataSourceTest{}
+var oracleDBNetworkDataSourceTestEntity = oracleDBNetworkDataSourceTest{}
 
 func TestAccODBNetworkDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -36,28 +36,28 @@ func TestAccODBNetworkDataSource_basic(t *testing.T) {
 	}
 	networkResource := "aws_odb_network.test_resource"
 	networkDataSource := "data.aws_odb_network.test"
-	rName := sdkacctest.RandomWithPrefix("tf-odb-net")
+	rName := sdkacctest.RandomWithPrefix("tf-ora-net")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			odbNetworkDataSourceTestEntity.testAccOdbNetworkDataSourcePreCheck(ctx, t)
+			oracleDBNetworkDataSourceTestEntity.testAccNetworkDataSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ODBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             odbNetworkDataSourceTestEntity.testAccCheckOdbNetworkDataSourceDestroyed(ctx),
+		CheckDestroy:             oracleDBNetworkDataSourceTestEntity.testAccCheckNetworkDataSourceDestroyed(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: odbNetworkDataSourceTestEntity.basicOdbNetworkDataSource(rName),
+				Config: oracleDBNetworkDataSourceTestEntity.basicNetworkDataSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(networkResource, "id", networkDataSource, "id"),
+					resource.TestCheckResourceAttrPair(networkResource, names.AttrID, networkDataSource, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func (odbNetworkDataSourceTest) testAccCheckOdbNetworkDataSourceDestroyed(ctx context.Context) resource.TestCheckFunc {
+func (oracleDBNetworkDataSourceTest) testAccCheckNetworkDataSourceDestroyed(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
@@ -65,7 +65,7 @@ func (odbNetworkDataSourceTest) testAccCheckOdbNetworkDataSourceDestroyed(ctx co
 			if rs.Type != "aws_odb_network" {
 				continue
 			}
-			_, err := odbNetworkDataSourceTestEntity.findOdbNetwork(ctx, conn, rs.Primary.ID)
+			_, err := oracleDBNetworkDataSourceTestEntity.findNetwork(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -80,7 +80,7 @@ func (odbNetworkDataSourceTest) testAccCheckOdbNetworkDataSourceDestroyed(ctx co
 	}
 }
 
-func (odbNetworkDataSourceTest) findOdbNetwork(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
+func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
 	input := odb.GetOdbNetworkInput{
 		OdbNetworkId: aws.String(id),
 	}
@@ -104,7 +104,7 @@ func (odbNetworkDataSourceTest) findOdbNetwork(ctx context.Context, conn *odb.Cl
 	return out.OdbNetwork, nil
 }
 
-func (odbNetworkDataSourceTest) basicOdbNetworkDataSource(rName string) string {
+func (oracleDBNetworkDataSourceTest) basicNetworkDataSource(rName string) string {
 	networkRes := fmt.Sprintf(`
 
 
@@ -131,13 +131,10 @@ data "aws_odb_network" "test" {
 `, rName)
 	return networkRes
 }
-func (odbNetworkDataSourceTest) testAccOdbNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {
+func (oracleDBNetworkDataSourceTest) testAccNetworkDataSourcePreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListOdbNetworksInput{}
-
-	_, err := conn.ListOdbNetworks(ctx, input)
-
+	input := odb.ListOdbNetworksInput{}
+	_, err := conn.ListOdbNetworks(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

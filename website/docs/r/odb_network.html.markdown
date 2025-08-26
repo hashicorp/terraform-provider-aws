@@ -1,14 +1,14 @@
 ---
 subcategory: "Oracle Database@AWS"
-layout: "aws"
+layout: "AWS: aws_odb_network"
 page_title: "AWS: aws_odb_network"
 description: |-
-  Terraform resource for managing an Oracle Database@AWS.
+  Terraform resource for managing odb network of an Oracle Database@AWS.
 ---
 
 # Resource: aws_odb_network
 
-Terraform resource for creating Odb Network resource in AWS for Oracle Database@AWS.
+Terraform resource for managing odb Network resource in AWS for Oracle Database@AWS.
 
 ## Example Usage
 

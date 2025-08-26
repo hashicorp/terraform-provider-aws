@@ -5,7 +5,6 @@ package odb
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -56,7 +56,7 @@ type resourceNetwork struct {
 	framework.WithImportByID
 }
 
-var OdbNetwork = newResourceNetwork
+var OracleDBNetwork = newResourceNetwork
 var managedServiceTimeout = 15 * time.Minute
 
 func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -68,7 +68,7 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Required:    true,
 				Description: "The user-friendly name for the odb network. Changing this will force terraform to create a new resource.",
 				PlanModifiers: []planmodifier.String{
@@ -155,7 +155,7 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				Description: "The DNS resolver endpoint in OCI for forwarding DNS queries for the ociPrivateZone domain.",
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"domain_name":         types.StringType,
+						names.AttrDomainName:  types.StringType,
 						"oci_dns_listener_ip": types.StringType,
 					},
 				},
@@ -199,7 +199,7 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Description: "Additional information about the current status of the ODB network.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the ODB network was created.",
@@ -323,7 +323,7 @@ func (r *resourceNetwork) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := FindOdbNetworkResourceByID(ctx, conn, state.OdbNetworkId.ValueString())
+	out, err := FindOracleDBNetworkResourceByID(ctx, conn, state.OdbNetworkId.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -520,7 +520,10 @@ func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeou
 }
 
 func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, conn *odb.Client, id string, timeout time.Duration, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) (*odbtypes.OdbNetwork, error) {
-	if targetStatus == odbtypes.AccessEnabled {
+
+	switch targetStatus {
+
+	case odbtypes.AccessEnabled:
 		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusEnabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusEnabled),
@@ -533,7 +536,7 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 			return out, err
 		}
 		return nil, err
-	} else if targetStatus == odbtypes.AccessDisabled {
+	case odbtypes.AccessDisabled:
 		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusDisabling),
 			Target:  enum.Slice(odbtypes.ManagedResourceStatusDisabled),
@@ -545,16 +548,16 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 		if out, ok := outputRaw.(*odbtypes.OdbNetwork); ok {
 			return out, err
 		}
-
 		return nil, err
-	}
 
-	return nil, errors.New("odb network invalid manged service status")
+	default:
+		return nil, errors.New("odb network invalid manged service status")
+	}
 }
 
 func statusManagedService(ctx context.Context, conn *odb.Client, id string, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindOdbNetworkResourceByID(ctx, conn, id)
+		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 
 		if err != nil {
 			return nil, "", err
@@ -602,7 +605,7 @@ func waitNetworkDeleted(ctx context.Context, conn *odb.Client, id string, timeou
 
 func statusNetwork(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
-		out, err := FindOdbNetworkResourceByID(ctx, conn, id)
+		out, err := FindOracleDBNetworkResourceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -625,7 +628,7 @@ func mapManagedServiceStatusToAccessStatus(mangedStatus odbtypes.ManagedResource
 	return "", errors.New("can not convert managed status to access status")
 }
 
-func FindOdbNetworkResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
+func FindOracleDBNetworkResourceByID(ctx context.Context, conn *odb.Client, id string) (*odbtypes.OdbNetwork, error) {
 	input := odb.GetOdbNetworkInput{
 		OdbNetworkId: aws.String(id),
 	}

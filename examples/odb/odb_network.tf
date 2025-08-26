@@ -1,7 +1,7 @@
 # Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
 
 # odb network without managed service
-resource "aws_odb_network" "test" {
+resource "aws_odb_network" "test_1" {
   display_name         = "odb-my-net"
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
@@ -14,7 +14,7 @@ resource "aws_odb_network" "test" {
 }
 
 # odb network with managed service
-resource "aws_odb_network" "test" {
+resource "aws_odb_network" "test_2" {
   display_name         = "odb-my-net"
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
