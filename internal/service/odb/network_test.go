@@ -31,7 +31,7 @@ var oracleDBNetworkResourceTestEntity = oracleDBNetworkResourceTest{
 }
 
 // Basic test with bare minimum input
-func TestOdbNetworkResource_basic(t *testing.T) {
+func TestAccODBNetworkResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -64,14 +64,13 @@ func TestOdbNetworkResource_basic(t *testing.T) {
 	})
 }
 
-func TestOdbNetworkResource_withAllParams(t *testing.T) {
+func TestAccODBNetworkResource_withAllParams(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var network odbtypes.OdbNetwork
+	var network1 odbtypes.OdbNetwork
 	rName := sdkacctest.RandomWithPrefix(oracleDBNetworkResourceTestEntity.displayNamePrefix)
 	resourceName := "aws_odb_network.test"
 
@@ -87,7 +86,7 @@ func TestOdbNetworkResource_withAllParams(t *testing.T) {
 			{
 				Config: oracleDBNetworkResourceTestEntity.networkWithAllParams(rName, "julia.com"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network),
+					oracleDBNetworkResourceTestEntity.testAccCheckNetworkExists(ctx, resourceName, &network1),
 				),
 			},
 			{
