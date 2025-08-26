@@ -1,4 +1,4 @@
-resource "aws_timestreaminfluxdb_db_instance" "test" {
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                   = var.rName
   allocated_storage      = 20
   username               = "admin"
@@ -8,11 +8,12 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"
   organization           = "organization"
+  failover_mode          = "AUTOMATIC"
 
 {{- template "tags" . }}
 }
 
-{{ template "acctest.ConfigVPCWithSubnets" 1 }}
+{{ template "acctest.ConfigVPCWithSubnets" 2 }}
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id

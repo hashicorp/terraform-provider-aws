@@ -7,7 +7,7 @@ provider "aws" {
   }
 }
 
-resource "aws_timestreaminfluxdb_db_instance" "test" {
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                   = var.rName
   allocated_storage      = 20
   username               = "admin"
@@ -17,18 +17,19 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"
   organization           = "organization"
+  failover_mode          = "AUTOMATIC"
 
   tags = var.resource_tags
 }
 
-# acctest.ConfigVPCWithSubnets(rName, 1)
+# acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-  count = 1
+  count = 2
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]

@@ -1,13 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "aws" {
-  default_tags {
-    tags = var.provider_tags
-  }
-}
+provider "null" {}
 
-resource "aws_timestreaminfluxdb_db_instance" "test" {
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
   name                   = var.rName
   allocated_storage      = 20
   username               = "admin"
@@ -17,18 +13,22 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_instance_type       = "db.influx.medium"
   bucket                 = "initial"
   organization           = "organization"
+  failover_mode          = "AUTOMATIC"
 
-  tags = var.resource_tags
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
 }
 
-# acctest.ConfigVPCWithSubnets(rName, 1)
+# acctest.ConfigVPCWithSubnets(rName, 2)
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test" {
-  count = 1
+  count = 2
 
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -55,20 +55,25 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 
+resource "null_resource" "test" {}
+
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "resource_tags" {
-  description = "Tags to set on resource. To specify no tags, set to `null`"
-  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
-  type     = map(string)
-  nullable = true
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
 }
 
-variable "provider_tags" {
-  type     = map(string)
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
+  type     = string
   nullable = false
 }

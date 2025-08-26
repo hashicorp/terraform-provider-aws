@@ -16,21 +16,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -38,7 +38,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -61,7 +61,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -76,7 +76,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -85,7 +85,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -112,7 +112,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -128,7 +128,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -136,7 +136,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -159,7 +159,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -174,13 +174,13 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -195,7 +195,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -211,21 +211,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -233,7 +233,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -256,7 +256,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -275,27 +275,27 @@ func TestAccTimestreamInfluxDBDBInstance_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_EmptyMap(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -310,7 +310,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyMap(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
@@ -327,27 +327,27 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -362,7 +362,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -370,7 +370,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -393,7 +393,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -411,21 +411,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -433,7 +433,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -456,7 +456,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -471,13 +471,13 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -492,7 +492,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -508,21 +508,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -530,7 +530,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -553,7 +553,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -562,7 +562,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -589,7 +589,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -605,7 +605,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -613,7 +613,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -636,7 +636,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -654,21 +654,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Add(t *testing.T
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -676,7 +676,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -699,7 +699,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -707,7 +707,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -730,7 +730,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -748,21 +748,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_EmptyTag_OnUpdate_Replace(t *testi
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -771,7 +771,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -791,7 +791,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -808,7 +808,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -818,7 +818,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -840,7 +840,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -858,7 +858,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -867,7 +867,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -887,7 +887,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -904,13 +904,13 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -926,7 +926,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -942,21 +942,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_providerOnly(t *testin
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -967,7 +967,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -993,7 +993,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1012,7 +1012,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1024,7 +1024,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1054,7 +1054,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1074,13 +1074,13 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1096,7 +1096,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -1112,21 +1112,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nonOverlapping(t *test
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1137,7 +1137,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1161,7 +1161,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1180,7 +1180,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1193,7 +1193,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1221,7 +1221,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1242,7 +1242,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1253,7 +1253,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1277,7 +1277,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1298,21 +1298,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_overlapping(t *testing
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1320,7 +1320,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1344,7 +1344,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1353,7 +1353,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1373,7 +1373,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1392,21 +1392,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToProviderOnly(t
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1415,7 +1415,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1435,7 +1435,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1443,7 +1443,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1467,7 +1467,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1485,21 +1485,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_updateToResourceOnly(t
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1510,7 +1510,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1534,7 +1534,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1555,21 +1555,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyResourceTag(t *te
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1578,7 +1578,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1598,7 +1598,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1617,21 +1617,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_emptyProviderOnlyTag(t
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1642,7 +1642,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1666,7 +1666,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1688,21 +1688,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullOverlappingResourc
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1713,7 +1713,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1739,7 +1739,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1761,27 +1761,27 @@ func TestAccTimestreamInfluxDBDBInstance_tags_DefaultTags_nullNonOverlappingReso
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1804,7 +1804,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1820,21 +1820,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnCreate(t *testing.T)
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1842,7 +1842,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1866,7 +1866,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1874,7 +1874,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1903,7 +1903,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1921,21 +1921,21 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Add(t *testin
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1943,7 +1943,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1967,13 +1967,13 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1996,7 +1996,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
@@ -2012,22 +2012,22 @@ func TestAccTimestreamInfluxDBDBInstance_tags_ComputedTag_OnUpdate_Replace(t *te
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -2041,7 +2041,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2076,7 +2076,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 			// 2: Update ignored tag only
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -2090,7 +2090,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2125,7 +2125,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -2139,7 +2139,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2175,22 +2175,22 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_DefaultTag(t *t
 	})
 }
 
-func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccTimestreamInfluxDBDBCluster_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v timestreaminfluxdb.GetDbInstanceOutput
-	resourceName := "aws_timestreaminfluxdb_db_instance.test"
+	var v timestreaminfluxdb.GetDbClusterOutput
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
-		CheckDestroy: testAccCheckDBInstanceDestroy(ctx, t),
+		CheckDestroy: testAccCheckDBClusterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2202,7 +2202,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2248,7 +2248,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *
 			// 2: Update ignored tag
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2260,7 +2260,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2305,7 +2305,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/DBInstance/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/DBCluster/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2317,7 +2317,7 @@ func TestAccTimestreamInfluxDBDBInstance_tags_IgnoreTags_Overlap_ResourceTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, t, resourceName, &v),
+					testAccCheckDBClusterExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
