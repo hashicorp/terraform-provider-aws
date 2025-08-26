@@ -270,6 +270,12 @@ service/appsync:
           - any-glob-to-any-file:
               - 'internal/service/appsync/**/*'
               - 'website/**/appsync_*'
+service/arcregionswitch:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/arcregionswitch/**/*'
+              - 'website/**/arcregionswitch_*'
 service/athena:
   - any:
       - changed-files:
