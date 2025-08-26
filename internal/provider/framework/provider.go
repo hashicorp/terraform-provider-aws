@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -387,23 +388,22 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 }
 
 func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
-	//spec := &inttypes.ServicePackageFrameworkListResource{
-	//	TypeName: "aws_batch_job_queue",
-	//	Factory:  batch.JobQueueResourceAsListResource,
-	//	Name:     "Job Queue",
-	//	Tags: unique.Make(inttypes.ServicePackageResourceTags{
-	//		IdentifierAttribute: names.AttrARN,
-	//	}),
-	//	Region:   unique.Make(inttypes.ResourceRegionDefault()),
-	//	Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
-	//}
-	//return []func() list.ListResource{
-	//	func() list.ListResource {
-	//		return newWrappedListResource(spec, names.Batch)
-	//	},
-	//}
+	spec := &inttypes.ServicePackageFrameworkListResource{
+		TypeName: "aws_cloudwatch_log_group",
+		Factory:  logs.LogGroupResourceAsListResource,
+		Name:     "Log Group",
+		Tags: unique.Make(inttypes.ServicePackageResourceTags{
+			IdentifierAttribute: names.AttrARN,
+		}),
+		Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+	}
 
-	return []func() list.ListResource{}
+	return []func() list.ListResource{
+		func() list.ListResource {
+			return newWrappedListResource(spec, names.Logs)
+		},
+	}
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
