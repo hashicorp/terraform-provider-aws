@@ -425,13 +425,6 @@ func (secretVersionImportID) Parse(id string) (string, map[string]string, error)
 	results := map[string]string{
 		"secret_id":  secretID,
 		"version_id": versionID,
-
-		// TODO - Always set to false on import
-		//
-		// The Parse method currently only supports string attributes. Attempting to
-		// set this boolean will result in a panic.
-		//   panic: has_secret_string_wo: '' expected type 'bool', got unconvertible type 'string', value: 'false'
-		// "has_secret_string_wo": "false",
 	}
 
 	return id, results, nil
