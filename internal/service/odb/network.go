@@ -520,9 +520,7 @@ func waitNetworkCreated(ctx context.Context, conn *odb.Client, id string, timeou
 }
 
 func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, conn *odb.Client, id string, timeout time.Duration, managedResourceStatus func(managedService *odbtypes.ManagedServices) odbtypes.ManagedResourceStatus) (*odbtypes.OdbNetwork, error) {
-
 	switch targetStatus {
-
 	case odbtypes.AccessEnabled:
 		stateConf := &retry.StateChangeConf{
 			Pending: enum.Slice(odbtypes.ManagedResourceStatusEnabling),
@@ -530,7 +528,6 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
-
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
 		if out, ok := outputRaw.(*odbtypes.OdbNetwork); ok {
 			return out, err
@@ -543,13 +540,11 @@ func waitForManagedService(ctx context.Context, targetStatus odbtypes.Access, co
 			Refresh: statusManagedService(ctx, conn, id, managedResourceStatus),
 			Timeout: timeout,
 		}
-
 		outputRaw, err := stateConf.WaitForStateContext(ctx)
 		if out, ok := outputRaw.(*odbtypes.OdbNetwork); ok {
 			return out, err
 		}
 		return nil, err
-
 	default:
 		return nil, errors.New("odb network invalid manged service status")
 	}
