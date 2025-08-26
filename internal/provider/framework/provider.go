@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -448,6 +449,21 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			}
 		}
 	}
+
+	spec := &inttypes.ServicePackageSDKListResource{
+		TypeName: "aws_cloudwatch_log_group",
+		Factory:  logs.LogGroupResourceAsListResource,
+		Name:     "Log Group",
+		Tags: unique.Make(inttypes.ServicePackageResourceTags{
+			IdentifierAttribute: names.AttrARN,
+		}),
+		Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+	}
+
+	p.listResources = append(p.listResources, func() list.ListResource {
+		return newWrappedListResourceSDK(spec, names.Logs)
+	})
 }
 
 // validateResourceSchemas is called from `New` to validate Terraform Plugin Framework-style resource schemas.
