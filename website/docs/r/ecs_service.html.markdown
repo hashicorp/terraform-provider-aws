@@ -106,8 +106,9 @@ resource "aws_ecs_service" "example" {
 
 ```terraform
 resource "aws_ecs_service" "example" {
-  name            = "example"
-  cluster         = aws_ecs_cluster.example.id
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
   # ... other configurations ...
 
   deployment_configuration {
