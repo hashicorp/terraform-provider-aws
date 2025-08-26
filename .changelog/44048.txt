@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_route53_resolver_rule: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_route53_resolver_rule_association: Add resource identity support
+```
