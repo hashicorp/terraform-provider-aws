@@ -49,6 +49,7 @@ BUG FIXES:
 * resource/aws_glue_catalog_table: Add `partition_keys.parameters` argument, fixing `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
 * resource/aws_imagebuilder_image_recipe: Increase upper limit of `block_device_mapping.ebs.iops` from `10000` to `100000` ([#43981](https://github.com/hashicorp/terraform-provider-aws/issues/43981))
 * resource/aws_nat_gateway: Fix inconsistent final plan for `secondary_private_ip_addresses` ([#43708](https://github.com/hashicorp/terraform-provider-aws/issues/43708))
+* resource/aws_wafv2_web_acl: Add missing flattening of `name` in `response_inspection.header` blocks for `AWSManagedRulesATPRuleSet` and `AWSManagedRulesACFPRuleSet` to avoid persistent plan diffs ([#44032](https://github.com/hashicorp/terraform-provider-aws/issues/44032))
 
 ## 6.10.0 (August 21, 2025)
 
