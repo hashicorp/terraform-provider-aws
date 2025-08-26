@@ -2090,12 +2090,12 @@ const (
 	serviceStatusStable  = "tfSTABLE"
 )
 
-var deploymentTerminalStates = []string{
-	string(awstypes.ServiceDeploymentStatusSuccessful),
-	string(awstypes.ServiceDeploymentStatusStopped),
-	string(awstypes.ServiceDeploymentStatusRollbackFailed),
-	string(awstypes.ServiceDeploymentStatusRollbackSuccessful),
-}
+var deploymentTerminalStates = enum.Slice(
+	awstypes.ServiceDeploymentStatusSuccessful,
+	awstypes.ServiceDeploymentStatusStopped,
+	awstypes.ServiceDeploymentStatusRollbackFailed,
+	awstypes.ServiceDeploymentStatusRollbackSuccessful,
+)
 
 func statusService(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
@@ -2309,12 +2309,12 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, primaryD
 
 func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, primaryDeploymentArn string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.ServiceDeploymentStatusPending),
-			string(awstypes.ServiceDeploymentStatusInProgress),
-			string(awstypes.ServiceDeploymentStatusRollbackRequested),
-			string(awstypes.ServiceDeploymentStatusRollbackInProgress),
-		},
+		Pending: enum.Slice(
+			awstypes.ServiceDeploymentStatusPending,
+			awstypes.ServiceDeploymentStatusInProgress,
+			awstypes.ServiceDeploymentStatusRollbackRequested,
+			awstypes.ServiceDeploymentStatusRollbackInProgress,
+		),
 		Target: deploymentTerminalStates,
 		Refresh: func() (any, string, error) {
 			status, err := findDeploymentStatus(ctx, conn, primaryDeploymentArn)
