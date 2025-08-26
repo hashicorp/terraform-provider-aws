@@ -480,11 +480,11 @@ resource "aws_glue_catalog_table_optimizer" "test" {
     role_arn = aws_iam_role.test.arn
     enabled  = true
 
-	compaction_configuration {
-		iceberg_configuration {
-			strategy = "binpack"
-		}
-	}
+    compaction_configuration {
+      iceberg_configuration {
+        strategy = "binpack"
+      }
+    }
   }
 }
 `,
@@ -505,11 +505,11 @@ resource "aws_glue_catalog_table_optimizer" "test" {
     role_arn = aws_iam_role.test.arn
     enabled  = %[1]t
 
-	compaction_configuration {
-		iceberg_configuration {
-			strategy = "binpack"
-		}
-	}
+    compaction_configuration {
+      iceberg_configuration {
+        strategy = "binpack"
+      }
+    }
   }
 }
 `, enabled))

@@ -499,7 +499,7 @@ func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Cont
 
 	if plan.Configuration.IsNull() {
 		if plan.Type.ValueString() == string(awstypes.TableOptimizerTypeCompaction) {
-			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(path.Root("configuration"), path.Root("type"), string(awstypes.TableOptimizerTypeCompaction)))
+			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(path.Root(names.AttrConfiguration), path.Root(names.AttrType), string(awstypes.TableOptimizerTypeCompaction)))
 		}
 		return
 	}
@@ -537,24 +537,24 @@ func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Cont
 	case string(awstypes.TableOptimizerTypeCompaction):
 		if compactionConfig == nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("compaction_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeCompaction)))
 			return
 		}
 
 		if retentionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("retention_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("retention_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeCompaction)))
 			return
 		}
 
 		if orphanFileDeletionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("orphan_file_deletion_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("orphan_file_deletion_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeCompaction)))
 			return
 		}
@@ -568,8 +568,8 @@ func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Cont
 		}
 		if icebergConfig == nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeRequiredWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("compaction_configuration").AtListIndex(0).AtName("iceberg_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration").AtListIndex(0).AtName("iceberg_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeCompaction)))
 			return
 		}
@@ -577,16 +577,16 @@ func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Cont
 	case string(awstypes.TableOptimizerTypeRetention):
 		if compactionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("compaction_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeRetention)))
 			return
 		}
 
 		if orphanFileDeletionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("orphan_file_deletion_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("orphan_file_deletion_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeRetention)))
 			return
 		}
@@ -594,16 +594,16 @@ func (m requireMatchingOptimizerConfiguration) PlanModifyObject(ctx context.Cont
 	case string(awstypes.TableOptimizerTypeOrphanFileDeletion):
 		if compactionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("compaction_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("compaction_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeOrphanFileDeletion)))
 			return
 		}
 
 		if retentionConfig != nil {
 			resp.Diagnostics.Append(fwdiag.NewAttributeConflictsWhenError(
-				path.Root("configuration").AtListIndex(0).AtName("retention_configuration"),
-				path.Root("type"),
+				path.Root(names.AttrConfiguration).AtListIndex(0).AtName("retention_configuration"),
+				path.Root(names.AttrType),
 				string(awstypes.TableOptimizerTypeOrphanFileDeletion)))
 			return
 		}
