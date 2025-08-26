@@ -75,7 +75,9 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the Domain.
+* `domain_version` - (Optional) Version of the Domain. Valid values are `V1` and `V2`. Defaults to `V1`.
 * `kms_key_identifier` - (Optional) ARN of the KMS key used to encrypt the Amazon DataZone domain, metadata and reporting data.
+* `service_role` - (Optional) ARN of the service role used by DataZone. Required when `domain_version` is set to `V2`.
 * `single_sign_on` - (Optional) Single sign on options, used to [enable AWS IAM Identity Center](https://docs.aws.amazon.com/datazone/latest/userguide/enable-IAM-identity-center-for-datazone.html) for DataZone.
 * `skip_deletion_check` - (Optional) Whether to skip the deletion check for the Domain.
 
