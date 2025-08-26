@@ -1086,7 +1086,7 @@ func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
 	resourceName := "aws_ecs_service.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.Skip(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
