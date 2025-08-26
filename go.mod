@@ -159,7 +159,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/location v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.36.0
