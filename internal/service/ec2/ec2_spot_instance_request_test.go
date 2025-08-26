@@ -384,9 +384,9 @@ func TestAccEC2SpotInstanceRequest_primaryNetworkInterface(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
-					resource.TestCheckResourceAttr(resourceName, "network_interface.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
-						"device_index": acctest.Ct0,
+						"device_index": "0",
 					}),
 				),
 			},
@@ -906,34 +906,16 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_spot_instance_request" "test" {
   ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
-  subnet_id            = aws_subnet.test.id
+  subnet_id            = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -1007,7 +989,7 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_primaryNetworkInterface(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1016,30 +998,11 @@ resource "aws_spot_instance_request" "test" {
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price                  = "0.05"
   wait_for_fulfillment        = true
+
   network_interface {
     network_interface_id = aws_network_interface.test.id
-    device_index = 0
+    device_index         = 0
   }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.0.0/24"
-  map_public_ip_on_launch = true
 
   tags = {
     Name = %[1]q
@@ -1047,18 +1010,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id       = aws_subnet.test.id
-  private_ips     = [ "10.0.0.100" ]
-  security_groups = [ aws_security_group.test.id ]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
