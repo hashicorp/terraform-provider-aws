@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newNetworkSettingsAssociationResource(_ context.Context) (resource.Resource
 	return &networkSettingsAssociationResource{}, nil
 }
 
-const (
-	ResNameNetworkSettingsAssociation = "Network Settings Association"
-)
-
 type networkSettingsAssociationResource struct {
 	framework.ResourceWithModel[networkSettingsAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *networkSettingsAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"network_settings_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"portal_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *networkSettingsAssociationResource) Create(ctx context.Context, request
 	_, err := conn.AssociateNetworkSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameNetworkSettingsAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Network Settings Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *networkSettingsAssociationResource) Read(ctx context.Context, request r
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameNetworkSettingsAssociation, data.NetworkSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Network Settings Association (%s)", data.NetworkSettingsARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *networkSettingsAssociationResource) Read(ctx context.Context, request r
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *networkSettingsAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *networkSettingsAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *networkSettingsAssociationResource) Delete(ctx context.Context, request
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameNetworkSettingsAssociation, data.NetworkSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Network Settings Association (%s)", data.NetworkSettingsARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *networkSettingsAssociationResource) ImportState(ctx context.Context, re
 
 type networkSettingsAssociationResourceModel struct {
 	framework.WithRegionModel
-	NetworkSettingsARN types.String `tfsdk:"network_settings_arn"`
-	PortalARN          types.String `tfsdk:"portal_arn"`
+	NetworkSettingsARN fwtypes.ARN `tfsdk:"network_settings_arn"`
+	PortalARN          fwtypes.ARN `tfsdk:"portal_arn"`
 }

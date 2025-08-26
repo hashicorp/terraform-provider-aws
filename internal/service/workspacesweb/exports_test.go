@@ -13,6 +13,7 @@ var (
 	ResourceIPAccessSettings                  = newIPAccessSettingsResource
 	ResourceIPAccessSettingsAssociation       = newIPAccessSettingsAssociationResource
 	ResourceNetworkSettings                   = newNetworkSettingsResource
+	ResourceNetworkSettingsAssociation        = newNetworkSettingsAssociationResource
 	ResourcePortal                            = newPortalResource
 	ResourceTrustStore                        = newTrustStoreResource
 	ResourceUserAccessLoggingSettings         = newUserAccessLoggingSettingsResource
