@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_sns_topic_policy: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_sns_topic_data_protection_policy: Add resource identity support
+```
+
+```release-note:enhancement
+resource/aws_sns_topic_subscription: Add resource identity support
+```

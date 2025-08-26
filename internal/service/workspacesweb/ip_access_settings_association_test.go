@@ -68,13 +68,10 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebIPAccessSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipAccessSettings1, ipAccessSettings2 awstypes.IpAccessSettings
+	var ipAccessSettings awstypes.IpAccessSettings
 	resourceName := "aws_workspacesweb_ip_access_settings_association.test"
-	ipAccessSettingsResourceName1 := "aws_workspacesweb_ip_access_settings.test"
-	ipAccessSettingsResourceName2 := "aws_workspacesweb_ip_access_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -89,18 +86,10 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_update(t *testing.T) {
 			{
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_access_settings_arn", ipAccessSettingsResourceName1, "ip_access_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccIPAccessSettingsAssociationConfig_updated(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_access_settings_arn", ipAccessSettingsResourceName2, "ip_access_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -190,35 +179,6 @@ resource "aws_workspacesweb_ip_access_settings" "test" {
 
 resource "aws_workspacesweb_ip_access_settings_association" "test" {
   ip_access_settings_arn = aws_workspacesweb_ip_access_settings.test.ip_access_settings_arn
-  portal_arn             = aws_workspacesweb_portal.test.portal_arn
-}
-`
-}
-
-func testAccIPAccessSettingsAssociationConfig_updated() string {
-	return `
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_ip_access_settings" "test" {
-  display_name = "test"
-
-  ip_rule {
-    ip_range = "10.0.0.0/16"
-  }
-}
-
-resource "aws_workspacesweb_ip_access_settings" "test2" {
-  display_name = "test2"
-
-  ip_rule {
-    ip_range = "192.168.0.0/24"
-  }
-}
-
-resource "aws_workspacesweb_ip_access_settings_association" "test" {
-  ip_access_settings_arn = aws_workspacesweb_ip_access_settings.test2.ip_access_settings_arn
   portal_arn             = aws_workspacesweb_portal.test.portal_arn
 }
 `

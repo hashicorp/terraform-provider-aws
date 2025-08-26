@@ -28,16 +28,16 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
+// @IdentityAttribute("bucket")
+// @IdentityAttribute("expected_bucket_owner", optional="true")
+// @ImportIDHandler("resourceImportID")
+// @Testing(preIdentityVersion="v6.9.0")
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,
 		ReadWithoutTimeout:   resourceBucketVersioningRead,
 		UpdateWithoutTimeout: resourceBucketVersioningUpdate,
 		DeleteWithoutTimeout: resourceBucketVersioningDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrBucket: {
