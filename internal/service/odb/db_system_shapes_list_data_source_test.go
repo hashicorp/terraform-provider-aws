@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccODBDbSystemShapesListDataSource_basic(t *testing.T) {
+func TestAccODBDBSystemShapesListDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -25,7 +25,7 @@ func TestAccODBDbSystemShapesListDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: basicConfigDbSystemShapeDataSource("use1-az6"),
+				Config: basicConfigDBSystemShapeDataSource("use1-az6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "db_system_shapes.#", "2"),
 				),
@@ -34,7 +34,7 @@ func TestAccODBDbSystemShapesListDataSource_basic(t *testing.T) {
 	})
 }
 
-func basicConfigDbSystemShapeDataSource(availabilityZoneId string) string {
+func basicConfigDBSystemShapeDataSource(availabilityZoneId string) string {
 	return fmt.Sprintf(`
 data "aws_odb_db_system_shapes_list" "test"{
   availability_zone_id = %[1]q

@@ -4,6 +4,7 @@ package odb
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -17,19 +18,19 @@ import (
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_db_system_shapes_list", name="Db System Shapes List")
-func newDataSourceDbSystemShapesList(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDbSystemShapesList{}, nil
+func newDataSourceDBSystemShapesList(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceDBSystemShapesList{}, nil
 }
 
 const (
-	DSNameDbSystemShapesList = "Db System Shapes List Data Source"
+	DSNameDBSystemShapesList = "Db System Shapes List Data Source"
 )
 
-type dataSourceDbSystemShapesList struct {
+type dataSourceDBSystemShapesList struct {
 	framework.DataSourceWithModel[dbSystemShapesListDataSourceModel]
 }
 
-func (d *dataSourceDbSystemShapesList) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceDBSystemShapesList) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"availability_zone_id": schema.StringAttribute{
@@ -46,7 +47,7 @@ func (d *dataSourceDbSystemShapesList) Schema(ctx context.Context, req datasourc
 	}
 }
 
-func (d *dataSourceDbSystemShapesList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *dataSourceDBSystemShapesList) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ODBClient(ctx)
 
 	var data dbSystemShapesListDataSourceModel
@@ -64,7 +65,7 @@ func (d *dataSourceDbSystemShapesList) Read(ctx context.Context, req datasource.
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDbSystemShapesList, "", err),
+				create.ProblemStandardMessage(names.ODB, create.ErrActionReading, DSNameDBSystemShapesList, "", err),
 				err.Error(),
 			)
 			return

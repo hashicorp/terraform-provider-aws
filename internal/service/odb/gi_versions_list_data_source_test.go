@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccGiVersionsListDataSource_basicX9M(t *testing.T) {
+func TestAccODBGiVersionsListDataSource_basicX9M(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -36,7 +36,7 @@ func TestAccGiVersionsListDataSource_basicX9M(t *testing.T) {
 	})
 }
 
-func TestAccGiVersionsListDataSource_basicX11M(t *testing.T) {
+func TestAccODBGiVersionsListDataSource_basicX11M(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

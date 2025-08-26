@@ -6,7 +6,7 @@ description: |-
   Terraform data source to retrieve available Grid Infrastructure versions of Oracle Database@AWS.
 ---
 
-# Data Source: aws_odb_cloud_exadata_infrastructure
+# Data Source: aws_odb_gi_versions_list
 
 Terraform data source to retrieve available Grid Infrastructure versions of Oracle Database@AWS.
 

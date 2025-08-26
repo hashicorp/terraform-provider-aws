@@ -21,7 +21,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
-			Factory:  newDataSourceDbSystemShapesList,
+			Factory:  newDataSourceDBSystemShapesList,
 			TypeName: "aws_odb_db_system_shapes_list",
 			Name:     "Db System Shapes List",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
