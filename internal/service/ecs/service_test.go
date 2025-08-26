@@ -3739,7 +3739,7 @@ resource "aws_ecs_service" "test" {
     }
   }
 
-  sigint_cancellation = true
+  sigint_rollback = true
   wait_for_steady_state = true
 
   depends_on = [
