@@ -2268,10 +2268,10 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 	select {
 	case <-ctx.Done():
 		log.Printf("[INFO] SIGINT detected. Initiating rollback for deployment: %s", *primaryDeploymentArn)
-		cancelContext, cancelFunc := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
-		defer cancelFunc()
+		ctx, cancel := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
+		defer cancel()
 
-		if err := rollbackBlueGreenDeployment(cancelContext, conn, primaryDeploymentArn); err != nil {
+		if err := rollbackBlueGreenDeployment(ctx, conn, primaryDeploymentArn); err != nil { //nolint:contextcheck // Original Context has been cancelled
 			log.Printf("[ERROR] Failed to rollback deployment: %s. Err: %s", *primaryDeploymentArn, err)
 		} else {
 			log.Printf("[INFO] Blue/green deployment: %s rolled back successfully.", *primaryDeploymentArn)
