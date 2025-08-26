@@ -31,13 +31,6 @@ func RetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context
 	return retryWhen(ctx, timeout, f, retryable)
 }
 
-// RetryGWhen is the generic version of RetryWhen which obviates the need for a type
-// assertion after the call. It retries the function `f` when the error it returns
-// satisfies `retryable`. `f` is retried until `timeout` expires.
-func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable) (T, error) {
-	return retryWhen(ctx, timeout, f, retryable)
-}
-
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
 func RetryWhenAWSErrCodeEquals[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), codes ...string) (T, error) { // nosemgrep:ci.aws-in-func-name
 	return retryWhen(ctx, timeout, f, func(err error) (bool, error) {
