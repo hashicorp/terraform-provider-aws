@@ -1799,6 +1799,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 				return false, err
 			},
 		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
@@ -1846,6 +1847,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		_, err := conn.UpdateService(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "draining ECS Service (%s): %s", d.Id(), err)
 		}
@@ -1872,6 +1874,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 			return false, err
 		},
 	)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): %s", d.Id(), err)
 	}
@@ -1945,6 +1948,7 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 			return false, err
 		},
 	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -1954,6 +1958,7 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 
 func findService(ctx context.Context, conn *ecs.Client, input *ecs.DescribeServicesInput) (*awstypes.Service, error) {
 	output, err := findServices(ctx, conn, input)
+
 	if err != nil {
 		return nil, err
 	}
@@ -2120,6 +2125,7 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 
 	return func() (any, string, error) {
 		outputRaw, serviceStatus, err := statusService(ctx, conn, serviceName, clusterNameOrARN)()
+
 		if err != nil {
 			return nil, "", err
 		}
@@ -2133,8 +2139,8 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 		if primaryTaskSet == nil {
 			primaryTaskSet = findPrimaryTaskSet(output.Deployments)
 
-			if primaryTaskSet != nil && (*primaryTaskSet).CreatedAt != nil {
-				createdAtUTC := (*primaryTaskSet).CreatedAt.UTC()
+			if primaryTaskSet != nil && primaryTaskSet.CreatedAt != nil {
+				createdAtUTC := primaryTaskSet.CreatedAt.UTC()
 				isNewPrimaryDeployment = createdAtUTC.After(operationTime)
 			}
 		}
