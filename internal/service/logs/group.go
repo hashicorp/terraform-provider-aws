@@ -8,25 +8,34 @@ import (
 	"fmt"
 	"iter"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -105,31 +114,127 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-func LogGroupResourceAsListResource() list.ListResourceWithProtoSchemas {
+func LogGroupResourceAsListResource() list.ListResourceWithConfigure {
 	return &logGroupListResource{}
 }
 
 type logGroupListResource struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByIdentity
 }
 
-func (l logGroupListResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	//TODO implement me
-	panic("implement me")
+type logGroupListResourceModel struct {
+	framework.WithRegionModel
 }
 
-func (l logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	//TODO implement me
-	panic("implement me")
+func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+	}
 }
 
-func (l logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	//TODO implement me
-	panic("implement me")
+func (l *logGroupListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
+	rg := resourceGroup()
+	response.ProtoV5Schema = rg.ProtoSchema(ctx)
+	response.ProtoV5IdentitySchema = rg.ProtoIdentitySchema(ctx)
 }
 
-func (l logGroupListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
-	//TODO implement me
-	panic("implement me")
+func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	awsClient := l.Meta()
+	conn := awsClient.LogsClient(ctx)
+
+	var query logGroupListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	interceptors := []listResultInterceptor{
+		populateIdentityInterceptor{},
+		identityInterceptor{
+			attributes: l.IdentitySpec().Attributes,
+		},
+		//setResourceInterceptor{},
+		//tagsInterceptor{
+		//	HTags: interceptors.HTags(unique.Make(inttypes.ServicePackageResourceTags{
+		//		IdentifierAttribute: names.AttrARN,
+		//	})),
+		//},
+	}
+
+	stream.Results = func(yield func(list.ListResult) bool) {
+		result := request.NewListResult(ctx)
+		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}) {
+			if err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
+				}
+				yield(result)
+				return
+			}
+
+			params := interceptorParams{
+				c:      awsClient,
+				result: &result,
+			}
+
+			params.when = Before
+			for interceptor := range slices.Values(interceptors) {
+				d := interceptor.read(ctx, params)
+				result.Diagnostics.Append(d...)
+				if d.HasError() {
+					result = list.ListResult{Diagnostics: result.Diagnostics}
+					yield(result)
+					return
+				}
+			}
+
+			logGroupResource := resourceGroup()
+			rg := logGroupResource.Data(&terraform.InstanceState{ID: aws.ToString(output.LogGroupName)})
+			resourceGroupSet(ctx, rg, output)
+
+			result.DisplayName = fmt.Sprintf("x%s (%s)x", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
+
+			params.when = After
+			for interceptor := range tfslices.BackwardValues(interceptors) {
+				d := interceptor.read(ctx, params)
+				result.Diagnostics.Append(d...)
+				if d.HasError() {
+					result = list.ListResult{Diagnostics: result.Diagnostics}
+					yield(result)
+					return
+				}
+			}
+
+			if result.Diagnostics.HasError() {
+				result = list.ListResult{Diagnostics: result.Diagnostics}
+				yield(result)
+				return
+			}
+
+			if !yield(result) {
+				return
+			}
+		}
+	}
+}
+
+func resourceGroupSet(ctx context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
+	d.Set(names.AttrName, lg.LogGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
+	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -319,4 +424,119 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 			}
 		}
 	}
+}
+
+// when represents the point in the CRUD request lifecycle that an interceptor is run.
+// Multiple values can be ORed together.
+type when uint16
+
+const (
+	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
+	After                    // Interceptor is invoked after successful call to method in schema
+	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
+	Finally                  // Interceptor is invoked after After or OnError
+)
+
+type interceptorParams struct {
+	c      *conns.AWSClient
+	result *list.ListResult
+	//object *jobQueueResourceModel // Because tfsdk.Resource doesn't have SetAttribute
+	when when
+}
+
+type listResultInterceptor interface {
+	read(ctx context.Context, params interceptorParams) fwdiag.Diagnostics
+}
+
+type identityInterceptor struct {
+	attributes []inttypes.IdentityAttribute
+}
+
+func (r identityInterceptor) read(ctx context.Context, params interceptorParams) (diags fwdiag.Diagnostics) {
+	awsClient := params.c
+
+	switch params.when {
+	case After:
+		for _, att := range r.attributes {
+			switch att.Name() {
+			case names.AttrAccountID:
+				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
+				if diags.HasError() {
+					return
+				}
+
+			case names.AttrRegion:
+				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
+				if diags.HasError() {
+					return
+				}
+
+			default:
+				var attrVal attr.Value
+				diags.Append(params.result.Resource.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
+				if diags.HasError() {
+					return
+				}
+
+				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
+				if diags.HasError() {
+					return
+				}
+			}
+		}
+	}
+
+	return
+}
+
+// This interceptor will not be needed if Framework pre-populates the Identity as it does with CRUD operations
+type populateIdentityInterceptor struct{}
+
+// This interceptor will not be needed if Framework pre-populates the Identity as it does with CRUD operations
+
+func (r populateIdentityInterceptor) read(ctx context.Context, params interceptorParams) (diags fwdiag.Diagnostics) {
+	switch params.when {
+	case Before:
+		identityType := params.result.Identity.Schema.Type()
+
+		obj, d := newEmptyObject(identityType)
+		diags.Append(d...)
+		if diags.HasError() {
+			return
+		}
+
+		diags.Append(params.result.Identity.Set(ctx, obj)...)
+		if diags.HasError() {
+			return
+		}
+	}
+
+	return
+}
+
+func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags fwdiag.Diagnostics) {
+	i, ok := typ.(attr.TypeWithAttributeTypes)
+	if !ok {
+		diags.AddError(
+			"Internal Error",
+			"An unexpected error occurred. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
+		)
+		return
+	}
+
+	attrTypes := i.AttributeTypes()
+	attrValues := make(map[string]attr.Value, len(attrTypes))
+	for attrName := range attrTypes {
+		attrValues[attrName] = types.StringNull()
+	}
+	obj, d := basetypes.NewObjectValue(attrTypes, attrValues)
+	diags.Append(d...)
+	if d.HasError() {
+		return basetypes.ObjectValue{}, diags
+	}
+
+	return obj, diags
 }
