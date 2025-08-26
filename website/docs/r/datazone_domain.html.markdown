@@ -36,26 +36,26 @@ resource "aws_iam_role" "domain_execution_role" {
       },
     ]
   })
+}
 
-  inline_policy {
-    name = "domain_execution_policy"
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          # Consider scoping down
-          Action = [
-            "datazone:*",
-            "ram:*",
-            "sso:*",
-            "kms:*",
-          ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
-      ]
-    })
-  }
+resource "aws_iam_role_policy" "domain_execution_role" {
+  role = aws_iam_role.domain_execution_role.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        # Consider scoping down
+        Action = [
+          "datazone:*",
+          "ram:*",
+          "sso:*",
+          "kms:*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 
 resource "aws_datazone_domain" "example" {
