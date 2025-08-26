@@ -30,7 +30,7 @@ func main() {
 	time.Sleep(time.Duration(delay) * time.Second)
 
 	// Find terraform process doing apply
-	cmd := exec.Command("ps", "aux")
+	cmd := exec.Command("ps", "aux") //lintignore:XR007
 	output, err := cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running ps: %v\n", err) // nosemgrep:ci.calling-fmt.Print-and-variants

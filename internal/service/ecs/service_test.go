@@ -1105,7 +1105,7 @@ func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 				Config: testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName, false),
 				PreConfig: func() {
 					go func() {
-						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start()
+						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start() //lintignore:XR007
 					}()
 				},
 				ExpectError: regexache.MustCompile("execution halted|context canceled"),
