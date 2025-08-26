@@ -1103,7 +1103,7 @@ func resourceService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"sigint_cancellation": {
+			"sigint_rollback": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -1438,7 +1438,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set(names.AttrARN, output.Service.ServiceArn)
 
 	if d.Get("wait_for_steady_state").(bool) {
-		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Get("sigint_cancellation").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitServiceStable(ctx, conn, d.Id(), d.Get("cluster").(string), operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 		}
 	} else if _, err := waitServiceActive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -1805,7 +1805,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if d.Get("wait_for_steady_state").(bool) {
-			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Get("sigint_cancellation").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, operationTime, d.Get("sigint_rollback").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 			}
 		} else if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -2159,7 +2159,7 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, serviceNa
 				}
 			}
 
-			if sigintConfig.rollbackRequested && !sigintConfig.rollbackRoutineStarted {
+			if sigintConfig.rollbackConfigured && !sigintConfig.rollbackRoutineStarted {
 				sigintConfig.waitGroup.Add(1)
 				go rollbackRoutine(ctx, conn, sigintConfig, primaryDeploymentArn)
 				sigintConfig.rollbackRoutineStarted = true
@@ -2257,7 +2257,7 @@ func findDeploymentStatus(ctx context.Context, conn *ecs.Client, deploymentArn s
 }
 
 type rollbackState struct {
-	rollbackRequested      bool
+	rollbackConfigured     bool
 	rollbackRoutineStarted bool
 	rollbackRoutineStopped chan struct{}
 	waitGroup              sync.WaitGroup
@@ -2272,10 +2272,10 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 		cancelContext, cancelFunc := context.WithTimeout(context.Background(), (1 * time.Hour)) // Maximum time before SIGKILL
 		defer cancelFunc()
 
-		if err := rollbackBlueGreenDeployment(cancelContext, conn, primaryDeploymentArn); err != nil {
+		if err := rollbackDeployment(cancelContext, conn, primaryDeploymentArn); err != nil {
 			log.Printf("[ERROR] Failed to rollback deployment: %s. Err: %s", *primaryDeploymentArn, err)
 		} else {
-			log.Printf("[INFO] Blue/green deployment: %s rolled back successfully.", *primaryDeploymentArn)
+			log.Printf("[INFO] Deployment: %s rolled back successfully.", *primaryDeploymentArn)
 		}
 
 	case <-rollbackState.rollbackRoutineStopped:
@@ -2283,7 +2283,7 @@ func rollbackRoutine(ctx context.Context, conn *ecs.Client, rollbackState *rollb
 	}
 }
 
-func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
+func rollbackDeployment(ctx context.Context, conn *ecs.Client, primaryDeploymentArn *string) error {
 	// Check if deployment is already in terminal state, meaning rollback is not needed
 	deploymentStatus, err := findDeploymentStatus(ctx, conn, *primaryDeploymentArn)
 	if err != nil {
@@ -2293,7 +2293,7 @@ func rollbackBlueGreenDeployment(ctx context.Context, conn *ecs.Client, primaryD
 		return nil
 	}
 
-	log.Printf("[INFO] Rolling back blue/green deployment. This may take a few minutes...")
+	log.Printf("[INFO] Rolling back deployment %s. This may take a few minutes...", *primaryDeploymentArn)
 
 	input := &ecs.StopServiceDeploymentInput{
 		ServiceDeploymentArn: primaryDeploymentArn,
@@ -2332,7 +2332,7 @@ func waitForDeploymentTerminalStatus(ctx context.Context, conn *ecs.Client, prim
 // Does not return tags.
 func waitServiceStable(ctx context.Context, conn *ecs.Client, serviceName, clusterNameOrARN string, operationTime time.Time, sigintCancellation bool, timeout time.Duration) (*awstypes.Service, error) { //nolint:unparam
 	sigintConfig := &rollbackState{
-		rollbackRequested:      sigintCancellation,
+		rollbackConfigured:     sigintCancellation,
 		rollbackRoutineStarted: false,
 		rollbackRoutineStopped: make(chan struct{}),
 		waitGroup:              sync.WaitGroup{},
