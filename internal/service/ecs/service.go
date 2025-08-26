@@ -2551,7 +2551,7 @@ func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration)
 	tfMap := map[string]any{}
 
 	if v := apiObject.BakeTimeInMinutes; v != nil {
-		tfMap["bake_time_in_minutes"] = strconv.Itoa(int(*v))
+		tfMap["bake_time_in_minutes"] = flex.Int32ToStringValue(v)
 	}
 
 	if v := apiObject.LifecycleHooks; len(v) > 0 {
