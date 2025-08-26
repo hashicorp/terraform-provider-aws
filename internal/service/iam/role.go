@@ -562,7 +562,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		RoleName: aws.String(roleName),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRole(ctx, input)
 	})
 

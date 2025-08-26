@@ -130,7 +130,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutRetentionPolicy(ctx, &input)
 		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -181,7 +181,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 				return conn.PutRetentionPolicy(ctx, &input)
 			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 

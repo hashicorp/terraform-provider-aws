@@ -123,13 +123,15 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 	}
 
 	// Convert string certificates to byte slices
-	for _, cert := range data.Certificates.Elements() {
-		var certValue certificateModel
-		if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
-			continue
+	for _, certificate := range data.Certificates.Elements() {
+		var cert certificateModel
+		response.Diagnostics.Append(tfsdk.ValueAs(ctx, certificate, &cert)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-		formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
-		input.CertificateList = append(input.CertificateList, []byte(formatted_cert))
+
+		formattedCert := strings.ReplaceAll(strings.Trim(cert.Body.ValueString(), "\""), `\n`, "\n")
+		input.CertificateList = append(input.CertificateList, []byte(formattedCert))
 	}
 
 	output, err := conn.CreateTrustStore(ctx, &input)
@@ -160,20 +162,13 @@ func (r *trustStoreResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	var d diag.Diagnostics
-	data.Certificates, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
-
-	response.Diagnostics.Append(d...)
+	var diags diag.Diagnostics
+	data.Certificates, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	for _, cert := range data.Certificates.Elements() {
-		var certValue certificateModel
-		if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
-			continue
-		}
-	}
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -210,7 +205,12 @@ func (r *trustStoreResource) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	data.Certificates, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+	var diags diag.Diagnostics
+	data.Certificates, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -230,40 +230,46 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 
 	if !new.Certificates.Equal(old.Certificates) {
 		input := workspacesweb.UpdateTrustStoreInput{
-			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 			ClientToken:   aws.String(sdkid.UniqueId()),
+			TrustStoreArn: new.TrustStoreARN.ValueStringPointer(),
 		}
 
 		// Handle certificate additions and deletions
 		oldCerts := make(map[string]string) // cert content -> thumbprint
-		for _, cert := range old.Certificates.Elements() {
-			var certValue certificateModel
-			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
-				continue
+		for _, certificate := range old.Certificates.Elements() {
+			var cert certificateModel
+			response.Diagnostics.Append(tfsdk.ValueAs(ctx, certificate, &cert)...)
+			if response.Diagnostics.HasError() {
+				return
 			}
-			oldCerts[base64.StdEncoding.EncodeToString([]byte(certValue.Body.ValueString()))] = certValue.Thumbprint.ValueString()
+
+			oldCerts[base64.StdEncoding.EncodeToString([]byte(cert.Body.ValueString()))] = cert.Thumbprint.ValueString()
 		}
 
 		newCertContents := make(map[string]bool)
-		for _, cert := range new.Certificates.Elements() {
-			var certValue certificateModel
-			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
-				continue
+		for _, certificate := range new.Certificates.Elements() {
+			var cert certificateModel
+			response.Diagnostics.Append(tfsdk.ValueAs(ctx, certificate, &cert)...)
+			if response.Diagnostics.HasError() {
+				return
 			}
-			formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
-			newCertContents[base64.StdEncoding.EncodeToString([]byte(formatted_cert))] = true
+
+			formattedCert := strings.ReplaceAll(strings.Trim(cert.Body.ValueString(), "\""), `\n`, "\n")
+			newCertContents[base64.StdEncoding.EncodeToString([]byte(formattedCert))] = true
 		}
 
 		// Find certificates to add
-		for _, cert := range new.Certificates.Elements() {
-			var certValue certificateModel
-			if tfsdk.ValueAs(ctx, cert, &certValue).HasError() {
-				continue
+		for _, certificate := range new.Certificates.Elements() {
+			var cert certificateModel
+			response.Diagnostics.Append(tfsdk.ValueAs(ctx, certificate, &cert)...)
+			if response.Diagnostics.HasError() {
+				return
 			}
-			formatted_cert := strings.ReplaceAll(strings.Trim(certValue.Body.String(), "\""), `\n`, "\n")
-			certEncoded := base64.StdEncoding.EncodeToString([]byte(formatted_cert))
+
+			formattedCert := strings.ReplaceAll(strings.Trim(cert.Body.String(), "\""), `\n`, "\n")
+			certEncoded := base64.StdEncoding.EncodeToString([]byte(formattedCert))
 			if _, exists := oldCerts[certEncoded]; !exists {
-				input.CertificatesToAdd = append(input.CertificatesToAdd, []byte(formatted_cert))
+				input.CertificatesToAdd = append(input.CertificatesToAdd, []byte(formattedCert))
 			}
 		}
 
@@ -301,7 +307,12 @@ func (r *trustStoreResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	new.Certificates, _ = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+	var diags diag.Diagnostics
+	new.Certificates, diags = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, certificates)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -336,7 +347,7 @@ func (r *trustStoreResource) ImportState(ctx context.Context, request resource.I
 
 func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn string) (*awstypes.TrustStore, error) {
 	input := workspacesweb.GetTrustStoreInput{
-		TrustStoreArn: &arn,
+		TrustStoreArn: aws.String(arn),
 	}
 	output, err := conn.GetTrustStore(ctx, &input)
 
@@ -364,33 +375,35 @@ func listTrustStoreCertificates(ctx context.Context, conn *workspacesweb.Client,
 	}
 
 	var certificates []certificateModel
-	paginator := workspacesweb.NewListTrustStoreCertificatesPaginator(conn, &input)
+	pages := workspacesweb.NewListTrustStoreCertificatesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		output, err := pages.NextPage(ctx)
 
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, certSummary := range output.CertificateList {
 			// Get detailed certificate information
-			certInput := workspacesweb.GetTrustStoreCertificateInput{
-				TrustStoreArn: aws.String(arn),
+			input := workspacesweb.GetTrustStoreCertificateInput{
 				Thumbprint:    certSummary.Thumbprint,
+				TrustStoreArn: aws.String(arn),
 			}
 
-			certOutput, err := conn.GetTrustStoreCertificate(ctx, &certInput)
+			output, err := conn.GetTrustStoreCertificate(ctx, &input)
+
 			if err != nil {
 				return nil, err
 			}
-			if certOutput.Certificate != nil {
+
+			if output.Certificate != nil {
 				cert := certificateModel{
-					Body:           types.StringValue(string(certOutput.Certificate.Body)),
-					Issuer:         types.StringPointerValue(certOutput.Certificate.Issuer),
-					NotValidAfter:  types.StringValue(aws.ToTime(certOutput.Certificate.NotValidAfter).Format(time.RFC3339)),
-					NotValidBefore: types.StringValue(aws.ToTime(certOutput.Certificate.NotValidBefore).Format(time.RFC3339)),
-					Subject:        types.StringPointerValue(certOutput.Certificate.Subject),
-					Thumbprint:     types.StringPointerValue(certOutput.Certificate.Thumbprint),
+					Body:           types.StringValue(string(output.Certificate.Body)),
+					Issuer:         types.StringPointerValue(output.Certificate.Issuer),
+					NotValidAfter:  types.StringValue(aws.ToTime(output.Certificate.NotValidAfter).Format(time.RFC3339)),
+					NotValidBefore: types.StringValue(aws.ToTime(output.Certificate.NotValidBefore).Format(time.RFC3339)),
+					Subject:        types.StringPointerValue(output.Certificate.Subject),
+					Thumbprint:     types.StringPointerValue(output.Certificate.Thumbprint),
 				}
 				certificates = append(certificates, cert)
 			}

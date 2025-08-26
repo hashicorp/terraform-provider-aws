@@ -4,7 +4,6 @@
 package slices
 
 import (
-	"iter"
 	"slices"
 )
 
@@ -58,17 +57,6 @@ func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2
 	return v, nil
 }
 
-// AppliedToEach returns an iterator that yields the slice elements transformed by the function `f`.
-func AppliedToEach[S ~[]E, E any, T any](s S, f func(E) T) iter.Seq[T] {
-	return func(yield func(T) bool) {
-		for _, v := range s {
-			if !yield(f(v)) {
-				return
-			}
-		}
-	}
-}
-
 // Values returns a new slice containing values from the pointers in each element of the original slice `s`.
 func Values[S ~[]*E, E any](s S) []E {
 	return ApplyToAll(s, func(e *E) E {
@@ -81,6 +69,10 @@ type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`.
 func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
+	if len(s) == 0 {
+		return nil
+	}
+
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {

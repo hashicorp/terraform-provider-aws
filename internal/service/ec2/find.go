@@ -2294,7 +2294,17 @@ func findNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.Client, i
 		}),
 	}
 
-	return findNetworkInterface(ctx, conn, &input)
+	output, err := findNetworkInterface(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findNetworkInterfaceSecurityGroup(ctx context.Context, conn *ec2.Client, networkInterfaceID string, securityGroupID string) (*awstypes.GroupIdentifier, error) {

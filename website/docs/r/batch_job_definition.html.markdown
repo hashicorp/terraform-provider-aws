@@ -344,7 +344,7 @@ The following arguments are optional:
 
 #### eks_metadata
 
-* `labels` - Key-value pairs used to identify, sort, and organize cube resources.
+* `labels` - Key-value pairs used to identify, sort, and organize kubernetes resources.
 
 #### `eks_secret`
 

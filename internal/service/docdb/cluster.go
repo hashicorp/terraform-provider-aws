@@ -512,7 +512,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterFromSnapshot(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
@@ -573,7 +573,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreDBClusterToPointInTime(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
@@ -677,7 +677,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.CreateDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 

@@ -76,7 +76,7 @@ func resourceResourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:    getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutResourcePolicy(ctx, input)
 	})
 
