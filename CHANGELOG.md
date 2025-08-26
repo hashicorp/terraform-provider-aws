@@ -11,6 +11,7 @@ FEATURES:
 * **New Resource:** `aws_workspacesweb_portal` ([#43444](https://github.com/hashicorp/terraform-provider-aws/issues/43444))
 * **New Resource:** `aws_workspacesweb_trust_store` ([#43408](https://github.com/hashicorp/terraform-provider-aws/issues/43408))
 * **New Resource:** `aws_workspacesweb_user_access_logging_settings_association` ([#43776](https://github.com/hashicorp/terraform-provider-aws/issues/43776))
+* **New Resource:** `aws_workspacesweb_user_settings_association` ([#43777](https://github.com/hashicorp/terraform-provider-aws/issues/43777))
 
 ENHANCEMENTS:
 
