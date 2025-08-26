@@ -1081,6 +1081,7 @@ func TestAccECSService_BlueGreenDeployment_outOfBandRemoval(t *testing.T) {
 }
 
 func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
+	acctest.Skip(t, "Skipping SIGINT rollback test, as it fails when ran alongside other acceptance tests. Remove this line to test SIGINT rollback.")
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
