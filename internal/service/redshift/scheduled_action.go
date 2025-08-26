@@ -184,7 +184,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %#v", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateScheduledAction(ctx, input)
 		},
 		func(err error) (bool, error) {
