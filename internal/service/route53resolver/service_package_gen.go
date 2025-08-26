@@ -180,6 +180,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route53_resolver_rule_association",
 			Name:     "Rule Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }
