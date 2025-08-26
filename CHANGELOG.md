@@ -1,5 +1,9 @@
 ## 6.11.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_distribution: Add SaaS manager configuration support ([#42409](https://github.com/hashicorp/terraform-provider-aws/issues/42409))
+
 ## 6.10.0 (August 21, 2025)
 
 NOTES:
