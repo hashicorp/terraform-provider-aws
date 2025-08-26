@@ -275,6 +275,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/gertd/go-pluralize v0.2.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.65
@@ -311,7 +312,6 @@ require (
 	golang.org/x/text v0.28.0
 	golang.org/x/tools v0.36.0
 	gopkg.in/dnaeon/go-vcr.v4 v4.0.5
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -339,7 +339,6 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
