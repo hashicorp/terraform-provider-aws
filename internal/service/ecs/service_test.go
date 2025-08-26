@@ -1081,13 +1081,14 @@ func TestAccECSService_BlueGreenDeployment_outOfBandRemoval(t *testing.T) {
 }
 
 func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
-	acctest.Skip(t, "Skipping SIGINT rollback test, as it fails when ran alongside other acceptance tests. Remove this line to test SIGINT rollback.")
+	acctest.Skip(t, "SIGINT handling can't reliably be tested in CI")
+
 	ctx := acctest.Context(t)
 	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)[:16] // Use shorter name to avoid target group name length issues
 	resourceName := "aws_ecs_service.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1104,7 +1105,7 @@ func TestAccECSService_BlueGreenDeployment_sigintRollback(t *testing.T) {
 				Config: testAccServiceConfig_blueGreenDeployment_withHookBehavior(rName, false),
 				PreConfig: func() {
 					go func() {
-						exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start()
+						_ = exec.Command("go", "run", "test-fixtures/sigint_helper.go", "30").Start()
 					}()
 				},
 				ExpectError: regexache.MustCompile("execution halted|context canceled"),
@@ -2766,21 +2767,6 @@ func testAccCheckServiceDisableServiceConnect(ctx context.Context, service *awst
 	}
 }
 
-func testAccCheckServiceRemoveDeploymentConfiguration(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-
-		input := &ecs.UpdateServiceInput{
-			Cluster:                 service.ClusterArn,
-			Service:                 service.ServiceName,
-			DeploymentConfiguration: &awstypes.DeploymentConfiguration{},
-		}
-
-		_, err := conn.UpdateService(ctx, input)
-		return err
-	}
-}
-
 func testAccCheckServiceRemoveBlueGreenDeploymentConfigurations(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
@@ -3739,7 +3725,7 @@ resource "aws_ecs_service" "test" {
     }
   }
 
-  sigint_rollback = true
+  sigint_rollback       = true
   wait_for_steady_state = true
 
   depends_on = [

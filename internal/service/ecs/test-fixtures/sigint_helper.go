@@ -4,22 +4,23 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/YakDriver/regexache"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: go run sigint_helper.go <delay_seconds>")
+		fmt.Println("Usage: go run sigint_helper.go <delay_seconds>") // nosemgrep:ci.calling-fmt.Print-and-variants
 		os.Exit(1)
 	}
 
 	delay, err := strconv.Atoi(os.Args[1])
 	if err != nil {
-		fmt.Printf("Invalid delay: %v\n", err)
+		fmt.Printf("Invalid delay: %v\n", err) // nosemgrep:ci.calling-fmt.Print-and-variants
 		os.Exit(1)
 	}
 
@@ -29,12 +30,12 @@ func main() {
 	cmd := exec.Command("ps", "aux")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("Error running ps: %v\n", err)
+		fmt.Printf("Error running ps: %v\n", err) // nosemgrep:ci.calling-fmt.Print-and-variants
 		os.Exit(1)
 	}
 
 	lines := strings.Split(string(output), "\n")
-	re := regexp.MustCompile(`/opt/homebrew/bin/terraform apply.*-auto-approve`)
+	re := regexache.MustCompile(`/opt/homebrew/bin/terraform apply.*-auto-approve`)
 
 	for _, line := range lines {
 		if re.MatchString(line) && !strings.Contains(line, "sigint_helper") {
@@ -45,12 +46,12 @@ func main() {
 					continue
 				}
 
-				fmt.Printf("Sending SIGINT to PID %d: %s\n", pid, line)
-				syscall.Kill(pid, syscall.SIGINT)
+				fmt.Printf("Sending SIGINT to PID %d: %s\n", pid, line) // nosemgrep:ci.calling-fmt.Print-and-variants
+				_ = syscall.Kill(pid, syscall.SIGINT)
 				return
 			}
 		}
 	}
 
-	fmt.Println("No matching terraform process found")
+	fmt.Println("No matching terraform process found") // nosemgrep:ci.calling-fmt.Print-and-variants
 }
