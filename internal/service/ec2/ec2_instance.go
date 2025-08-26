@@ -609,6 +609,7 @@ func resourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						// Note: Changes to `network_interface.network_card_index` should be mirrored in `aws_spot_instance_request`
 						"network_card_index": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -1333,10 +1334,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 			// Otherwise, assume the network device was attached via an outside resource.
 			for _, index := range configuredDeviceIndexes {
 				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
 					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -2680,16 +2681,18 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfa
 		networkInterfaces = append(networkInterfaces, ni)
 	} else if nInterfaces != nil && nInterfaces.(*schema.Set).Len() > 0 {
 		// If we have manually specified network interfaces, build and attach those here.
-		vL := nInterfaces.(*schema.Set).List()
-		for _, v := range vL {
-			ini := v.(map[string]any)
-			ni := awstypes.InstanceNetworkInterfaceSpecification{
-				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+		tfList := nInterfaces.(*schema.Set).List()
+		for _, tfMapRaw := range tfList {
+			tfMap := tfMapRaw.(map[string]any)
+			apiObject := awstypes.InstanceNetworkInterfaceSpecification{
+				DeleteOnTermination: aws.Bool(tfMap[names.AttrDeleteOnTermination].(bool)),
+				DeviceIndex:         aws.Int32(int32(tfMap["device_index"].(int))),
+				NetworkInterfaceId:  aws.String(tfMap[names.AttrNetworkInterfaceID].(string)),
 			}
-			networkInterfaces = append(networkInterfaces, ni)
+			if v, ok := tfMap["network_card_index"]; ok && v != 0 {
+				apiObject.NetworkCardIndex = aws.Int32(int32(v.(int)))
+			}
+			networkInterfaces = append(networkInterfaces, apiObject)
 		}
 	} else {
 		v := primaryNetworkInterface.([]any)
