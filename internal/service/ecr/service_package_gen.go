@@ -148,8 +148,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 		{
 			Factory:  resourceRepositoryPolicy,
 			TypeName: "aws_ecr_repository_policy",
-			Name:     "Repsitory Policy",
+			Name:     "Repository Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity("repository"),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }
