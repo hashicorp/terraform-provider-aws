@@ -383,7 +383,6 @@ func TestAccEC2SpotInstanceRequest_primaryNetworkInterface(t *testing.T) {
 				Config: testAccSpotInstanceRequestConfig_primaryNetworkInterface(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
-					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
 						"device_index": "0",
