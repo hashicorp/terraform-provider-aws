@@ -42,6 +42,8 @@ func TestAccDataZoneDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "portal_url"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "datazone", "domain/{id}"),
+					resource.TestCheckResourceAttr(resourceName, "domain_version", "V1"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrServiceRole),
 				),
 			},
 			{
