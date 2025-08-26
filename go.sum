@@ -403,8 +403,8 @@ github.com/aws/aws-sdk-go-v2/service/outposts v1.56.0 h1:kOqT0HBrIn7nfX2X81VPnPq
 github.com/aws/aws-sdk-go-v2/service/outposts v1.56.0/go.mod h1:YSMVOwGc+mgGnlYYA+SPM3jDngBaPDWFFQhoDiobxkU=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.0 h1:2Q55YYHqitmezF6oNwhszb7feV0iH3pOqmN1519pK8c=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.23.0/go.mod h1:D965E7cTpFVf5Jt9O5/QlMqnEJOz69UDT/9q2Rkmf8o=
-github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.14.2 h1:VAFDtiP1dwvrwLsRETzyIbENGZrYZU4EHeYeGJaT8nY=
-github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.14.2/go.mod h1:XpKmAxXi9iKPMMULORJVN6fUzwzSHoQ6VCWmk4ypZQ4=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.0 h1:XU2x1cN+5gksh0r7jtQYFQY0kBkmdhzylDwAxA7bHVg=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.15.0/go.mod h1:XpKmAxXi9iKPMMULORJVN6fUzwzSHoQ6VCWmk4ypZQ4=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.11.2 h1:F7v8ORYq38EXz369JoeiGbRdehi5tsDqEUuRdxzVA2Q=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.11.2/go.mod h1:0YpYDAw7FTVae7YFJalT/MvCor9grmcHN3N/5gw7ZaY=
 github.com/aws/aws-sdk-go-v2/service/pinpoint v1.38.2 h1:2jESr6QyBr25xMHkrwlgPrQuhTRVSnRVaAIW7JLk0iE=
