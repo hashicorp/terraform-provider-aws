@@ -254,7 +254,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/swf v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.40.0
-	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.34.2
