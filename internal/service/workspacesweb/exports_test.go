@@ -19,6 +19,7 @@ var (
 	ResourceUserAccessLoggingSettings            = newUserAccessLoggingSettingsResource
 	ResourceUserAccessLoggingSettingsAssociation = newUserAccessLoggingSettingsAssociationResource
 	ResourceUserSettings                         = newUserSettingsResource
+	ResourceUserSettingsAssociation              = newUserSettingsAssociationResource
 
 	FindBrowserSettingsByARN           = findBrowserSettingsByARN
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
