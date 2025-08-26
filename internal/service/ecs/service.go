@@ -620,12 +620,6 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
-						},
 						"bake_time_in_minutes": {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
@@ -642,11 +636,6 @@ func resourceService() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
 									"lifecycle_stages": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -655,8 +644,19 @@ func resourceService() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.DeploymentLifecycleHookStage](),
 										},
 									},
+									names.AttrRoleARN: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 								},
 							},
+						},
+						"strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DeploymentStrategy](),
 						},
 					},
 				},
@@ -1101,12 +1101,12 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"sigint_cancellation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"task_definition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1510,11 +1510,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			d.Set("deployment_circuit_breaker", nil)
 		}
 
-		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(ctx, service.DeploymentConfiguration)); err != nil {
+		if err := d.Set("deployment_configuration", flattenDeploymentConfiguration(service.DeploymentConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting deployment_configuration: %s", err)
 		}
 	}
-
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
@@ -2544,16 +2543,12 @@ func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreake
 	return tfMap
 }
 
-func flattenDeploymentConfiguration(ctx context.Context, apiObject *awstypes.DeploymentConfiguration) []any {
+func flattenDeploymentConfiguration(apiObject *awstypes.DeploymentConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]any{}
-
-	if v := apiObject.Strategy; v != "" {
-		tfMap["strategy"] = string(v)
-	}
 
 	if v := apiObject.BakeTimeInMinutes; v != nil {
 		tfMap["bake_time_in_minutes"] = strconv.Itoa(int(*v))
@@ -2561,6 +2556,10 @@ func flattenDeploymentConfiguration(ctx context.Context, apiObject *awstypes.Dep
 
 	if v := apiObject.LifecycleHooks; len(v) > 0 {
 		tfMap["lifecycle_hook"] = flattenLifecycleHooks(v)
+	}
+
+	if v := apiObject.Strategy; v != "" {
+		tfMap["strategy"] = v
 	}
 
 	if len(tfMap) == 0 {
