@@ -993,10 +993,10 @@ func testAccSpotInstanceRequestConfig_primaryNetworkInterface(rName string) stri
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  spot_price                  = "0.05"
-  wait_for_fulfillment        = true
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
 
   network_interface {
     network_interface_id = aws_network_interface.test.id
