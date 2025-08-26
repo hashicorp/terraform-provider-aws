@@ -115,6 +115,15 @@ type ServicePackageSDKResource struct {
 	Import   SDKv2Import
 }
 
+type ServicePackageSDKListResource struct {
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
+}
+
 type Identity struct {
 	IsGlobalResource       bool   // All
 	IsSingleton            bool   // Singleton
