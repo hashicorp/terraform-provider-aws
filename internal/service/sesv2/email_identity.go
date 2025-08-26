@@ -115,6 +115,10 @@ func resourceEmailIdentity() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"verification_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -191,6 +195,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("identity_type", string(out.IdentityType))
+	d.Set("verification_status", string(out.VerificationStatus))
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return diags
