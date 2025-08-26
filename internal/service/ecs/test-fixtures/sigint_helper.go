@@ -47,7 +47,7 @@ func main() {
 				}
 
 				fmt.Printf("Sending SIGINT to PID %d: %s\n", pid, line) // nosemgrep:ci.calling-fmt.Print-and-variants
-				syscall.Kill(pid, syscall.SIGINT)
+				_ = syscall.Kill(pid, syscall.SIGINT)
 				return
 			}
 		}
