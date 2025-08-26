@@ -757,3 +757,120 @@ func (w *wrappedListResourceFramework) Metadata(_ context.Context, request resou
 	// This method does not call down to the inner resource.
 	response.TypeName = w.spec.TypeName
 }
+
+type wrappedListResourceSDK struct {
+	inner              list.ListResourceWithConfigure
+	meta               *conns.AWSClient
+	servicePackageName string
+	spec               *inttypes.ServicePackageSDKListResource
+	interceptors       interceptorInvocations
+}
+
+func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) list.ListResourceWithConfigure {
+	var interceptors interceptorInvocations
+
+	if v := spec.Region; !tfunique.IsHandleNil(v) && v.Value().IsOverrideEnabled {
+		interceptors = append(interceptors, listResourceInjectRegionAttribute())
+		// TODO: validate region in partition, needs tweaked error message
+	}
+
+	inner := spec.Factory()
+
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
+	}
+
+	if v, ok := inner.(framework.Lister); ok {
+		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
+
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
+		}
+	}
+
+	return &wrappedListResourceSDK{
+		inner:              inner,
+		servicePackageName: servicePackageName,
+		spec:               spec,
+		interceptors:       interceptors,
+	}
+}
+
+// Metadata implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
+	response.TypeName = w.spec.TypeName
+}
+
+// context is run on all wrapped methods before any interceptors.
+func (w *wrappedListResourceSDK) context(ctx context.Context, getAttribute getAttributeFunc, c *conns.AWSClient) (context.Context, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var overrideRegion string
+
+	var isRegionOverrideEnabled bool
+	if regionSpec := w.spec.Region; !tfunique.IsHandleNil(regionSpec) && regionSpec.Value().IsOverrideEnabled {
+		isRegionOverrideEnabled = true
+	}
+
+	if isRegionOverrideEnabled && getAttribute != nil {
+		var target types.String
+		diags.Append(getAttribute(ctx, path.Root(names.AttrRegion), &target)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		if target.IsNull() || target.IsUnknown() {
+			overrideRegion = c.AwsConfig(ctx).Region
+		} else {
+			overrideRegion = target.ValueString()
+		}
+	}
+
+	ctx = conns.NewResourceContext(ctx, w.servicePackageName, w.spec.Name, overrideRegion)
+	if c != nil {
+		ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+		ctx = c.RegisterLogger(ctx)
+		ctx = fwflex.RegisterLogger(ctx)
+	}
+
+	return ctx, diags
+}
+
+func (w *wrappedListResourceSDK) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedListResourceSDK) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	stream.Results = tfiter.Null[list.ListResult]()
+
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	if len(diags) > 0 {
+		stream.Results = tfiter.Concat(stream.Results, list.ListResultsStreamDiagnostics(diags))
+	}
+	if diags.HasError() {
+		return
+	}
+
+	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
+}
+
+// ListResourceConfigSchema implements list.ListResourceWithConfigure.
+func (w *wrappedListResourceSDK) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	ctx, diags := w.context(ctx, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+}
