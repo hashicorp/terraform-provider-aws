@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_timestreaminfluxdb_db_cluster` ([#42382](https://github.com/hashicorp/terraform-provider-aws/issues/42382))
 * **New Resource:** `aws_workspacesweb_browser_settings_association` ([#43735](https://github.com/hashicorp/terraform-provider-aws/issues/43735))
 * **New Resource:** `aws_workspacesweb_data_protection_settings_association` ([#43773](https://github.com/hashicorp/terraform-provider-aws/issues/43773))
 * **New Resource:** `aws_workspacesweb_identity_provider` ([#43729](https://github.com/hashicorp/terraform-provider-aws/issues/43729))
@@ -9,6 +10,7 @@ FEATURES:
 * **New Resource:** `aws_workspacesweb_network_settings_association` ([#43775](https://github.com/hashicorp/terraform-provider-aws/issues/43775))
 * **New Resource:** `aws_workspacesweb_portal` ([#43444](https://github.com/hashicorp/terraform-provider-aws/issues/43444))
 * **New Resource:** `aws_workspacesweb_trust_store` ([#43408](https://github.com/hashicorp/terraform-provider-aws/issues/43408))
+* **New Resource:** `aws_workspacesweb_user_access_logging_settings_association` ([#43776](https://github.com/hashicorp/terraform-provider-aws/issues/43776))
 
 ENHANCEMENTS:
 
@@ -51,6 +53,7 @@ BUG FIXES:
 * resource/aws_glue_catalog_table: Add `partition_keys.parameters` argument, fixing `Invalid address to set: []string{"partition_keys", "0", "parameters"}` errors ([#26702](https://github.com/hashicorp/terraform-provider-aws/issues/26702))
 * resource/aws_imagebuilder_image_recipe: Increase upper limit of `block_device_mapping.ebs.iops` from `10000` to `100000` ([#43981](https://github.com/hashicorp/terraform-provider-aws/issues/43981))
 * resource/aws_nat_gateway: Fix inconsistent final plan for `secondary_private_ip_addresses` ([#43708](https://github.com/hashicorp/terraform-provider-aws/issues/43708))
+* resource/aws_timestreaminfluxdb_db_instance: Fix tag-only update errors ([#42382](https://github.com/hashicorp/terraform-provider-aws/issues/42382))
 * resource/aws_wafv2_web_acl: Add missing flattening of `name` in `response_inspection.header` blocks for `AWSManagedRulesATPRuleSet` and `AWSManagedRulesACFPRuleSet` to avoid persistent plan diffs ([#44032](https://github.com/hashicorp/terraform-provider-aws/issues/44032))
 
 ## 6.10.0 (August 21, 2025)
