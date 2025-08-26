@@ -582,7 +582,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 	}
 
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyGlobalCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -679,7 +679,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Clien
 
 		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", globalClusterID, clusterID, engineVersion)
 		_, err = tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input, optFn)
 			},
 			func(err error) (bool, error) {

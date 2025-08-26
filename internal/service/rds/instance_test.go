@@ -7093,7 +7093,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 						SkipFinalSnapshot:    aws.Bool(true),
 					}
 					_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
-						func() (any, error) {
+						func(ctx context.Context) (any, error) {
 							return conn.DeleteDBInstance(ctx, deleteInput)
 						},
 						func(err error) (bool, error) {
