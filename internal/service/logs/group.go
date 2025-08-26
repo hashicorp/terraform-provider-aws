@@ -5,12 +5,16 @@ package logs
 
 import (
 	"context"
+	"fmt"
+	"iter"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -99,6 +103,33 @@ func resourceGroup() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+func LogGroupResourceAsListResource() list.ListResourceWithProtoSchemas {
+	return &logGroupListResource{}
+}
+
+type logGroupListResource struct {
+}
+
+func (l logGroupListResource) Metadata(ctx context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l logGroupListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -268,36 +299,24 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 }
 
 func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
-	output, err := findLogGroups(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertSingleValueResultIterErr(listLogGroups(ctx, conn, input))
 }
 
-func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogGroup, error) {
-	var output []awstypes.LogGroup
-	opts := tfslices.NewFinderOptions(optFns)
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput) iter.Seq2[awstypes.LogGroup, error] {
+	return func(yield func(awstypes.LogGroup, error) bool) {
+		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.LogGroup{}, fmt.Errorf("listing CloudWatch Logs Log Groups: %w", err))
+				return
+			}
 
-	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.LogGroups {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
+			for _, v := range page.LogGroups {
+				if !yield(v, nil) {
+					return
 				}
 			}
 		}
 	}
-
-	return output, nil
 }

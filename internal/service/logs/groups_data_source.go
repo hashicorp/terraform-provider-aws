@@ -8,12 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,17 +48,15 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any)
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	output, err := findLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	var arns, logGroupNames []string
-	for _, v := range output {
-		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(v.Arn)))
-		logGroupNames = append(logGroupNames, aws.ToString(v.LogGroupName))
+	for output, err := range listLogGroups(ctx, conn, &input) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
+		}
+
+		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(output.Arn)))
+		logGroupNames = append(logGroupNames, aws.ToString(output.LogGroupName))
 	}
 	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)
