@@ -2767,21 +2767,6 @@ func testAccCheckServiceDisableServiceConnect(ctx context.Context, service *awst
 	}
 }
 
-func testAccCheckServiceRemoveDeploymentConfiguration(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
-
-		input := &ecs.UpdateServiceInput{
-			Cluster:                 service.ClusterArn,
-			Service:                 service.ServiceName,
-			DeploymentConfiguration: &awstypes.DeploymentConfiguration{},
-		}
-
-		_, err := conn.UpdateService(ctx, input)
-		return err
-	}
-}
-
 func testAccCheckServiceRemoveBlueGreenDeploymentConfigurations(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
