@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newDataProtectionSettingsAssociationResource(_ context.Context) (resource.R
 	return &dataProtectionSettingsAssociationResource{}, nil
 }
 
-const (
-	ResNameDataProtectionSettingsAssociation = "Data Protection Settings Association"
-)
-
 type dataProtectionSettingsAssociationResource struct {
 	framework.ResourceWithModel[dataProtectionSettingsAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *dataProtectionSettingsAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"data_protection_settings_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"portal_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *dataProtectionSettingsAssociationResource) Create(ctx context.Context, 
 	_, err := conn.AssociateDataProtectionSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameDataProtectionSettingsAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Data Protection Settings Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *dataProtectionSettingsAssociationResource) Read(ctx context.Context, re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameDataProtectionSettingsAssociation, data.DataProtectionSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Data Protection Settings Association (%s)", data.DataProtectionSettingsARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *dataProtectionSettingsAssociationResource) Read(ctx context.Context, re
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *dataProtectionSettingsAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *dataProtectionSettingsAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *dataProtectionSettingsAssociationResource) Delete(ctx context.Context, 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameDataProtectionSettingsAssociation, data.DataProtectionSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Data Protection Settings Association (%s)", data.DataProtectionSettingsARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *dataProtectionSettingsAssociationResource) ImportState(ctx context.Cont
 
 type dataProtectionSettingsAssociationResourceModel struct {
 	framework.WithRegionModel
-	DataProtectionSettingsARN types.String `tfsdk:"data_protection_settings_arn"`
-	PortalARN                 types.String `tfsdk:"portal_arn"`
+	DataProtectionSettingsARN fwtypes.ARN `tfsdk:"data_protection_settings_arn"`
+	PortalARN                 fwtypes.ARN `tfsdk:"portal_arn"`
 }

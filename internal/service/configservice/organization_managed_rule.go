@@ -162,7 +162,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 		input.OrganizationManagedRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutOrganizationConfigRule(ctx, input)
 	})
 
@@ -275,7 +275,7 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 		timeout = 2 * time.Minute
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
 			OrganizationConfigRuleName: aws.String(d.Id()),
 		})
@@ -398,7 +398,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 		const (
 			timeout = 15 * time.Second
 		)
-		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *types.OrganizationAccessDeniedException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return pages.NextPage(ctx)
 		})
 

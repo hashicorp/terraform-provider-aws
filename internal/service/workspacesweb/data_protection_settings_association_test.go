@@ -68,13 +68,10 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebDataProtectionSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebDataProtectionSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dataProtectionSettings1, dataProtectionSettings2 awstypes.DataProtectionSettings
+	var dataProtectionSettings awstypes.DataProtectionSettings
 	resourceName := "aws_workspacesweb_data_protection_settings_association.test"
-	dataProtectionSettingsResourceName1 := "aws_workspacesweb_data_protection_settings.test"
-	dataProtectionSettingsResourceName2 := "aws_workspacesweb_data_protection_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -89,18 +86,10 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_update(t *testing.T) 
 			{
 				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName1, "data_protection_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceDataProtectionSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccDataProtectionSettingsAssociationConfig_updated(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "data_protection_settings_arn", dataProtectionSettingsResourceName2, "data_protection_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -186,27 +175,6 @@ resource "aws_workspacesweb_data_protection_settings" "test" {
 
 resource "aws_workspacesweb_data_protection_settings_association" "test" {
   data_protection_settings_arn = aws_workspacesweb_data_protection_settings.test.data_protection_settings_arn
-  portal_arn                   = aws_workspacesweb_portal.test.portal_arn
-}
-`
-}
-
-func testAccDataProtectionSettingsAssociationConfig_updated() string {
-	return `
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_data_protection_settings" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_data_protection_settings" "test2" {
-  display_name = "test2"
-}
-
-resource "aws_workspacesweb_data_protection_settings_association" "test" {
-  data_protection_settings_arn = aws_workspacesweb_data_protection_settings.test2.data_protection_settings_arn
   portal_arn                   = aws_workspacesweb_portal.test.portal_arn
 }
 `

@@ -70,13 +70,10 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_basic(t *testing.T
 	})
 }
 
-func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userAccessLoggingSettings1, userAccessLoggingSettings2 awstypes.UserAccessLoggingSettings
+	var userAccessLoggingSettings awstypes.UserAccessLoggingSettings
 	resourceName := "aws_workspacesweb_user_access_logging_settings_association.test"
-	userAccessLoggingSettingsResourceName1 := "aws_workspacesweb_user_access_logging_settings.test"
-	userAccessLoggingSettingsResourceName2 := "aws_workspacesweb_user_access_logging_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,18 +89,10 @@ func TestAccWorkSpacesWebUserAccessLoggingSettingsAssociation_update(t *testing.
 			{
 				Config: testAccUserAccessLoggingSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "user_access_logging_settings_arn", userAccessLoggingSettingsResourceName1, "user_access_logging_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserAccessLoggingSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccUserAccessLoggingSettingsAssociationConfig_updated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserAccessLoggingSettingsAssociationExists(ctx, resourceName, &userAccessLoggingSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "user_access_logging_settings_arn", userAccessLoggingSettingsResourceName2, "user_access_logging_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -194,37 +183,6 @@ resource "aws_workspacesweb_user_access_logging_settings" "test" {
 
 resource "aws_workspacesweb_user_access_logging_settings_association" "test" {
   user_access_logging_settings_arn = aws_workspacesweb_user_access_logging_settings.test.user_access_logging_settings_arn
-  portal_arn                       = aws_workspacesweb_portal.test.portal_arn
-}
-`, rName)
-}
-
-func testAccUserAccessLoggingSettingsAssociationConfig_updated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_kinesis_stream" "test" {
-  name        = "amazon-workspaces-web-%[1]s"
-  shard_count = 1
-}
-
-resource "aws_kinesis_stream" "test2" {
-  name        = "amazon-workspaces-web-%[1]s-2"
-  shard_count = 1
-}
-
-resource "aws_workspacesweb_user_access_logging_settings" "test" {
-  kinesis_stream_arn = aws_kinesis_stream.test.arn
-}
-
-resource "aws_workspacesweb_user_access_logging_settings" "test2" {
-  kinesis_stream_arn = aws_kinesis_stream.test2.arn
-}
-
-resource "aws_workspacesweb_user_access_logging_settings_association" "test" {
-  user_access_logging_settings_arn = aws_workspacesweb_user_access_logging_settings.test2.user_access_logging_settings_arn
   portal_arn                       = aws_workspacesweb_portal.test.portal_arn
 }
 `, rName)
