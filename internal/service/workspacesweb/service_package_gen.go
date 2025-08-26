@@ -88,6 +88,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newNetworkSettingsAssociationResource,
+			TypeName: "aws_workspacesweb_network_settings_association",
+			Name:     "Network Settings Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newPortalResource,
 			TypeName: "aws_workspacesweb_portal",
 			Name:     "Portal",
