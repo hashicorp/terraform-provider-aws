@@ -15,16 +15,17 @@ import (
 )
 
 // @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
+// @Region(global=true)
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(hasExistsFunction=false)
+// @Testing(generator=false)
 func resourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
 		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,
 		UpdateWithoutTimeout: resourceSerialConsoleAccessUpdate,
 		DeleteWithoutTimeout: resourceSerialConsoleAccessDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrEnabled: {
@@ -36,7 +37,7 @@ func resourceSerialConsoleAccess() *schema.Resource {
 	}
 }
 
-func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -46,17 +47,18 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceSerialConsoleAccessRead(ctx, d, meta)...)
 }
 
-func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+	input := ec2.GetSerialConsoleAccessStatusInput{}
+	output, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)
@@ -67,7 +69,7 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -80,7 +82,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSerialConsoleAccessRead(ctx, d, meta)...)
 }
 
-func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -97,9 +99,11 @@ func setSerialConsoleAccess(ctx context.Context, conn *ec2.Client, enabled bool)
 	var err error
 
 	if enabled {
-		_, err = conn.EnableSerialConsoleAccess(ctx, &ec2.EnableSerialConsoleAccessInput{})
+		input := ec2.EnableSerialConsoleAccessInput{}
+		_, err = conn.EnableSerialConsoleAccess(ctx, &input)
 	} else {
-		_, err = conn.DisableSerialConsoleAccess(ctx, &ec2.DisableSerialConsoleAccessInput{})
+		input := ec2.DisableSerialConsoleAccessInput{}
+		_, err = conn.DisableSerialConsoleAccess(ctx, &input)
 	}
 
 	return err

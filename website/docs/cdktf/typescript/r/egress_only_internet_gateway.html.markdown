@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpcId` - (Required) The VPC ID to create in.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -97,4 +98,4 @@ Using `terraform import`, import Egress-only Internet gateways using the `id`. F
 % terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7ed3e94395680c60b6e40820f5a3e85dfb53bdc2a67b6dc191917e0125e4b534 -->
+<!-- cache-key: cdktf-0.20.8 input-6b7ee46f62c9ace49a8c5d227042f518ce3656ea3ed85483f0802dfffdbc4fe9 -->

@@ -121,6 +121,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_policy` - (Required) Defines how Security Hub is configured. See [below](#configuration_policy).
 * `description` - (Optional) The description of the configuration policy.
 * `name` - (Required) The name of the configuration policy.

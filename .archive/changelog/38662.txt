@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_service: Add `volume_configuration.managed_ebs_volume.tag_specifications` attribute
+```

@@ -36,13 +36,14 @@ func resourceEBSDefaultKMSKey() *schema.Resource {
 	}
 }
 
-func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.ModifyEbsDefaultKmsKeyId(ctx, &ec2.ModifyEbsDefaultKmsKeyIdInput{
+	input := ec2.ModifyEbsDefaultKmsKeyIdInput{
 		KmsKeyId: aws.String(d.Get("key_arn").(string)),
-	})
+	}
+	resp, err := conn.ModifyEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS default KMS key: %s", err)
 	}
@@ -52,11 +53,12 @@ func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEBSDefaultKMSKeyRead(ctx, d, meta)...)
 }
 
-func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+	input := ec2.GetEbsDefaultKmsKeyIdInput{}
+	resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
@@ -66,11 +68,12 @@ func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.ResetEbsDefaultKmsKeyId(ctx, &ec2.ResetEbsDefaultKmsKeyIdInput{})
+	input := ec2.ResetEbsDefaultKmsKeyIdInput{}
+	_, err := conn.ResetEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EBS default KMS key: %s", err)
 	}

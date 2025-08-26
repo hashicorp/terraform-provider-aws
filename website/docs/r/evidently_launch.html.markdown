@@ -10,6 +10,8 @@ description: |-
 
 Provides a CloudWatch Evidently Launch resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS AppConfig feature flags](https://aws.amazon.com/blogs/mt/using-aws-appconfig-feature-flags/) instead.
+
 ## Example Usage
 
 ### Basic
@@ -257,6 +259,7 @@ resource "aws_evidently_launch" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the launch.
 * `groups` - (Required) One or up to five blocks that contain the feature and variations that are to be used for the launch. [Detailed below](#groups).
 * `metric_monitors` - (Optional) One or up to three blocks that define the metrics that will be used to monitor the launch performance. [Detailed below](#metric_monitors).

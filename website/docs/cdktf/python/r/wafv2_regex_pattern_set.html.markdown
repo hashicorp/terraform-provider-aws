@@ -47,10 +47,12 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Required) A friendly name of the regular expression pattern set.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Optional, Forces new resource) A friendly name of the regular expression pattern set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `regular_expression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details. A maximum of 10 `regular_expression` blocks may be specified.
+* `regular_expression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Regular Expression](#regular-expression) below for details.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Regular Expression
@@ -90,4 +92,4 @@ Using `terraform import`, import WAFv2 Regex Pattern Sets using `ID/name/scope`.
 % terraform import aws_wafv2_regex_pattern_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eed21a5d34f7cebe366e9c7f2f0e99fea6caa3cbfe03c93ecf2ee8118271fa64 -->
+<!-- cache-key: cdktf-0.20.8 input-e28cf140ed9368c3f6afb505751769b05eacbd163f74e66ac99af0346fb2e515 -->

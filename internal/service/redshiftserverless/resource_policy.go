@@ -8,14 +8,16 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,7 +43,7 @@ func resourceResourcePolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -56,9 +58,9 @@ func resourceResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	arn := d.Get(names.AttrResourceARN).(string)
 
@@ -67,25 +69,25 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	input := redshiftserverless.PutResourcePolicyInput{
+	input := &redshiftserverless.PutResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 		Policy:      aws.String(policy),
 	}
 
-	out, err := conn.PutResourcePolicyWithContext(ctx, &input)
+	out, err := conn.PutResourcePolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Redshift Serverless Resource Policy (%s): %s", arn, err)
 	}
 
-	d.SetId(aws.StringValue(out.ResourcePolicy.ResourceArn))
+	d.SetId(aws.ToString(out.ResourcePolicy.ResourceArn))
 
 	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	out, err := findResourcePolicyByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -101,9 +103,9 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrResourceARN, out.ResourceArn)
 
 	doc := resourcePolicyDoc{}
-	log.Printf("policy is %s:", aws.StringValue(out.Policy))
+	log.Printf("policy is %s:", aws.ToString(out.Policy))
 
-	if err := json.Unmarshal([]byte(aws.StringValue(out.Policy)), &doc); err != nil {
+	if err := json.Unmarshal([]byte(aws.ToString(out.Policy)), &doc); err != nil {
 		return sdkdiag.AppendErrorf(diags, "unmarshaling policy: %s", err)
 	}
 
@@ -137,16 +139,16 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Resource Policy: %s", d.Id())
-	_, err := conn.DeleteResourcePolicyWithContext(ctx, &redshiftserverless.DeleteResourcePolicyInput{
+	_, err := conn.DeleteResourcePolicy(ctx, &redshiftserverless.DeleteResourcePolicyInput{
 		ResourceArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -155,6 +157,31 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.Client, arn string) (*awstypes.ResourcePolicy, error) {
+	input := &redshiftserverless.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResourcePolicy, nil
 }
 
 type resourcePolicyDoc struct {

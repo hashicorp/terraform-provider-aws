@@ -6,7 +6,7 @@ package cur
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,7 +73,7 @@ func dataSourceReportDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURClient(ctx)
 
@@ -84,7 +84,7 @@ func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Cost And Usage Report Definition (%s): %s", reportName, err)
 	}
 
-	d.SetId(aws.StringValue(reportDefinition.ReportName))
+	d.SetId(aws.ToString(reportDefinition.ReportName))
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
 	d.Set("compression", reportDefinition.Compression)

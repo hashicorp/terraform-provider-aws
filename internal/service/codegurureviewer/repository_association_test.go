@@ -43,16 +43,22 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"repository"},
 			},
 		},
 	})
@@ -78,14 +84,14 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_kms_key(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "CUSTOMER_MANAGED_CMK"),
 				),
 			},
@@ -113,15 +119,15 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_s3_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.bucket_name", "codeguru-reviewer-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
 			},
@@ -149,7 +155,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -157,7 +163,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_tags_2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -166,7 +172,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -358,6 +364,7 @@ func testAccRepositoryAssociation_kms_key() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }

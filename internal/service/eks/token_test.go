@@ -38,7 +38,7 @@ func validationErrorTest(t *testing.T, token string, expectedErr string) {
 func validationSuccessTest(t *testing.T, token string) {
 	t.Helper()
 	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
-	account := "123456789012"
+	account := "123456789012"                     // nosemgrep:ci.literal-12Digit-string-test-constant
 	userID := "Alice"
 	_, err := newVerifier(200, jsonResponse(arn, account, userID), nil).Verify(token)
 	if err != nil {
@@ -233,7 +233,7 @@ func TestVerifyInvalidUserIDError(t *testing.T) {
 	t.Parallel()
 
 	//lintignore:AWSAT005
-	_, err := newVerifier(200, jsonResponse("arn:aws:iam::123456789012:user/Alice", "123456789012", "not:vailid:userid"), nil).Verify(validToken)
+	_, err := newVerifier(200, jsonResponse("arn:aws:iam::123456789012:user/Alice", "123456789012", "not:vailid:userid"), nil).Verify(validToken) // nosemgrep:ci.literal-12Digit-string-test-constant
 	errorContains(t, err, "malformed UserID")
 	assertSTSError(t, err)
 }
@@ -242,7 +242,7 @@ func TestVerifyNoSession(t *testing.T) {
 	t.Parallel()
 
 	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
-	account := "123456789012"
+	account := "123456789012"                     // nosemgrep:ci.literal-12Digit-string-test-constant
 	userID := "Alice"
 	accessKeyID := "ASIABCDEFGHIJKLMNOPQ"
 	identity, err := newVerifier(200, jsonResponse(arn, account, userID), nil).Verify(validToken)
@@ -267,7 +267,7 @@ func TestVerifySessionName(t *testing.T) {
 	t.Parallel()
 
 	arn := "arn:aws:iam::123456789012:user/Alice" //lintignore:AWSAT005
-	account := "123456789012"
+	account := "123456789012"                     // nosemgrep:ci.literal-12Digit-string-test-constant
 	userID := "Alice"
 	session := "session-name"
 	identity, err := newVerifier(200, jsonResponse(arn, account, userID+":"+session), nil).Verify(validToken)
@@ -287,7 +287,7 @@ func TestVerifyCanonicalARN(t *testing.T) {
 
 	arn := "arn:aws:sts::123456789012:assumed-role/Alice/extra" //lintignore:AWSAT005
 	canonicalARN := "arn:aws:iam::123456789012:role/Alice"      //lintignore:AWSAT005
-	account := "123456789012"
+	account := "123456789012"                                   // nosemgrep:ci.literal-12Digit-string-test-constant
 	userID := "Alice"
 	session := "session-name"
 	identity, err := newVerifier(200, jsonResponse(arn, account, userID+":"+session), nil).Verify(validToken)

@@ -5,9 +5,10 @@ package outposts
 
 import (
 	"context"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_outposts_outpost_instance_type")
-func DataSourceOutpostInstanceType() *schema.Resource {
+// @SDKDataSource("aws_outposts_outpost_instance_type", name="Outpost Instance Type")
+func dataSourceOutpostInstanceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
@@ -43,9 +44,9 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
+	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 
 	input := &outposts.GetOutpostInstanceTypesInput{
 		OutpostId: aws.String(d.Get(names.AttrARN).(string)), // Accepts both ARN and ID; prefer ARN which is more common
@@ -54,28 +55,19 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 	var outpostID string
 	var foundInstanceTypes []string
 
-	for {
-		output, err := conn.GetOutpostInstanceTypesWithContext(ctx, input)
+	pages := outposts.NewGetOutpostInstanceTypesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "getting Outpost Instance Types: %s", err)
 		}
 
-		if output == nil {
-			break
+		outpostID = aws.ToString(page.OutpostId)
+
+		for _, outputInstanceType := range page.InstanceTypes {
+			foundInstanceTypes = append(foundInstanceTypes, aws.ToString(outputInstanceType.InstanceType))
 		}
-
-		outpostID = aws.StringValue(output.OutpostId)
-
-		for _, outputInstanceType := range output.InstanceTypes {
-			foundInstanceTypes = append(foundInstanceTypes, aws.StringValue(outputInstanceType.InstanceType))
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
 	}
 
 	if len(foundInstanceTypes) == 0 {
@@ -86,17 +78,14 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 
 	// Check requested instance type
 	if v, ok := d.GetOk(names.AttrInstanceType); ok {
-		for _, foundInstanceType := range foundInstanceTypes {
-			if foundInstanceType == v.(string) {
-				resultInstanceType = v.(string)
-				break
-			}
+		if slices.Contains(foundInstanceTypes, v.(string)) {
+			resultInstanceType = v.(string)
 		}
 	}
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
-	if l := d.Get("preferred_instance_types").([]interface{}); len(l) > 0 {
+	if l := d.Get("preferred_instance_types").([]any); len(l) > 0 {
 		for _, elem := range l {
 			preferredInstanceType, ok := elem.(string)
 
@@ -104,11 +93,8 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 				continue
 			}
 
-			for _, foundInstanceType := range foundInstanceTypes {
-				if foundInstanceType == preferredInstanceType {
-					resultInstanceType = preferredInstanceType
-					break
-				}
+			if slices.Contains(foundInstanceTypes, preferredInstanceType) {
+				resultInstanceType = preferredInstanceType
 			}
 
 			if resultInstanceType != "" {

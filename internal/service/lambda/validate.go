@@ -5,9 +5,17 @@ package lambda
 
 import (
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+var (
+	functionNameRegex = regexache.MustCompile("(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)")
+)
+
+var functionNameValidator validator.String = stringvalidator.RegexMatches(functionNameRegex, "must be a valid function name")
 
 func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html

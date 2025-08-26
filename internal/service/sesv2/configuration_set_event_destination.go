@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -20,14 +21,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_configuration_set_event_destination")
-func ResourceConfigurationSetEventDestination() *schema.Resource {
+// @SDKResource("aws_sesv2_configuration_set_event_destination", name="Configuration Set Event Destination")
+func resourceConfigurationSetEventDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetEventDestinationCreate,
 		ReadWithoutTimeout:   resourceConfigurationSetEventDestinationRead,
@@ -141,7 +145,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							},
 						},
 						"matching_event_types": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
@@ -203,28 +207,41 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 }
 
 const (
-	ResNameConfigurationSetEventDestination = "Configuration Set Event Destination"
+	resNameConfigurationSetEventDestination = "Configuration Set Event Destination"
 )
 
-func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
-		EventDestination:     expandEventDestination(d.Get("event_destination").([]interface{})[0].(map[string]interface{})),
+		EventDestination:     expandEventDestinationDefinition(d.Get("event_destination").([]any)[0].(map[string]any)),
 		EventDestinationName: aws.String(d.Get("event_destination_name").(string)),
 	}
 
-	configurationSetEventDestinationID := FormatConfigurationSetEventDestinationID(d.Get("configuration_set_name").(string), d.Get("event_destination_name").(string))
+	configurationSetEventDestinationID := configurationSetEventDestinationCreateResourceID(d.Get("configuration_set_name").(string), d.Get("event_destination_name").(string))
 
-	out, err := conn.CreateConfigurationSetEventDestination(ctx, in)
+	out, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (any, error) {
+			return conn.CreateConfigurationSetEventDestination(ctx, in)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not access Kinesis Firehose Stream") ||
+				tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not assume IAM role") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSetEventDestination, configurationSetEventDestinationID, err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSetEventDestination, configurationSetEventDestinationID, errors.New("empty output"))
 	}
 
 	d.SetId(configurationSetEventDestinationID)
@@ -232,16 +249,16 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 	return append(diags, resourceConfigurationSetEventDestinationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	configurationSetName, _, err := ParseConfigurationSetEventDestinationID(d.Id())
+	configurationSetName, eventDestinationName, err := configurationSetEventDestinationParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := FindConfigurationSetEventDestinationByID(ctx, conn, d.Id())
+	out, err := findConfigurationSetEventDestinationByTwoPartKey(ctx, conn, configurationSetName, eventDestinationName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ConfigurationSetEventDestination (%s) not found, removing from state", d.Id())
@@ -250,413 +267,436 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	d.Set("configuration_set_name", configurationSetName)
-	d.Set("event_destination_name", out.Name)
-
-	if err := d.Set("event_destination", []interface{}{flattenEventDestination(out)}); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSetEventDestination, d.Id(), err)
+	if err := d.Set("event_destination", []any{flattenEventDestination(out)}); err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSetEventDestination, d.Id(), err)
 	}
+	d.Set("event_destination_name", out.Name)
 
 	return diags
 }
 
-func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
+	configurationSetName, eventDestinationName, err := configurationSetEventDestinationParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChanges("event_destination") {
 		in := &sesv2.UpdateConfigurationSetEventDestinationInput{
 			ConfigurationSetName: aws.String(configurationSetName),
-			EventDestination:     expandEventDestination(d.Get("event_destination").([]interface{})[0].(map[string]interface{})),
+			EventDestination:     expandEventDestinationDefinition(d.Get("event_destination").([]any)[0].(map[string]any)),
 			EventDestinationName: aws.String(eventDestinationName),
 		}
 
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateConfigurationSetEventDestination(ctx, in)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (any, error) {
+				return conn.UpdateConfigurationSetEventDestination(ctx, in)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not access Kinesis Firehose Stream") ||
+					tfawserr.ErrMessageContains(err, errCodeBadRequestException, "Could not assume IAM role") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 		if err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSetEventDestination, d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceConfigurationSetEventDestinationRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination %s", d.Id())
-
-	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
+	configurationSetName, eventDestinationName, err := configurationSetEventDestinationParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination: %s", d.Id())
 	_, err = conn.DeleteConfigurationSetEventDestination(ctx, &sesv2.DeleteConfigurationSetEventDestinationInput{
 		ConfigurationSetName: aws.String(configurationSetName),
 		EventDestinationName: aws.String(eventDestinationName),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameConfigurationSetEventDestination, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.Client, id string) (types.EventDestination, error) {
-	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(id)
-	if err != nil {
-		return types.EventDestination{}, err
-	}
+const configurationSetEventDestinationResourceIDSeparator = "|"
 
-	in := &sesv2.GetConfigurationSetEventDestinationsInput{
-		ConfigurationSetName: aws.String(configurationSetName),
-	}
-	out, err := conn.GetConfigurationSetEventDestinations(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return types.EventDestination{}, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+func configurationSetEventDestinationCreateResourceID(configurationSetName, eventDestinationName string) string {
+	parts := []string{configurationSetName, eventDestinationName}
+	id := strings.Join(parts, configurationSetEventDestinationResourceIDSeparator)
 
-		return types.EventDestination{}, err
-	}
-
-	if out == nil {
-		return types.EventDestination{}, tfresource.NewEmptyResultError(in)
-	}
-
-	for _, eventDestination := range out.EventDestinations {
-		if aws.ToString(eventDestination.Name) == eventDestinationName {
-			return eventDestination, nil
-		}
-	}
-
-	return types.EventDestination{}, &retry.NotFoundError{}
+	return id
 }
 
-func flattenEventDestination(apiObject types.EventDestination) map[string]interface{} {
-	m := map[string]interface{}{
+func configurationSetEventDestinationParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, configurationSetEventDestinationResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected CONFIGURATION_SET_NAME%[2]sEVENT_DESTINATION_NAME", id, configurationSetEventDestinationResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findConfigurationSetEventDestinationByTwoPartKey(ctx context.Context, conn *sesv2.Client, configurationSetName, eventDestinationName string) (*types.EventDestination, error) {
+	input := &sesv2.GetConfigurationSetEventDestinationsInput{
+		ConfigurationSetName: aws.String(configurationSetName),
+	}
+
+	return findConfigurationSetEventDestination(ctx, conn, input, func(v *types.EventDestination) bool {
+		return aws.ToString(v.Name) == eventDestinationName
+	})
+}
+
+func findConfigurationSetEventDestination(ctx context.Context, conn *sesv2.Client, input *sesv2.GetConfigurationSetEventDestinationsInput, filter tfslices.Predicate[*types.EventDestination]) (*types.EventDestination, error) {
+	output, err := findConfigurationSetEventDestinations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConfigurationSetEventDestinations(ctx context.Context, conn *sesv2.Client, input *sesv2.GetConfigurationSetEventDestinationsInput, filter tfslices.Predicate[*types.EventDestination]) ([]types.EventDestination, error) {
+	output, err := conn.GetConfigurationSetEventDestinations(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfslices.Filter(output.EventDestinations, tfslices.PredicateValue(filter)), nil
+}
+
+func flattenEventDestination(apiObject *types.EventDestination) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.CloudWatchDestination; v != nil {
-		m["cloud_watch_destination"] = []interface{}{flattenCloudWatchDestination(v)}
+		tfMap["cloud_watch_destination"] = []any{flattenCloudWatchDestination(v)}
 	}
 
 	if v := apiObject.EventBridgeDestination; v != nil {
-		m["event_bridge_destination"] = []interface{}{flattenEventBridgeDestination(v)}
+		tfMap["event_bridge_destination"] = []any{flattenEventBridgeDestination(v)}
 	}
 
 	if v := apiObject.KinesisFirehoseDestination; v != nil {
-		m["kinesis_firehose_destination"] = []interface{}{flattenKinesisFirehoseDestination(v)}
+		tfMap["kinesis_firehose_destination"] = []any{flattenKinesisFirehoseDestination(v)}
 	}
 
 	if v := apiObject.MatchingEventTypes; v != nil {
-		m["matching_event_types"] = enum.Slice(apiObject.MatchingEventTypes...)
+		tfMap["matching_event_types"] = enum.Slice(apiObject.MatchingEventTypes...)
 	}
 
 	if v := apiObject.PinpointDestination; v != nil {
-		m["pinpoint_destination"] = []interface{}{flattenPinpointDestination(v)}
+		tfMap["pinpoint_destination"] = []any{flattenPinpointDestination(v)}
 	}
 
 	if v := apiObject.SnsDestination; v != nil {
-		m["sns_destination"] = []interface{}{flattenSNSDestination(v)}
+		tfMap["sns_destination"] = []any{flattenSNSDestination(v)}
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenCloudWatchDestination(apiObject *types.CloudWatchDestination) map[string]interface{} {
+func flattenCloudWatchDestination(apiObject *types.CloudWatchDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DimensionConfigurations; v != nil {
-		m["dimension_configuration"] = flattenCloudWatchDimensionConfigurations(v)
+		tfMap["dimension_configuration"] = flattenCloudWatchDimensionConfigurations(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenEventBridgeDestination(apiObject *types.EventBridgeDestination) map[string]interface{} {
+func flattenEventBridgeDestination(apiObject *types.EventBridgeDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EventBusArn; v != nil {
-		m["event_bus_arn"] = aws.ToString(v)
+		tfMap["event_bus_arn"] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestination) map[string]interface{} {
+func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeliveryStreamArn; v != nil {
-		m["delivery_stream_arn"] = aws.ToString(v)
+		tfMap["delivery_stream_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.IamRoleArn; v != nil {
-		m[names.AttrIAMRoleARN] = aws.ToString(v)
+		tfMap[names.AttrIAMRoleARN] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenPinpointDestination(apiObject *types.PinpointDestination) map[string]interface{} {
+func flattenPinpointDestination(apiObject *types.PinpointDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ApplicationArn; v != nil {
-		m["application_arn"] = aws.ToString(v)
+		tfMap["application_arn"] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenSNSDestination(apiObject *types.SnsDestination) map[string]interface{} {
+func flattenSNSDestination(apiObject *types.SnsDestination) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.TopicArn; v != nil {
-		m[names.AttrTopicARN] = aws.ToString(v)
+		tfMap[names.AttrTopicARN] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenCloudWatchDimensionConfigurations(apiObjects []types.CloudWatchDimensionConfiguration) []interface{} {
+func flattenCloudWatchDimensionConfigurations(apiObjects []types.CloudWatchDimensionConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenCloudWatchDimensionConfiguration(apiObject))
+		tfList = append(tfList, flattenCloudWatchDimensionConfiguration(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func flattenCloudWatchDimensionConfiguration(apiObject types.CloudWatchDimensionConfiguration) map[string]interface{} {
-	m := map[string]interface{}{
+func flattenCloudWatchDimensionConfiguration(apiObject *types.CloudWatchDimensionConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
 		"dimension_value_source": string(apiObject.DimensionValueSource),
 	}
 
 	if v := apiObject.DefaultDimensionValue; v != nil {
-		m["default_dimension_value"] = aws.ToString(v)
+		tfMap["default_dimension_value"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DimensionName; v != nil {
-		m["dimension_name"] = aws.ToString(v)
+		tfMap["dimension_name"] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinationDefinition {
+func expandEventDestinationDefinition(tfMap map[string]any) *types.EventDestinationDefinition {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.EventDestinationDefinition{}
+	apiObject := &types.EventDestinationDefinition{}
 
-	if v, ok := tfMap["cloud_watch_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.CloudWatchDestination = expandCloudWatchDestination(v[0].(map[string]interface{}))
+	if v, ok := tfMap["cloud_watch_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchDestination = expandCloudWatchDestination(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
-		a.Enabled = v
+		apiObject.Enabled = v
 	}
 
-	if v, ok := tfMap["event_bridge_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.EventBridgeDestination = expandEventBridgeDestinaton(v[0].(map[string]interface{}))
+	if v, ok := tfMap["event_bridge_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EventBridgeDestination = expandEventBridgeDestination(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["kinesis_firehose_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.KinesisFirehoseDestination = expandKinesisFirehoseDestination(v[0].(map[string]interface{}))
+	if v, ok := tfMap["kinesis_firehose_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.KinesisFirehoseDestination = expandKinesisFirehoseDestination(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["matching_event_types"].([]interface{}); ok && len(v) > 0 {
-		a.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringList(v))
+	if v, ok := tfMap["matching_event_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.MatchingEventTypes = flex.ExpandStringyValueSet[types.EventType](v)
 	}
 
-	if v, ok := tfMap["pinpoint_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.PinpointDestination = expandPinpointDestinaton(v[0].(map[string]interface{}))
+	if v, ok := tfMap["pinpoint_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PinpointDestination = expandPinpointDestinaton(v[0].(map[string]any))
 	}
 
-	if v, ok := tfMap["sns_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		a.SnsDestination = expandSNSDestination(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sns_destination"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SnsDestination = expandSNSDestination(v[0].(map[string]any))
 	}
 
-	return a
+	return apiObject
 }
 
-func expandCloudWatchDestination(tfMap map[string]interface{}) *types.CloudWatchDestination {
+func expandCloudWatchDestination(tfMap map[string]any) *types.CloudWatchDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.CloudWatchDestination{}
+	apiObject := &types.CloudWatchDestination{}
 
-	if v, ok := tfMap["dimension_configuration"].([]interface{}); ok && len(v) > 0 {
-		a.DimensionConfigurations = expandCloudWatchDimensionConfigurations(v)
+	if v, ok := tfMap["dimension_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.DimensionConfigurations = expandCloudWatchDimensionConfigurations(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func expandEventBridgeDestinaton(tfMap map[string]interface{}) *types.EventBridgeDestination {
+func expandEventBridgeDestination(tfMap map[string]any) *types.EventBridgeDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.EventBridgeDestination{}
+	apiObject := &types.EventBridgeDestination{}
 
 	if v, ok := tfMap["event_bus_arn"].(string); ok && v != "" {
-		a.EventBusArn = aws.String(v)
+		apiObject.EventBusArn = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func expandKinesisFirehoseDestination(tfMap map[string]interface{}) *types.KinesisFirehoseDestination {
+func expandKinesisFirehoseDestination(tfMap map[string]any) *types.KinesisFirehoseDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.KinesisFirehoseDestination{}
+	apiObject := &types.KinesisFirehoseDestination{}
 
 	if v, ok := tfMap["delivery_stream_arn"].(string); ok && v != "" {
-		a.DeliveryStreamArn = aws.String(v)
+		apiObject.DeliveryStreamArn = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrIAMRoleARN].(string); ok && v != "" {
-		a.IamRoleArn = aws.String(v)
+		apiObject.IamRoleArn = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func expandPinpointDestinaton(tfMap map[string]interface{}) *types.PinpointDestination {
+func expandPinpointDestinaton(tfMap map[string]any) *types.PinpointDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.PinpointDestination{}
+	apiObject := &types.PinpointDestination{}
 
 	if v, ok := tfMap["application_arn"].(string); ok && v != "" {
-		a.ApplicationArn = aws.String(v)
+		apiObject.ApplicationArn = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func expandSNSDestination(tfMap map[string]interface{}) *types.SnsDestination {
+func expandSNSDestination(tfMap map[string]any) *types.SnsDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.SnsDestination{}
+	apiObject := &types.SnsDestination{}
 
 	if v, ok := tfMap[names.AttrTopicARN].(string); ok && v != "" {
-		a.TopicArn = aws.String(v)
+		apiObject.TopicArn = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func expandCloudWatchDimensionConfigurations(tfList []interface{}) []types.CloudWatchDimensionConfiguration {
+func expandCloudWatchDimensionConfigurations(tfList []any) []types.CloudWatchDimensionConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var s []types.CloudWatchDimensionConfiguration
+	var apiObjects []types.CloudWatchDimensionConfiguration
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		s = append(s, expandCloudWatchDimensionConfiguration(m))
+		apiObject := expandCloudWatchDimensionConfiguration(tfMap)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
-func expandCloudWatchDimensionConfiguration(tfMap map[string]interface{}) types.CloudWatchDimensionConfiguration {
-	a := types.CloudWatchDimensionConfiguration{}
+func expandCloudWatchDimensionConfiguration(tfMap map[string]any) *types.CloudWatchDimensionConfiguration {
+	apiObject := &types.CloudWatchDimensionConfiguration{}
 
 	if v, ok := tfMap["default_dimension_value"].(string); ok && v != "" {
-		a.DefaultDimensionValue = aws.String(v)
+		apiObject.DefaultDimensionValue = aws.String(v)
 	}
 
 	if v, ok := tfMap["dimension_name"].(string); ok && v != "" {
-		a.DimensionName = aws.String(v)
+		apiObject.DimensionName = aws.String(v)
 	}
 
 	if v, ok := tfMap["dimension_value_source"].(string); ok && v != "" {
-		a.DimensionValueSource = types.DimensionValueSource(v)
+		apiObject.DimensionValueSource = types.DimensionValueSource(v)
 	}
 
-	return a
-}
-
-func FormatConfigurationSetEventDestinationID(configurationSetName, eventDestinationName string) string {
-	return fmt.Sprintf("%s|%s", configurationSetName, eventDestinationName)
-}
-
-func ParseConfigurationSetEventDestinationID(id string) (string, string, error) {
-	idParts := strings.Split(id, "|")
-	if len(idParts) != 2 {
-		return "", "", errors.New("please make sure the ID is in the form CONFIGURATION_SET_NAME|EVENT_DESTINATION_NAME")
-	}
-
-	return idParts[0], idParts[1], nil
-}
-
-func stringsToEventTypes(values []*string) []types.EventType {
-	var eventTypes []types.EventType
-
-	for _, eventType := range values {
-		eventTypes = append(eventTypes, types.EventType(aws.ToString(eventType)))
-	}
-
-	return eventTypes
+	return apiObject
 }

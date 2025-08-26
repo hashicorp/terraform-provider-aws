@@ -26,7 +26,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = aws_globalaccelerator_accelerator.example.id
+  accelerator_arn = aws_globalaccelerator_accelerator.example.arn
   client_affinity = "SOURCE_IP"
   protocol        = "TCP"
 
@@ -56,6 +56,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the listener.
+* `arn` - The Amazon Resource Name (ARN) of the listener.
 
 ## Timeouts
 

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearchserverless_access_policy: Fix incompatible type error when setting `policy`
+```

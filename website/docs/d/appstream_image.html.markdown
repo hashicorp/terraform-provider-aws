@@ -10,7 +10,7 @@ description: |-
 
 Terraform data source for managing an AWS AppStream 2.0 Image.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 data "aws_appstream_image" "test" {
@@ -25,6 +25,7 @@ data "aws_appstream_image" "test" {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - Name of the image being searched for. Cannot be used with name_regex or arn.
 * `name_regex` - Regular expression name of the image being searched for. Cannot be used with arn or name.
 * `arn` - Arn of the image being searched for. Cannot be used with name_regex or name.

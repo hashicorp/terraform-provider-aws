@@ -82,6 +82,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterId` - (Required) ID of the EMR Cluster to attach to. Changing this forces a new resource to be created.
 * `instanceTypeConfigs` - (Optional) Configuration block for instance fleet
 * `launchSpecifications` - (Optional) Configuration block for launch specification
@@ -181,4 +182,4 @@ Using `terraform import`, import EMR Instance Fleet using the EMR Cluster identi
 % terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-484ebd4db579a713d776c01bd54e9d3f8d6d98496da04bf00e6a7d5e3d2c471f -->
+<!-- cache-key: cdktf-0.20.8 input-640782c51179b7266763f2283efedc6d38e66d94c33fefeb108505129cdbad2a -->

@@ -72,6 +72,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the document.
 * `attachmentsSource` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. See [`attachmentsSource` block](#attachments_source-block) below for details.
 * `content` - (Required) The content for the SSM document in JSON or YAML format. The content of the document must not exceed 64KB. This quota also includes the content specified for input parameters at runtime. We recommend storing the contents for your new document in an external JSON or YAML file and referencing the file in a command.
@@ -195,4 +196,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dbc191d1faac6db26e158b39a17e8a60353096e90d91fef1e8889d9c8c6538b0 -->
+<!-- cache-key: cdktf-0.20.8 input-4a40ecc1d407bee46a85e5f430ea8bccf89db626de14736f98057cb5b5e6beb0 -->

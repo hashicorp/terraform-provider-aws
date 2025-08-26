@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Unique identifier for the notification channel.
 
 ## Attribute Reference
@@ -58,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `messageTypes` - Events to receive notifications for.
 * `severities` - Severity levels to receive notifications for.
 
-<!-- cache-key: cdktf-0.20.1 input-78cadd26ed90ab20f01b2dbc792c6469d1c96085b8c332d5476c85e4951770d2 -->
+<!-- cache-key: cdktf-0.20.8 input-dba8836ec075ed79168f73f9bb0b70956ecd0339f756dde7faaf9e958e13ed53 -->

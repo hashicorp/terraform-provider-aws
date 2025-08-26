@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_arns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `domain` - (Optional) The name of the Windows domain the SMB server belongs to.
 * `mount_options` - (Optional) Configuration block containing mount options used by DataSync to access the SMB Server. Can be `AUTOMATIC`, `SMB2`, or `SMB3`.
@@ -88,4 +89,4 @@ Using `terraform import`, import `aws_datasync_location_smb` using the Amazon Re
 % terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ef64a786032b1bd4736b717fcbb2fa2b4849fff365db36c6537de225840acb5d -->
+<!-- cache-key: cdktf-0.20.8 input-3cf7619db8f460398c962a969712fc173b287d393878c7d0f9c8601d6c22a33a -->

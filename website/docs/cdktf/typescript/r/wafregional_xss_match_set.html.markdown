@@ -52,6 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the set
 * `xssMatchTuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
 
@@ -105,4 +106,4 @@ Using `terraform import`, import AWS WAF Regional XSS Match using the `id`. For 
 % terraform import aws_wafregional_xss_match_set.example 12345abcde
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4f4d2ad8398170e5434a031da6cefde1dcdd17702dcd9c227325415752575f4a -->
+<!-- cache-key: cdktf-0.20.8 input-8932cc99a9375ad6ac76feb468466f1581535196463ce51c2861c96097ecebd6 -->

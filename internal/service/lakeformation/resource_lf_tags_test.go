@@ -43,7 +43,7 @@ func testAccResourceLFTags_basic(t *testing.T) {
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
 					}),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -179,17 +179,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "woodcote",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "theloop",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "two",
@@ -209,17 +209,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "stowe",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "becketts",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "three",
@@ -371,7 +371,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnNames = cols
@@ -383,7 +383,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 
 				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]); err == nil && n > 0 {
 					var cols []string
-					for i := 0; i < n; i++ {
+					for i := range n {
 						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
 					}
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
@@ -478,7 +478,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnNames = cols
@@ -490,7 +490,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 
 			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.excluded_column_names.#"]); err == nil && n > 0 {
 				var cols []string
-				for i := 0; i < n; i++ {
+				for i := range n {
 					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
 				}
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{

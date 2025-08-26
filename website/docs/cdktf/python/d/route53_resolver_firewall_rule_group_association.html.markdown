@@ -37,9 +37,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_rule_group_association_id` - (Required) The identifier for the association.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall rule group association.
 * `creation_time` - The date and time that the association was created, in Unix time format and Coordinated Universal Time (UTC).
@@ -54,4 +59,4 @@ The following attribute is additionally exported:
 * `status_message` - Additional information about the status of the response, if available.
 * `vpc_id` - The unique identifier of the VPC that is associated with the rule group.
 
-<!-- cache-key: cdktf-0.20.1 input-96baaccea7a8993bc2b43ff8bcd9ea43595994e4407fb3bc1d20edf090565dd8 -->
+<!-- cache-key: cdktf-0.20.8 input-4c2d762438dfd6f0fcfbde00fef20b27ad5b78e393b81ae456228a441e1e76fd -->

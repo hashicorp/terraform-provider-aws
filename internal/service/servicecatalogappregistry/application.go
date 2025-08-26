@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -21,28 +21,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceApplication{}, nil
+// @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
+// @Tags(identifierAttribute="arn")
+func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &applicationResource{}, nil
 }
 
 const (
 	ResNameApplication = "Application"
 )
 
-type resourceApplication struct {
-	framework.ResourceWithConfigure
+type applicationResource struct {
+	framework.ResourceWithModel[applicationResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalogappregistry_application"
-}
-
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -60,17 +60,23 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"application_tag": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Map{
+					mapplanmodifier.UseStateForUnknown(),
+				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var plan resourceApplicationData
+	var plan applicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -81,6 +87,8 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateApplication(ctx, in)
 	if err != nil {
@@ -102,10 +110,10 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceApplicationData
+	var state applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,10 +136,10 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var plan, state resourceApplicationData
+	var plan, state applicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -144,7 +152,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		in.Application = aws.String(plan.ID.ValueString()) // Set manually, AWS naming is inconsistent
+		in.Application = plan.ID.ValueStringPointer() // Set manually, AWS naming is inconsistent
 
 		out, err := conn.UpdateApplication(ctx, in)
 		if err != nil {
@@ -168,17 +176,17 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceApplicationData
+	var state applicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &servicecatalogappregistry.DeleteApplicationInput{
-		Application: aws.String(state.ID.ValueString()),
+		Application: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteApplication(ctx, in)
@@ -192,10 +200,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 		)
 		return
 	}
-}
-
-func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetApplicationOutput, error) {
@@ -222,10 +226,13 @@ func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Cl
 	return out, nil
 }
 
-type resourceApplicationData struct {
-	ARN            types.String `tfsdk:"arn"`
-	Description    types.String `tfsdk:"description"`
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	ApplicationTag types.Map    `tfsdk:"application_tag"`
+type applicationResourceModel struct {
+	framework.WithRegionModel
+	ApplicationTag fwtypes.MapOfString `tfsdk:"application_tag"`
+	ARN            types.String        `tfsdk:"arn"`
+	Description    types.String        `tfsdk:"description"`
+	ID             types.String        `tfsdk:"id"`
+	Name           types.String        `tfsdk:"name"`
+	Tags           tftags.Map          `tfsdk:"tags"`
+	TagsAll        tftags.Map          `tfsdk:"tags_all"`
 }

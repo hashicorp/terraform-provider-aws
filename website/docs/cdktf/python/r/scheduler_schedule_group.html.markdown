@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the schedule group. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -86,4 +87,4 @@ Using `terraform import`, import schedule groups using the `name`. For example:
 % terraform import aws_scheduler_schedule_group.example my-schedule-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-10168b28a6e4905d4caa31ec8a7ac8f50e27b681fd289f91d98f6ade6ba63b5c -->
+<!-- cache-key: cdktf-0.20.8 input-e4583b097be4c3ea55bdbb30f4983fef6e9e047a124d2cb4d51350a30ad93ee2 -->

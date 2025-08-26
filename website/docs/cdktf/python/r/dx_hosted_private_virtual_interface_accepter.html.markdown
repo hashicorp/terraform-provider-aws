@@ -67,6 +67,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `dx_gateway_id` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -120,4 +121,4 @@ Using `terraform import`, import Direct Connect hosted private virtual interface
 % terraform import aws_dx_hosted_private_virtual_interface_accepter.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-82aee1d3fc70745175c9dad52c1bbb0ad47469969a29d92069bf48c33d5539a9 -->
+<!-- cache-key: cdktf-0.20.8 input-9deb6ad5d7a481664d93ed14145bc8334d3298321c539d88c63fd4d55206d1db -->

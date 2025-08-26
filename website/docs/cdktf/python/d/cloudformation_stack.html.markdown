@@ -46,6 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the stack
 
 ## Attribute Reference
@@ -63,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_role_arn` - ARN of the IAM role used to create the stack.
 * `timeout_in_minutes` - Amount of time that can pass before the stack status becomes `CREATE_FAILED`
 
-<!-- cache-key: cdktf-0.20.1 input-a9acea3392c4b01ef5f2a16da219c4a26f63291cbb995f3f40b2de0113d12c7d -->
+<!-- cache-key: cdktf-0.20.8 input-8ebecf636f61d7fcc417fb6bdfa67d5217e91adf031e8dc9be82f962fe19e429 -->

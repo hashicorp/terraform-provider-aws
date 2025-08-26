@@ -9,11 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -41,8 +46,19 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(true),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -94,7 +110,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				Config: testAccSpotInstanceRequestConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -109,7 +125,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
 					testAccCheckSpotInstanceRequestIDsEqual(&sir2, &sir1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -119,7 +135,7 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir3),
 					testAccCheckSpotInstanceRequestIDsEqual(&sir3, &sir2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

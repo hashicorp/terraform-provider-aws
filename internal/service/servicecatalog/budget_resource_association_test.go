@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +27,7 @@ func TestAccServiceCatalogBudgetResourceAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "budgets") },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogEndpointID, "budgets"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +55,7 @@ func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "budgets") },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID, "budgets"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogEndpointID, "budgets"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +73,7 @@ func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 
 func testAccCheckBudgetResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_budget_resource_association" {
@@ -116,7 +115,7 @@ func testAccCheckBudgetResourceAssociationExists(ctx context.Context, resourceNa
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		_, err = tfservicecatalog.WaitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, tfservicecatalog.BudgetResourceAssociationReadyTimeout)
 

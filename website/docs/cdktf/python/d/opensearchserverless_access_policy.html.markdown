@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy.
 * `type` - (Required) Type of access policy. Must be `data`.
 
@@ -49,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - JSON policy document to use as the content for the new policy.
 * `policy_version` - Version of the policy.
 
-<!-- cache-key: cdktf-0.20.1 input-ac35c9dc57ef1f9e36ad182e014949ca30f6f5bc2316c4bcf6e057aee396e895 -->
+<!-- cache-key: cdktf-0.20.8 input-5a072812e78c8583903a58cf83d552c8b01925b7749882e922e1f935ae0bca8d -->

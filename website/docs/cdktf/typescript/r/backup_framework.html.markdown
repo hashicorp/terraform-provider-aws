@@ -116,6 +116,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `control` - (Required) One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
 * `description` - (Optional) The description of the framework with a maximum of 1,024 characters
 * `name` - (Required) The unique name of the framework. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
@@ -191,4 +192,4 @@ Using `terraform import`, import Backup Framework using the `id` which correspon
 % terraform import aws_backup_framework.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4cb34459561740182d4b24333fe8df9142bdd3e691f64f140504aa521fe31ef8 -->
+<!-- cache-key: cdktf-0.20.8 input-01f1ea339e2563eebe0b97c84d2a5f0f4d80c7d0ac83a8b77be63beab75bd3d8 -->

@@ -11,13 +11,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +97,7 @@ func testAccAPNSChannelTokenConfigurationFromEnv(t *testing.T) *testAccAPNSChann
 
 func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.APNSChannelResponse
+	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 
 	configuration := testAccAPNSChannelCertConfigurationFromEnv(t)
@@ -132,7 +132,7 @@ func TestAccPinpointAPNSChannel_basicCertificate(t *testing.T) {
 
 func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 	ctx := acctest.Context(t)
-	var channel pinpoint.APNSChannelResponse
+	var channel awstypes.APNSChannelResponse
 	resourceName := "aws_pinpoint_apns_channel.test_apns_channel"
 
 	configuration := testAccAPNSChannelTokenConfigurationFromEnv(t)
@@ -165,7 +165,7 @@ func TestAccPinpointAPNSChannel_basicToken(t *testing.T) {
 	})
 }
 
-func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *pinpoint.APNSChannelResponse) resource.TestCheckFunc {
+func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *awstypes.APNSChannelResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -176,19 +176,41 @@ func testAccCheckAPNSChannelExists(ctx context.Context, n string, channel *pinpo
 			return fmt.Errorf("No Pinpoint APNs Channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
 
-		// Check if the app exists
-		params := &pinpoint.GetApnsChannelInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-		output, err := conn.GetApnsChannelWithContext(ctx, params)
+		output, err := tfpinpoint.FindAPNSChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*channel = *output.APNSChannelResponse
+		*channel = *output
+
+		return nil
+	}
+}
+
+func testAccCheckAPNSChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_pinpoint_apns_channel" {
+				continue
+			}
+
+			_, err := tfpinpoint.FindAPNSChannelByApplicationId(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Pinpoint APNS Channel %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -224,31 +246,4 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
   token_key_id = %s
 }
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
-}
-
-func testAccCheckAPNSChannelDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_pinpoint_apns_channel" {
-				continue
-			}
-
-			// Check if the channel exists
-			params := &pinpoint.GetApnsChannelInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetApnsChannelWithContext(ctx, params)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-					continue
-				}
-				return err
-			}
-			return fmt.Errorf("APNs Channel exists when it should be destroyed!")
-		}
-
-		return nil
-	}
 }

@@ -120,6 +120,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to put metric configuration.
 * `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
@@ -168,4 +169,4 @@ Using `terraform import`, import S3 bucket metric configurations using `bucket:m
 % terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-490b1eb1181c3efda1dde28185cec6c51621e51d6133087bfb3f30541f6ac55e -->
+<!-- cache-key: cdktf-0.20.8 input-bbbacccf80799533bf1106b59b73cc2b636feeab1571fb032509469c8ef193ea -->

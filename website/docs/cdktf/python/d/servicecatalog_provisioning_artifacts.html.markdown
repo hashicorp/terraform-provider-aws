@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 
 ## Attribute Reference
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - The name of the provisioning artifact.
 * `type` - The type of provisioning artifact.
 
-<!-- cache-key: cdktf-0.20.1 input-70d3d0ef3ce0371f0258d9d9db5e9876444b44930ec3530badd4b8fe021fee18 -->
+<!-- cache-key: cdktf-0.20.8 input-9a2e31161d4f2935c8f556f4e7bd4cb2958887f522dedccada7cdd632ff3e5a0 -->

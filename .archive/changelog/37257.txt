@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: When changing `storage_type` from `io1` or `io2` to `gp3`, fix bug causing error `InvalidParameterCombination: You must specify both the storage size and iops when modifying the storage size or iops on a DB instance that has iops`
+```

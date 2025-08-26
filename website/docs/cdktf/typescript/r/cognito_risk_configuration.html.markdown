@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `userPoolId` - (Required) The user pool ID.
 * `clientId` - (Optional) The app client ID. When the client ID is not provided, the same risk configuration is applied to all the clients in the User Pool.
 * `accountTakeoverRiskConfiguration` - (Optional) The account takeover risk configuration. See details below.
@@ -164,4 +165,4 @@ Import using the user pool ID and Client ID separated by a `:`:
 % terraform import aws_cognito_risk_configuration.main example:example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b75593cc575d1cd95ecde1a9b1a8a4e0bd77767201715d4f626c2fa0398eed4b -->
+<!-- cache-key: cdktf-0.20.8 input-e17da8ce669c47d862f650ea2ad233ece141265054401a137a19ef1083e9fde9 -->

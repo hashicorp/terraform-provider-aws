@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -64,7 +64,6 @@ func TestAccSageMakerModelPackageGroupPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelPackageGroupPolicyExists(ctx, resourceName, &mpg),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceModelPackageGroupPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,7 +98,7 @@ func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *tes
 
 func testAccCheckModelPackageGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_model_package_group_policy" {
@@ -107,13 +106,16 @@ func testAccCheckModelPackageGroupPolicyDestroy(ctx context.Context) resource.Te
 			}
 
 			_, err := tfsagemaker.FindModelPackageGroupPolicyByName(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", rs.Primary.ID, err)
+				return err
 			}
+
+			return fmt.Errorf("reading SageMaker AI Model Package Group Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -131,7 +133,7 @@ func testAccCheckModelPackageGroupPolicyExists(ctx context.Context, n string, mp
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindModelPackageGroupPolicyByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

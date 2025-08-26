@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,17 +36,7 @@ func resourceRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
 			"registry_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,7 +50,7 @@ func resourceRepositoryPolicy() *schema.Resource {
 	}
 }
 
-func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -75,9 +65,9 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		RepositoryName: aws.String(repositoryName),
 	}
 
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidParameterException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.SetRepositoryPolicy(ctx, input)
-	}, "Invalid repository policy provided")
+	}, "Principal not found")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ECR Repository Policy (%s): %s", repositoryName, err)
@@ -90,11 +80,11 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceRepositoryPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*ecr.GetRepositoryPolicyOutput, error) {
 		return findRepositoryPolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -107,8 +97,6 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository Policy (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*ecr.GetRepositoryPolicyOutput)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyText))
 	if err != nil {
@@ -127,7 +115,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 

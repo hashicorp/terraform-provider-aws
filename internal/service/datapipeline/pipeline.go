@@ -20,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datapipeline_pipeline", name="Pipeline")
-// @Tags(identifierAttribute="id")
-func ResourcePipeline() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="Pipeline")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datapipeline/types;awstypes;awstypes.PipelineDescription")
+func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
 		ReadWithoutTimeout:   resourcePipelineRead,
@@ -52,12 +52,10 @@ func ResourcePipeline() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
@@ -83,11 +81,11 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
-	v, err := PipelineRetrieve(ctx, d.Id(), conn)
+	v, err := findPipeline(ctx, conn, d.Id())
 	if errs.IsA[*awstypes.PipelineNotFoundException](err) || errs.IsA[*awstypes.PipelineDeletedException](err) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -105,7 +103,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -113,7 +111,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataPipelineClient(ctx)
 
@@ -129,13 +127,13 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
 
-	if err := WaitForDeletion(ctx, conn, d.Id()); err != nil {
+	if err := waitForDeletion(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
 	return diags
 }
 
-func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.Client) (*awstypes.PipelineDescription, error) {
+func findPipeline(ctx context.Context, conn *datapipeline.Client, id string) (*awstypes.PipelineDescription, error) {
 	opts := datapipeline.DescribePipelinesInput{
 		PipelineIds: []string{id},
 	}
@@ -157,7 +155,7 @@ func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.Client)
 	return &pipeline, nil
 }
 
-func WaitForDeletion(ctx context.Context, conn *datapipeline.Client, pipelineID string) error {
+func waitForDeletion(ctx context.Context, conn *datapipeline.Client, pipelineID string) error {
 	params := &datapipeline.DescribePipelinesInput{
 		PipelineIds: []string{pipelineID},
 	}

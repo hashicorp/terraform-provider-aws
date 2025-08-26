@@ -18,7 +18,11 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{secrets.APP_PEM }}
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
       - run: |
           touch main.tf
           cat << EOF > main.tf
@@ -32,15 +36,15 @@ jobs:
           EOF
       - run: terraform init
       - run: |
-          datasources=$(terraform providers schema -json | jq '.provider_schemas[] .data_source_schemas | length')
-          resources=$(terraform providers schema -json | jq '.provider_schemas[] .resource_schemas | length')
-          sed -r -i "s/There are currently ([0-9]+) resources and ([0-9]+)(.*)/There are currently $resources resources and $datasources\3/" website/docs/index.html.markdown
+          datasources=$(terraform providers schema -json | jq '.provider_schemas[] .data_source_schemas | length' | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')
+          resources=$(terraform providers schema -json | jq '.provider_schemas[] .resource_schemas | length' | sed ':a;s/\B[0-9]\{3\}\>/,&/;ta')
+          sed -r -i "s/With ([0-9,]+) resources and ([0-9,]+) data sources,/With $resources resources and $datasources data sources,/" website/docs/index.html.markdown
       - run: |
           rm main.tf
           rm .terraform.lock.hcl
           rm -rf .terraform
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c # v6.1.0
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           token: ${{ steps.generate_token.outputs.token }}
           branch: "resource-counts"

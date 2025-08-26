@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 service "accessanalyzer" {
-
   sdk {
-    id             = "AccessAnalyzer"
-    client_version = [2]
+    id            = "AccessAnalyzer"
+    arn_namespace = "access-analyzer"
   }
 
   names {
@@ -14,7 +13,7 @@ service "accessanalyzer" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAnalyzers"
+    endpoint_api_call = "ListAnalyzers"
   }
 
   resource_prefix {
@@ -27,10 +26,9 @@ service "accessanalyzer" {
 }
 
 service "account" {
-
   sdk {
-    id             = "Account"
-    client_version = [2]
+    id            = "Account"
+    arn_namespace = "account"
   }
 
   names {
@@ -39,7 +37,7 @@ service "account" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRegions"
+    endpoint_api_call = "ListRegions"
   }
 
   resource_prefix {
@@ -49,13 +47,14 @@ service "account" {
   provider_package_correct = "account"
   doc_prefix               = ["account_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "acm" {
-
   sdk {
-    id             = "ACM"
-    client_version = [2]
+    id            = "ACM"
+    arn_namespace = "acm"
   }
 
   names {
@@ -64,7 +63,7 @@ service "acm" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCertificates"
+    endpoint_api_call = "ListCertificates"
   }
 
   resource_prefix {
@@ -77,15 +76,14 @@ service "acm" {
 }
 
 service "acmpca" {
-
   cli_v2_command {
     aws_cli_v2_command           = "acm-pca"
     aws_cli_v2_command_no_dashes = "acmpca"
   }
 
   sdk {
-    id             = "ACM PCA"
-    client_version = [2]
+    id            = "ACM PCA"
+    arn_namespace = "acm-pca"
   }
 
   names {
@@ -94,7 +92,7 @@ service "acmpca" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCertificateAuthorities"
+    endpoint_api_call = "ListCertificateAuthorities"
   }
 
   resource_prefix {
@@ -107,19 +105,14 @@ service "acmpca" {
 }
 
 service "alexaforbusiness" {
-
   sdk {
-    id             = "Alexa For Business"
-    client_version = [1]
+    id            = "Alexa For Business"
+    arn_namespace = "a4b"
   }
 
   names {
     provider_name_upper = "AlexaForBusiness"
     human_friendly      = "Alexa for Business"
-  }
-
-  client {
-    go_v1_client_typename = "AlexaForBusiness"
   }
 
   resource_prefix {
@@ -128,20 +121,18 @@ service "alexaforbusiness" {
 
   provider_package_correct = "alexaforbusiness"
   doc_prefix               = ["alexaforbusiness_"]
-  brand                    = ""
   not_implemented          = true
 }
 
 service "amp" {
-
   go_packages {
     v1_package = "prometheusservice"
     v2_package = "amp"
   }
 
   sdk {
-    id             = "amp"
-    client_version = [2]
+    id            = "amp"
+    arn_namespace = "aps"
   }
 
   names {
@@ -151,7 +142,7 @@ service "amp" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListScrapers"
+    endpoint_api_call = "ListScrapers"
   }
 
   resource_prefix {
@@ -165,10 +156,9 @@ service "amp" {
 }
 
 service "amplify" {
-
   sdk {
-    id             = "Amplify"
-    client_version = [2]
+    id            = "Amplify"
+    arn_namespace = "amplify"
   }
 
   names {
@@ -177,7 +167,7 @@ service "amplify" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApps"
+    endpoint_api_call = "ListApps"
   }
 
   resource_prefix {
@@ -190,19 +180,14 @@ service "amplify" {
 }
 
 service "amplifybackend" {
-
   sdk {
-    id             = "AmplifyBackend"
-    client_version = [1]
+    id            = "AmplifyBackend"
+    arn_namespace = "amplifybackend"
   }
 
   names {
     provider_name_upper = "AmplifyBackend"
     human_friendly      = "Amplify Backend"
-  }
-
-  client {
-    go_v1_client_typename = "AmplifyBackend"
   }
 
   resource_prefix {
@@ -216,19 +201,14 @@ service "amplifybackend" {
 }
 
 service "amplifyuibuilder" {
-
   sdk {
-    id             = "AmplifyUIBuilder"
-    client_version = [1]
+    id            = "AmplifyUIBuilder"
+    arn_namespace = "amplifyuibuilder"
   }
 
   names {
     provider_name_upper = "AmplifyUIBuilder"
     human_friendly      = "Amplify UI Builder"
-  }
-
-  client {
-    go_v1_client_typename = "AmplifyUIBuilder"
   }
 
   resource_prefix {
@@ -242,10 +222,9 @@ service "amplifyuibuilder" {
 }
 
 service "apigateway" {
-
   sdk {
-    id             = "API Gateway"
-    client_version = [2]
+    id            = "API Gateway"
+    arn_namespace = "apigateway"
   }
 
   names {
@@ -253,12 +232,8 @@ service "apigateway" {
     human_friendly      = "API Gateway"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetAccount"
+    endpoint_api_call = "GetAccount"
   }
 
   resource_prefix {
@@ -272,19 +247,14 @@ service "apigateway" {
 }
 
 service "apigatewaymanagementapi" {
-
   sdk {
-    id             = "ApiGatewayManagementApi"
-    client_version = [1]
+    id            = "ApiGatewayManagementApi"
+    arn_namespace = "apigateway"
   }
 
   names {
     provider_name_upper = "APIGatewayManagementAPI"
     human_friendly      = "API Gateway Management API"
-  }
-
-  client {
-    go_v1_client_typename = "ApiGatewayManagementApi"
   }
 
   resource_prefix {
@@ -298,10 +268,9 @@ service "apigatewaymanagementapi" {
 }
 
 service "apigatewayv2" {
-
   sdk {
-    id             = "ApiGatewayV2"
-    client_version = [2]
+    id            = "ApiGatewayV2"
+    arn_namespace = "apigateway"
   }
 
   names {
@@ -309,12 +278,8 @@ service "apigatewayv2" {
     human_friendly      = "API Gateway V2"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetApis"
+    endpoint_api_call = "GetApis"
   }
 
   resource_prefix {
@@ -327,10 +292,9 @@ service "apigatewayv2" {
 }
 
 service "appfabric" {
-
   sdk {
-    id             = "AppFabric"
-    client_version = [2]
+    id            = "AppFabric"
+    arn_namespace = "appfabric"
   }
 
   names {
@@ -339,7 +303,7 @@ service "appfabric" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAppBundles"
+    endpoint_api_call = "ListAppBundles"
   }
 
   resource_prefix {
@@ -352,10 +316,9 @@ service "appfabric" {
 }
 
 service "appmesh" {
-
   sdk {
-    id             = "App Mesh"
-    client_version = [1]
+    id            = "App Mesh"
+    arn_namespace = "appmesh"
   }
 
   names {
@@ -363,12 +326,8 @@ service "appmesh" {
     human_friendly      = "App Mesh"
   }
 
-  client {
-    go_v1_client_typename = "AppMesh"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListMeshes"
+    endpoint_api_call = "ListMeshes"
   }
 
   resource_prefix {
@@ -381,10 +340,9 @@ service "appmesh" {
 }
 
 service "apprunner" {
-
   sdk {
-    id             = "AppRunner"
-    client_version = [2]
+    id            = "AppRunner"
+    arn_namespace = "apprunner"
   }
 
   names {
@@ -393,7 +351,7 @@ service "apprunner" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListConnections"
+    endpoint_api_call = "ListConnections"
   }
 
   resource_prefix {
@@ -406,10 +364,9 @@ service "apprunner" {
 }
 
 service "appconfig" {
-
   sdk {
-    id             = "AppConfig"
-    client_version = [2]
+    id            = "AppConfig"
+    arn_namespace = "appconfig"
   }
 
   names {
@@ -417,12 +374,8 @@ service "appconfig" {
     human_friendly      = "AppConfig"
   }
 
-  client {
-    go_v1_client_typename = "AppConfig"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -435,19 +388,14 @@ service "appconfig" {
 }
 
 service "appconfigdata" {
-
   sdk {
-    id             = "AppConfigData"
-    client_version = [1]
+    id            = "AppConfigData"
+    arn_namespace = "appconfig"
   }
 
   names {
     provider_name_upper = "AppConfigData"
     human_friendly      = "AppConfig Data"
-  }
-
-  client {
-    go_v1_client_typename = "AppConfigData"
   }
 
   resource_prefix {
@@ -461,10 +409,9 @@ service "appconfigdata" {
 }
 
 service "appflow" {
-
   sdk {
-    id             = "Appflow"
-    client_version = [2]
+    id            = "Appflow"
+    arn_namespace = "appflow"
   }
 
   names {
@@ -473,7 +420,7 @@ service "appflow" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFlows"
+    endpoint_api_call = "ListFlows"
   }
 
   resource_prefix {
@@ -486,15 +433,14 @@ service "appflow" {
 }
 
 service "appintegrations" {
-
   go_packages {
     v1_package = "appintegrationsservice"
     v2_package = "appintegrations"
   }
 
   sdk {
-    id             = "AppIntegrations"
-    client_version = [2]
+    id            = "AppIntegrations"
+    arn_namespace = "app-integrations"
   }
 
   names {
@@ -504,7 +450,7 @@ service "appintegrations" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -517,7 +463,6 @@ service "appintegrations" {
 }
 
 service "appautoscaling" {
-
   cli_v2_command {
     aws_cli_v2_command           = "application-autoscaling"
     aws_cli_v2_command_no_dashes = "applicationautoscaling"
@@ -529,8 +474,8 @@ service "appautoscaling" {
   }
 
   sdk {
-    id             = "Application Auto Scaling"
-    client_version = [2]
+    id            = "Application Auto Scaling"
+    arn_namespace = "application-autoscaling"
   }
 
   names {
@@ -540,8 +485,8 @@ service "appautoscaling" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeScalableTargets"
-    endpoint_api_params      = "ServiceNamespace: awstypes.ServiceNamespaceEcs"
+    endpoint_api_call   = "DescribeScalableTargets"
+    endpoint_api_params = "ServiceNamespace: awstypes.ServiceNamespaceEcs"
   }
 
   resource_prefix {
@@ -551,22 +496,17 @@ service "appautoscaling" {
 
   provider_package_correct = "applicationautoscaling"
   doc_prefix               = ["appautoscaling_"]
-  brand                    = ""
 }
-service "applicationcostprofiler" {
 
+service "applicationcostprofiler" {
   sdk {
-    id             = "ApplicationCostProfiler"
-    client_version = [1]
+    id            = "ApplicationCostProfiler"
+    arn_namespace = "application-cost-profiler"
   }
 
   names {
     provider_name_upper = "ApplicationCostProfiler"
     human_friendly      = "Application Cost Profiler"
-  }
-
-  client {
-    go_v1_client_typename = "ApplicationCostProfiler"
   }
 
   resource_prefix {
@@ -580,15 +520,14 @@ service "applicationcostprofiler" {
 }
 
 service "applicationsignals" {
-
   cli_v2_command {
     aws_cli_v2_command           = "application-signals"
     aws_cli_v2_command_no_dashes = "applicationsignals"
   }
 
   sdk {
-    id             = "Application Signals"
-    client_version = [2]
+    id            = "Application Signals"
+    arn_namespace = "application-signals"
   }
 
   names {
@@ -597,7 +536,7 @@ service "applicationsignals" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListServiceLevelObjectives"
+    endpoint_api_call = "ListServiceLevelObjectives"
   }
 
   resource_prefix {
@@ -610,25 +549,20 @@ service "applicationsignals" {
 }
 
 service "discovery" {
-
   go_packages {
     v1_package = "applicationdiscoveryservice"
     v2_package = "applicationdiscoveryservice"
   }
 
   sdk {
-    id             = "Application Discovery Service"
-    client_version = [1]
+    id            = "Application Discovery Service"
+    arn_namespace = "discovery"
   }
 
   names {
     aliases             = ["applicationdiscovery", "applicationdiscoveryservice"]
     provider_name_upper = "Discovery"
     human_friendly      = "Application Discovery"
-  }
-
-  client {
-    go_v1_client_typename = "ApplicationDiscoveryService"
   }
 
   resource_prefix {
@@ -642,10 +576,9 @@ service "discovery" {
 }
 
 service "mgn" {
-
   sdk {
-    id             = "mgn"
-    client_version = [1]
+    id            = "mgn"
+    arn_namespace = "mgn"
   }
 
   names {
@@ -653,8 +586,8 @@ service "mgn" {
     human_friendly      = "Application Migration (Mgn)"
   }
 
-  client {
-    go_v1_client_typename = "Mgn"
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -664,14 +597,12 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {
-
   sdk {
-    id             = "AppStream"
-    client_version = [2]
+    id            = "AppStream"
+    arn_namespace = "appstream"
   }
 
   names {
@@ -680,8 +611,8 @@ service "appstream" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAssociatedFleets"
-    endpoint_api_params      = "StackName: aws_sdkv2.String(\"test\")"
+    endpoint_api_call   = "ListAssociatedFleets"
+    endpoint_api_params = "StackName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -694,10 +625,9 @@ service "appstream" {
 }
 
 service "appsync" {
-
   sdk {
-    id             = "AppSync"
-    client_version = [2]
+    id            = "AppSync"
+    arn_namespace = "appsync"
   }
 
   names {
@@ -705,13 +635,8 @@ service "appsync" {
     human_friendly      = "AppSync"
   }
 
-  client {
-    go_v1_client_typename = "AppSync"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDomainNames"
+    endpoint_api_call = "ListDomainNames"
   }
 
   resource_prefix {
@@ -724,10 +649,9 @@ service "appsync" {
 }
 
 service "athena" {
-
   sdk {
-    id             = "Athena"
-    client_version = [2]
+    id            = "Athena"
+    arn_namespace = "athena"
   }
 
   names {
@@ -736,7 +660,7 @@ service "athena" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDataCatalogs"
+    endpoint_api_call = "ListDataCatalogs"
   }
 
   resource_prefix {
@@ -749,10 +673,9 @@ service "athena" {
 }
 
 service "auditmanager" {
-
   sdk {
-    id             = "AuditManager"
-    client_version = [2]
+    id            = "AuditManager"
+    arn_namespace = "auditmanager"
   }
 
   names {
@@ -761,7 +684,7 @@ service "auditmanager" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetAccountStatus"
+    endpoint_api_call = "GetAccountStatus"
   }
 
   resource_prefix {
@@ -774,10 +697,9 @@ service "auditmanager" {
 }
 
 service "autoscaling" {
-
   sdk {
-    id             = "Auto Scaling"
-    client_version = [2]
+    id            = "Auto Scaling"
+    arn_namespace = "autoscaling"
   }
 
   names {
@@ -786,7 +708,7 @@ service "autoscaling" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeAutoScalingGroups"
+    endpoint_api_call = "DescribeAutoScalingGroups"
   }
 
   resource_prefix {
@@ -796,18 +718,17 @@ service "autoscaling" {
 
   provider_package_correct = "autoscaling"
   doc_prefix               = ["autoscaling_", "launch_configuration"]
-  brand                    = ""
 }
-service "autoscalingplans" {
 
+service "autoscalingplans" {
   cli_v2_command {
     aws_cli_v2_command           = "autoscaling-plans"
     aws_cli_v2_command_no_dashes = "autoscalingplans"
   }
 
   sdk {
-    id             = "Auto Scaling Plans"
-    client_version = [2]
+    id            = "Auto Scaling Plans"
+    arn_namespace = "autoscaling-plans"
   }
 
   names {
@@ -816,7 +737,7 @@ service "autoscalingplans" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeScalingPlans"
+    endpoint_api_call = "DescribeScalingPlans"
   }
 
   resource_prefix {
@@ -825,13 +746,12 @@ service "autoscalingplans" {
 
   provider_package_correct = "autoscalingplans"
   doc_prefix               = ["autoscalingplans_"]
-  brand                    = ""
 }
-service "backup" {
 
+service "backup" {
   sdk {
-    id             = "Backup"
-    client_version = [2]
+    id            = "Backup"
+    arn_namespace = "backup"
   }
 
   names {
@@ -839,12 +759,8 @@ service "backup" {
     human_friendly      = "Backup"
   }
 
-  client {
-    go_v1_client_typename = "Backup"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListBackupPlans"
+    endpoint_api_call = "ListBackupPlans"
   }
 
   resource_prefix {
@@ -857,24 +773,19 @@ service "backup" {
 }
 
 service "backupgateway" {
-
   cli_v2_command {
     aws_cli_v2_command           = "backup-gateway"
     aws_cli_v2_command_no_dashes = "backupgateway"
   }
 
   sdk {
-    id             = "Backup Gateway"
-    client_version = [1]
+    id            = "Backup Gateway"
+    arn_namespace = "backup-gateway"
   }
 
   names {
     provider_name_upper = "BackupGateway"
     human_friendly      = "Backup Gateway"
-  }
-
-  client {
-    go_v1_client_typename = "BackupGateway"
   }
 
   resource_prefix {
@@ -888,10 +799,9 @@ service "backupgateway" {
 }
 
 service "batch" {
-
   sdk {
-    id             = "Batch"
-    client_version = [1, 2]
+    id            = "Batch"
+    arn_namespace = "batch"
   }
 
   names {
@@ -899,12 +809,8 @@ service "batch" {
     human_friendly      = "Batch"
   }
 
-  client {
-    go_v1_client_typename = "Batch"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListJobs"
+    endpoint_api_call = "ListJobs"
   }
 
   resource_prefix {
@@ -918,8 +824,8 @@ service "batch" {
 
 service "bedrock" {
   sdk {
-    id             = "Bedrock"
-    client_version = [2]
+    id            = "Bedrock"
+    arn_namespace = "bedrock"
   }
 
   names {
@@ -947,8 +853,8 @@ service "bedrockagent" {
   }
 
   sdk {
-    id             = "Bedrock Agent"
-    client_version = [2]
+    id            = "Bedrock Agent"
+    arn_namespace = "bedrock"
   }
 
   names {
@@ -969,11 +875,43 @@ service "bedrockagent" {
   brand                    = "Amazon"
 }
 
-service "bcmdataexports" {
+service "bedrockagentcore" {
+   cli_v2_command {
+     aws_cli_v2_command           = "bedrock-agentcore-control"
+     aws_cli_v2_command_no_dashes = "bedrockagentcorecontrol"
+   }
 
+   go_packages {
+     v2_package = "bedrockagentcorecontrol"
+   }
+
+   sdk {
+     id            = "Bedrock AgentCore Control"
+     arn_namespace = "bedrock-agentcore"
+   }
+
+   names {
+     provider_name_upper = "BedrockAgentCore"
+     human_friendly      = "Bedrock AgentCore"
+   }
+
+   endpoint_info {
+     endpoint_api_call = "ListAgentRuntimes"
+   }
+
+   resource_prefix {
+     correct = "aws_bedrockagentcore_"
+   }
+
+   provider_package_correct = "bedrockagentcore"
+   doc_prefix               = ["bedrockagentcore_"]
+   brand                    = "Amazon"
+}
+
+service "bcmdataexports" {
   sdk {
-    id             = "BCM Data Exports"
-    client_version = [2]
+    id            = "BCM Data Exports"
+    arn_namespace = "bcm-data-exports"
   }
 
   names {
@@ -982,7 +920,7 @@ service "bcmdataexports" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListExports"
+    endpoint_api_call = "ListExports"
   }
 
   resource_prefix {
@@ -992,27 +930,53 @@ service "bcmdataexports" {
   provider_package_correct = "bcmdataexports"
   doc_prefix               = ["bcmdataexports_"]
   brand                    = "AWS"
+
+  is_global = true
+}
+
+service "billing" {
+  sdk {
+    id            = "Billing"
+    arn_namespace = "billing"
+  }
+
+  names {
+    provider_name_upper = "Billing"
+    human_friendly      = "Billing"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListBillingViews"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_billing_"
+  }
+
+  provider_package_correct = "billing"
+  doc_prefix               = ["billing_"]
+  brand                    = "AWS"
+
+  is_global = true
 }
 
 service "billingconductor" {
-
   go_packages {
     v1_package = "billingconductor"
-    v2_package = ""
+    v2_package = "billingconductor"
   }
 
   sdk {
-    id             = "billingconductor"
-    client_version = [1]
+    id            = "billingconductor"
+    arn_namespace = "billingconductor"
   }
 
   names {
     provider_name_upper = "BillingConductor"
     human_friendly      = "Billing Conductor"
-  }
-
-  client {
-    go_v1_client_typename = "BillingConductor"
   }
 
   resource_prefix {
@@ -1026,19 +990,14 @@ service "billingconductor" {
 }
 
 service "braket" {
-
   sdk {
-    id             = "Braket"
-    client_version = [1]
+    id            = "Braket"
+    arn_namespace = "braket"
   }
 
   names {
     provider_name_upper = "Braket"
     human_friendly      = "Braket"
-  }
-
-  client {
-    go_v1_client_typename = "Braket"
   }
 
   resource_prefix {
@@ -1052,15 +1011,14 @@ service "braket" {
 }
 
 service "ce" {
-
   go_packages {
     v1_package = "costexplorer"
     v2_package = "costexplorer"
   }
 
   sdk {
-    id             = "Cost Explorer"
-    client_version = [2]
+    id            = "Cost Explorer"
+    arn_namespace = "ce"
   }
 
   names {
@@ -1070,7 +1028,7 @@ service "ce" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCostCategoryDefinitions"
+    endpoint_api_call = "ListCostCategoryDefinitions"
   }
 
   resource_prefix {
@@ -1080,13 +1038,14 @@ service "ce" {
   provider_package_correct = "ce"
   doc_prefix               = ["ce_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "chatbot" {
-
   sdk {
-    id             = "Chatbot"
-    client_version = [2]
+    id            = "Chatbot"
+    arn_namespace = "chatbot"
   }
 
   names {
@@ -1094,12 +1053,8 @@ service "chatbot" {
     human_friendly      = "Chatbot"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetAccountPreferences"
+    endpoint_api_call = "GetAccountPreferences"
   }
 
   resource_prefix {
@@ -1112,10 +1067,9 @@ service "chatbot" {
 }
 
 service "chime" {
-
   sdk {
-    id             = "Chime"
-    client_version = [2]
+    id            = "Chime"
+    arn_namespace = "chime"
   }
 
   names {
@@ -1123,12 +1077,8 @@ service "chime" {
     human_friendly      = "Chime"
   }
 
-  client {
-    go_v1_client_typename = "Chime"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAccounts"
+    endpoint_api_call = "ListAccounts"
   }
 
   resource_prefix {
@@ -1141,24 +1091,19 @@ service "chime" {
 }
 
 service "chimesdkidentity" {
-
   cli_v2_command {
     aws_cli_v2_command           = "chime-sdk-identity"
     aws_cli_v2_command_no_dashes = "chimesdkidentity"
   }
 
   sdk {
-    id             = "Chime SDK Identity"
-    client_version = [1]
+    id            = "Chime SDK Identity"
+    arn_namespace = "chime"
   }
 
   names {
     provider_name_upper = "ChimeSDKIdentity"
     human_friendly      = "Chime SDK Identity"
-  }
-
-  client {
-    go_v1_client_typename = "ChimeSDKIdentity"
   }
 
   resource_prefix {
@@ -1172,15 +1117,14 @@ service "chimesdkidentity" {
 }
 
 service "chimesdkmediapipelines" {
-
   cli_v2_command {
     aws_cli_v2_command           = "chime-sdk-mediapipelines"
     aws_cli_v2_command_no_dashes = "chimesdkmediapipelines"
   }
 
   sdk {
-    id             = "Chime SDK Media Pipelines"
-    client_version = [2]
+    id            = "Chime SDK Media Pipelines"
+    arn_namespace = "chime"
   }
 
   names {
@@ -1189,7 +1133,7 @@ service "chimesdkmediapipelines" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListMediaPipelines"
+    endpoint_api_call = "ListMediaPipelines"
   }
 
   resource_prefix {
@@ -1202,24 +1146,19 @@ service "chimesdkmediapipelines" {
 }
 
 service "chimesdkmeetings" {
-
   cli_v2_command {
     aws_cli_v2_command           = "chime-sdk-meetings"
     aws_cli_v2_command_no_dashes = "chimesdkmeetings"
   }
 
   sdk {
-    id             = "Chime SDK Meetings"
-    client_version = [1]
+    id            = "Chime SDK Meetings"
+    arn_namespace = "chime"
   }
 
   names {
     provider_name_upper = "ChimeSDKMeetings"
     human_friendly      = "Chime SDK Meetings"
-  }
-
-  client {
-    go_v1_client_typename = "ChimeSDKMeetings"
   }
 
   resource_prefix {
@@ -1233,24 +1172,19 @@ service "chimesdkmeetings" {
 }
 
 service "chimesdkmessaging" {
-
   cli_v2_command {
     aws_cli_v2_command           = "chime-sdk-messaging"
     aws_cli_v2_command_no_dashes = "chimesdkmessaging"
   }
 
   sdk {
-    id             = "Chime SDK Messaging"
-    client_version = [1]
+    id            = "Chime SDK Messaging"
+    arn_namespace = "chime"
   }
 
   names {
     provider_name_upper = "ChimeSDKMessaging"
     human_friendly      = "Chime SDK Messaging"
-  }
-
-  client {
-    go_v1_client_typename = "ChimeSDKMessaging"
   }
 
   resource_prefix {
@@ -1264,15 +1198,14 @@ service "chimesdkmessaging" {
 }
 
 service "chimesdkvoice" {
-
   cli_v2_command {
     aws_cli_v2_command           = "chime-sdk-voice"
     aws_cli_v2_command_no_dashes = "chimesdkvoice"
   }
 
   sdk {
-    id             = "Chime SDK Voice"
-    client_version = [2]
+    id            = "Chime SDK Voice"
+    arn_namespace = "chime"
   }
 
   names {
@@ -1281,7 +1214,7 @@ service "chimesdkvoice" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPhoneNumbers"
+    endpoint_api_call = "ListPhoneNumbers"
   }
 
   resource_prefix {
@@ -1294,10 +1227,9 @@ service "chimesdkvoice" {
 }
 
 service "cleanrooms" {
-
   sdk {
-    id             = "CleanRooms"
-    client_version = [2]
+    id            = "CleanRooms"
+    arn_namespace = "cleanrooms"
   }
 
   names {
@@ -1306,7 +1238,7 @@ service "cleanrooms" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCollaborations"
+    endpoint_api_call = "ListCollaborations"
   }
 
   resource_prefix {
@@ -1319,15 +1251,14 @@ service "cleanrooms" {
 }
 
 service "cloudcontrol" {
-
   go_packages {
     v1_package = "cloudcontrolapi"
     v2_package = "cloudcontrol"
   }
 
   sdk {
-    id             = "CloudControl"
-    client_version = [2]
+    id            = "CloudControl"
+    arn_namespace = "cloudcontrol"
   }
 
   names {
@@ -1336,12 +1267,8 @@ service "cloudcontrol" {
     human_friendly      = "Cloud Control API"
   }
 
-    client {
-    go_v1_client_typename = "CloudControlApi"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListResourceRequests"
+    endpoint_api_call = "ListResourceRequests"
   }
 
   resource_prefix {
@@ -1355,19 +1282,14 @@ service "cloudcontrol" {
 }
 
 service "clouddirectory" {
-
   sdk {
-    id             = "CloudDirectory"
-    client_version = [1]
+    id            = "CloudDirectory"
+    arn_namespace = "clouddirectory"
   }
 
   names {
     provider_name_upper = "CloudDirectory"
     human_friendly      = "Cloud Directory"
-  }
-
-  client {
-    go_v1_client_typename = "CloudDirectory"
   }
 
   resource_prefix {
@@ -1381,10 +1303,9 @@ service "clouddirectory" {
 }
 
 service "servicediscovery" {
-
   sdk {
-    id             = "ServiceDiscovery"
-    client_version = [2]
+    id            = "ServiceDiscovery"
+    arn_namespace = "servicediscovery"
   }
 
   names {
@@ -1393,7 +1314,7 @@ service "servicediscovery" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListNamespaces"
+    endpoint_api_call = "ListNamespaces"
   }
 
   resource_prefix {
@@ -1407,10 +1328,9 @@ service "servicediscovery" {
 }
 
 service "cloud9" {
-
   sdk {
-    id             = "Cloud9"
-    client_version = [2]
+    id            = "Cloud9"
+    arn_namespace = "cloud9"
   }
 
   names {
@@ -1419,7 +1339,7 @@ service "cloud9" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListEnvironments"
+    endpoint_api_call = "ListEnvironments"
   }
 
   resource_prefix {
@@ -1432,10 +1352,9 @@ service "cloud9" {
 }
 
 service "cloudformation" {
-
   sdk {
-    id             = "CloudFormation"
-    client_version = [2]
+    id            = "CloudFormation"
+    arn_namespace = "cloudformation"
   }
 
   names {
@@ -1443,13 +1362,9 @@ service "cloudformation" {
     human_friendly      = "CloudFormation"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListStackInstances"
-    endpoint_api_params      = "StackSetName: aws_sdkv2.String(\"test\")"
+    endpoint_api_call   = "ListStackInstances"
+    endpoint_api_params = "StackSetName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -1462,10 +1377,9 @@ service "cloudformation" {
 }
 
 service "cloudfront" {
-
   sdk {
-    id             = "CloudFront"
-    client_version = [2]
+    id            = "CloudFront"
+    arn_namespace = "cloudfront"
   }
 
   names {
@@ -1474,7 +1388,7 @@ service "cloudfront" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDistributions"
+    endpoint_api_call = "ListDistributions"
   }
 
   resource_prefix {
@@ -1484,10 +1398,11 @@ service "cloudfront" {
   provider_package_correct = "cloudfront"
   doc_prefix               = ["cloudfront_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cloudfrontkeyvaluestore" {
-
   cli_v2_command {
     aws_cli_v2_command           = "cloudfront-keyvaluestore"
     aws_cli_v2_command_no_dashes = "cloudfrontkeyvaluestore"
@@ -1499,8 +1414,8 @@ service "cloudfrontkeyvaluestore" {
   }
 
   sdk {
-    id             = "CloudFront KeyValueStore"
-    client_version = [2]
+    id            = "CloudFront KeyValueStore"
+    arn_namespace = "cloudfront"
   }
 
   names {
@@ -1509,8 +1424,8 @@ service "cloudfrontkeyvaluestore" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListKeys"
-    endpoint_api_params      = "KvsARN: aws_sdkv2.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
+    endpoint_api_call   = "ListKeys"
+    endpoint_api_params = "KvsARN: aws.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
   }
 
   resource_prefix {
@@ -1520,13 +1435,14 @@ service "cloudfrontkeyvaluestore" {
   provider_package_correct = "cloudfrontkeyvaluestore"
   doc_prefix               = ["cloudfrontkeyvaluestore_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cloudhsmv2" {
-
   sdk {
-    id             = "CloudHSM V2"
-    client_version = [2]
+    id            = "CloudHSM V2"
+    arn_namespace = "cloudhsm"
   }
 
   names {
@@ -1535,12 +1451,8 @@ service "cloudhsmv2" {
     human_friendly      = "CloudHSM"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeClusters"
+    endpoint_api_call = "DescribeClusters"
   }
 
   resource_prefix {
@@ -1554,10 +1466,9 @@ service "cloudhsmv2" {
 }
 
 service "cloudsearch" {
-
   sdk {
-    id             = "CloudSearch"
-    client_version = [2]
+    id            = "CloudSearch"
+    arn_namespace = "cloudsearch"
   }
 
   names {
@@ -1566,7 +1477,7 @@ service "cloudsearch" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomainNames"
+    endpoint_api_call = "ListDomainNames"
   }
 
   resource_prefix {
@@ -1579,19 +1490,14 @@ service "cloudsearch" {
 }
 
 service "cloudsearchdomain" {
-
   sdk {
-    id             = "CloudSearch Domain"
-    client_version = [1]
+    id            = "CloudSearch Domain"
+    arn_namespace = "cloudsearch"
   }
 
   names {
     provider_name_upper = "CloudSearchDomain"
     human_friendly      = "CloudSearch Domain"
-  }
-
-  client {
-    go_v1_client_typename = "CloudSearchDomain"
   }
 
   resource_prefix {
@@ -1605,10 +1511,9 @@ service "cloudsearchdomain" {
 }
 
 service "cloudtrail" {
-
   sdk {
-    id             = "CloudTrail"
-    client_version = [2]
+    id            = "CloudTrail"
+    arn_namespace = "cloudtrail"
   }
 
   names {
@@ -1617,7 +1522,7 @@ service "cloudtrail" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListChannels"
+    endpoint_api_call = "ListChannels"
   }
 
   resource_prefix {
@@ -1631,10 +1536,9 @@ service "cloudtrail" {
 }
 
 service "cloudwatch" {
-
   sdk {
-    id             = "CloudWatch"
-    client_version = [2]
+    id            = "CloudWatch"
+    arn_namespace = "cloudwatch"
   }
 
   names {
@@ -1643,7 +1547,7 @@ service "cloudwatch" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDashboards"
+    endpoint_api_call = "ListDashboards"
   }
 
   resource_prefix {
@@ -1652,20 +1556,19 @@ service "cloudwatch" {
   }
 
   provider_package_correct = "cloudwatch"
-  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
+  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_", "cloudwatch_contributor_"]
   brand                    = "AWS"
 }
 
 service "applicationinsights" {
-
   cli_v2_command {
     aws_cli_v2_command           = "application-insights"
     aws_cli_v2_command_no_dashes = "applicationinsights"
   }
 
   sdk {
-    id             = "Application Insights"
-    client_version = [2]
+    id            = "Application Insights"
+    arn_namespace = "applicationinsights"
   }
 
   names {
@@ -1674,7 +1577,7 @@ service "applicationinsights" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "CreateApplication"
+    endpoint_api_call = "CreateApplication"
   }
 
   resource_prefix {
@@ -1687,15 +1590,14 @@ service "applicationinsights" {
 }
 
 service "evidently" {
-
   go_packages {
     v1_package = "cloudwatchevidently"
     v2_package = "evidently"
   }
 
   sdk {
-    id             = "Evidently"
-    client_version = [2]
+    id            = "Evidently"
+    arn_namespace = "evidently"
   }
 
   names {
@@ -1705,7 +1607,7 @@ service "evidently" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProjects"
+    endpoint_api_call = "ListProjects"
   }
 
   resource_prefix {
@@ -1718,10 +1620,9 @@ service "evidently" {
 }
 
 service "internetmonitor" {
-
   sdk {
-    id             = "InternetMonitor"
-    client_version = [2]
+    id            = "InternetMonitor"
+    arn_namespace = "internetmonitor"
   }
 
   names {
@@ -1730,7 +1631,7 @@ service "internetmonitor" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListMonitors"
+    endpoint_api_call = "ListMonitors"
   }
 
   resource_prefix {
@@ -1743,15 +1644,14 @@ service "internetmonitor" {
 }
 
 service "logs" {
-
   go_packages {
     v1_package = "cloudwatchlogs"
     v2_package = "cloudwatchlogs"
   }
 
   sdk {
-    id             = "CloudWatch Logs"
-    client_version = [2]
+    id            = "CloudWatch Logs"
+    arn_namespace = "logs"
   }
 
   names {
@@ -1760,12 +1660,8 @@ service "logs" {
     human_friendly      = "CloudWatch Logs"
   }
 
-  client {
-    go_v1_client_typename = "CloudWatchLogs"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAnomalies"
+    endpoint_api_call = "ListAnomalies"
   }
 
   resource_prefix {
@@ -1779,10 +1675,9 @@ service "logs" {
 }
 
 service "networkmonitor" {
-
   sdk {
-    id             = "NetworkMonitor"
-    client_version = [2]
+    id            = "NetworkMonitor"
+    arn_namespace = "networkmonitor"
   }
 
   names {
@@ -1791,7 +1686,7 @@ service "networkmonitor" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListMonitors"
+    endpoint_api_call = "ListMonitors"
   }
 
   resource_prefix {
@@ -1804,15 +1699,14 @@ service "networkmonitor" {
 }
 
 service "rum" {
-
   go_packages {
     v1_package = "cloudwatchrum"
     v2_package = "rum"
   }
 
   sdk {
-    id             = "RUM"
-    client_version = [2]
+    id            = "RUM"
+    arn_namespace = "rum"
   }
 
   names {
@@ -1821,12 +1715,8 @@ service "rum" {
     human_friendly      = "CloudWatch RUM"
   }
 
-  client {
-    go_v1_client_typename = "CloudWatchRUM"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAppMonitors"
+    endpoint_api_call = "ListAppMonitors"
   }
 
   resource_prefix {
@@ -1839,10 +1729,9 @@ service "rum" {
 }
 
 service "synthetics" {
-
   sdk {
-    id             = "synthetics"
-    client_version = [2]
+    id            = "synthetics"
+    arn_namespace = "synthetics"
   }
 
   names {
@@ -1851,7 +1740,7 @@ service "synthetics" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListGroups"
+    endpoint_api_call = "ListGroups"
   }
 
   resource_prefix {
@@ -1864,10 +1753,9 @@ service "synthetics" {
 }
 
 service "codeartifact" {
-
   sdk {
-    id             = "codeartifact"
-    client_version = [2]
+    id            = "codeartifact"
+    arn_namespace = "codeartifact"
   }
 
   names {
@@ -1876,7 +1764,7 @@ service "codeartifact" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
+    endpoint_api_call = "ListDomains"
   }
 
   resource_prefix {
@@ -1889,10 +1777,9 @@ service "codeartifact" {
 }
 
 service "codebuild" {
-
   sdk {
-    id             = "CodeBuild"
-    client_version = [2]
+    id            = "CodeBuild"
+    arn_namespace = "codebuild"
   }
 
   names {
@@ -1901,7 +1788,7 @@ service "codebuild" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListBuildBatches"
+    endpoint_api_call = "ListBuildBatches"
   }
 
   resource_prefix {
@@ -1914,10 +1801,9 @@ service "codebuild" {
 }
 
 service "codecommit" {
-
   sdk {
-    id             = "CodeCommit"
-    client_version = [2]
+    id            = "CodeCommit"
+    arn_namespace = "codecommit"
   }
 
   names {
@@ -1926,7 +1812,7 @@ service "codecommit" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRepositories"
+    endpoint_api_call = "ListRepositories"
   }
 
   resource_prefix {
@@ -1938,16 +1824,44 @@ service "codecommit" {
   brand                    = "AWS"
 }
 
-service "deploy" {
+service "codeconnections" {
+  cli_v2_command {
+    aws_cli_v2_command           = "codeconnections"
+    aws_cli_v2_command_no_dashes = "codeconnections"
+  }
 
+  sdk {
+    id            = "CodeConnections"
+    arn_namespace = "codeconnections"
+  }
+
+  names {
+    provider_name_upper = "CodeConnections"
+    human_friendly      = "CodeConnections"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConnections"
+  }
+
+  resource_prefix {
+    correct = "aws_codeconnections_"
+  }
+
+  provider_package_correct = "codeconnections"
+  doc_prefix               = ["codeconnections_"]
+  brand                    = "AWS"
+}
+
+service "deploy" {
   go_packages {
     v1_package = "codedeploy"
     v2_package = "codedeploy"
   }
 
   sdk {
-    id             = "CodeDeploy"
-    client_version = [2]
+    id            = "CodeDeploy"
+    arn_namespace = "codedeploy"
   }
 
   names {
@@ -1957,11 +1871,7 @@ service "deploy" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
-  }
-
-  client {
-  go_v1_client_typename = "CodeDeploy"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -1975,10 +1885,9 @@ service "deploy" {
 }
 
 service "codeguruprofiler" {
-
   sdk {
-    id             = "CodeGuruProfiler"
-    client_version = [2]
+    id            = "CodeGuruProfiler"
+    arn_namespace = "codeguru-profiler"
   }
 
   names {
@@ -1987,7 +1896,7 @@ service "codeguruprofiler" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProfilingGroups"
+    endpoint_api_call = "ListProfilingGroups"
   }
 
   resource_prefix {
@@ -2000,15 +1909,14 @@ service "codeguruprofiler" {
 }
 
 service "codegurureviewer" {
-
   cli_v2_command {
     aws_cli_v2_command           = "codeguru-reviewer"
     aws_cli_v2_command_no_dashes = "codegurureviewer"
   }
 
   sdk {
-    id             = "CodeGuru Reviewer"
-    client_version = [2]
+    id            = "CodeGuru Reviewer"
+    arn_namespace = "codeguru-reviewer"
   }
 
   names {
@@ -2017,8 +1925,8 @@ service "codegurureviewer" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCodeReviews"
-    endpoint_api_params      = "Type: awstypes.TypePullRequest"
+    endpoint_api_call   = "ListCodeReviews"
+    endpoint_api_params = "Type: awstypes.TypePullRequest"
   }
 
   resource_prefix {
@@ -2031,10 +1939,9 @@ service "codegurureviewer" {
 }
 
 service "codepipeline" {
-
   sdk {
-    id             = "CodePipeline"
-    client_version = [2]
+    id            = "CodePipeline"
+    arn_namespace = "codepipeline"
   }
 
   names {
@@ -2043,7 +1950,7 @@ service "codepipeline" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPipelines"
+    endpoint_api_call = "ListPipelines"
   }
 
   resource_prefix {
@@ -2057,19 +1964,14 @@ service "codepipeline" {
 }
 
 service "codestar" {
-
   sdk {
-    id             = "CodeStar"
-    client_version = [1]
+    id            = "CodeStar"
+    arn_namespace = "codestar"
   }
 
   names {
     provider_name_upper = "CodeStar"
     human_friendly      = "CodeStar"
-  }
-
-  client {
-    go_v1_client_typename = "CodeStar"
   }
 
   resource_prefix {
@@ -2083,15 +1985,14 @@ service "codestar" {
 }
 
 service "codestarconnections" {
-
   cli_v2_command {
     aws_cli_v2_command           = "codestar-connections"
     aws_cli_v2_command_no_dashes = "codestarconnections"
   }
 
   sdk {
-    id             = "CodeStar connections"
-    client_version = [2]
+    id            = "CodeStar connections"
+    arn_namespace = "codestar-connections"
   }
 
   names {
@@ -2100,7 +2001,7 @@ service "codestarconnections" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListConnections"
+    endpoint_api_call = "ListConnections"
   }
 
   resource_prefix {
@@ -2113,15 +2014,14 @@ service "codestarconnections" {
 }
 
 service "codestarnotifications" {
-
   cli_v2_command {
     aws_cli_v2_command           = "codestar-notifications"
     aws_cli_v2_command_no_dashes = "codestarnotifications"
   }
 
   sdk {
-    id             = "codestar notifications"
-    client_version = [2]
+    id            = "codestar notifications"
+    arn_namespace = "codestar-notifications"
   }
 
   names {
@@ -2130,7 +2030,7 @@ service "codestarnotifications" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListTargets"
+    endpoint_api_call = "ListTargets"
   }
 
   resource_prefix {
@@ -2143,15 +2043,14 @@ service "codestarnotifications" {
 }
 
 service "cognitoidentity" {
-
   cli_v2_command {
     aws_cli_v2_command           = "cognito-identity"
     aws_cli_v2_command_no_dashes = "cognitoidentity"
   }
 
   sdk {
-    id             = "Cognito Identity"
-    client_version = [2]
+    id            = "Cognito Identity"
+    arn_namespace = "cognito-identity"
   }
 
   names {
@@ -2160,8 +2059,8 @@ service "cognitoidentity" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListIdentityPools"
-    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_call   = "ListIdentityPools"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -2175,7 +2074,6 @@ service "cognitoidentity" {
 }
 
 service "cognitoidp" {
-
   cli_v2_command {
     aws_cli_v2_command           = "cognito-idp"
     aws_cli_v2_command_no_dashes = "cognitoidp"
@@ -2187,8 +2085,8 @@ service "cognitoidp" {
   }
 
   sdk {
-    id             = "Cognito Identity Provider"
-    client_version = [2]
+    id            = "Cognito Identity Provider"
+    arn_namespace = "cognito-idp"
   }
 
   names {
@@ -2197,44 +2095,35 @@ service "cognitoidp" {
     human_friendly      = "Cognito IDP (Identity Provider)"
   }
 
-  client {
-    go_v1_client_typename = "CognitoIdentityProvider"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListUserPools"
-    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_call   = "ListUserPools"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk)"
+    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
+  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
   brand                    = "AWS"
 }
 
 service "cognitosync" {
-
   cli_v2_command {
     aws_cli_v2_command           = "cognito-sync"
     aws_cli_v2_command_no_dashes = "cognitosync"
   }
 
   sdk {
-    id             = "Cognito Sync"
-    client_version = [1]
+    id            = "Cognito Sync"
+    arn_namespace = "cognito-sync"
   }
 
   names {
     provider_name_upper = "CognitoSync"
     human_friendly      = "Cognito Sync"
-  }
-
-  client {
-    go_v1_client_typename = "CognitoSync"
   }
 
   resource_prefix {
@@ -2248,10 +2137,9 @@ service "cognitosync" {
 }
 
 service "comprehend" {
-
   sdk {
-    id             = "Comprehend"
-    client_version = [2]
+    id            = "Comprehend"
+    arn_namespace = "comprehend"
   }
 
   names {
@@ -2260,7 +2148,7 @@ service "comprehend" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDocumentClassifiers"
+    endpoint_api_call = "ListDocumentClassifiers"
   }
 
   resource_prefix {
@@ -2273,19 +2161,14 @@ service "comprehend" {
 }
 
 service "comprehendmedical" {
-
   sdk {
-    id             = "ComprehendMedical"
-    client_version = [1]
+    id            = "ComprehendMedical"
+    arn_namespace = "comprehendmedical"
   }
 
   names {
     provider_name_upper = "ComprehendMedical"
     human_friendly      = "Comprehend Medical"
-  }
-
-  client {
-    go_v1_client_typename = "ComprehendMedical"
   }
 
   resource_prefix {
@@ -2299,15 +2182,14 @@ service "comprehendmedical" {
 }
 
 service "computeoptimizer" {
-
   cli_v2_command {
     aws_cli_v2_command           = "compute-optimizer"
     aws_cli_v2_command_no_dashes = "computeoptimizer"
   }
 
   sdk {
-    id             = "Compute Optimizer"
-    client_version = [2]
+    id            = "Compute Optimizer"
+    arn_namespace = "compute-optimizer"
   }
 
   names {
@@ -2316,7 +2198,7 @@ service "computeoptimizer" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetEnrollmentStatus"
+    endpoint_api_call = "GetEnrollmentStatus"
   }
 
   resource_prefix {
@@ -2329,10 +2211,9 @@ service "computeoptimizer" {
 }
 
 service "configservice" {
-
   sdk {
-    id             = "Config Service"
-    client_version = [2]
+    id            = "Config Service"
+    arn_namespace = "config"
   }
 
   names {
@@ -2342,7 +2223,7 @@ service "configservice" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListStoredQueries"
+    endpoint_api_call = "ListStoredQueries"
   }
 
   resource_prefix {
@@ -2356,10 +2237,9 @@ service "configservice" {
 }
 
 service "connect" {
-
   sdk {
-    id             = "Connect"
-    client_version = [1]
+    id            = "Connect"
+    arn_namespace = "connect"
   }
 
   names {
@@ -2367,12 +2247,8 @@ service "connect" {
     human_friendly      = "Connect"
   }
 
-  client {
-    go_v1_client_typename = "Connect"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListInstances"
+    endpoint_api_call = "ListInstances"
   }
 
   resource_prefix {
@@ -2385,10 +2261,9 @@ service "connect" {
 }
 
 service "connectcases" {
-
   sdk {
-    id             = "ConnectCases"
-    client_version = [2]
+    id            = "ConnectCases"
+    arn_namespace = "connect"
   }
 
   names {
@@ -2396,12 +2271,8 @@ service "connectcases" {
     human_friendly      = "Connect Cases"
   }
 
-  client {
-    go_v1_client_typename = "ConnectCases"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
+    endpoint_api_call = "ListDomains"
   }
 
   resource_prefix {
@@ -2414,24 +2285,19 @@ service "connectcases" {
 }
 
 service "connectcontactlens" {
-
   cli_v2_command {
     aws_cli_v2_command           = "connect-contact-lens"
     aws_cli_v2_command_no_dashes = "connectcontactlens"
   }
 
   sdk {
-    id             = "Connect Contact Lens"
-    client_version = [1]
+    id            = "Connect Contact Lens"
+    arn_namespace = "connectcontactlens"
   }
 
   names {
     provider_name_upper = "ConnectContactLens"
     human_friendly      = "Connect Contact Lens"
-  }
-
-  client {
-    go_v1_client_typename = "ConnectContactLens"
   }
 
   resource_prefix {
@@ -2445,15 +2311,14 @@ service "connectcontactlens" {
 }
 
 service "customerprofiles" {
-
   cli_v2_command {
     aws_cli_v2_command           = "customer-profiles"
     aws_cli_v2_command_no_dashes = "customerprofiles"
   }
 
   sdk {
-    id             = "Customer Profiles"
-    client_version = [2]
+    id            = "Customer Profiles"
+    arn_namespace = "customerprofiles"
   }
 
   names {
@@ -2462,7 +2327,7 @@ service "customerprofiles" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
+    endpoint_api_call = "ListDomains"
   }
 
   resource_prefix {
@@ -2475,19 +2340,14 @@ service "customerprofiles" {
 }
 
 service "connectparticipant" {
-
   sdk {
-    id             = "ConnectParticipant"
-    client_version = [1]
+    id            = "ConnectParticipant"
+    arn_namespace = "connect"
   }
 
   names {
     provider_name_upper = "ConnectParticipant"
     human_friendly      = "Connect Participant"
-  }
-
-  client {
-    go_v1_client_typename = "ConnectParticipant"
   }
 
   resource_prefix {
@@ -2501,24 +2361,19 @@ service "connectparticipant" {
 }
 
 service "voiceid" {
-
   cli_v2_command {
     aws_cli_v2_command           = "voice-id"
     aws_cli_v2_command_no_dashes = "voiceid"
   }
 
   sdk {
-    id             = "Voice ID"
-    client_version = [1]
+    id            = "Voice ID"
+    arn_namespace = "voiceid"
   }
 
   names {
     provider_name_upper = "VoiceID"
     human_friendly      = "Connect Voice ID"
-  }
-
-  client {
-    go_v1_client_typename = "VoiceID"
   }
 
   resource_prefix {
@@ -2532,25 +2387,20 @@ service "voiceid" {
 }
 
 service "wisdom" {
-
   go_packages {
     v1_package = "connectwisdomservice"
     v2_package = "wisdom"
   }
 
   sdk {
-    id             = "Wisdom"
-    client_version = [1]
+    id            = "Wisdom"
+    arn_namespace = "wisdom"
   }
 
   names {
     aliases             = ["connectwisdomservice"]
     provider_name_upper = "Wisdom"
     human_friendly      = "Connect Wisdom"
-  }
-
-  client {
-    go_v1_client_typename = "ConnectWisdomService"
   }
 
   resource_prefix {
@@ -2564,10 +2414,9 @@ service "wisdom" {
 }
 
 service "controltower" {
-
   sdk {
-    id             = "ControlTower"
-    client_version = [2]
+    id            = "ControlTower"
+    arn_namespace = "controltower"
   }
 
   names {
@@ -2576,7 +2425,7 @@ service "controltower" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListLandingZones"
+    endpoint_api_call = "ListLandingZones"
   }
 
   resource_prefix {
@@ -2589,15 +2438,14 @@ service "controltower" {
 }
 
 service "costoptimizationhub" {
-
   cli_v2_command {
     aws_cli_v2_command           = "cost-optimization-hub"
     aws_cli_v2_command_no_dashes = "costoptimizationhub"
   }
 
   sdk {
-    id             = "Cost Optimization Hub"
-    client_version = [2]
+    id            = "Cost Optimization Hub"
+    arn_namespace = "costoptimizationhub"
   }
 
   names {
@@ -2605,13 +2453,11 @@ service "costoptimizationhub" {
     human_friendly      = "Cost Optimization Hub"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetPreferences"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "GetPreferences"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -2621,18 +2467,19 @@ service "costoptimizationhub" {
   provider_package_correct = "costoptimizationhub"
   doc_prefix               = ["costoptimizationhub_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "cur" {
-
   go_packages {
     v1_package = "costandusagereportservice"
     v2_package = "costandusagereportservice"
   }
 
   sdk {
-    id             = "Cost and Usage Report Service"
-    client_version = [2]
+    id            = "Cost and Usage Report Service"
+    arn_namespace = "cur"
   }
 
   names {
@@ -2641,13 +2488,11 @@ service "cur" {
     human_friendly      = "Cost and Usage Report"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeReportDefinitions"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "DescribeReportDefinitions"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -2657,13 +2502,14 @@ service "cur" {
   provider_package_correct = "cur"
   doc_prefix               = ["cur_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "dataexchange" {
-
   sdk {
-    id             = "DataExchange"
-    client_version = [2]
+    id            = "DataExchange"
+    arn_namespace = "dataexchange"
   }
 
   names {
@@ -2671,12 +2517,8 @@ service "dataexchange" {
     human_friendly      = "Data Exchange"
   }
 
-  client {
-    go_v1_client_typename = "DataExchange"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDataSets"
+    endpoint_api_call = "ListDataSets"
   }
 
   resource_prefix {
@@ -2689,10 +2531,9 @@ service "dataexchange" {
 }
 
 service "datapipeline" {
-
   sdk {
-    id             = "Data Pipeline"
-    client_version = [2]
+    id            = "Data Pipeline"
+    arn_namespace = "datapipeline"
   }
 
   names {
@@ -2700,12 +2541,8 @@ service "datapipeline" {
     human_friendly      = "Data Pipeline"
   }
 
-  client {
-    go_v1_client_typename = "DataPipeline"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListPipelines"
+    endpoint_api_call = "ListPipelines"
   }
 
   resource_prefix {
@@ -2718,10 +2555,9 @@ service "datapipeline" {
 }
 
 service "datasync" {
-
   sdk {
-    id             = "DataSync"
-    client_version = [2]
+    id            = "DataSync"
+    arn_namespace = "datasync"
   }
 
   names {
@@ -2730,7 +2566,7 @@ service "datasync" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAgents"
+    endpoint_api_call = "ListAgents"
   }
 
   resource_prefix {
@@ -2743,10 +2579,9 @@ service "datasync" {
 }
 
 service "datazone" {
-
   sdk {
-    id             = "DataZone"
-    client_version = [2]
+    id            = "DataZone"
+    arn_namespace = "datazone"
   }
 
   names {
@@ -2755,7 +2590,7 @@ service "datazone" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
+    endpoint_api_call = "ListDomains"
   }
 
   resource_prefix {
@@ -2768,10 +2603,9 @@ service "datazone" {
 }
 
 service "detective" {
-
   sdk {
-    id             = "Detective"
-    client_version = [2]
+    id            = "Detective"
+    arn_namespace = "detective"
   }
 
   names {
@@ -2779,12 +2613,8 @@ service "detective" {
     human_friendly      = "Detective"
   }
 
-  client {
-    go_v1_client_typename = "Detective"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListGraphs"
+    endpoint_api_call = "ListGraphs"
   }
 
   resource_prefix {
@@ -2797,10 +2627,9 @@ service "detective" {
 }
 
 service "devicefarm" {
-
   sdk {
-    id             = "Device Farm"
-    client_version = [2]
+    id            = "Device Farm"
+    arn_namespace = "devicefarm"
   }
 
   names {
@@ -2809,7 +2638,7 @@ service "devicefarm" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDeviceInstances"
+    endpoint_api_call = "ListDeviceInstances"
   }
 
   resource_prefix {
@@ -2822,15 +2651,14 @@ service "devicefarm" {
 }
 
 service "devopsguru" {
-
   cli_v2_command {
     aws_cli_v2_command           = "devops-guru"
     aws_cli_v2_command_no_dashes = "devopsguru"
   }
 
   sdk {
-    id             = "DevOps Guru"
-    client_version = [2]
+    id            = "DevOps Guru"
+    arn_namespace = "devopsguru"
   }
 
   names {
@@ -2839,7 +2667,7 @@ service "devopsguru" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeAccountHealth"
+    endpoint_api_call = "DescribeAccountHealth"
   }
 
   resource_prefix {
@@ -2852,10 +2680,9 @@ service "devopsguru" {
 }
 
 service "directconnect" {
-
   sdk {
-    id             = "Direct Connect"
-    client_version = [1]
+    id            = "Direct Connect"
+    arn_namespace = "directconnect"
   }
 
   names {
@@ -2863,12 +2690,8 @@ service "directconnect" {
     human_friendly      = "Direct Connect"
   }
 
-  client {
-    go_v1_client_typename = "DirectConnect"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeConnections"
+    endpoint_api_call = "DescribeConnections"
   }
 
   resource_prefix {
@@ -2882,10 +2705,9 @@ service "directconnect" {
 }
 
 service "dlm" {
-
   sdk {
-    id             = "DLM"
-    client_version = [2]
+    id            = "DLM"
+    arn_namespace = "dlm"
   }
 
   names {
@@ -2894,7 +2716,7 @@ service "dlm" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetLifecyclePolicies"
+    endpoint_api_call = "GetLifecyclePolicies"
   }
 
   resource_prefix {
@@ -2907,15 +2729,14 @@ service "dlm" {
 }
 
 service "dms" {
-
   go_packages {
     v1_package = "databasemigrationservice"
     v2_package = "databasemigrationservice"
   }
 
   sdk {
-    id             = "Database Migration Service"
-    client_version = [2]
+    id            = "Database Migration Service"
+    arn_namespace = "dms"
   }
 
   names {
@@ -2924,12 +2745,8 @@ service "dms" {
     human_friendly      = "DMS (Database Migration)"
   }
 
-  client {
-    go_v1_client_typename = "DatabaseMigrationService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeCertificates"
+    endpoint_api_call = "DescribeCertificates"
   }
 
   resource_prefix {
@@ -2942,10 +2759,9 @@ service "dms" {
 }
 
 service "docdb" {
-
   sdk {
-    id             = "DocDB"
-    client_version = [2]
+    id            = "DocDB"
+    arn_namespace = "rds"
   }
 
   names {
@@ -2954,7 +2770,7 @@ service "docdb" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeDBClusters"
+    endpoint_api_call = "DescribeDBClusters"
   }
 
   resource_prefix {
@@ -2967,15 +2783,14 @@ service "docdb" {
 }
 
 service "docdbelastic" {
-
   cli_v2_command {
     aws_cli_v2_command           = "docdb-elastic"
     aws_cli_v2_command_no_dashes = "docdbelastic"
   }
 
   sdk {
-    id             = "DocDB Elastic"
-    client_version = [2]
+    id            = "DocDB Elastic"
+    arn_namespace = "docdbelastic"
   }
 
   names {
@@ -2984,7 +2799,7 @@ service "docdbelastic" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -2997,10 +2812,9 @@ service "docdbelastic" {
 }
 
 service "drs" {
-
   sdk {
-    id             = "DRS"
-    client_version = [2]
+    id            = "DRS"
+    arn_namespace = "drs"
   }
 
   names {
@@ -3009,7 +2823,7 @@ service "drs" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeJobs"
+    endpoint_api_call = "DescribeJobs"
   }
 
   resource_prefix {
@@ -3022,15 +2836,14 @@ service "drs" {
 }
 
 service "ds" {
-
   go_packages {
     v1_package = "directoryservice"
     v2_package = "directoryservice"
   }
 
   sdk {
-    id             = "Directory Service"
-    client_version = [2]
+    id            = "Directory Service"
+    arn_namespace = "ds"
   }
 
   names {
@@ -3039,12 +2852,8 @@ service "ds" {
     human_friendly      = "Directory Service"
   }
 
-  client {
-    go_v1_client_typename = "DirectoryService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeDirectories"
+    endpoint_api_call = "DescribeDirectories"
   }
 
   resource_prefix {
@@ -3057,11 +2866,34 @@ service "ds" {
   brand                    = "AWS"
 }
 
-service "dax" {
-
+service "dsql" {
   sdk {
-    id             = "DAX"
-    client_version = [2]
+    id            = "DSQL"
+    arn_namespace = "dsql"
+  }
+
+  names {
+    provider_name_upper = "DSQL"
+    human_friendly      = "DSQL"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_dsql_"
+  }
+
+  provider_package_correct = "dsql"
+  doc_prefix               = ["dsql_"]
+  brand                    = "AWS"
+}
+
+service "dax" {
+  sdk {
+    id            = "DAX"
+    arn_namespace = "dax"
   }
 
   names {
@@ -3070,7 +2902,7 @@ service "dax" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeClusters"
+    endpoint_api_call = "DescribeClusters"
   }
 
   resource_prefix {
@@ -3083,19 +2915,14 @@ service "dax" {
 }
 
 service "dynamodbstreams" {
-
   sdk {
-    id             = "DynamoDB Streams"
-    client_version = [1]
+    id            = "DynamoDB Streams"
+    arn_namespace = "dynamodb"
   }
 
   names {
     provider_name_upper = "DynamoDBStreams"
     human_friendly      = "DynamoDB Streams"
-  }
-
-  client {
-    go_v1_client_typename = "DynamoDBStreams"
   }
 
   resource_prefix {
@@ -3109,19 +2936,14 @@ service "dynamodbstreams" {
 }
 
 service "ebs" {
-
   sdk {
-    id             = "EBS"
-    client_version = [1]
+    id            = "EBS"
+    arn_namespace = "ebs"
   }
 
   names {
     provider_name_upper = "EBS"
     human_friendly      = "EBS (Elastic Block Store)"
-  }
-
-  client {
-    go_v1_client_typename = "EBS"
   }
 
   resource_prefix {
@@ -3135,10 +2957,9 @@ service "ebs" {
 }
 
 service "imagebuilder" {
-
   sdk {
-    id             = "imagebuilder"
-    client_version = [1]
+    id            = "imagebuilder"
+    arn_namespace = "imagebuilder"
   }
 
   names {
@@ -3146,12 +2967,8 @@ service "imagebuilder" {
     human_friendly      = "EC2 Image Builder"
   }
 
-  client {
-    go_v1_client_typename = "Imagebuilder"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListImages"
+    endpoint_api_call = "ListImages"
   }
 
   resource_prefix {
@@ -3164,24 +2981,19 @@ service "imagebuilder" {
 }
 
 service "ec2instanceconnect" {
-
   cli_v2_command {
     aws_cli_v2_command           = "ec2-instance-connect"
     aws_cli_v2_command_no_dashes = "ec2instanceconnect"
   }
 
   sdk {
-    id             = "EC2 Instance Connect"
-    client_version = [1]
+    id            = "EC2 Instance Connect"
+    arn_namespace = "ec2instanceconnect"
   }
 
   names {
     provider_name_upper = "EC2InstanceConnect"
     human_friendly      = "EC2 Instance Connect"
-  }
-
-  client {
-    go_v1_client_typename = "EC2InstanceConnect"
   }
 
   resource_prefix {
@@ -3195,10 +3007,9 @@ service "ec2instanceconnect" {
 }
 
 service "ecr" {
-
   sdk {
-    id             = "ECR"
-    client_version = [2]
+    id            = "ECR"
+    arn_namespace = "ecr"
   }
 
   names {
@@ -3207,7 +3018,7 @@ service "ecr" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeRepositories"
+    endpoint_api_call = "DescribeRepositories"
   }
 
   resource_prefix {
@@ -3220,15 +3031,14 @@ service "ecr" {
 }
 
 service "ecrpublic" {
-
   cli_v2_command {
     aws_cli_v2_command           = "ecr-public"
     aws_cli_v2_command_no_dashes = "ecrpublic"
   }
 
   sdk {
-    id             = "ECR PUBLIC"
-    client_version = [2]
+    id            = "ECR PUBLIC"
+    arn_namespace = "ecrpublic"
   }
 
   names {
@@ -3237,7 +3047,7 @@ service "ecrpublic" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeRepositories"
+    endpoint_api_call = "DescribeRepositories"
   }
 
   resource_prefix {
@@ -3250,10 +3060,9 @@ service "ecrpublic" {
 }
 
 service "ecs" {
-
   sdk {
-    id             = "ECS"
-    client_version = [2]
+    id            = "ECS"
+    arn_namespace = "ecs"
   }
 
   names {
@@ -3262,7 +3071,7 @@ service "ecs" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -3275,10 +3084,9 @@ service "ecs" {
 }
 
 service "efs" {
-
   sdk {
-    id             = "EFS"
-    client_version = [2]
+    id            = "EFS"
+    arn_namespace = "elasticfilesystem"
   }
 
   names {
@@ -3287,7 +3095,7 @@ service "efs" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeFileSystems"
+    endpoint_api_call = "DescribeFileSystems"
   }
 
   resource_prefix {
@@ -3300,10 +3108,9 @@ service "efs" {
 }
 
 service "eks" {
-
   sdk {
-    id             = "EKS"
-    client_version = [2]
+    id            = "EKS"
+    arn_namespace = "eks"
   }
 
   names {
@@ -3312,7 +3119,7 @@ service "eks" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -3325,10 +3132,9 @@ service "eks" {
 }
 
 service "elasticbeanstalk" {
-
   sdk {
-    id             = "Elastic Beanstalk"
-    client_version = [2]
+    id            = "Elastic Beanstalk"
+    arn_namespace = "elasticbeanstalk"
   }
 
   names {
@@ -3338,7 +3144,7 @@ service "elasticbeanstalk" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAvailableSolutionStacks"
+    endpoint_api_call = "ListAvailableSolutionStacks"
   }
 
   resource_prefix {
@@ -3352,24 +3158,19 @@ service "elasticbeanstalk" {
 }
 
 service "elasticinference" {
-
   cli_v2_command {
     aws_cli_v2_command           = "elastic-inference"
     aws_cli_v2_command_no_dashes = "elasticinference"
   }
 
   sdk {
-    id             = "Elastic Inference"
-    client_version = [1]
+    id            = "Elastic Inference"
+    arn_namespace = "elasticinference"
   }
 
   names {
     provider_name_upper = "ElasticInference"
     human_friendly      = "Elastic Inference"
-  }
-
-  client {
-    go_v1_client_typename = "ElasticInference"
   }
 
   resource_prefix {
@@ -3383,10 +3184,9 @@ service "elasticinference" {
 }
 
 service "elastictranscoder" {
-
   sdk {
-    id             = "Elastic Transcoder"
-    client_version = [2]
+    id            = "Elastic Transcoder"
+    arn_namespace = "elastictranscoder"
   }
 
   names {
@@ -3395,7 +3195,7 @@ service "elastictranscoder" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPipelines"
+    endpoint_api_call = "ListPipelines"
   }
 
   resource_prefix {
@@ -3408,10 +3208,9 @@ service "elastictranscoder" {
 }
 
 service "elasticache" {
-
   sdk {
-    id             = "ElastiCache"
-    client_version = [2]
+    id            = "ElastiCache"
+    arn_namespace = "elasticache"
   }
 
   names {
@@ -3420,7 +3219,7 @@ service "elasticache" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeCacheClusters"
+    endpoint_api_call = "DescribeCacheClusters"
   }
 
   resource_prefix {
@@ -3433,7 +3232,6 @@ service "elasticache" {
 }
 
 service "elasticsearch" {
-
   cli_v2_command {
     aws_cli_v2_command           = "es"
     aws_cli_v2_command_no_dashes = "es"
@@ -3445,8 +3243,8 @@ service "elasticsearch" {
   }
 
   sdk {
-    id             = "Elasticsearch Service"
-    client_version = [1]
+    id            = "Elasticsearch Service"
+    arn_namespace = "elasticsearch"
   }
 
   names {
@@ -3455,12 +3253,8 @@ service "elasticsearch" {
     human_friendly      = "Elasticsearch"
   }
 
-  client {
-    go_v1_client_typename = "ElasticsearchService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDomainNames"
+    endpoint_api_call = "ListDomainNames"
   }
 
   resource_prefix {
@@ -3474,15 +3268,14 @@ service "elasticsearch" {
 }
 
 service "elbv2" {
-
   go_packages {
     v1_package = "elbv2"
     v2_package = "elasticloadbalancingv2"
   }
 
   sdk {
-    id             = "Elastic Load Balancing v2"
-    client_version = [2]
+    id            = "Elastic Load Balancing v2"
+    arn_namespace = "elbv2"
   }
 
   names {
@@ -3491,12 +3284,8 @@ service "elbv2" {
     human_friendly      = "ELB (Elastic Load Balancing)"
   }
 
-  client {
-    go_v1_client_typename = "ELBV2"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeLoadBalancers"
+    endpoint_api_call = "DescribeLoadBalancers"
   }
 
   resource_prefix {
@@ -3506,18 +3295,17 @@ service "elbv2" {
 
   provider_package_correct = "elbv2"
   doc_prefix               = ["lbs?\\.", "lb_listener", "lb_target_group", "lb_hosted", "lb_trust_store"]
-  brand                    = ""
 }
-service "elb" {
 
+service "elb" {
   go_packages {
     v1_package = "elb"
     v2_package = "elasticloadbalancing"
   }
 
   sdk {
-    id             = "Elastic Load Balancing"
-    client_version = [2]
+    id            = "Elastic Load Balancing"
+    arn_namespace = "elb"
   }
 
   names {
@@ -3526,12 +3314,8 @@ service "elb" {
     human_friendly      = "ELB Classic"
   }
 
-  client {
-    go_v1_client_typename = "ELB"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeLoadBalancers"
+    endpoint_api_call = "DescribeLoadBalancers"
   }
 
   resource_prefix {
@@ -3541,13 +3325,36 @@ service "elb" {
 
   provider_package_correct = "elb"
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
-  brand                    = ""
 }
-service "mediaconnect" {
 
+service "invoicing" {
   sdk {
-    id             = "MediaConnect"
-    client_version = [2]
+    id            = "Invoicing"
+    arn_namespace = "invoicing"
+  }
+
+  names {
+    provider_name_upper = "Invoicing"
+    human_friendly      = "Invoicing"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListInvoiceUnits"
+  }
+
+  resource_prefix {
+    correct = "aws_invoicing_"
+  }
+
+  provider_package_correct = "invoicing"
+  doc_prefix               = ["invoicing_"]
+  brand                    = "AWS"
+}
+
+service "mediaconnect" {
+  sdk {
+    id            = "MediaConnect"
+    arn_namespace = "mediaconnect"
   }
 
   names {
@@ -3556,7 +3363,7 @@ service "mediaconnect" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListBridges"
+    endpoint_api_call = "ListBridges"
   }
 
   resource_prefix {
@@ -3569,10 +3376,9 @@ service "mediaconnect" {
 }
 
 service "mediaconvert" {
-
   sdk {
-    id             = "MediaConvert"
-    client_version = [2]
+    id            = "MediaConvert"
+    arn_namespace = "mediaconvert"
   }
 
   names {
@@ -3580,7 +3386,7 @@ service "mediaconvert" {
     human_friendly      = "Elemental MediaConvert"
   }
   endpoint_info {
-    endpoint_api_call        = "ListJobs"
+    endpoint_api_call = "ListJobs"
   }
 
   resource_prefix {
@@ -3594,10 +3400,9 @@ service "mediaconvert" {
 }
 
 service "medialive" {
-
   sdk {
-    id             = "MediaLive"
-    client_version = [2]
+    id            = "MediaLive"
+    arn_namespace = "medialive"
   }
 
   names {
@@ -3606,7 +3411,7 @@ service "medialive" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListOfferings"
+    endpoint_api_call = "ListOfferings"
   }
 
   resource_prefix {
@@ -3619,10 +3424,9 @@ service "medialive" {
 }
 
 service "mediapackage" {
-
   sdk {
-    id             = "MediaPackage"
-    client_version = [2]
+    id            = "MediaPackage"
+    arn_namespace = "mediapackage"
   }
 
   names {
@@ -3631,7 +3435,7 @@ service "mediapackage" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListChannels"
+    endpoint_api_call = "ListChannels"
   }
 
   resource_prefix {
@@ -3645,15 +3449,14 @@ service "mediapackage" {
 }
 
 service "mediapackagevod" {
-
   cli_v2_command {
     aws_cli_v2_command           = "mediapackage-vod"
     aws_cli_v2_command_no_dashes = "mediapackagevod"
   }
 
   sdk {
-    id             = "MediaPackage Vod"
-    client_version = [1]
+    id            = "MediaPackage Vod"
+    arn_namespace = "mediapackagevod"
   }
 
   names {
@@ -3661,8 +3464,8 @@ service "mediapackagevod" {
     human_friendly      = "Elemental MediaPackage VOD"
   }
 
-  client {
-    go_v1_client_typename = "MediaPackageVod"
+  endpoint_info {
+    endpoint_api_call = "ListPackagingGroups"
   }
 
   resource_prefix {
@@ -3672,14 +3475,12 @@ service "mediapackagevod" {
   provider_package_correct = "mediapackagevod"
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "mediastore" {
-
   sdk {
-    id             = "MediaStore"
-    client_version = [2]
+    id            = "MediaStore"
+    arn_namespace = "mediastore"
   }
 
   names {
@@ -3688,7 +3489,7 @@ service "mediastore" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListContainers"
+    endpoint_api_call = "ListContainers"
   }
 
   resource_prefix {
@@ -3702,24 +3503,19 @@ service "mediastore" {
 }
 
 service "mediastoredata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "mediastore-data"
     aws_cli_v2_command_no_dashes = "mediastoredata"
   }
 
   sdk {
-    id             = "MediaStore Data"
-    client_version = [1]
+    id            = "MediaStore Data"
+    arn_namespace = "mediastoredata"
   }
 
   names {
     provider_name_upper = "MediaStoreData"
     human_friendly      = "Elemental MediaStore Data"
-  }
-
-  client {
-    go_v1_client_typename = "MediaStoreData"
   }
 
   resource_prefix {
@@ -3733,19 +3529,14 @@ service "mediastoredata" {
 }
 
 service "mediatailor" {
-
   sdk {
-    id             = "MediaTailor"
-    client_version = [1]
+    id            = "MediaTailor"
+    arn_namespace = "mediatailor"
   }
 
   names {
     provider_name_upper = "MediaTailor"
     human_friendly      = "Elemental MediaTailor"
-  }
-
-  client {
-    go_v1_client_typename = "MediaTailor"
   }
 
   resource_prefix {
@@ -3759,10 +3550,9 @@ service "mediatailor" {
 }
 
 service "emr" {
-
   sdk {
-    id             = "EMR"
-    client_version = [1, 2]
+    id            = "EMR"
+    arn_namespace = "elasticmapreduce"
   }
 
   names {
@@ -3770,12 +3560,8 @@ service "emr" {
     human_friendly      = "EMR"
   }
 
-  client {
-    go_v1_client_typename = "EMR"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -3788,15 +3574,14 @@ service "emr" {
 }
 
 service "emrcontainers" {
-
   cli_v2_command {
     aws_cli_v2_command           = "emr-containers"
     aws_cli_v2_command_no_dashes = "emrcontainers"
   }
 
   sdk {
-    id             = "EMR containers"
-    client_version = [2]
+    id            = "EMR containers"
+    arn_namespace = "emrcontainers"
   }
 
   names {
@@ -3804,12 +3589,8 @@ service "emrcontainers" {
     human_friendly      = "EMR Containers"
   }
 
-  client {
-    go_v1_client_typename = "EMRContainers"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListVirtualClusters"
+    endpoint_api_call = "ListVirtualClusters"
   }
 
   resource_prefix {
@@ -3822,15 +3603,14 @@ service "emrcontainers" {
 }
 
 service "emrserverless" {
-
   cli_v2_command {
     aws_cli_v2_command           = "emr-serverless"
     aws_cli_v2_command_no_dashes = "emrserverless"
   }
 
   sdk {
-    id             = "EMR Serverless"
-    client_version = [2]
+    id            = "EMR Serverless"
+    arn_namespace = "emrserverless"
   }
 
   names {
@@ -3839,7 +3619,7 @@ service "emrserverless" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -3852,15 +3632,14 @@ service "emrserverless" {
 }
 
 service "events" {
-
   go_packages {
     v1_package = "eventbridge"
     v2_package = "eventbridge"
   }
 
   sdk {
-    id             = "EventBridge"
-    client_version = [2]
+    id            = "EventBridge"
+    arn_namespace = "events"
   }
 
   names {
@@ -3870,7 +3649,7 @@ service "events" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListEventBuses"
+    endpoint_api_call = "ListEventBuses"
   }
 
   resource_prefix {
@@ -3884,10 +3663,9 @@ service "events" {
 }
 
 service "schemas" {
-
   sdk {
-    id             = "schemas"
-    client_version = [2]
+    id            = "schemas"
+    arn_namespace = "schemas"
   }
 
   names {
@@ -3895,12 +3673,8 @@ service "schemas" {
     human_friendly      = "EventBridge Schemas"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListRegistries"
+    endpoint_api_call = "ListRegistries"
   }
 
   resource_prefix {
@@ -3913,10 +3687,9 @@ service "schemas" {
 }
 
 service "fis" {
-
   sdk {
-    id             = "fis"
-    client_version = [2]
+    id            = "fis"
+    arn_namespace = "fis"
   }
 
   names {
@@ -3925,7 +3698,7 @@ service "fis" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListExperiments"
+    endpoint_api_call = "ListExperiments"
   }
 
   resource_prefix {
@@ -3938,10 +3711,9 @@ service "fis" {
 }
 
 service "finspace" {
-
   sdk {
-    id             = "finspace"
-    client_version = [2]
+    id            = "finspace"
+    arn_namespace = "finspace"
   }
 
   names {
@@ -3950,7 +3722,7 @@ service "finspace" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListEnvironments"
+    endpoint_api_call = "ListEnvironments"
   }
 
   resource_prefix {
@@ -3963,24 +3735,19 @@ service "finspace" {
 }
 
 service "finspacedata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "finspace-data"
     aws_cli_v2_command_no_dashes = "finspacedata"
   }
 
   sdk {
-    id             = "finspace data"
-    client_version = [1]
+    id            = "finspace data"
+    arn_namespace = "finspacedata"
   }
 
   names {
     provider_name_upper = "FinSpaceData"
     human_friendly      = "FinSpace Data"
-  }
-
-  client {
-    go_v1_client_typename = "FinSpaceData"
   }
 
   resource_prefix {
@@ -3994,10 +3761,9 @@ service "finspacedata" {
 }
 
 service "fms" {
-
   sdk {
-    id             = "FMS"
-    client_version = [2]
+    id            = "FMS"
+    arn_namespace = "fms"
   }
 
   names {
@@ -4005,13 +3771,9 @@ service "fms" {
     human_friendly      = "FMS (Firewall Manager)"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAppsLists"
-    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_call   = "ListAppsLists"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -4024,25 +3786,20 @@ service "fms" {
 }
 
 service "forecast" {
-
   go_packages {
     v1_package = "forecastservice"
     v2_package = "forecast"
   }
 
   sdk {
-    id             = "forecast"
-    client_version = [1]
+    id            = "forecast"
+    arn_namespace = "forecast"
   }
 
   names {
     aliases             = ["forecastservice"]
     provider_name_upper = "Forecast"
     human_friendly      = "Forecast"
-  }
-
-  client {
-    go_v1_client_typename = "ForecastService"
   }
 
   resource_prefix {
@@ -4056,25 +3813,20 @@ service "forecast" {
 }
 
 service "forecastquery" {
-
   go_packages {
     v1_package = "forecastqueryservice"
     v2_package = "forecastquery"
   }
 
   sdk {
-    id             = "forecastquery"
-    client_version = [1]
+    id            = "forecastquery"
+    arn_namespace = "forecastquery"
   }
 
   names {
     aliases             = ["forecastqueryservice"]
     provider_name_upper = "ForecastQuery"
     human_friendly      = "Forecast Query"
-  }
-
-  client {
-    go_v1_client_typename = "ForecastQueryService"
   }
 
   resource_prefix {
@@ -4088,19 +3840,14 @@ service "forecastquery" {
 }
 
 service "frauddetector" {
-
   sdk {
-    id             = "FraudDetector"
-    client_version = [1]
+    id            = "FraudDetector"
+    arn_namespace = "frauddetector"
   }
 
   names {
     provider_name_upper = "FraudDetector"
     human_friendly      = "Fraud Detector"
-  }
-
-  client {
-    go_v1_client_typename = "FraudDetector"
   }
 
   resource_prefix {
@@ -4114,10 +3861,9 @@ service "frauddetector" {
 }
 
 service "fsx" {
-
   sdk {
-    id             = "FSx"
-    client_version = [2]
+    id            = "FSx"
+    arn_namespace = "fsx"
   }
 
   names {
@@ -4125,12 +3871,8 @@ service "fsx" {
     human_friendly      = "FSx"
   }
 
-  client {
-    go_v1_client_typename = "FSx"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeFileSystems"
+    endpoint_api_call = "DescribeFileSystems"
   }
 
   resource_prefix {
@@ -4143,10 +3885,9 @@ service "fsx" {
 }
 
 service "gamelift" {
-
   sdk {
-    id             = "GameLift"
-    client_version = [1]
+    id            = "GameLift"
+    arn_namespace = "gamelift"
   }
 
   names {
@@ -4154,12 +3895,8 @@ service "gamelift" {
     human_friendly      = "GameLift"
   }
 
-  client {
-    go_v1_client_typename = "GameLift"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListGameServerGroups"
+    endpoint_api_call = "ListGameServerGroups"
   }
 
   resource_prefix {
@@ -4172,10 +3909,9 @@ service "gamelift" {
 }
 
 service "globalaccelerator" {
-
   sdk {
-    id             = "Global Accelerator"
-    client_version = [2]
+    id            = "Global Accelerator"
+    arn_namespace = "globalaccelerator"
   }
 
   names {
@@ -4183,13 +3919,11 @@ service "globalaccelerator" {
     human_friendly      = "Global Accelerator"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAccelerators"
-    endpoint_region_override = "us-west-2"
+    endpoint_api_call = "ListAccelerators"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -4199,13 +3933,14 @@ service "globalaccelerator" {
   provider_package_correct = "globalaccelerator"
   doc_prefix               = ["globalaccelerator_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "glue" {
-
   sdk {
-    id             = "Glue"
-    client_version = [2]
+    id            = "Glue"
+    arn_namespace = "glue"
   }
 
   names {
@@ -4213,12 +3948,8 @@ service "glue" {
     human_friendly      = "Glue"
   }
 
-  client {
-    go_v1_client_typename = "Glue"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListRegistries"
+    endpoint_api_call = "ListRegistries"
   }
 
   resource_prefix {
@@ -4231,10 +3962,9 @@ service "glue" {
 }
 
 service "databrew" {
-
   sdk {
-    id             = "DataBrew"
-    client_version = [2]
+    id            = "DataBrew"
+    arn_namespace = "databrew"
   }
 
   names {
@@ -4257,10 +3987,9 @@ service "databrew" {
 }
 
 service "groundstation" {
-
   sdk {
-    id             = "GroundStation"
-    client_version = [2]
+    id            = "GroundStation"
+    arn_namespace = "groundstation"
   }
 
   names {
@@ -4269,7 +3998,7 @@ service "groundstation" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListConfigs"
+    endpoint_api_call = "ListConfigs"
   }
 
   resource_prefix {
@@ -4282,10 +4011,9 @@ service "groundstation" {
 }
 
 service "guardduty" {
-
   sdk {
-    id             = "GuardDuty"
-    client_version = [1, 2]
+    id            = "GuardDuty"
+    arn_namespace = "guardduty"
   }
 
   names {
@@ -4293,12 +4021,8 @@ service "guardduty" {
     human_friendly      = "GuardDuty"
   }
 
-  client {
-    go_v1_client_typename = "GuardDuty"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDetectors"
+    endpoint_api_call = "ListDetectors"
   }
 
   resource_prefix {
@@ -4311,19 +4035,14 @@ service "guardduty" {
 }
 
 service "health" {
-
   sdk {
-    id             = "Health"
-    client_version = [1]
+    id            = "Health"
+    arn_namespace = "health"
   }
 
   names {
     provider_name_upper = "Health"
     human_friendly      = "Health"
-  }
-
-  client {
-    go_v1_client_typename = "Health"
   }
 
   resource_prefix {
@@ -4337,10 +4056,9 @@ service "health" {
 }
 
 service "healthlake" {
-
   sdk {
-    id             = "HealthLake"
-    client_version = [2]
+    id            = "HealthLake"
+    arn_namespace = "healthlake"
   }
 
   names {
@@ -4349,7 +4067,7 @@ service "healthlake" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFHIRDatastores"
+    endpoint_api_call = "ListFHIRDatastores"
   }
 
   resource_prefix {
@@ -4362,19 +4080,14 @@ service "healthlake" {
 }
 
 service "honeycode" {
-
   sdk {
-    id             = "Honeycode"
-    client_version = [1]
+    id            = "Honeycode"
+    arn_namespace = "honeycode"
   }
 
   names {
     provider_name_upper = "Honeycode"
     human_friendly      = "Honeycode"
-  }
-
-  client {
-    go_v1_client_typename = "Honeycode"
   }
 
   resource_prefix {
@@ -4388,10 +4101,9 @@ service "honeycode" {
 }
 
 service "iam" {
-
   sdk {
-    id             = "IAM"
-    client_version = [2]
+    id            = "IAM"
+    arn_namespace = "iam"
   }
 
   names {
@@ -4399,16 +4111,12 @@ service "iam" {
     human_friendly      = "IAM (Identity & Access Management)"
   }
 
-  client {
-    go_v1_client_typename = "IAM"
-  }
-
   env_var {
     deprecated_env_var = "AWS_IAM_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_IAM_ENDPOINT"
   }
   endpoint_info {
-    endpoint_api_call        = "ListRoles"
+    endpoint_api_call = "ListRoles"
   }
 
   resource_prefix {
@@ -4418,13 +4126,14 @@ service "iam" {
   provider_package_correct = "iam"
   doc_prefix               = ["iam_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "inspector" {
-
   sdk {
-    id             = "Inspector"
-    client_version = [2]
+    id            = "Inspector"
+    arn_namespace = "inspector"
   }
 
   names {
@@ -4432,12 +4141,8 @@ service "inspector" {
     human_friendly      = "Inspector Classic"
   }
 
-  client {
-    go_v1_client_typename = "Inspector"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListRulesPackages"
+    endpoint_api_call = "ListRulesPackages"
   }
 
   resource_prefix {
@@ -4450,10 +4155,9 @@ service "inspector" {
 }
 
 service "inspector2" {
-
   sdk {
-    id             = "Inspector2"
-    client_version = [2]
+    id            = "Inspector2"
+    arn_namespace = "inspector2"
   }
 
   names {
@@ -4462,7 +4166,7 @@ service "inspector2" {
     human_friendly      = "Inspector"
   }
   endpoint_info {
-    endpoint_api_call        = "ListAccountPermissions"
+    endpoint_api_call = "ListAccountPermissions"
   }
 
   resource_prefix {
@@ -4475,7 +4179,6 @@ service "inspector2" {
 }
 
 service "iot1clickdevices" {
-
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-devices"
     aws_cli_v2_command_no_dashes = "iot1clickdevices"
@@ -4487,18 +4190,14 @@ service "iot1clickdevices" {
   }
 
   sdk {
-    id             = "IoT 1Click Devices Service"
-    client_version = [1]
+    id            = "IoT 1Click Devices Service"
+    arn_namespace = "iot1clickdevices"
   }
 
   names {
     aliases             = ["iot1clickdevicesservice"]
     provider_name_upper = "IoT1ClickDevices"
     human_friendly      = "IoT 1-Click Devices"
-  }
-
-  client {
-    go_v1_client_typename = "IoT1ClickDevicesService"
   }
 
   resource_prefix {
@@ -4512,24 +4211,19 @@ service "iot1clickdevices" {
 }
 
 service "iot1clickprojects" {
-
   cli_v2_command {
     aws_cli_v2_command           = "iot1click-projects"
     aws_cli_v2_command_no_dashes = "iot1clickprojects"
   }
 
   sdk {
-    id             = "IoT 1Click Projects"
-    client_version = [1]
+    id            = "IoT 1Click Projects"
+    arn_namespace = "iot1clickprojects"
   }
 
   names {
     provider_name_upper = "IoT1ClickProjects"
     human_friendly      = "IoT 1-Click Projects"
-  }
-
-  client {
-    go_v1_client_typename = "IoT1ClickProjects"
   }
 
   resource_prefix {
@@ -4543,10 +4237,9 @@ service "iot1clickprojects" {
 }
 
 service "iotanalytics" {
-
   sdk {
-    id             = "IoTAnalytics"
-    client_version = [2]
+    id            = "IoTAnalytics"
+    arn_namespace = "iotanalytics"
   }
 
   names {
@@ -4554,12 +4247,8 @@ service "iotanalytics" {
     human_friendly      = "IoT Analytics"
   }
 
-  client {
-    go_v1_client_typename = "IoTAnalytics"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListChannels"
+    endpoint_api_call = "ListChannels"
   }
 
   resource_prefix {
@@ -4569,10 +4258,10 @@ service "iotanalytics" {
   provider_package_correct = "iotanalytics"
   doc_prefix               = ["iotanalytics_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "iotdata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "iot-data"
     aws_cli_v2_command_no_dashes = "iotdata"
@@ -4584,18 +4273,14 @@ service "iotdata" {
   }
 
   sdk {
-    id             = "IoT Data Plane"
-    client_version = [1]
+    id            = "IoT Data Plane"
+    arn_namespace = "iotdata"
   }
 
   names {
     aliases             = ["iotdataplane"]
     provider_name_upper = "IoTData"
     human_friendly      = "IoT Data Plane"
-  }
-
-  client {
-    go_v1_client_typename = "IoTDataPlane"
   }
 
   resource_prefix {
@@ -4609,19 +4294,14 @@ service "iotdata" {
 }
 
 service "iotdeviceadvisor" {
-
   sdk {
-    id             = "IotDeviceAdvisor"
-    client_version = [1]
+    id            = "IotDeviceAdvisor"
+    arn_namespace = "iotdeviceadvisor"
   }
 
   names {
     provider_name_upper = "IoTDeviceAdvisor"
     human_friendly      = "IoT Device Management"
-  }
-
-  client {
-    go_v1_client_typename = "IoTDeviceAdvisor"
   }
 
   resource_prefix {
@@ -4635,10 +4315,9 @@ service "iotdeviceadvisor" {
 }
 
 service "iotevents" {
-
   sdk {
-    id             = "IoT Events"
-    client_version = [2]
+    id            = "IoT Events"
+    arn_namespace = "iotevents"
   }
 
   names {
@@ -4646,12 +4325,8 @@ service "iotevents" {
     human_friendly      = "IoT Events"
   }
 
-  client {
-    go_v1_client_typename = "IoTEvents"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAlarmModels"
+    endpoint_api_call = "ListAlarmModels"
   }
 
   resource_prefix {
@@ -4661,27 +4336,23 @@ service "iotevents" {
   provider_package_correct = "iotevents"
   doc_prefix               = ["iotevents_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "ioteventsdata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "iotevents-data"
     aws_cli_v2_command_no_dashes = "ioteventsdata"
   }
 
   sdk {
-    id             = "IoT Events Data"
-    client_version = [1]
+    id            = "IoT Events Data"
+    arn_namespace = "iotevents"
   }
 
   names {
     provider_name_upper = "IoTEventsData"
     human_friendly      = "IoT Events Data"
-  }
-
-  client {
-    go_v1_client_typename = "IoTEventsData"
   }
 
   resource_prefix {
@@ -4695,19 +4366,14 @@ service "ioteventsdata" {
 }
 
 service "iotfleethub" {
-
   sdk {
-    id             = "IoTFleetHub"
-    client_version = [1]
+    id            = "IoTFleetHub"
+    arn_namespace = "iotfleethub"
   }
 
   names {
     provider_name_upper = "IoTFleetHub"
     human_friendly      = "IoT Fleet Hub"
-  }
-
-  client {
-    go_v1_client_typename = "IoTFleetHub"
   }
 
   resource_prefix {
@@ -4721,10 +4387,9 @@ service "iotfleethub" {
 }
 
 service "greengrass" {
-
   sdk {
-    id             = "Greengrass"
-    client_version = [2]
+    id            = "Greengrass"
+    arn_namespace = "greengrass"
   }
 
   names {
@@ -4732,12 +4397,8 @@ service "greengrass" {
     human_friendly      = "IoT Greengrass"
   }
 
-  client {
-    go_v1_client_typename = "Greengrass"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListGroups"
+    endpoint_api_call = "ListGroups"
   }
 
   resource_prefix {
@@ -4750,19 +4411,14 @@ service "greengrass" {
 }
 
 service "greengrassv2" {
-
   sdk {
-    id             = "GreengrassV2"
-    client_version = [1]
+    id            = "GreengrassV2"
+    arn_namespace = "greengrassv2"
   }
 
   names {
     provider_name_upper = "GreengrassV2"
     human_friendly      = "IoT Greengrass V2"
-  }
-
-  client {
-    go_v1_client_typename = "GreengrassV2"
   }
 
   resource_prefix {
@@ -4776,7 +4432,6 @@ service "greengrassv2" {
 }
 
 service "iotjobsdata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "iot-jobs-data"
     aws_cli_v2_command_no_dashes = "iotjobsdata"
@@ -4788,18 +4443,14 @@ service "iotjobsdata" {
   }
 
   sdk {
-    id             = "IoT Jobs Data Plane"
-    client_version = [1]
+    id            = "IoT Jobs Data Plane"
+    arn_namespace = "iotjobsdata"
   }
 
   names {
     aliases             = ["iotjobsdataplane"]
     provider_name_upper = "IoTJobsData"
     human_friendly      = "IoT Jobs Data Plane"
-  }
-
-  client {
-    go_v1_client_typename = "IoTJobsDataPlane"
   }
 
   resource_prefix {
@@ -4813,19 +4464,14 @@ service "iotjobsdata" {
 }
 
 service "iotsecuretunneling" {
-
   sdk {
-    id             = "IoTSecureTunneling"
-    client_version = [1]
+    id            = "IoTSecureTunneling"
+    arn_namespace = "iotsecuretunneling"
   }
 
   names {
     provider_name_upper = "IoTSecureTunneling"
     human_friendly      = "IoT Secure Tunneling"
-  }
-
-  client {
-    go_v1_client_typename = "IoTSecureTunneling"
   }
 
   resource_prefix {
@@ -4839,19 +4485,14 @@ service "iotsecuretunneling" {
 }
 
 service "iotsitewise" {
-
   sdk {
-    id             = "IoTSiteWise"
-    client_version = [1]
+    id            = "IoTSiteWise"
+    arn_namespace = "iotsitewise"
   }
 
   names {
     provider_name_upper = "IoTSiteWise"
     human_friendly      = "IoT SiteWise"
-  }
-
-  client {
-    go_v1_client_typename = "IoTSiteWise"
   }
 
   resource_prefix {
@@ -4865,19 +4506,14 @@ service "iotsitewise" {
 }
 
 service "iotthingsgraph" {
-
   sdk {
-    id             = "IoTThingsGraph"
-    client_version = [1]
+    id            = "IoTThingsGraph"
+    arn_namespace = "iotthingsgraph"
   }
 
   names {
     provider_name_upper = "IoTThingsGraph"
     human_friendly      = "IoT Things Graph"
-  }
-
-  client {
-    go_v1_client_typename = "IoTThingsGraph"
   }
 
   resource_prefix {
@@ -4891,19 +4527,14 @@ service "iotthingsgraph" {
 }
 
 service "iottwinmaker" {
-
   sdk {
-    id             = "IoTTwinMaker"
-    client_version = [1]
+    id            = "IoTTwinMaker"
+    arn_namespace = "iottwinmaker"
   }
 
   names {
     provider_name_upper = "IoTTwinMaker"
     human_friendly      = "IoT TwinMaker"
-  }
-
-  client {
-    go_v1_client_typename = "IoTTwinMaker"
   }
 
   resource_prefix {
@@ -4917,19 +4548,14 @@ service "iottwinmaker" {
 }
 
 service "iotwireless" {
-
   sdk {
-    id             = "IoT Wireless"
-    client_version = [1]
+    id            = "IoT Wireless"
+    arn_namespace = "iotwireless"
   }
 
   names {
     provider_name_upper = "IoTWireless"
     human_friendly      = "IoT Wireless"
-  }
-
-  client {
-    go_v1_client_typename = "IoTWireless"
   }
 
   resource_prefix {
@@ -4943,10 +4569,9 @@ service "iotwireless" {
 }
 
 service "ivs" {
-
   sdk {
-    id             = "ivs"
-    client_version = [2]
+    id            = "ivs"
+    arn_namespace = "ivs"
   }
 
   names {
@@ -4954,12 +4579,8 @@ service "ivs" {
     human_friendly      = "IVS (Interactive Video)"
   }
 
-  client {
-    go_v1_client_typename = "IVS"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListChannels"
+    endpoint_api_call = "ListChannels"
   }
 
   resource_prefix {
@@ -4972,10 +4593,9 @@ service "ivs" {
 }
 
 service "ivschat" {
-
   sdk {
-    id             = "ivschat"
-    client_version = [2]
+    id            = "ivschat"
+    arn_namespace = "ivschat"
   }
 
   names {
@@ -4984,7 +4604,7 @@ service "ivschat" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRooms"
+    endpoint_api_call = "ListRooms"
   }
 
   resource_prefix {
@@ -4997,10 +4617,9 @@ service "ivschat" {
 }
 
 service "kendra" {
-
   sdk {
-    id             = "kendra"
-    client_version = [2]
+    id            = "kendra"
+    arn_namespace = "kendra"
   }
 
   names {
@@ -5008,12 +4627,8 @@ service "kendra" {
     human_friendly      = "Kendra"
   }
 
-  client {
-    go_v1_client_typename = "Kendra"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListIndices"
+    endpoint_api_call = "ListIndices"
   }
 
   resource_prefix {
@@ -5026,10 +4641,9 @@ service "kendra" {
 }
 
 service "keyspaces" {
-
   sdk {
-    id             = "Keyspaces"
-    client_version = [2]
+    id            = "Keyspaces"
+    arn_namespace = "keyspaces"
   }
 
   names {
@@ -5038,7 +4652,7 @@ service "keyspaces" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListKeyspaces"
+    endpoint_api_call = "ListKeyspaces"
   }
 
   resource_prefix {
@@ -5051,10 +4665,9 @@ service "keyspaces" {
 }
 
 service "kinesis" {
-
   sdk {
-    id             = "Kinesis"
-    client_version = [2]
+    id            = "Kinesis"
+    arn_namespace = "kinesis"
   }
 
   names {
@@ -5062,12 +4675,8 @@ service "kinesis" {
     human_friendly      = "Kinesis"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListStreams"
+    endpoint_api_call = "ListStreams"
   }
 
   resource_prefix {
@@ -5081,10 +4690,9 @@ service "kinesis" {
 }
 
 service "kinesisanalytics" {
-
   sdk {
-    id             = "Kinesis Analytics"
-    client_version = [2]
+    id            = "Kinesis Analytics"
+    arn_namespace = "kinesisanalytics"
   }
 
   names {
@@ -5092,12 +4700,8 @@ service "kinesisanalytics" {
     human_friendly      = "Kinesis Analytics"
   }
 
-  client {
-    go_v1_client_typename = "KinesisAnalytics"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -5111,10 +4715,9 @@ service "kinesisanalytics" {
 }
 
 service "kinesisanalyticsv2" {
-
   sdk {
-    id             = "Kinesis Analytics V2"
-    client_version = [2]
+    id            = "Kinesis Analytics V2"
+    arn_namespace = "kinesisanalyticsv2"
   }
 
   names {
@@ -5122,12 +4725,8 @@ service "kinesisanalyticsv2" {
     human_friendly      = "Kinesis Analytics V2"
   }
 
-  client {
-    go_v1_client_typename = "KinesisAnalyticsV2"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -5140,10 +4739,9 @@ service "kinesisanalyticsv2" {
 }
 
 service "firehose" {
-
   sdk {
-    id             = "Firehose"
-    client_version = [2]
+    id            = "Firehose"
+    arn_namespace = "firehose"
   }
 
   names {
@@ -5152,7 +4750,7 @@ service "firehose" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDeliveryStreams"
+    endpoint_api_call = "ListDeliveryStreams"
   }
 
   resource_prefix {
@@ -5166,10 +4764,9 @@ service "firehose" {
 }
 
 service "kinesisvideo" {
-
   sdk {
-    id             = "Kinesis Video"
-    client_version = [1]
+    id            = "Kinesis Video"
+    arn_namespace = "kinesisvideo"
   }
 
   names {
@@ -5177,12 +4774,8 @@ service "kinesisvideo" {
     human_friendly      = "Kinesis Video"
   }
 
-  client {
-    go_v1_client_typename = "KinesisVideo"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListStreams"
+    endpoint_api_call = "ListStreams"
   }
 
   resource_prefix {
@@ -5195,24 +4788,19 @@ service "kinesisvideo" {
 }
 
 service "kinesisvideoarchivedmedia" {
-
   cli_v2_command {
     aws_cli_v2_command           = "kinesis-video-archived-media"
     aws_cli_v2_command_no_dashes = "kinesisvideoarchivedmedia"
   }
 
   sdk {
-    id             = "Kinesis Video Archived Media"
-    client_version = [1]
+    id            = "Kinesis Video Archived Media"
+    arn_namespace = "kinesisvideoarchivedmedia"
   }
 
   names {
     provider_name_upper = "KinesisVideoArchivedMedia"
     human_friendly      = "Kinesis Video Archived Media"
-  }
-
-  client {
-    go_v1_client_typename = "KinesisVideoArchivedMedia"
   }
 
   resource_prefix {
@@ -5226,24 +4814,19 @@ service "kinesisvideoarchivedmedia" {
 }
 
 service "kinesisvideomedia" {
-
   cli_v2_command {
     aws_cli_v2_command           = "kinesis-video-media"
     aws_cli_v2_command_no_dashes = "kinesisvideomedia"
   }
 
   sdk {
-    id             = "Kinesis Video Media"
-    client_version = [1]
+    id            = "Kinesis Video Media"
+    arn_namespace = "kinesisvideomedia"
   }
 
   names {
     provider_name_upper = "KinesisVideoMedia"
     human_friendly      = "Kinesis Video Media"
-  }
-
-  client {
-    go_v1_client_typename = "KinesisVideoMedia"
   }
 
   resource_prefix {
@@ -5257,7 +4840,6 @@ service "kinesisvideomedia" {
 }
 
 service "kinesisvideosignaling" {
-
   cli_v2_command {
     aws_cli_v2_command           = "kinesis-video-signaling"
     aws_cli_v2_command_no_dashes = "kinesisvideosignaling"
@@ -5269,18 +4851,14 @@ service "kinesisvideosignaling" {
   }
 
   sdk {
-    id             = "Kinesis Video Signaling"
-    client_version = [1]
+    id            = "Kinesis Video Signaling"
+    arn_namespace = "kinesisvideosignaling"
   }
 
   names {
     aliases             = ["kinesisvideosignalingchannels"]
     provider_name_upper = "KinesisVideoSignaling"
     human_friendly      = "Kinesis Video Signaling"
-  }
-
-  client {
-    go_v1_client_typename = "KinesisVideoSignalingChannels"
   }
 
   resource_prefix {
@@ -5294,10 +4872,9 @@ service "kinesisvideosignaling" {
 }
 
 service "kms" {
-
   sdk {
-    id             = "KMS"
-    client_version = [2]
+    id            = "KMS"
+    arn_namespace = "kms"
   }
 
   names {
@@ -5306,7 +4883,7 @@ service "kms" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListKeys"
+    endpoint_api_call = "ListKeys"
   }
 
   resource_prefix {
@@ -5319,10 +4896,9 @@ service "kms" {
 }
 
 service "lakeformation" {
-
   sdk {
-    id             = "LakeFormation"
-    client_version = [2]
+    id            = "LakeFormation"
+    arn_namespace = "lakeformation"
   }
 
   names {
@@ -5331,7 +4907,7 @@ service "lakeformation" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListResources"
+    endpoint_api_call = "ListResources"
   }
 
   resource_prefix {
@@ -5344,10 +4920,9 @@ service "lakeformation" {
 }
 
 service "lambda" {
-
   sdk {
-    id             = "Lambda"
-    client_version = [2]
+    id            = "Lambda"
+    arn_namespace = "lambda"
   }
 
   names {
@@ -5356,7 +4931,7 @@ service "lambda" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListFunctions"
+    endpoint_api_call = "ListFunctions"
   }
 
   resource_prefix {
@@ -5369,15 +4944,14 @@ service "lambda" {
 }
 
 service "launchwizard" {
-
   cli_v2_command {
     aws_cli_v2_command           = "launch-wizard"
     aws_cli_v2_command_no_dashes = "launchwizard"
   }
 
   sdk {
-    id             = "Launch Wizard"
-    client_version = [2]
+    id            = "Launch Wizard"
+    arn_namespace = "launchwizard"
   }
 
   names {
@@ -5386,7 +4960,7 @@ service "launchwizard" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListWorkloads"
+    endpoint_api_call = "ListWorkloads"
   }
 
   resource_prefix {
@@ -5399,7 +4973,6 @@ service "launchwizard" {
 }
 
 service "lexmodels" {
-
   cli_v2_command {
     aws_cli_v2_command           = "lex-models"
     aws_cli_v2_command_no_dashes = "lexmodels"
@@ -5411,8 +4984,8 @@ service "lexmodels" {
   }
 
   sdk {
-    id             = "Lex Model Building Service"
-    client_version = [1]
+    id            = "Lex Model Building Service"
+    arn_namespace = "lexmodels"
   }
 
   names {
@@ -5421,12 +4994,8 @@ service "lexmodels" {
     human_friendly      = "Lex Model Building"
   }
 
-  client {
-    go_v1_client_typename = "LexModelBuildingService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetBots"
+    endpoint_api_call = "GetBots"
   }
 
   resource_prefix {
@@ -5440,7 +5009,6 @@ service "lexmodels" {
 }
 
 service "lexv2models" {
-
   cli_v2_command {
     aws_cli_v2_command           = "lexv2-models"
     aws_cli_v2_command_no_dashes = "lexv2models"
@@ -5452,8 +5020,8 @@ service "lexv2models" {
   }
 
   sdk {
-    id             = "Lex Models V2"
-    client_version = [2]
+    id            = "Lex Models V2"
+    arn_namespace = "lexv2models"
   }
 
   names {
@@ -5463,7 +5031,7 @@ service "lexv2models" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListBots"
+    endpoint_api_call = "ListBots"
   }
 
   resource_prefix {
@@ -5476,7 +5044,6 @@ service "lexv2models" {
 }
 
 service "lexruntime" {
-
   cli_v2_command {
     aws_cli_v2_command           = "lex-runtime"
     aws_cli_v2_command_no_dashes = "lexruntime"
@@ -5488,18 +5055,14 @@ service "lexruntime" {
   }
 
   sdk {
-    id             = "Lex Runtime Service"
-    client_version = [1]
+    id            = "Lex Runtime Service"
+    arn_namespace = "lexruntime"
   }
 
   names {
     aliases             = ["lexruntimeservice"]
     provider_name_upper = "LexRuntime"
     human_friendly      = "Lex Runtime"
-  }
-
-  client {
-    go_v1_client_typename = "LexRuntimeService"
   }
 
   resource_prefix {
@@ -5513,25 +5076,20 @@ service "lexruntime" {
 }
 
 service "lexruntimev2" {
-
   cli_v2_command {
     aws_cli_v2_command           = "lexv2-runtime"
     aws_cli_v2_command_no_dashes = "lexv2runtime"
   }
 
   sdk {
-    id             = "Lex Runtime V2"
-    client_version = [1]
+    id            = "Lex Runtime V2"
+    arn_namespace = "lexruntimev2"
   }
 
   names {
     aliases             = ["lexv2runtime"]
     provider_name_upper = "LexRuntimeV2"
     human_friendly      = "Lex Runtime V2"
-  }
-
-  client {
-    go_v1_client_typename = "LexRuntimeV2"
   }
 
   resource_prefix {
@@ -5545,15 +5103,14 @@ service "lexruntimev2" {
 }
 
 service "licensemanager" {
-
   cli_v2_command {
     aws_cli_v2_command           = "license-manager"
     aws_cli_v2_command_no_dashes = "licensemanager"
   }
 
   sdk {
-    id             = "License Manager"
-    client_version = [1]
+    id            = "License Manager"
+    arn_namespace = "licensemanager"
   }
 
   names {
@@ -5561,12 +5118,8 @@ service "licensemanager" {
     human_friendly      = "License Manager"
   }
 
-  client {
-    go_v1_client_typename = "LicenseManager"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListLicenseConfigurations"
+    endpoint_api_call = "ListLicenseConfigurations"
   }
 
   resource_prefix {
@@ -5579,10 +5132,9 @@ service "licensemanager" {
 }
 
 service "lightsail" {
-
   sdk {
-    id             = "Lightsail"
-    client_version = [2]
+    id            = "Lightsail"
+    arn_namespace = "lightsail"
   }
 
   names {
@@ -5590,12 +5142,8 @@ service "lightsail" {
     human_friendly      = "Lightsail"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetInstances"
+    endpoint_api_call = "GetInstances"
   }
 
   resource_prefix {
@@ -5608,15 +5156,14 @@ service "lightsail" {
 }
 
 service "location" {
-
   go_packages {
     v1_package = "locationservice"
     v2_package = "location"
   }
 
   sdk {
-    id             = "Location"
-    client_version = [1]
+    id            = "Location"
+    arn_namespace = "location"
   }
 
   names {
@@ -5625,12 +5172,8 @@ service "location" {
     human_friendly      = "Location"
   }
 
-  client {
-    go_v1_client_typename = "LocationService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListGeofenceCollections"
+    endpoint_api_call = "ListGeofenceCollections"
   }
 
   resource_prefix {
@@ -5643,19 +5186,14 @@ service "location" {
 }
 
 service "lookoutequipment" {
-
   sdk {
-    id             = "LookoutEquipment"
-    client_version = [1]
+    id            = "LookoutEquipment"
+    arn_namespace = "lookoutequipment"
   }
 
   names {
     provider_name_upper = "LookoutEquipment"
     human_friendly      = "Lookout for Equipment"
-  }
-
-  client {
-    go_v1_client_typename = "LookoutEquipment"
   }
 
   resource_prefix {
@@ -5669,10 +5207,9 @@ service "lookoutequipment" {
 }
 
 service "lookoutmetrics" {
-
   sdk {
-    id             = "LookoutMetrics"
-    client_version = [2]
+    id            = "LookoutMetrics"
+    arn_namespace = "lookoutmetrics"
   }
 
   names {
@@ -5681,7 +5218,7 @@ service "lookoutmetrics" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListMetricSets"
+    endpoint_api_call = "ListMetricSets"
   }
 
   resource_prefix {
@@ -5694,25 +5231,20 @@ service "lookoutmetrics" {
 }
 
 service "lookoutvision" {
-
   go_packages {
     v1_package = "lookoutforvision"
     v2_package = "lookoutvision"
   }
 
   sdk {
-    id             = "LookoutVision"
-    client_version = [1]
+    id            = "LookoutVision"
+    arn_namespace = "lookoutvision"
   }
 
   names {
     aliases             = ["lookoutforvision"]
     provider_name_upper = "LookoutVision"
     human_friendly      = "Lookout for Vision"
-  }
-
-  client {
-    go_v1_client_typename = "LookoutForVision"
   }
 
   resource_prefix {
@@ -5726,19 +5258,14 @@ service "lookoutvision" {
 }
 
 service "machinelearning" {
-
   sdk {
-    id             = "Machine Learning"
-    client_version = [1]
+    id            = "Machine Learning"
+    arn_namespace = "machinelearning"
   }
 
   names {
     provider_name_upper = "MachineLearning"
     human_friendly      = "Machine Learning"
-  }
-
-  client {
-    go_v1_client_typename = "MachineLearning"
   }
 
   resource_prefix {
@@ -5752,10 +5279,9 @@ service "machinelearning" {
 }
 
 service "macie2" {
-
   sdk {
-    id             = "Macie2"
-    client_version = [1]
+    id            = "Macie2"
+    arn_namespace = "macie2"
   }
 
   names {
@@ -5763,12 +5289,8 @@ service "macie2" {
     human_friendly      = "Macie"
   }
 
-  client {
-    go_v1_client_typename = "Macie2"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListFindings"
+    endpoint_api_call = "ListFindings"
   }
 
   resource_prefix {
@@ -5781,19 +5303,14 @@ service "macie2" {
 }
 
 service "macie" {
-
   sdk {
-    id             = "Macie"
-    client_version = [1]
+    id            = "Macie"
+    arn_namespace = "macie"
   }
 
   names {
     provider_name_upper = "Macie"
     human_friendly      = "Macie Classic"
-  }
-
-  client {
-    go_v1_client_typename = "Macie"
   }
 
   resource_prefix {
@@ -5807,10 +5324,9 @@ service "macie" {
 }
 
 service "m2" {
-
   sdk {
-    id             = "m2"
-    client_version = [2]
+    id            = "m2"
+    arn_namespace = "m2"
   }
 
   names {
@@ -5819,7 +5335,7 @@ service "m2" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -5832,19 +5348,14 @@ service "m2" {
 }
 
 service "managedblockchain" {
-
   sdk {
-    id             = "ManagedBlockchain"
-    client_version = [1]
+    id            = "ManagedBlockchain"
+    arn_namespace = "managedblockchain"
   }
 
   names {
     provider_name_upper = "ManagedBlockchain"
     human_friendly      = "Managed Blockchain"
-  }
-
-  client {
-    go_v1_client_typename = "ManagedBlockchain"
   }
 
   resource_prefix {
@@ -5858,15 +5369,14 @@ service "managedblockchain" {
 }
 
 service "grafana" {
-
   go_packages {
     v1_package = "managedgrafana"
     v2_package = "grafana"
   }
 
   sdk {
-    id             = "grafana"
-    client_version = [2]
+    id            = "grafana"
+    arn_namespace = "grafana"
   }
 
   names {
@@ -5875,12 +5385,8 @@ service "grafana" {
     human_friendly      = "Managed Grafana"
   }
 
-  client {
-    go_v1_client_typename = "ManagedGrafana"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListWorkspaces"
+    endpoint_api_call = "ListWorkspaces"
   }
 
   resource_prefix {
@@ -5893,10 +5399,9 @@ service "grafana" {
 }
 
 service "kafka" {
-
   sdk {
-    id             = "Kafka"
-    client_version = [2]
+    id            = "Kafka"
+    arn_namespace = "kafka"
   }
 
   names {
@@ -5905,12 +5410,8 @@ service "kafka" {
     human_friendly      = "Managed Streaming for Kafka"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -5924,10 +5425,9 @@ service "kafka" {
 }
 
 service "kafkaconnect" {
-
   sdk {
-    id             = "KafkaConnect"
-    client_version = [2]
+    id            = "KafkaConnect"
+    arn_namespace = "kafkaconnect"
   }
 
   names {
@@ -5935,12 +5435,8 @@ service "kafkaconnect" {
     human_friendly      = "Managed Streaming for Kafka Connect"
   }
 
-  client {
-    go_v1_client_typename = "KafkaConnect"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListConnectors"
+    endpoint_api_call = "ListConnectors"
   }
 
   resource_prefix {
@@ -5954,24 +5450,19 @@ service "kafkaconnect" {
 }
 
 service "marketplacecatalog" {
-
   cli_v2_command {
     aws_cli_v2_command           = "marketplace-catalog"
     aws_cli_v2_command_no_dashes = "marketplacecatalog"
   }
 
   sdk {
-    id             = "Marketplace Catalog"
-    client_version = [1]
+    id            = "Marketplace Catalog"
+    arn_namespace = "marketplacecatalog"
   }
 
   names {
     provider_name_upper = "MarketplaceCatalog"
     human_friendly      = "Marketplace Catalog"
-  }
-
-  client {
-    go_v1_client_typename = "MarketplaceCatalog"
   }
 
   resource_prefix {
@@ -5985,19 +5476,14 @@ service "marketplacecatalog" {
 }
 
 service "marketplacecommerceanalytics" {
-
   sdk {
-    id             = "Marketplace Commerce Analytics"
-    client_version = [1]
+    id            = "Marketplace Commerce Analytics"
+    arn_namespace = "marketplacecommerceanalytics"
   }
 
   names {
     provider_name_upper = "MarketplaceCommerceAnalytics"
     human_friendly      = "Marketplace Commerce Analytics"
-  }
-
-  client {
-    go_v1_client_typename = "MarketplaceCommerceAnalytics"
   }
 
   resource_prefix {
@@ -6011,7 +5497,6 @@ service "marketplacecommerceanalytics" {
 }
 
 service "marketplaceentitlement" {
-
   cli_v2_command {
     aws_cli_v2_command           = "marketplace-entitlement"
     aws_cli_v2_command_no_dashes = "marketplaceentitlement"
@@ -6023,18 +5508,14 @@ service "marketplaceentitlement" {
   }
 
   sdk {
-    id             = "Marketplace Entitlement Service"
-    client_version = [1]
+    id            = "Marketplace Entitlement Service"
+    arn_namespace = "marketplaceentitlement"
   }
 
   names {
     aliases             = ["marketplaceentitlementservice"]
     provider_name_upper = "MarketplaceEntitlement"
     human_friendly      = "Marketplace Entitlement"
-  }
-
-  client {
-    go_v1_client_typename = "MarketplaceEntitlementService"
   }
 
   resource_prefix {
@@ -6048,25 +5529,20 @@ service "marketplaceentitlement" {
 }
 
 service "marketplacemetering" {
-
   cli_v2_command {
     aws_cli_v2_command           = "meteringmarketplace"
     aws_cli_v2_command_no_dashes = "meteringmarketplace"
   }
 
   sdk {
-    id             = "Marketplace Metering"
-    client_version = [1]
+    id            = "Marketplace Metering"
+    arn_namespace = "marketplacemetering"
   }
 
   names {
     aliases             = ["meteringmarketplace"]
     provider_name_upper = "MarketplaceMetering"
     human_friendly      = "Marketplace Metering"
-  }
-
-  client {
-    go_v1_client_typename = "MarketplaceMetering"
   }
 
   resource_prefix {
@@ -6080,23 +5556,18 @@ service "marketplacemetering" {
 }
 
 service "memorydb" {
-
   sdk {
-    id             = "MemoryDB"
-    client_version = [1]
+    id            = "MemoryDB"
+    arn_namespace = "memorydb"
   }
 
   names {
     provider_name_upper = "MemoryDB"
-    human_friendly      = "MemoryDB for Redis"
-  }
-
-  client {
-    go_v1_client_typename = "MemoryDB"
+    human_friendly      = "MemoryDB"
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeClusters"
+    endpoint_api_call = "DescribeClusters"
   }
 
   resource_prefix {
@@ -6105,21 +5576,10 @@ service "memorydb" {
 
   provider_package_correct = "memorydb"
   doc_prefix               = ["memorydb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "meta" {
-
-  go_packages {
-    v1_package = ""
-    v2_package = ""
-  }
-
-  sdk {
-    id             = ""
-    client_version = null
-  }
-
   names {
     provider_name_upper = "Meta"
     human_friendly      = "Meta Data Sources"
@@ -6136,31 +5596,26 @@ service "meta" {
 
   provider_package_correct = "meta"
   doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\.", "service_principal"]
-  brand                    = ""
   exclude                  = true
   allowed_subcategory      = true
   note                     = "Not an AWS service (metadata)"
 }
-service "mgh" {
 
+service "mgh" {
   go_packages {
     v1_package = "migrationhub"
     v2_package = "migrationhub"
   }
 
   sdk {
-    id             = "Migration Hub"
-    client_version = [1]
+    id            = "Migration Hub"
+    arn_namespace = "mgh"
   }
 
   names {
     aliases             = ["migrationhub"]
     provider_name_upper = "MgH"
     human_friendly      = "MgH (Migration Hub)"
-  }
-
-  client {
-    go_v1_client_typename = "MigrationHub"
   }
 
   resource_prefix {
@@ -6174,24 +5629,19 @@ service "mgh" {
 }
 
 service "migrationhubconfig" {
-
   cli_v2_command {
     aws_cli_v2_command           = "migrationhub-config"
     aws_cli_v2_command_no_dashes = "migrationhubconfig"
   }
 
   sdk {
-    id             = "MigrationHub Config"
-    client_version = [1]
+    id            = "MigrationHub Config"
+    arn_namespace = "migrationhubconfig"
   }
 
   names {
     provider_name_upper = "MigrationHubConfig"
     human_friendly      = "Migration Hub Config"
-  }
-
-  client {
-    go_v1_client_typename = "MigrationHubConfig"
   }
 
   resource_prefix {
@@ -6205,24 +5655,19 @@ service "migrationhubconfig" {
 }
 
 service "migrationhubrefactorspaces" {
-
   cli_v2_command {
     aws_cli_v2_command           = "migration-hub-refactor-spaces"
     aws_cli_v2_command_no_dashes = "migrationhubrefactorspaces"
   }
 
   sdk {
-    id             = "Migration Hub Refactor Spaces"
-    client_version = [1]
+    id            = "Migration Hub Refactor Spaces"
+    arn_namespace = "migrationhubrefactorspaces"
   }
 
   names {
     provider_name_upper = "MigrationHubRefactorSpaces"
     human_friendly      = "Migration Hub Refactor Spaces"
-  }
-
-  client {
-    go_v1_client_typename = "MigrationHubRefactorSpaces"
   }
 
   resource_prefix {
@@ -6236,25 +5681,20 @@ service "migrationhubrefactorspaces" {
 }
 
 service "migrationhubstrategy" {
-
   go_packages {
     v1_package = "migrationhubstrategyrecommendations"
     v2_package = "migrationhubstrategy"
   }
 
   sdk {
-    id             = "MigrationHubStrategy"
-    client_version = [1]
+    id            = "MigrationHubStrategy"
+    arn_namespace = "migrationhubstrategy"
   }
 
   names {
     aliases             = ["migrationhubstrategyrecommendations"]
     provider_name_upper = "MigrationHubStrategy"
     human_friendly      = "Migration Hub Strategy"
-  }
-
-  client {
-    go_v1_client_typename = "MigrationHubStrategyRecommendations"
   }
 
   resource_prefix {
@@ -6268,19 +5708,14 @@ service "migrationhubstrategy" {
 }
 
 service "mobile" {
-
   sdk {
-    id             = "Mobile"
-    client_version = [1]
+    id            = "Mobile"
+    arn_namespace = "mobile"
   }
 
   names {
     provider_name_upper = "Mobile"
     human_friendly      = "Mobile"
-  }
-
-  client {
-    go_v1_client_typename = "Mobile"
   }
 
   resource_prefix {
@@ -6294,10 +5729,9 @@ service "mobile" {
 }
 
 service "mq" {
-
   sdk {
-    id             = "mq"
-    client_version = [2]
+    id            = "mq"
+    arn_namespace = "mq"
   }
 
   names {
@@ -6306,7 +5740,7 @@ service "mq" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListBrokers"
+    endpoint_api_call = "ListBrokers"
   }
 
   resource_prefix {
@@ -6319,19 +5753,14 @@ service "mq" {
 }
 
 service "mturk" {
-
   sdk {
-    id             = "MTurk"
-    client_version = [1]
+    id            = "MTurk"
+    arn_namespace = "mturk"
   }
 
   names {
     provider_name_upper = "MTurk"
     human_friendly      = "MTurk (Mechanical Turk)"
-  }
-
-  client {
-    go_v1_client_typename = "MTurk"
   }
 
   resource_prefix {
@@ -6345,10 +5774,9 @@ service "mturk" {
 }
 
 service "mwaa" {
-
   sdk {
-    id             = "MWAA"
-    client_version = [2]
+    id            = "MWAA"
+    arn_namespace = "mwaa"
   }
 
   names {
@@ -6357,7 +5785,7 @@ service "mwaa" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListEnvironments"
+    endpoint_api_call = "ListEnvironments"
   }
 
   resource_prefix {
@@ -6370,10 +5798,9 @@ service "mwaa" {
 }
 
 service "neptune" {
-
   sdk {
-    id             = "Neptune"
-    client_version = [1]
+    id            = "Neptune"
+    arn_namespace = "rds"
   }
 
   names {
@@ -6381,12 +5808,8 @@ service "neptune" {
     human_friendly      = "Neptune"
   }
 
-  client {
-    go_v1_client_typename = "Neptune"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeDBClusters"
+    endpoint_api_call = "DescribeDBClusters"
   }
 
   resource_prefix {
@@ -6399,7 +5822,6 @@ service "neptune" {
 }
 
 service "neptunegraph" {
-
   cli_v2_command {
     aws_cli_v2_command           = "neptune-graph"
     aws_cli_v2_command_no_dashes = "neptunegraph"
@@ -6411,8 +5833,8 @@ service "neptunegraph" {
   }
 
   sdk {
-    id             = "Neptune Graph"
-    client_version = [2]
+    id            = "Neptune Graph"
+    arn_namespace = "neptunegraph"
   }
 
   names {
@@ -6421,7 +5843,7 @@ service "neptunegraph" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListGraphs"
+    endpoint_api_call = "ListGraphs"
   }
 
   resource_prefix {
@@ -6434,15 +5856,14 @@ service "neptunegraph" {
 }
 
 service "networkfirewall" {
-
   cli_v2_command {
     aws_cli_v2_command           = "network-firewall"
     aws_cli_v2_command_no_dashes = "networkfirewall"
   }
 
   sdk {
-    id             = "Network Firewall"
-    client_version = [2]
+    id            = "Network Firewall"
+    arn_namespace = "network-firewall"
   }
 
   names {
@@ -6450,12 +5871,8 @@ service "networkfirewall" {
     human_friendly      = "Network Firewall"
   }
 
-  client {
-    go_v1_client_typename = "NetworkFirewall"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListFirewalls"
+    endpoint_api_call = "ListFirewalls"
   }
 
   resource_prefix {
@@ -6468,10 +5885,9 @@ service "networkfirewall" {
 }
 
 service "networkmanager" {
-
   sdk {
-    id             = "NetworkManager"
-    client_version = [1]
+    id            = "NetworkManager"
+    arn_namespace = "networkmanager"
   }
 
   names {
@@ -6479,12 +5895,8 @@ service "networkmanager" {
     human_friendly      = "Network Manager"
   }
 
-  client {
-    go_v1_client_typename = "NetworkManager"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListCoreNetworks"
+    endpoint_api_call = "ListCoreNetworks"
   }
 
   resource_prefix {
@@ -6494,28 +5906,25 @@ service "networkmanager" {
   provider_package_correct = "networkmanager"
   doc_prefix               = ["networkmanager_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "nimble" {
-
   go_packages {
     v1_package = "nimblestudio"
     v2_package = "nimble"
   }
 
   sdk {
-    id             = "nimble"
-    client_version = [1]
+    id            = "nimble"
+    arn_namespace = "nimble"
   }
 
   names {
     aliases             = ["nimblestudio"]
     provider_name_upper = "Nimble"
     human_friendly      = "Nimble Studio"
-  }
-
-  client {
-    go_v1_client_typename = "NimbleStudio"
   }
 
   resource_prefix {
@@ -6528,11 +5937,78 @@ service "nimble" {
   not_implemented          = true
 }
 
-service "oam" {
+service "notifications" {
+  go_packages {
+    v2_package = "notifications"
+  }
 
   sdk {
-    id             = "OAM"
-    client_version = [2]
+    id             = "notifications"
+    client_version = 2
+    arn_namespace  = "notifications"
+  }
+
+  names {
+    provider_name_upper = "Notifications"
+    human_friendly      = "User Notifications"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListNotificationConfigurations"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notifications_"
+  }
+
+  provider_package_correct = "notifications"
+  doc_prefix               = ["notifications_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
+service "notificationscontacts" {
+  go_packages {
+    v2_package = "notificationscontacts"
+  }
+
+  sdk {
+    id             = "notificationscontacts"
+    client_version = 2
+    arn_namespace  = "notifications-contacts"
+  }
+
+  names {
+    provider_name_upper = "NotificationsContacts"
+    human_friendly      = "User Notifications Contacts"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEmailContacts"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_notificationscontacts_"
+  }
+
+  provider_package_correct = "notificationscontacts"
+  doc_prefix               = ["notificationscontacts_"]
+  brand                    = "AWS"
+
+  is_global = true
+}
+
+service "oam" {
+  sdk {
+    id            = "OAM"
+    arn_namespace = "oam"
   }
 
   names {
@@ -6542,7 +6018,7 @@ service "oam" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListLinks"
+    endpoint_api_call = "ListLinks"
   }
 
   resource_prefix {
@@ -6554,16 +6030,38 @@ service "oam" {
   brand                    = "AWS"
 }
 
-service "opensearch" {
+service "odb" {
+  sdk {
+    id            = "ODB"
+    arn_namespace = "odb"
+  }
 
+  names {
+    provider_name_upper = "ODB"
+    human_friendly      = "Oracle Database@AWS"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListCloudExadataInfrastructures"
+  }
+
+  resource_prefix {
+    correct = "aws_odb_"
+  }
+
+  doc_prefix = ["odb_"]
+  brand      = "AWS"
+}
+
+service "opensearch" {
   go_packages {
     v1_package = "opensearchservice"
     v2_package = "opensearch"
   }
 
   sdk {
-    id             = "OpenSearch"
-    client_version = [1]
+    id            = "OpenSearch"
+    arn_namespace = "es"
   }
 
   names {
@@ -6572,12 +6070,8 @@ service "opensearch" {
     human_friendly      = "OpenSearch"
   }
 
-  client {
-    go_v1_client_typename = "OpenSearchService"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDomainNames"
+    endpoint_api_call = "ListDomainNames"
   }
 
   resource_prefix {
@@ -6590,10 +6084,9 @@ service "opensearch" {
 }
 
 service "opensearchserverless" {
-
   sdk {
-    id             = "OpenSearchServerless"
-    client_version = [2]
+    id            = "OpenSearchServerless"
+    arn_namespace = "opensearchserverless"
   }
 
   names {
@@ -6602,7 +6095,7 @@ service "opensearchserverless" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCollections"
+    endpoint_api_call = "ListCollections"
   }
 
   resource_prefix {
@@ -6615,10 +6108,9 @@ service "opensearchserverless" {
 }
 
 service "osis" {
-
   sdk {
-    id             = "OSIS"
-    client_version = [2]
+    id            = "OSIS"
+    arn_namespace = "osis"
   }
 
   names {
@@ -6628,7 +6120,7 @@ service "osis" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPipelines"
+    endpoint_api_call = "ListPipelines"
   }
 
   resource_prefix {
@@ -6641,10 +6133,9 @@ service "osis" {
 }
 
 service "opsworks" {
-
   sdk {
-    id             = "OpsWorks"
-    client_version = [1]
+    id            = "OpsWorks"
+    arn_namespace = "opsworks"
   }
 
   names {
@@ -6652,12 +6143,8 @@ service "opsworks" {
     human_friendly      = "OpsWorks"
   }
 
-  client {
-    go_v1_client_typename = "OpsWorks"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeApps"
+    endpoint_api_call = "DescribeApps"
   }
 
   resource_prefix {
@@ -6667,27 +6154,23 @@ service "opsworks" {
   provider_package_correct = "opsworks"
   doc_prefix               = ["opsworks_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "opsworkscm" {
-
   cli_v2_command {
     aws_cli_v2_command           = "opsworks-cm"
     aws_cli_v2_command_no_dashes = "opsworkscm"
   }
 
   sdk {
-    id             = "OpsWorksCM"
-    client_version = [1]
+    id            = "OpsWorksCM"
+    arn_namespace = "opsworkscm"
   }
 
   names {
     provider_name_upper = "OpsWorksCM"
     human_friendly      = "OpsWorks CM"
-  }
-
-  client {
-    go_v1_client_typename = "OpsWorksCM"
   }
 
   resource_prefix {
@@ -6701,10 +6184,9 @@ service "opsworkscm" {
 }
 
 service "organizations" {
-
   sdk {
-    id             = "Organizations"
-    client_version = [2]
+    id            = "Organizations"
+    arn_namespace = "organizations"
   }
 
   names {
@@ -6712,12 +6194,8 @@ service "organizations" {
     human_friendly      = "Organizations"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListAccounts"
+    endpoint_api_call = "ListAccounts"
   }
 
   resource_prefix {
@@ -6727,13 +6205,14 @@ service "organizations" {
   provider_package_correct = "organizations"
   doc_prefix               = ["organizations_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "outposts" {
-
   sdk {
-    id             = "Outposts"
-    client_version = [1]
+    id            = "Outposts"
+    arn_namespace = "outposts"
   }
 
   names {
@@ -6741,12 +6220,8 @@ service "outposts" {
     human_friendly      = "Outposts"
   }
 
-  client {
-    go_v1_client_typename = "Outposts"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListSites"
+    endpoint_api_call = "ListSites"
   }
 
   resource_prefix {
@@ -6759,19 +6234,14 @@ service "outposts" {
 }
 
 service "panorama" {
-
   sdk {
-    id             = "Panorama"
-    client_version = [1]
+    id            = "Panorama"
+    arn_namespace = "panorama"
   }
 
   names {
     provider_name_upper = "Panorama"
     human_friendly      = "Panorama"
-  }
-
-  client {
-    go_v1_client_typename = "Panorama"
   }
 
   resource_prefix {
@@ -6785,15 +6255,14 @@ service "panorama" {
 }
 
 service "paymentcryptography" {
-
   cli_v2_command {
     aws_cli_v2_command           = "payment-cryptography"
     aws_cli_v2_command_no_dashes = "paymentcryptography"
   }
 
   sdk {
-    id             = "PaymentCryptography"
-    client_version = [2]
+    id            = "PaymentCryptography"
+    arn_namespace = "paymentcryptography"
   }
 
   names {
@@ -6802,7 +6271,7 @@ service "paymentcryptography" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListKeys"
+    endpoint_api_call = "ListKeys"
   }
 
   resource_prefix {
@@ -6815,15 +6284,14 @@ service "paymentcryptography" {
 }
 
 service "pcaconnectorad" {
-
   cli_v2_command {
     aws_cli_v2_command           = "pca-connector-ad"
     aws_cli_v2_command_no_dashes = "pcaconnectorad"
   }
 
   sdk {
-    id             = "Pca Connector Ad"
-    client_version = [2]
+    id            = "Pca Connector Ad"
+    arn_namespace = "pcaconnectorad"
   }
 
   names {
@@ -6832,7 +6300,7 @@ service "pcaconnectorad" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListConnectors"
+    endpoint_api_call = "ListConnectors"
   }
 
   resource_prefix {
@@ -6844,20 +6312,40 @@ service "pcaconnectorad" {
   brand                    = "AWS"
 }
 
-service "personalize" {
+service "pcs" {
 
   sdk {
-    id             = "Personalize"
-    client_version = [1]
+    id            = "PCS"
+    arn_namespace = "pcs"
+  }
+
+  names {
+    provider_name_upper = "PCS"
+    human_friendly      = "Parallel Computing Service"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListClusters"
+  }
+
+  resource_prefix {
+    correct = "aws_pcs_"
+  }
+
+  provider_package_correct = "pcs"
+  doc_prefix               = ["pcs_"]
+  brand                    = "AWS"
+}
+
+service "personalize" {
+  sdk {
+    id            = "Personalize"
+    arn_namespace = "personalize"
   }
 
   names {
     provider_name_upper = "Personalize"
     human_friendly      = "Personalize"
-  }
-
-  client {
-    go_v1_client_typename = "Personalize"
   }
 
   resource_prefix {
@@ -6871,24 +6359,19 @@ service "personalize" {
 }
 
 service "personalizeevents" {
-
   cli_v2_command {
     aws_cli_v2_command           = "personalize-events"
     aws_cli_v2_command_no_dashes = "personalizeevents"
   }
 
   sdk {
-    id             = "Personalize Events"
-    client_version = [1]
+    id            = "Personalize Events"
+    arn_namespace = "personalizeevents"
   }
 
   names {
     provider_name_upper = "PersonalizeEvents"
     human_friendly      = "Personalize Events"
-  }
-
-  client {
-    go_v1_client_typename = "PersonalizeEvents"
   }
 
   resource_prefix {
@@ -6902,24 +6385,19 @@ service "personalizeevents" {
 }
 
 service "personalizeruntime" {
-
   cli_v2_command {
     aws_cli_v2_command           = "personalize-runtime"
     aws_cli_v2_command_no_dashes = "personalizeruntime"
   }
 
   sdk {
-    id             = "Personalize Runtime"
-    client_version = [1]
+    id            = "Personalize Runtime"
+    arn_namespace = "personalize"
   }
 
   names {
     provider_name_upper = "PersonalizeRuntime"
     human_friendly      = "Personalize Runtime"
-  }
-
-  client {
-    go_v1_client_typename = "PersonalizeRuntime"
   }
 
   resource_prefix {
@@ -6933,10 +6411,9 @@ service "personalizeruntime" {
 }
 
 service "pinpoint" {
-
   sdk {
-    id             = "Pinpoint"
-    client_version = [1]
+    id            = "Pinpoint"
+    arn_namespace = "mobiletargeting"
   }
 
   names {
@@ -6944,12 +6421,8 @@ service "pinpoint" {
     human_friendly      = "Pinpoint"
   }
 
-  client {
-    go_v1_client_typename = "Pinpoint"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "GetApps"
+    endpoint_api_call = "GetApps"
   }
 
   resource_prefix {
@@ -6962,24 +6435,19 @@ service "pinpoint" {
 }
 
 service "pinpointemail" {
-
   cli_v2_command {
     aws_cli_v2_command           = "pinpoint-email"
     aws_cli_v2_command_no_dashes = "pinpointemail"
   }
 
   sdk {
-    id             = "Pinpoint Email"
-    client_version = [1]
+    id            = "Pinpoint Email"
+    arn_namespace = "ses"
   }
 
   names {
     provider_name_upper = "PinpointEmail"
     human_friendly      = "Pinpoint Email"
-  }
-
-  client {
-    go_v1_client_typename = "PinpointEmail"
   }
 
   resource_prefix {
@@ -6993,24 +6461,19 @@ service "pinpointemail" {
 }
 
 service "pinpointsmsvoice" {
-
   cli_v2_command {
     aws_cli_v2_command           = "pinpoint-sms-voice"
     aws_cli_v2_command_no_dashes = "pinpointsmsvoice"
   }
 
   sdk {
-    id             = "Pinpoint SMS Voice"
-    client_version = [1]
+    id            = "Pinpoint SMS Voice"
+    arn_namespace = "pinpointsmsvoice"
   }
 
   names {
     provider_name_upper = "PinpointSMSVoice"
     human_friendly      = "Pinpoint SMS and Voice"
-  }
-
-  client {
-    go_v1_client_typename = "PinpointSMSVoice"
   }
 
   resource_prefix {
@@ -7023,11 +6486,39 @@ service "pinpointsmsvoice" {
   not_implemented          = true
 }
 
-service "pipes" {
+service "pinpointsmsvoicev2" {
+  cli_v2_command {
+    aws_cli_v2_command           = "pinpoint-sms-voice-v2"
+    aws_cli_v2_command_no_dashes = "pinpointsmsvoicev2"
+  }
 
   sdk {
-    id             = "Pipes"
-    client_version = [2]
+    id            = "Pinpoint SMS Voice v2"
+    arn_namespace = "pinpointsmsvoicev2"
+  }
+
+  names {
+    provider_name_upper = "PinpointSMSVoiceV2"
+    human_friendly      = "End User Messaging SMS"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "DescribePhoneNumbers"
+  }
+
+  resource_prefix {
+    correct = "aws_pinpointsmsvoicev2_"
+  }
+
+  provider_package_correct = "pinpointsmsvoicev2"
+  doc_prefix               = ["pinpointsmsvoicev2_"]
+  brand                    = "AWS"
+}
+
+service "pipes" {
+  sdk {
+    id            = "Pipes"
+    arn_namespace = "pipes"
   }
 
   names {
@@ -7036,7 +6527,7 @@ service "pipes" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPipes"
+    endpoint_api_call = "ListPipes"
   }
 
   resource_prefix {
@@ -7049,10 +6540,9 @@ service "pipes" {
 }
 
 service "polly" {
-
   sdk {
-    id             = "Polly"
-    client_version = [2]
+    id            = "Polly"
+    arn_namespace = "polly"
   }
 
   names {
@@ -7061,7 +6551,7 @@ service "polly" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListLexicons"
+    endpoint_api_call = "ListLexicons"
   }
 
   resource_prefix {
@@ -7074,10 +6564,9 @@ service "polly" {
 }
 
 service "pricing" {
-
   sdk {
-    id             = "Pricing"
-    client_version = [2]
+    id            = "Pricing"
+    arn_namespace = "pricing"
   }
 
   names {
@@ -7086,7 +6575,7 @@ service "pricing" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeServices"
+    endpoint_api_call = "DescribeServices"
   }
 
   resource_prefix {
@@ -7096,22 +6585,19 @@ service "pricing" {
   provider_package_correct = "pricing"
   doc_prefix               = ["pricing_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "proton" {
-
   sdk {
-    id             = "Proton"
-    client_version = [1]
+    id            = "Proton"
+    arn_namespace = "proton"
   }
 
   names {
     provider_name_upper = "Proton"
     human_friendly      = "Proton"
-  }
-
-  client {
-    go_v1_client_typename = "Proton"
   }
 
   resource_prefix {
@@ -7125,10 +6611,9 @@ service "proton" {
 }
 
 service "qbusiness" {
-
   sdk {
-    id             = "QBusiness"
-    client_version = [2]
+    id            = "QBusiness"
+    arn_namespace = "qbusiness"
   }
 
   names {
@@ -7137,7 +6622,7 @@ service "qbusiness" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -7150,10 +6635,9 @@ service "qbusiness" {
 }
 
 service "qldb" {
-
   sdk {
-    id             = "QLDB"
-    client_version = [2]
+    id            = "QLDB"
+    arn_namespace = "qldb"
   }
 
   names {
@@ -7162,7 +6646,7 @@ service "qldb" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListLedgers"
+    endpoint_api_call = "ListLedgers"
   }
 
   resource_prefix {
@@ -7175,24 +6659,19 @@ service "qldb" {
 }
 
 service "qldbsession" {
-
   cli_v2_command {
     aws_cli_v2_command           = "qldb-session"
     aws_cli_v2_command_no_dashes = "qldbsession"
   }
 
   sdk {
-    id             = "QLDB Session"
-    client_version = [1]
+    id            = "QLDB Session"
+    arn_namespace = "qldbsession"
   }
 
   names {
     provider_name_upper = "QLDBSession"
     human_friendly      = "QLDB Session"
-  }
-
-  client {
-    go_v1_client_typename = "QLDBSession"
   }
 
   resource_prefix {
@@ -7206,10 +6685,9 @@ service "qldbsession" {
 }
 
 service "quicksight" {
-
   sdk {
-    id             = "QuickSight"
-    client_version = [1]
+    id            = "QuickSight"
+    arn_namespace = "quicksight"
   }
 
   names {
@@ -7217,13 +6695,9 @@ service "quicksight" {
     human_friendly      = "QuickSight"
   }
 
-  client {
-    go_v1_client_typename = "QuickSight"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDashboards"
-    endpoint_api_params      = "AwsAccountId: aws_sdkv1.String(\"123456789012\")"
+    endpoint_api_call   = "ListDashboards"
+    endpoint_api_params = "AwsAccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -7236,10 +6710,9 @@ service "quicksight" {
 }
 
 service "ram" {
-
   sdk {
-    id             = "RAM"
-    client_version = [2]
+    id            = "RAM"
+    arn_namespace = "ram"
   }
 
   names {
@@ -7248,7 +6721,7 @@ service "ram" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPermissions"
+    endpoint_api_call = "ListPermissions"
   }
 
   resource_prefix {
@@ -7261,10 +6734,9 @@ service "ram" {
 }
 
 service "rds" {
-
   sdk {
-    id             = "RDS"
-    client_version = [1, 2]
+    id            = "RDS"
+    arn_namespace = "rds"
   }
 
   names {
@@ -7272,12 +6744,8 @@ service "rds" {
     human_friendly      = "RDS (Relational Database)"
   }
 
-  client {
-    go_v1_client_typename = "RDS"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeDBInstances"
+    endpoint_api_call = "DescribeDBInstances"
   }
 
   resource_prefix {
@@ -7291,7 +6759,6 @@ service "rds" {
 }
 
 service "rdsdata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "rds-data"
     aws_cli_v2_command_no_dashes = "rdsdata"
@@ -7303,18 +6770,14 @@ service "rdsdata" {
   }
 
   sdk {
-    id             = "RDS Data"
-    client_version = [1]
+    id            = "RDS Data"
+    arn_namespace = "rdsdata"
   }
 
   names {
     aliases             = ["rdsdataservice"]
     provider_name_upper = "RDSData"
     human_friendly      = "RDS Data"
-  }
-
-  client {
-    go_v1_client_typename = "RDSDataService"
   }
 
   resource_prefix {
@@ -7328,19 +6791,14 @@ service "rdsdata" {
 }
 
 service "pi" {
-
   sdk {
-    id             = "PI"
-    client_version = [1]
+    id            = "PI"
+    arn_namespace = "pi"
   }
 
   names {
     provider_name_upper = "PI"
     human_friendly      = "RDS Performance Insights (PI)"
-  }
-
-  client {
-    go_v1_client_typename = "PI"
   }
 
   resource_prefix {
@@ -7354,15 +6812,14 @@ service "pi" {
 }
 
 service "rbin" {
-
   go_packages {
     v1_package = "recyclebin"
     v2_package = "rbin"
   }
 
   sdk {
-    id             = "rbin"
-    client_version = [2]
+    id            = "rbin"
+    arn_namespace = "rbin"
   }
 
   names {
@@ -7372,8 +6829,8 @@ service "rbin" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRules"
-    endpoint_api_params      = "ResourceType: awstypes.ResourceTypeEc2Image"
+    endpoint_api_call   = "ListRules"
+    endpoint_api_params = "ResourceType: awstypes.ResourceTypeEc2Image"
   }
 
   resource_prefix {
@@ -7386,10 +6843,9 @@ service "rbin" {
 }
 
 service "redshift" {
-
   sdk {
-    id             = "Redshift"
-    client_version = [1, 2]
+    id            = "Redshift"
+    arn_namespace = "redshift"
   }
 
   names {
@@ -7397,12 +6853,8 @@ service "redshift" {
     human_friendly      = "Redshift"
   }
 
-  client {
-    go_v1_client_typename = "Redshift"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeClusters"
+    endpoint_api_call = "DescribeClusters"
   }
 
   resource_prefix {
@@ -7415,7 +6867,6 @@ service "redshift" {
 }
 
 service "redshiftdata" {
-
   cli_v2_command {
     aws_cli_v2_command           = "redshift-data"
     aws_cli_v2_command_no_dashes = "redshiftdata"
@@ -7427,8 +6878,8 @@ service "redshiftdata" {
   }
 
   sdk {
-    id             = "Redshift Data"
-    client_version = [2]
+    id            = "Redshift Data"
+    arn_namespace = "redshiftdata"
   }
 
   names {
@@ -7438,8 +6889,8 @@ service "redshiftdata" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDatabases"
-    endpoint_api_params      = "Database: aws_sdkv2.String(\"test\")"
+    endpoint_api_call   = "ListDatabases"
+    endpoint_api_params = "Database: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -7452,15 +6903,14 @@ service "redshiftdata" {
 }
 
 service "redshiftserverless" {
-
   cli_v2_command {
     aws_cli_v2_command           = "redshift-serverless"
     aws_cli_v2_command_no_dashes = "redshiftserverless"
   }
 
   sdk {
-    id             = "Redshift Serverless"
-    client_version = [1, 2]
+    id            = "Redshift Serverless"
+    arn_namespace = "redshiftserverless"
   }
 
   names {
@@ -7468,12 +6918,8 @@ service "redshiftserverless" {
     human_friendly      = "Redshift Serverless"
   }
 
-  client {
-    go_v1_client_typename = "RedshiftServerless"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListNamespaces"
+    endpoint_api_call = "ListNamespaces"
   }
 
   resource_prefix {
@@ -7486,10 +6932,9 @@ service "redshiftserverless" {
 }
 
 service "rekognition" {
-
   sdk {
-    id             = "Rekognition"
-    client_version = [2]
+    id            = "Rekognition"
+    arn_namespace = "rekognition"
   }
 
   names {
@@ -7498,7 +6943,7 @@ service "rekognition" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListCollections"
+    endpoint_api_call = "ListCollections"
   }
 
   resource_prefix {
@@ -7511,10 +6956,9 @@ service "rekognition" {
 }
 
 service "resiliencehub" {
-
   sdk {
-    id             = "resiliencehub"
-    client_version = [1]
+    id            = "resiliencehub"
+    arn_namespace = "resiliencehub"
   }
 
   names {
@@ -7522,8 +6966,8 @@ service "resiliencehub" {
     human_friendly      = "Resilience Hub"
   }
 
-  client {
-    go_v1_client_typename = "ResilienceHub"
+  endpoint_info {
+    endpoint_api_call = "ListApps"
   }
 
   resource_prefix {
@@ -7533,19 +6977,17 @@ service "resiliencehub" {
   provider_package_correct = "resiliencehub"
   doc_prefix               = ["resiliencehub_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "resourceexplorer2" {
-
   cli_v2_command {
     aws_cli_v2_command           = "resource-explorer-2"
     aws_cli_v2_command_no_dashes = "resourceexplorer2"
   }
 
   sdk {
-    id             = "Resource Explorer 2"
-    client_version = [2]
+    id            = "Resource Explorer 2"
+    arn_namespace = "resourceexplorer2"
   }
 
   names {
@@ -7555,7 +6997,7 @@ service "resourceexplorer2" {
 
 
   endpoint_info {
-    endpoint_api_call        = "ListIndexes"
+    endpoint_api_call = "ListIndexes"
   }
 
   resource_prefix {
@@ -7568,15 +7010,14 @@ service "resourceexplorer2" {
 }
 
 service "resourcegroups" {
-
   cli_v2_command {
     aws_cli_v2_command           = "resource-groups"
     aws_cli_v2_command_no_dashes = "resourcegroups"
   }
 
   sdk {
-    id             = "Resource Groups"
-    client_version = [2]
+    id            = "Resource Groups"
+    arn_namespace = "resourcegroups"
   }
 
   names {
@@ -7585,7 +7026,7 @@ service "resourcegroups" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListGroups"
+    endpoint_api_call = "ListGroups"
   }
 
   resource_prefix {
@@ -7598,10 +7039,9 @@ service "resourcegroups" {
 }
 
 service "resourcegroupstaggingapi" {
-
   sdk {
-    id             = "Resource Groups Tagging API"
-    client_version = [2]
+    id            = "Resource Groups Tagging API"
+    arn_namespace = "resourcegroupstaggingapi"
   }
 
   names {
@@ -7611,7 +7051,7 @@ service "resourcegroupstaggingapi" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetResources"
+    endpoint_api_call = "GetResources"
   }
 
   resource_prefix {
@@ -7624,19 +7064,14 @@ service "resourcegroupstaggingapi" {
 }
 
 service "robomaker" {
-
   sdk {
-    id             = "RoboMaker"
-    client_version = [1]
+    id            = "RoboMaker"
+    arn_namespace = "robomaker"
   }
 
   names {
     provider_name_upper = "RoboMaker"
     human_friendly      = "RoboMaker"
-  }
-
-  client {
-    go_v1_client_typename = "RoboMaker"
   }
 
   resource_prefix {
@@ -7650,10 +7085,9 @@ service "robomaker" {
 }
 
 service "rolesanywhere" {
-
   sdk {
-    id             = "RolesAnywhere"
-    client_version = [2]
+    id            = "RolesAnywhere"
+    arn_namespace = "rolesanywhere"
   }
 
   names {
@@ -7662,7 +7096,7 @@ service "rolesanywhere" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProfiles"
+    endpoint_api_call = "ListProfiles"
   }
 
   resource_prefix {
@@ -7672,13 +7106,14 @@ service "rolesanywhere" {
   provider_package_correct = "rolesanywhere"
   doc_prefix               = ["rolesanywhere_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53" {
-
   sdk {
-    id             = "Route 53"
-    client_version = [2]
+    id            = "Route 53"
+    arn_namespace = "route53"
   }
 
   names {
@@ -7686,13 +7121,13 @@ service "route53" {
     human_friendly      = "Route 53"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListHostedZones"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListHostedZones"
+    endpoint_region_overrides = {
+      "aws"        = "us-east-1"
+      "aws-us-gov" = "us-gov-west-1"
+      "aws-cn"     = "cn-northwest-1"
+    }
   }
 
   resource_prefix {
@@ -7703,13 +7138,14 @@ service "route53" {
   provider_package_correct = "route53"
   doc_prefix               = ["route53_cidr_", "route53_delegation_", "route53_health_", "route53_hosted_", "route53_key_", "route53_query_", "route53_record", "route53_traffic_", "route53_vpc_", "route53_zone"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53domains" {
-
   sdk {
-    id             = "Route 53 Domains"
-    client_version = [2]
+    id            = "Route 53 Domains"
+    arn_namespace = "route53domains"
   }
 
   names {
@@ -7717,13 +7153,11 @@ service "route53domains" {
     human_friendly      = "Route 53 Domains"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListDomains"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -7733,13 +7167,14 @@ service "route53domains" {
   provider_package_correct = "route53domains"
   doc_prefix               = ["route53domains_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53profiles" {
-
   sdk {
-    id             = "Route 53 Profiles"
-    client_version = [2]
+    id            = "Route 53 Profiles"
+    arn_namespace = "route53profiles"
   }
 
   names {
@@ -7748,7 +7183,7 @@ service "route53profiles" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProfiles"
+    endpoint_api_call = "ListProfiles"
   }
 
   resource_prefix {
@@ -7761,24 +7196,19 @@ service "route53profiles" {
 }
 
 service "route53recoverycluster" {
-
   cli_v2_command {
     aws_cli_v2_command           = "route53-recovery-cluster"
     aws_cli_v2_command_no_dashes = "route53recoverycluster"
   }
 
   sdk {
-    id             = "Route53 Recovery Cluster"
-    client_version = [1]
+    id            = "Route53 Recovery Cluster"
+    arn_namespace = "route53recoverycluster"
   }
 
   names {
     provider_name_upper = "Route53RecoveryCluster"
     human_friendly      = "Route 53 Recovery Cluster"
-  }
-
-  client {
-    go_v1_client_typename = "Route53RecoveryCluster"
   }
 
   resource_prefix {
@@ -7792,15 +7222,14 @@ service "route53recoverycluster" {
 }
 
 service "route53recoverycontrolconfig" {
-
   cli_v2_command {
     aws_cli_v2_command           = "route53-recovery-control-config"
     aws_cli_v2_command_no_dashes = "route53recoverycontrolconfig"
   }
 
   sdk {
-    id             = "Route53 Recovery Control Config"
-    client_version = [1]
+    id            = "Route53 Recovery Control Config"
+    arn_namespace = "route53recoverycontrolconfig"
   }
 
   names {
@@ -7808,13 +7237,11 @@ service "route53recoverycontrolconfig" {
     human_friendly      = "Route 53 Recovery Control Config"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryControlConfig"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -7824,18 +7251,19 @@ service "route53recoverycontrolconfig" {
   provider_package_correct = "route53recoverycontrolconfig"
   doc_prefix               = ["route53recoverycontrolconfig_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53recoveryreadiness" {
-
   cli_v2_command {
     aws_cli_v2_command           = "route53-recovery-readiness"
     aws_cli_v2_command_no_dashes = "route53recoveryreadiness"
   }
 
   sdk {
-    id             = "Route53 Recovery Readiness"
-    client_version = [1]
+    id            = "Route53 Recovery Readiness"
+    arn_namespace = "route53recoveryreadiness"
   }
 
   names {
@@ -7843,13 +7271,11 @@ service "route53recoveryreadiness" {
     human_friendly      = "Route 53 Recovery Readiness"
   }
 
-  client {
-    go_v1_client_typename = "Route53RecoveryReadiness"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListCells"
+    endpoint_api_call = "ListCells"
+    endpoint_region_overrides = {
+      "aws" = "us-west-2"
+    }
   }
 
   resource_prefix {
@@ -7859,13 +7285,14 @@ service "route53recoveryreadiness" {
   provider_package_correct = "route53recoveryreadiness"
   doc_prefix               = ["route53recoveryreadiness_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "route53resolver" {
-
   sdk {
-    id             = "Route53Resolver"
-    client_version = [1]
+    id            = "Route53Resolver"
+    arn_namespace = "route53resolver"
   }
 
   names {
@@ -7873,12 +7300,8 @@ service "route53resolver" {
     human_friendly      = "Route 53 Resolver"
   }
 
-  client {
-    go_v1_client_typename = "Route53Resolver"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListFirewallDomainLists"
+    endpoint_api_call = "ListFirewallDomainLists"
   }
 
   resource_prefix {
@@ -7892,15 +7315,14 @@ service "route53resolver" {
 }
 
 service "s3" {
-
   cli_v2_command {
     aws_cli_v2_command           = "s3api"
     aws_cli_v2_command_no_dashes = "s3api"
   }
 
   sdk {
-    id             = "S3"
-    client_version = [2]
+    id            = "S3"
+    arn_namespace = "s3"
   }
 
   names {
@@ -7909,16 +7331,12 @@ service "s3" {
     human_friendly      = "S3 (Simple Storage)"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_S3_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_S3_ENDPOINT"
   }
   endpoint_info {
-    endpoint_api_call        = "ListBuckets"
+    endpoint_api_call = "ListBuckets"
   }
 
   resource_prefix {
@@ -7932,10 +7350,9 @@ service "s3" {
 }
 
 service "s3control" {
-
   sdk {
-    id             = "S3 Control"
-    client_version = [2]
+    id            = "S3 Control"
+    arn_namespace = "s3"
   }
 
   names {
@@ -7944,7 +7361,7 @@ service "s3control" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListJobs"
+    endpoint_api_call = "ListJobs"
   }
 
   resource_prefix {
@@ -7957,11 +7374,56 @@ service "s3control" {
   brand                    = "AWS"
 }
 
-service "glacier" {
-
+service "s3tables" {
   sdk {
-    id             = "Glacier"
-    client_version = [2]
+    id            = "S3Tables"
+    arn_namespace = "s3tables"
+  }
+
+  names {
+    provider_name_upper = "S3Tables"
+    human_friendly      = "S3 Tables"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTableBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3tables_"
+  }
+
+  doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
+}
+
+service "s3vectors" {
+  sdk {
+    id            = "S3Vectors"
+    arn_namespace = "s3vectors"
+  }
+
+  names {
+    provider_name_upper = "S3Vectors"
+    human_friendly      = "S3 Vectors"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListVectorBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3vectors_"
+  }
+
+  doc_prefix = ["s3vectors_"]
+  brand      = "Amazon"
+}
+
+service "glacier" {
+  sdk {
+    id            = "Glacier"
+    arn_namespace = "glacier"
   }
 
   names {
@@ -7970,7 +7432,7 @@ service "glacier" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListVaults"
+    endpoint_api_call = "ListVaults"
   }
 
   resource_prefix {
@@ -7983,10 +7445,9 @@ service "glacier" {
 }
 
 service "s3outposts" {
-
   sdk {
-    id             = "S3Outposts"
-    client_version = [1]
+    id            = "S3Outposts"
+    arn_namespace = "s3-outposts"
   }
 
   names {
@@ -7994,12 +7455,8 @@ service "s3outposts" {
     human_friendly      = "S3 on Outposts"
   }
 
-  client {
-    go_v1_client_typename = "S3Outposts"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListEndpoints"
+    endpoint_api_call = "ListEndpoints"
   }
 
   resource_prefix {
@@ -8012,23 +7469,18 @@ service "s3outposts" {
 }
 
 service "sagemaker" {
-
   sdk {
-    id             = "SageMaker"
-    client_version = [1]
+    id            = "SageMaker"
+    arn_namespace = "sagemaker"
   }
 
   names {
     provider_name_upper = "SageMaker"
-    human_friendly      = "SageMaker"
-  }
-
-  client {
-    go_v1_client_typename = "SageMaker"
+    human_friendly      = "SageMaker AI"
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListClusters"
+    endpoint_api_call = "ListClusters"
   }
 
   resource_prefix {
@@ -8037,11 +7489,10 @@ service "sagemaker" {
 
   provider_package_correct = "sagemaker"
   doc_prefix               = ["sagemaker_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "sagemakera2iruntime" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sagemaker-a2i-runtime"
     aws_cli_v2_command_no_dashes = "sagemakera2iruntime"
@@ -8053,18 +7504,14 @@ service "sagemakera2iruntime" {
   }
 
   sdk {
-    id             = "SageMaker A2I Runtime"
-    client_version = [1]
+    id            = "SageMaker A2I Runtime"
+    arn_namespace = "sagemaker"
   }
 
   names {
     aliases             = ["augmentedairuntime"]
     provider_name_upper = "SageMakerA2IRuntime"
     human_friendly      = "SageMaker A2I (Augmented AI)"
-  }
-
-  client {
-    go_v1_client_typename = "AugmentedAIRuntime"
   }
 
   resource_prefix {
@@ -8078,7 +7525,6 @@ service "sagemakera2iruntime" {
 }
 
 service "sagemakeredge" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sagemaker-edge"
     aws_cli_v2_command_no_dashes = "sagemakeredge"
@@ -8090,18 +7536,14 @@ service "sagemakeredge" {
   }
 
   sdk {
-    id             = "Sagemaker Edge"
-    client_version = [1]
+    id            = "Sagemaker Edge"
+    arn_namespace = "sagemakeredge"
   }
 
   names {
     aliases             = ["sagemakeredgemanager"]
     provider_name_upper = "SageMakerEdge"
     human_friendly      = "SageMaker Edge Manager"
-  }
-
-  client {
-    go_v1_client_typename = "SagemakerEdgeManager"
   }
 
   resource_prefix {
@@ -8115,24 +7557,19 @@ service "sagemakeredge" {
 }
 
 service "sagemakerfeaturestoreruntime" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sagemaker-featurestore-runtime"
     aws_cli_v2_command_no_dashes = "sagemakerfeaturestoreruntime"
   }
 
   sdk {
-    id             = "SageMaker FeatureStore Runtime"
-    client_version = [1]
+    id            = "SageMaker FeatureStore Runtime"
+    arn_namespace = "sagemakerfeaturestoreruntime"
   }
 
   names {
     provider_name_upper = "SageMakerFeatureStoreRuntime"
     human_friendly      = "SageMaker Feature Store Runtime"
-  }
-
-  client {
-    go_v1_client_typename = "SageMakerFeatureStoreRuntime"
   }
 
   resource_prefix {
@@ -8146,24 +7583,19 @@ service "sagemakerfeaturestoreruntime" {
 }
 
 service "sagemakerruntime" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sagemaker-runtime"
     aws_cli_v2_command_no_dashes = "sagemakerruntime"
   }
 
   sdk {
-    id             = "SageMaker Runtime"
-    client_version = [1]
+    id            = "SageMaker Runtime"
+    arn_namespace = "sagemakerruntime"
   }
 
   names {
     provider_name_upper = "SageMakerRuntime"
     human_friendly      = "SageMaker Runtime"
-  }
-
-  client {
-    go_v1_client_typename = "SageMakerRuntime"
   }
 
   resource_prefix {
@@ -8177,19 +7609,14 @@ service "sagemakerruntime" {
 }
 
 service "savingsplans" {
-
   sdk {
-    id             = "savingsplans"
-    client_version = [1]
+    id            = "savingsplans"
+    arn_namespace = "savingsplans"
   }
 
   names {
     provider_name_upper = "SavingsPlans"
     human_friendly      = "Savings Plans"
-  }
-
-  client {
-    go_v1_client_typename = "SavingsPlans"
   }
 
   resource_prefix {
@@ -8203,7 +7630,6 @@ service "savingsplans" {
 }
 
 service "simpledb" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sdb"
     aws_cli_v2_command_no_dashes = "sdb"
@@ -8216,7 +7642,8 @@ service "simpledb" {
 
   sdk {
     id             = "SimpleDB"
-    client_version = [1]
+    client_version = 1
+    arn_namespace  = "sdb"
   }
 
   names {
@@ -8227,10 +7654,11 @@ service "simpledb" {
 
   client {
     go_v1_client_typename = "SimpleDB"
+    skip_client_generate  = true
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
+    endpoint_api_call = "ListDomains"
   }
 
   resource_prefix {
@@ -8241,13 +7669,13 @@ service "simpledb" {
   provider_package_correct = "sdb"
   doc_prefix               = ["simpledb_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "scheduler" {
-
   sdk {
-    id             = "Scheduler"
-    client_version = [2]
+    id            = "Scheduler"
+    arn_namespace = "scheduler"
   }
 
   names {
@@ -8256,7 +7684,7 @@ service "scheduler" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListSchedules"
+    endpoint_api_call = "ListSchedules"
   }
 
   resource_prefix {
@@ -8269,10 +7697,9 @@ service "scheduler" {
 }
 
 service "secretsmanager" {
-
   sdk {
-    id             = "Secrets Manager"
-    client_version = [2]
+    id            = "Secrets Manager"
+    arn_namespace = "secretsmanager"
   }
 
   names {
@@ -8281,7 +7708,7 @@ service "secretsmanager" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListSecrets"
+    endpoint_api_call = "ListSecrets"
   }
 
   resource_prefix {
@@ -8294,10 +7721,9 @@ service "secretsmanager" {
 }
 
 service "securityhub" {
-
   sdk {
-    id             = "SecurityHub"
-    client_version = [2]
+    id            = "SecurityHub"
+    arn_namespace = "securityhub"
   }
 
   names {
@@ -8306,7 +7732,7 @@ service "securityhub" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAutomationRules"
+    endpoint_api_call = "ListAutomationRules"
   }
 
   resource_prefix {
@@ -8319,10 +7745,9 @@ service "securityhub" {
 }
 
 service "securitylake" {
-
   sdk {
-    id             = "SecurityLake"
-    client_version = [2]
+    id            = "SecurityLake"
+    arn_namespace = "securitylake"
   }
 
   names {
@@ -8331,7 +7756,7 @@ service "securitylake" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDataLakes"
+    endpoint_api_call = "ListDataLakes"
   }
 
   resource_prefix {
@@ -8344,15 +7769,14 @@ service "securitylake" {
 }
 
 service "serverlessrepo" {
-
   go_packages {
     v1_package = "serverlessapplicationrepository"
     v2_package = "serverlessapplicationrepository"
   }
 
   sdk {
-    id             = "ServerlessApplicationRepository"
-    client_version = [2]
+    id            = "ServerlessApplicationRepository"
+    arn_namespace = "serverlessrepo"
   }
 
   names {
@@ -8361,12 +7785,8 @@ service "serverlessrepo" {
     human_friendly      = "Serverless Application Repository"
   }
 
-  client {
-    go_v1_client_typename = "ServerlessApplicationRepository"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -8380,10 +7800,9 @@ service "serverlessrepo" {
 }
 
 service "servicecatalog" {
-
   sdk {
-    id             = "Service Catalog"
-    client_version = [1]
+    id            = "Service Catalog"
+    arn_namespace = "servicecatalog"
   }
 
   names {
@@ -8391,12 +7810,8 @@ service "servicecatalog" {
     human_friendly      = "Service Catalog"
   }
 
-  client {
-    go_v1_client_typename = "ServiceCatalog"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListPortfolios"
+    endpoint_api_call = "ListPortfolios"
   }
 
   resource_prefix {
@@ -8409,7 +7824,6 @@ service "servicecatalog" {
 }
 
 service "servicecatalogappregistry" {
-
   cli_v2_command {
     aws_cli_v2_command           = "servicecatalog-appregistry"
     aws_cli_v2_command_no_dashes = "servicecatalogappregistry"
@@ -8421,8 +7835,8 @@ service "servicecatalogappregistry" {
   }
 
   sdk {
-    id             = "Service Catalog AppRegistry"
-    client_version = [2]
+    id            = "Service Catalog AppRegistry"
+    arn_namespace = "servicecatalogappregistry"
   }
 
   names {
@@ -8432,7 +7846,7 @@ service "servicecatalogappregistry" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -8445,15 +7859,14 @@ service "servicecatalogappregistry" {
 }
 
 service "servicequotas" {
-
   cli_v2_command {
     aws_cli_v2_command           = "service-quotas"
     aws_cli_v2_command_no_dashes = "servicequotas"
   }
 
   sdk {
-    id             = "Service Quotas"
-    client_version = [2]
+    id            = "Service Quotas"
+    arn_namespace = "servicequotas"
   }
 
   names {
@@ -8462,7 +7875,7 @@ service "servicequotas" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListServices"
+    endpoint_api_call = "ListServices"
   }
 
   resource_prefix {
@@ -8471,13 +7884,12 @@ service "servicequotas" {
 
   provider_package_correct = "servicequotas"
   doc_prefix               = ["servicequotas_"]
-  brand                    = ""
 }
-service "ses" {
 
+service "ses" {
   sdk {
-    id             = "SES"
-    client_version = [1]
+    id            = "SES"
+    arn_namespace = "ses"
   }
 
   names {
@@ -8485,12 +7897,8 @@ service "ses" {
     human_friendly      = "SES (Simple Email)"
   }
 
-  client {
-    go_v1_client_typename = "SES"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListIdentities"
+    endpoint_api_call = "ListIdentities"
   }
 
   resource_prefix {
@@ -8503,10 +7911,9 @@ service "ses" {
 }
 
 service "sesv2" {
-
   sdk {
-    id             = "SESv2"
-    client_version = [2]
+    id            = "SESv2"
+    arn_namespace = "sesv2"
   }
 
   names {
@@ -8515,7 +7922,7 @@ service "sesv2" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListContactLists"
+    endpoint_api_call = "ListContactLists"
   }
 
   resource_prefix {
@@ -8528,15 +7935,14 @@ service "sesv2" {
 }
 
 service "sfn" {
-
   cli_v2_command {
     aws_cli_v2_command           = "stepfunctions"
     aws_cli_v2_command_no_dashes = "stepfunctions"
   }
 
   sdk {
-    id             = "SFN"
-    client_version = [2]
+    id            = "SFN"
+    arn_namespace = "states"
   }
 
   names {
@@ -8545,12 +7951,8 @@ service "sfn" {
     human_friendly      = "SFN (Step Functions)"
   }
 
-  client {
-    go_v1_client_typename = "SFN"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListActivities"
+    endpoint_api_call = "ListActivities"
   }
 
   resource_prefix {
@@ -8563,10 +7965,9 @@ service "sfn" {
 }
 
 service "shield" {
-
   sdk {
-    id             = "Shield"
-    client_version = [2]
+    id            = "Shield"
+    arn_namespace = "shield"
   }
 
   names {
@@ -8574,13 +7975,11 @@ service "shield" {
     human_friendly      = "Shield"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListProtectionGroups"
-    endpoint_region_override = "us-east-1"
+    endpoint_api_call = "ListProtectionGroups"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
   }
 
   resource_prefix {
@@ -8590,13 +7989,14 @@ service "shield" {
   provider_package_correct = "shield"
   doc_prefix               = ["shield_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "signer" {
-
   sdk {
-    id             = "signer"
-    client_version = [2]
+    id            = "signer"
+    arn_namespace = "signer"
   }
 
   names {
@@ -8605,7 +8005,7 @@ service "signer" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListSigningJobs"
+    endpoint_api_call = "ListSigningJobs"
   }
 
   resource_prefix {
@@ -8618,19 +8018,14 @@ service "signer" {
 }
 
 service "sms" {
-
   sdk {
-    id             = "SMS"
-    client_version = [1]
+    id            = "SMS"
+    arn_namespace = "sms"
   }
 
   names {
     provider_name_upper = "SMS"
     human_friendly      = "SMS (Server Migration)"
-  }
-
-  client {
-    go_v1_client_typename = "SMS"
   }
 
   resource_prefix {
@@ -8644,24 +8039,19 @@ service "sms" {
 }
 
 service "snowdevicemanagement" {
-
   cli_v2_command {
     aws_cli_v2_command           = "snow-device-management"
     aws_cli_v2_command_no_dashes = "snowdevicemanagement"
   }
 
   sdk {
-    id             = "Snow Device Management"
-    client_version = [1]
+    id            = "Snow Device Management"
+    arn_namespace = "snowdevicemanagement"
   }
 
   names {
     provider_name_upper = "SnowDeviceManagement"
     human_friendly      = "Snow Device Management"
-  }
-
-  client {
-    go_v1_client_typename = "SnowDeviceManagement"
   }
 
   resource_prefix {
@@ -8675,19 +8065,14 @@ service "snowdevicemanagement" {
 }
 
 service "snowball" {
-
   sdk {
-    id             = "Snowball"
-    client_version = [1]
+    id            = "Snowball"
+    arn_namespace = "snowball"
   }
 
   names {
     provider_name_upper = "Snowball"
     human_friendly      = "Snow Family"
-  }
-
-  client {
-    go_v1_client_typename = "Snowball"
   }
 
   resource_prefix {
@@ -8701,10 +8086,9 @@ service "snowball" {
 }
 
 service "sns" {
-
   sdk {
-    id             = "SNS"
-    client_version = [2]
+    id            = "SNS"
+    arn_namespace = "sns"
   }
 
   names {
@@ -8713,7 +8097,7 @@ service "sns" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListSubscriptions"
+    endpoint_api_call = "ListSubscriptions"
   }
 
   resource_prefix {
@@ -8726,10 +8110,9 @@ service "sns" {
 }
 
 service "sqs" {
-
   sdk {
-    id             = "SQS"
-    client_version = [2]
+    id            = "SQS"
+    arn_namespace = "sqs"
   }
 
   names {
@@ -8738,7 +8121,7 @@ service "sqs" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListQueues"
+    endpoint_api_call = "ListQueues"
   }
 
   resource_prefix {
@@ -8751,10 +8134,9 @@ service "sqs" {
 }
 
 service "ssm" {
-
   sdk {
-    id             = "SSM"
-    client_version = [2]
+    id            = "SSM"
+    arn_namespace = "ssm"
   }
 
   names {
@@ -8763,7 +8145,7 @@ service "ssm" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDocuments"
+    endpoint_api_call = "ListDocuments"
   }
 
   resource_prefix {
@@ -8776,15 +8158,14 @@ service "ssm" {
 }
 
 service "ssmcontacts" {
-
   cli_v2_command {
     aws_cli_v2_command           = "ssm-contacts"
     aws_cli_v2_command_no_dashes = "ssmcontacts"
   }
 
   sdk {
-    id             = "SSM Contacts"
-    client_version = [2]
+    id            = "SSM Contacts"
+    arn_namespace = "ssmcontacts"
   }
 
   names {
@@ -8793,7 +8174,7 @@ service "ssmcontacts" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListContacts"
+    endpoint_api_call = "ListContacts"
   }
 
   resource_prefix {
@@ -8806,15 +8187,14 @@ service "ssmcontacts" {
 }
 
 service "ssmincidents" {
-
   cli_v2_command {
     aws_cli_v2_command           = "ssm-incidents"
     aws_cli_v2_command_no_dashes = "ssmincidents"
   }
 
   sdk {
-    id             = "SSM Incidents"
-    client_version = [2]
+    id            = "SSM Incidents"
+    arn_namespace = "ssmincidents"
   }
 
   names {
@@ -8823,7 +8203,7 @@ service "ssmincidents" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListResponsePlans"
+    endpoint_api_call = "ListResponsePlans"
   }
 
   resource_prefix {
@@ -8836,15 +8216,14 @@ service "ssmincidents" {
 }
 
 service "ssmsap" {
-
   cli_v2_command {
     aws_cli_v2_command           = "ssm-sap"
     aws_cli_v2_command_no_dashes = "ssmsap"
   }
 
   sdk {
-    id             = "Ssm Sap"
-    client_version = [2]
+    id            = "Ssm Sap"
+    arn_namespace = "ssmsap"
   }
 
   names {
@@ -8853,7 +8232,7 @@ service "ssmsap" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListApplications"
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -8865,11 +8244,39 @@ service "ssmsap" {
   brand                    = "AWS"
 }
 
-service "sso" {
+service "ssmquicksetup" {
+  cli_v2_command {
+    aws_cli_v2_command           = "ssm-quicksetup"
+    aws_cli_v2_command_no_dashes = "ssmquicksetup"
+  }
 
   sdk {
-    id             = "SSO"
-    client_version = [2]
+    id            = "SSM QuickSetup"
+    arn_namespace = "ssmquicksetup"
+  }
+
+  names {
+    provider_name_upper = "SSMQuickSetup"
+    human_friendly      = "SSM Quick Setup"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListConfigurationManagers"
+  }
+
+  resource_prefix {
+    correct = "aws_ssmquicksetup_"
+  }
+
+  provider_package_correct = "ssmquicksetup"
+  doc_prefix               = ["ssmquicksetup_"]
+  brand                    = "AWS"
+}
+
+service "sso" {
+  sdk {
+    id            = "SSO"
+    arn_namespace = "sso"
   }
 
   names {
@@ -8878,9 +8285,9 @@ service "sso" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAccounts"
-    endpoint_api_params      = "AccessToken: aws_sdkv2.String(\"mock-access-token\")"
-    endpoint_only            = true
+    endpoint_api_call   = "ListAccounts"
+    endpoint_api_params = "AccessToken: aws.String(\"mock-access-token\")"
+    endpoint_only       = true
   }
 
   resource_prefix {
@@ -8894,15 +8301,14 @@ service "sso" {
 }
 
 service "ssoadmin" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sso-admin"
     aws_cli_v2_command_no_dashes = "ssoadmin"
   }
 
   sdk {
-    id             = "SSO Admin"
-    client_version = [2]
+    id            = "SSO Admin"
+    arn_namespace = "ssoadmin"
   }
 
   names {
@@ -8910,12 +8316,8 @@ service "ssoadmin" {
     human_friendly      = "SSO Admin"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListInstances"
+    endpoint_api_call = "ListInstances"
   }
 
   resource_prefix {
@@ -8928,10 +8330,9 @@ service "ssoadmin" {
 }
 
 service "identitystore" {
-
   sdk {
-    id             = "identitystore"
-    client_version = [2]
+    id            = "identitystore"
+    arn_namespace = "identitystore"
   }
 
   names {
@@ -8940,8 +8341,8 @@ service "identitystore" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListUsers"
-    endpoint_api_params      = "IdentityStoreId: aws_sdkv2.String(\"d-1234567890\")"
+    endpoint_api_call   = "ListUsers"
+    endpoint_api_params = "IdentityStoreId: aws.String(\"d-1234567890\")"
   }
 
   resource_prefix {
@@ -8954,24 +8355,19 @@ service "identitystore" {
 }
 
 service "ssooidc" {
-
   cli_v2_command {
     aws_cli_v2_command           = "sso-oidc"
     aws_cli_v2_command_no_dashes = "ssooidc"
   }
 
   sdk {
-    id             = "SSO OIDC"
-    client_version = [1]
+    id            = "SSO OIDC"
+    arn_namespace = "ssooidc"
   }
 
   names {
     provider_name_upper = "SSOOIDC"
     human_friendly      = "SSO OIDC"
-  }
-
-  client {
-    go_v1_client_typename = "SSOOIDC"
   }
 
   resource_prefix {
@@ -8985,10 +8381,9 @@ service "ssooidc" {
 }
 
 service "storagegateway" {
-
   sdk {
-    id             = "Storage Gateway"
-    client_version = [1]
+    id            = "Storage Gateway"
+    arn_namespace = "storagegateway"
   }
 
   names {
@@ -8996,12 +8391,8 @@ service "storagegateway" {
     human_friendly      = "Storage Gateway"
   }
 
-  client {
-    go_v1_client_typename = "StorageGateway"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListGateways"
+    endpoint_api_call = "ListGateways"
   }
 
   resource_prefix {
@@ -9014,19 +8405,14 @@ service "storagegateway" {
 }
 
 service "sts" {
-
   sdk {
-    id             = "STS"
-    client_version = [2]
+    id            = "STS"
+    arn_namespace = "sts"
   }
 
   names {
     provider_name_upper = "STS"
     human_friendly      = "STS (Security Token)"
-  }
-
-  client {
-    skip_client_generate = true
   }
 
   env_var {
@@ -9035,7 +8421,7 @@ service "sts" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "GetCallerIdentity"
+    endpoint_api_call = "GetCallerIdentity"
   }
 
   resource_prefix {
@@ -9046,22 +8432,19 @@ service "sts" {
   provider_package_correct = "sts"
   doc_prefix               = ["caller_identity"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "support" {
-
   sdk {
-    id             = "Support"
-    client_version = [1]
+    id            = "Support"
+    arn_namespace = "support"
   }
 
   names {
     provider_name_upper = "Support"
     human_friendly      = "Support"
-  }
-
-  client {
-    go_v1_client_typename = "Support"
   }
 
   resource_prefix {
@@ -9075,10 +8458,9 @@ service "support" {
 }
 
 service "swf" {
-
   sdk {
-    id             = "SWF"
-    client_version = [2]
+    id            = "SWF"
+    arn_namespace = "swf"
   }
 
   names {
@@ -9087,8 +8469,8 @@ service "swf" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = "RegistrationStatus: \"REGISTERED\""
+    endpoint_api_call   = "ListDomains"
+    endpoint_api_params = "RegistrationStatus: \"REGISTERED\""
   }
 
   resource_prefix {
@@ -9100,20 +8482,39 @@ service "swf" {
   brand                    = "AWS"
 }
 
-service "textract" {
-
+service "taxsettings" {
   sdk {
-    id             = "Textract"
-    client_version = [1]
+    id            = "TaxSettings"
+    arn_namespace = "taxsettings"
+  }
+
+  names {
+    provider_name_upper = "TaxSettings"
+    human_friendly      = "Tax Settings"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTaxRegistrations"
+  }
+
+  resource_prefix {
+    correct = "aws_taxsettings_"
+  }
+
+  provider_package_correct = "taxsettings"
+  doc_prefix               = ["taxsettings_"]
+  brand                    = "Amazon"
+}
+
+service "textract" {
+  sdk {
+    id            = "Textract"
+    arn_namespace = "textract"
   }
 
   names {
     provider_name_upper = "Textract"
     human_friendly      = "Textract"
-  }
-
-  client {
-    go_v1_client_typename = "Textract"
   }
 
   resource_prefix {
@@ -9127,15 +8528,14 @@ service "textract" {
 }
 
 service "timestreaminfluxdb" {
-
   cli_v2_command {
     aws_cli_v2_command           = "timestream-influxdb"
     aws_cli_v2_command_no_dashes = "timestreaminfluxdb"
   }
 
   sdk {
-    id             = "Timestream InfluxDB"
-    client_version = [2]
+    id            = "Timestream InfluxDB"
+    arn_namespace = "timestreaminfluxdb"
   }
 
   names {
@@ -9144,7 +8544,7 @@ service "timestreaminfluxdb" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDbInstances"
+    endpoint_api_call = "ListDbInstances"
   }
 
   resource_prefix {
@@ -9153,19 +8553,18 @@ service "timestreaminfluxdb" {
 
   provider_package_correct = "timestreaminfluxdb"
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "timestreamquery" {
-
   cli_v2_command {
     aws_cli_v2_command           = "timestream-query"
     aws_cli_v2_command_no_dashes = "timestreamquery"
   }
 
   sdk {
-    id             = "Timestream Query"
-    client_version = [1]
+    id            = "Timestream Query"
+    arn_namespace = "timestreamquery"
   }
 
   names {
@@ -9173,8 +8572,8 @@ service "timestreamquery" {
     human_friendly      = "Timestream Query"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamQuery"
+  endpoint_info {
+    endpoint_api_call = "DescribeEndpoints"
   }
 
   resource_prefix {
@@ -9184,19 +8583,17 @@ service "timestreamquery" {
   provider_package_correct = "timestreamquery"
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "timestreamwrite" {
-
   cli_v2_command {
     aws_cli_v2_command           = "timestream-write"
     aws_cli_v2_command_no_dashes = "timestreamwrite"
   }
 
   sdk {
-    id             = "Timestream Write"
-    client_version = [2]
+    id            = "Timestream Write"
+    arn_namespace = "timestreamwrite"
   }
 
   names {
@@ -9205,7 +8602,7 @@ service "timestreamwrite" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListDatabases"
+    endpoint_api_call = "ListDatabases"
   }
 
   resource_prefix {
@@ -9214,19 +8611,18 @@ service "timestreamwrite" {
 
   provider_package_correct = "timestreamwrite"
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribe" {
-
   go_packages {
     v1_package = "transcribeservice"
     v2_package = "transcribe"
   }
 
   sdk {
-    id             = "Transcribe"
-    client_version = [2]
+    id            = "Transcribe"
+    arn_namespace = "transcribe"
   }
 
   names {
@@ -9236,7 +8632,7 @@ service "transcribe" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListLanguageModels"
+    endpoint_api_call = "ListLanguageModels"
   }
 
   resource_prefix {
@@ -9249,25 +8645,20 @@ service "transcribe" {
 }
 
 service "transcribestreaming" {
-
   go_packages {
     v1_package = "transcribestreamingservice"
     v2_package = "transcribestreaming"
   }
 
   sdk {
-    id             = "Transcribe Streaming"
-    client_version = [1]
+    id            = "Transcribe Streaming"
+    arn_namespace = "transcribestreaming"
   }
 
   names {
     aliases             = ["transcribestreamingservice"]
     provider_name_upper = "TranscribeStreaming"
     human_friendly      = "Transcribe Streaming"
-  }
-
-  client {
-    go_v1_client_typename = "TranscribeStreamingService"
   }
 
   resource_prefix {
@@ -9281,10 +8672,9 @@ service "transcribestreaming" {
 }
 
 service "transfer" {
-
   sdk {
-    id             = "Transfer"
-    client_version = [2]
+    id            = "Transfer"
+    arn_namespace = "transfer"
   }
 
   names {
@@ -9294,7 +8684,7 @@ service "transfer" {
 
 
   endpoint_info {
-    endpoint_api_call        = "ListConnectors"
+    endpoint_api_call = "ListConnectors"
   }
 
   resource_prefix {
@@ -9307,19 +8697,14 @@ service "transfer" {
 }
 
 service "translate" {
-
   sdk {
-    id             = "Translate"
-    client_version = [1]
+    id            = "Translate"
+    arn_namespace = "translate"
   }
 
   names {
     provider_name_upper = "Translate"
     human_friendly      = "Translate"
-  }
-
-  client {
-    go_v1_client_typename = "Translate"
   }
 
   resource_prefix {
@@ -9333,15 +8718,14 @@ service "translate" {
 }
 
 service "vpclattice" {
-
   cli_v2_command {
     aws_cli_v2_command           = "vpc-lattice"
     aws_cli_v2_command_no_dashes = "vpclattice"
   }
 
   sdk {
-    id             = "VPC Lattice"
-    client_version = [2]
+    id            = "VPC Lattice"
+    arn_namespace = "vpclattice"
   }
 
   names {
@@ -9350,7 +8734,7 @@ service "vpclattice" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListServices"
+    endpoint_api_call = "ListServices"
   }
 
   resource_prefix {
@@ -9363,10 +8747,9 @@ service "vpclattice" {
 }
 
 service "wafv2" {
-
   sdk {
-    id             = "WAFV2"
-    client_version = [2]
+    id            = "WAFV2"
+    arn_namespace = "wafv2"
   }
 
   names {
@@ -9375,8 +8758,8 @@ service "wafv2" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRuleGroups"
-    endpoint_api_params      = "Scope: awstypes.ScopeRegional"
+    endpoint_api_call   = "ListRuleGroups"
+    endpoint_api_params = "Scope: awstypes.ScopeRegional"
   }
 
   resource_prefix {
@@ -9389,10 +8772,9 @@ service "wafv2" {
 }
 
 service "waf" {
-
   sdk {
-    id             = "WAF"
-    client_version = [2]
+    id            = "WAF"
+    arn_namespace = "waf"
   }
 
   names {
@@ -9401,7 +8783,7 @@ service "waf" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRules"
+    endpoint_api_call = "ListRules"
   }
 
   resource_prefix {
@@ -9411,18 +8793,19 @@ service "waf" {
   provider_package_correct = "waf"
   doc_prefix               = ["waf_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "wafregional" {
-
   cli_v2_command {
     aws_cli_v2_command           = "waf-regional"
     aws_cli_v2_command_no_dashes = "wafregional"
   }
 
   sdk {
-    id             = "WAF Regional"
-    client_version = [2]
+    id            = "WAF Regional"
+    arn_namespace = "wafregional"
   }
 
   names {
@@ -9431,7 +8814,7 @@ service "wafregional" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListRules"
+    endpoint_api_call = "ListRules"
   }
 
   resource_prefix {
@@ -9444,10 +8827,9 @@ service "wafregional" {
 }
 
 service "budgets" {
-
   sdk {
-    id             = "Budgets"
-    client_version = [2]
+    id            = "Budgets"
+    arn_namespace = "budgets"
   }
 
   names {
@@ -9456,8 +8838,8 @@ service "budgets" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeBudgets"
-    endpoint_api_params      = "AccountId: aws_sdkv2.String(\"012345678901\")"
+    endpoint_api_call   = "DescribeBudgets"
+    endpoint_api_params = "AccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -9467,13 +8849,14 @@ service "budgets" {
   provider_package_correct = "budgets"
   doc_prefix               = ["budgets_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "wellarchitected" {
-
   sdk {
-    id             = "WellArchitected"
-    client_version = [2]
+    id            = "WellArchitected"
+    arn_namespace = "wellarchitected"
   }
 
   names {
@@ -9482,7 +8865,7 @@ service "wellarchitected" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListProfiles"
+    endpoint_api_call = "ListProfiles"
   }
 
   resource_prefix {
@@ -9495,19 +8878,14 @@ service "wellarchitected" {
 }
 
 service "workdocs" {
-
   sdk {
-    id             = "WorkDocs"
-    client_version = [1]
+    id            = "WorkDocs"
+    arn_namespace = "workdocs"
   }
 
   names {
     provider_name_upper = "WorkDocs"
     human_friendly      = "WorkDocs"
-  }
-
-  client {
-    go_v1_client_typename = "WorkDocs"
   }
 
   resource_prefix {
@@ -9521,10 +8899,9 @@ service "workdocs" {
 }
 
 service "worklink" {
-
   sdk {
-    id             = "WorkLink"
-    client_version = [1]
+    id            = "WorkLink"
+    arn_namespace = "worklink"
   }
 
   names {
@@ -9532,12 +8909,8 @@ service "worklink" {
     human_friendly      = "WorkLink"
   }
 
-  client {
-    go_v1_client_typename = "WorkLink"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "ListFleets"
+    endpoint_api_call = "ListFleets"
   }
 
   resource_prefix {
@@ -9547,22 +8920,18 @@ service "worklink" {
   provider_package_correct = "worklink"
   doc_prefix               = ["worklink_"]
   brand                    = "AWS"
+  not_implemented          = true
 }
 
 service "workmail" {
-
   sdk {
-    id             = "WorkMail"
-    client_version = [1]
+    id            = "WorkMail"
+    arn_namespace = "workmail"
   }
 
   names {
     provider_name_upper = "WorkMail"
     human_friendly      = "WorkMail"
-  }
-
-  client {
-    go_v1_client_typename = "WorkMail"
   }
 
   resource_prefix {
@@ -9576,19 +8945,14 @@ service "workmail" {
 }
 
 service "workmailmessageflow" {
-
   sdk {
-    id             = "WorkMailMessageFlow"
-    client_version = [1]
+    id            = "WorkMailMessageFlow"
+    arn_namespace = "workmailmessageflow"
   }
 
   names {
     provider_name_upper = "WorkMailMessageFlow"
     human_friendly      = "WorkMail Message Flow"
-  }
-
-  client {
-    go_v1_client_typename = "WorkMailMessageFlow"
   }
 
   resource_prefix {
@@ -9602,10 +8966,9 @@ service "workmailmessageflow" {
 }
 
 service "workspaces" {
-
   sdk {
-    id             = "WorkSpaces"
-    client_version = [2]
+    id            = "WorkSpaces"
+    arn_namespace = "workspaces"
   }
 
   names {
@@ -9614,7 +8977,7 @@ service "workspaces" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "DescribeWorkspaces"
+    endpoint_api_call = "DescribeWorkspaces"
   }
 
   resource_prefix {
@@ -9627,15 +8990,14 @@ service "workspaces" {
 }
 
 service "workspacesweb" {
-
   cli_v2_command {
     aws_cli_v2_command           = "workspaces-web"
     aws_cli_v2_command_no_dashes = "workspacesweb"
   }
 
   sdk {
-    id             = "WorkSpaces Web"
-    client_version = [2]
+    id            = "WorkSpaces Web"
+    arn_namespace = "workspacesweb"
   }
 
   names {
@@ -9644,7 +9006,7 @@ service "workspacesweb" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPortals"
+    endpoint_api_call = "ListPortals"
   }
 
   resource_prefix {
@@ -9657,10 +9019,9 @@ service "workspacesweb" {
 }
 
 service "xray" {
-
   sdk {
-    id             = "XRay"
-    client_version = [2]
+    id            = "XRay"
+    arn_namespace = "xray"
   }
 
   names {
@@ -9669,7 +9030,7 @@ service "xray" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListResourcePolicies"
+    endpoint_api_call = "ListResourcePolicies"
   }
 
   resource_prefix {
@@ -9682,10 +9043,9 @@ service "xray" {
 }
 
 service "verifiedpermissions" {
-
   sdk {
-    id             = "VerifiedPermissions"
-    client_version = [2]
+    id            = "VerifiedPermissions"
+    arn_namespace = "verifiedpermissions"
   }
 
   names {
@@ -9694,7 +9054,7 @@ service "verifiedpermissions" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListPolicyStores"
+    endpoint_api_call = "ListPolicyStores"
   }
 
   resource_prefix {
@@ -9707,10 +9067,9 @@ service "verifiedpermissions" {
 }
 
 service "codecatalyst" {
-
   sdk {
-    id             = "CodeCatalyst"
-    client_version = [2]
+    id            = "CodeCatalyst"
+    arn_namespace = "codecatalyst"
   }
 
   names {
@@ -9719,7 +9078,7 @@ service "codecatalyst" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListAccessTokens"
+    endpoint_api_call = "ListAccessTokens"
   }
 
   resource_prefix {
@@ -9732,10 +9091,9 @@ service "codecatalyst" {
 }
 
 service "mediapackagev2" {
-
   sdk {
-    id             = "MediaPackageV2"
-    client_version = [2]
+    id            = "MediaPackageV2"
+    arn_namespace = "mediapackagev2"
   }
 
   names {
@@ -9744,7 +9102,7 @@ service "mediapackagev2" {
   }
 
   endpoint_info {
-    endpoint_api_call        = "ListChannelGroups"
+    endpoint_api_call = "ListChannelGroups"
   }
 
   resource_prefix {
@@ -9758,10 +9116,9 @@ service "mediapackagev2" {
 }
 
 service "iot" {
-
   sdk {
-    id             = "IoT"
-    client_version = [2]
+    id            = "IoT"
+    arn_namespace = "iot"
   }
 
   names {
@@ -9769,12 +9126,8 @@ service "iot" {
     human_friendly      = "IoT Core"
   }
 
-  client {
-    go_v1_client_typename = "IoT"
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeDefaultAuthorizer"
+    endpoint_api_call = "DescribeDefaultAuthorizer"
   }
 
   resource_prefix {
@@ -9787,10 +9140,9 @@ service "iot" {
 }
 
 service "dynamodb" {
-
   sdk {
-    id             = "DynamoDB"
-    client_version = [2]
+    id            = "DynamoDB"
+    arn_namespace = "dynamodb"
   }
 
   names {
@@ -9798,16 +9150,13 @@ service "dynamodb" {
     human_friendly      = "DynamoDB"
   }
 
-  client {
-    skip_client_generate  = true
-  }
-
   env_var {
     deprecated_env_var = "AWS_DYNAMODB_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_DYNAMODB_ENDPOINT"
   }
+
   endpoint_info {
-    endpoint_api_call        = "ListTables"
+    endpoint_api_call = "ListTables"
   }
 
   resource_prefix {
@@ -9820,10 +9169,9 @@ service "dynamodb" {
 }
 
 service "ec2" {
-
   sdk {
-    id             = "EC2"
-    client_version = [2]
+    id            = "EC2"
+    arn_namespace = "ec2"
   }
 
   names {
@@ -9831,39 +9179,32 @@ service "ec2" {
     human_friendly      = "EC2 (Elastic Compute Cloud)"
   }
 
-  client {
-    go_v1_client_typename = "EC2"
-    skip_client_generate  = true
-  }
-
   endpoint_info {
-    endpoint_api_call        = "DescribeVpcs"
+    endpoint_api_call = "DescribeVpcs"
   }
 
   resource_prefix {
-    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
+    actual  = "aws_(ami|availability_zone|ec2_(availability|capacity|default_credit_specification|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot)"
     correct = "aws_ec2_"
   }
 
   sub_service "ec2ebs" {
-
     cli_v2_command {
-          aws_cli_v2_command                    = ""
-          aws_cli_v2_command_no_dashes          = ""
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
     }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
+      v1_package = ""
+      v2_package = ""
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "EC2EBS"
+      provider_name_upper = "EC2EBS"
       human_friendly      = "EBS (EC2)"
     }
 
@@ -9872,34 +9213,32 @@ service "ec2" {
       correct = "aws_ec2ebs_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "ebs_"
-    doc_prefix               = ["ebs_", "volume_attachment", "snapshot_"]
-    brand                    = "Amazon"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "ebs_"
+    doc_prefix          = ["ebs_", "volume_attachment", "snapshot_"]
+    brand               = "Amazon"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "ec2outposts" {
-
     cli_v2_command {
-          aws_cli_v2_command           = ""
-          aws_cli_v2_command_no_dashes          = ""
-      }
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
+    }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
-      }
+      v1_package = ""
+      v2_package = ""
+    }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "EC2Outposts"
+      provider_name_upper = "EC2Outposts"
       human_friendly      = "Outposts (EC2)"
     }
 
@@ -9908,34 +9247,32 @@ service "ec2" {
       correct = "aws_ec2outposts_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "outposts_"
-    doc_prefix               = ["ec2_coip_pool", "ec2_local_gateway"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "outposts_"
+    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "transitgateway" {
-
-  cli_v2_command {
-        aws_cli_v2_command           = ""
-        aws_cli_v2_command_no_dashes           = ""
+    cli_v2_command {
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
     }
 
-  go_packages {
-        v1_package                   = ""
-        v2_package                   = ""
+    go_packages {
+      v1_package = ""
+      v2_package = ""
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "TransitGateway"
+      provider_name_upper = "TransitGateway"
       human_friendly      = "Transit Gateway"
     }
 
@@ -9944,34 +9281,32 @@ service "ec2" {
       correct = "aws_transitgateway_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "transitgateway_"
-    doc_prefix               = ["ec2_transit_gateway"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "transitgateway_"
+    doc_prefix          = ["ec2_transit_gateway"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "verifiedaccess" {
-
     cli_v2_command {
-          aws_cli_v2_command           = ""
-          aws_cli_v2_command_no_dashes           = ""
-      }
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
+    }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
-      }
+      v1_package = ""
+      v2_package = ""
+    }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "VerifiedAccess"
+      provider_name_upper = "VerifiedAccess"
       human_friendly      = "Verified Access"
     }
 
@@ -9979,35 +9314,33 @@ service "ec2" {
       actual  = "aws_verifiedaccess"
       correct = "aws_verifiedaccess_"
     }
-    
-    split_package            = "ec2"
-    file_prefix              = "verifiedaccess_"
-    doc_prefix               = ["verifiedaccess_"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+
+    split_package       = "ec2"
+    file_prefix         = "verifiedaccess_"
+    doc_prefix          = ["verifiedaccess_"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "vpc" {
-
     cli_v2_command {
-          aws_cli_v2_command           = ""
-          aws_cli_v2_command_no_dashes          = ""
-      }
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
+    }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
-      }
+      v1_package = ""
+      v2_package = ""
+    }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "VPC"
+      provider_name_upper = "VPC"
       human_friendly      = "VPC (Virtual Private Cloud)"
     }
 
@@ -10016,34 +9349,32 @@ service "ec2" {
       correct = "aws_vpc_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "vpc_"
-    doc_prefix               = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
-    brand                    = "Amazon"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "vpc_"
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_", "vpc_route_server"]
+    brand               = "Amazon"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "ipam" {
-
     cli_v2_command {
-          aws_cli_v2_command                    = ""
-          aws_cli_v2_command_no_dashes          = ""
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
     }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
+      v1_package = ""
+      v2_package = ""
     }
-      
+
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "IPAM"
+      provider_name_upper = "IPAM"
       human_friendly      = "VPC IPAM (IP Address Manager)"
     }
 
@@ -10051,34 +9382,32 @@ service "ec2" {
       actual  = "aws_vpc_ipam"
       correct = "aws_ipam_"
     }
-    split_package            = "ec2"
-    file_prefix              = "ipam_"
-    doc_prefix               = ["vpc_ipam"]
-    brand                    = "Amazon"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "ipam_"
+    doc_prefix          = ["vpc_ipam"]
+    brand               = "Amazon"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "vpnclient" {
-
     cli_v2_command {
-          aws_cli_v2_command                    = ""
-          aws_cli_v2_command_no_dashes          = ""
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
     }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
+      v1_package = ""
+      v2_package = ""
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "ClientVPN"
+      provider_name_upper = "ClientVPN"
       human_friendly      = "VPN (Client)"
     }
 
@@ -10086,34 +9415,32 @@ service "ec2" {
       actual  = "aws_ec2_client_vpn"
       correct = "aws_vpnclient_"
     }
-    split_package            = "ec2"
-    file_prefix              = "vpnclient_"
-    doc_prefix               = ["ec2_client_vpn_"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "vpnclient_"
+    doc_prefix          = ["ec2_client_vpn_"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "vpnsite" {
-
     cli_v2_command {
-          aws_cli_v2_command           = ""
-          aws_cli_v2_command_no_dashes          = ""
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
     }
 
     go_packages {
-          v1_package                   = ""
-          v2_package                   = ""
+      v1_package = ""
+      v2_package = ""
     }
 
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "SiteVPN"
+      provider_name_upper = "SiteVPN"
       human_friendly      = "VPN (Site-to-Site)"
     }
 
@@ -10122,33 +9449,31 @@ service "ec2" {
       correct = "aws_vpnsite_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "vpnsite_"
-    doc_prefix               = ["customer_gateway", "vpn_"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "vpnsite_"
+    doc_prefix          = ["customer_gateway", "vpn_"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   sub_service "wavelength" {
+    cli_v2_command {
+      aws_cli_v2_command           = ""
+      aws_cli_v2_command_no_dashes = ""
+    }
 
-cli_v2_command {
-       aws_cli_v2_command                     = ""
-       aws_cli_v2_command_no_dashes           = ""
-   }
-
-go_packages {
-       v1_package                   = ""
-       v2_package                   = ""
-   }
+    go_packages {
+      v1_package = ""
+      v2_package = ""
+    }
     sdk {
-      id             = ""
-      client_version = null
+      id = ""
     }
 
     names {
-        provider_name_upper = "Wavelength"
+      provider_name_upper = "Wavelength"
       human_friendly      = "Wavelength"
     }
 
@@ -10157,18 +9482,42 @@ go_packages {
       correct = "aws_wavelength_"
     }
 
-    split_package            = "ec2"
-    file_prefix              = "wavelength_"
-    doc_prefix               = ["ec2_carrier_"]
-    brand                    = "AWS"
-    exclude                  = true
-      allowed_subcategory      = true
-    note                     = "Part of EC2"
+    split_package       = "ec2"
+    file_prefix         = "wavelength_"
+    doc_prefix          = ["ec2_carrier_"]
+    brand               = "AWS"
+    exclude             = true
+    allowed_subcategory = true
+    note                = "Part of EC2"
   }
 
   provider_package_correct = "ec2"
   split_package            = "ec2"
   file_prefix              = "ec2_"
-  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_default_credit_specification", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  brand                    = "Amazon"
+}
+
+service "evs" {
+  sdk {
+    id            = "EVS"
+    arn_namespace = "evs"
+  }
+
+  names {
+    provider_name_upper = "EVS"
+    human_friendly      = "Elastic VMware"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListEnvironments"
+  }
+
+  resource_prefix {
+    correct = "aws_evs_"
+  }
+
+  provider_package_correct = "evs"
+  doc_prefix               = ["evs_"]
   brand                    = "Amazon"
 }

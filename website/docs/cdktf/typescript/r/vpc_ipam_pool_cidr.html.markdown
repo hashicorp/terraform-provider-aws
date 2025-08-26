@@ -40,14 +40,14 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
     const awsVpcIpamPoolExample = new VpcIpamPool(this, "example_2", {
       addressFamily: "ipv4",
       ipamScopeId: example.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
@@ -83,7 +83,7 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
@@ -115,6 +115,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Optional) The CIDR you want to assign to the pool. Conflicts with `netmaskLength`.
 * `cidrAuthorizationContext` - (Optional) A signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context) for more information.
 * `ipamPoolId` - (Required) The ID of the pool to which you want to assign a CIDR.
@@ -168,4 +169,4 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 % terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9510d76ea7d66c26049583f9c5d435912df190bc1c3c78f5fda73a13a93912cc -->
+<!-- cache-key: cdktf-0.20.8 input-51c1b9e4f158ae8f3f60b219801f516f338f24545ef6371360467b651b38d4d0 -->

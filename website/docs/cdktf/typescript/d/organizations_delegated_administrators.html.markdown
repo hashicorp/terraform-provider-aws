@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `servicePrincipal` - (Optional) Specifies a service principal name. If specified, then the operation lists the delegated administrators only for the specified service. If you don't specify a service principal, the operation lists all delegated administrators for all services in your organization.
 
 ## Attribute Reference
@@ -52,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - The friendly name of the delegated administrator's account.
     * `status` - The status of the delegated administrator's account in the organization.
 
-<!-- cache-key: cdktf-0.20.1 input-109c5f762c0d10ecbb15ab59b2bb18f8653bf89c01823c41fe23ae6036327116 -->
+<!-- cache-key: cdktf-0.20.8 input-fd6c062c56418ee26327d35005144d5d6f4215c0742c909bc6098cc6493c8007 -->

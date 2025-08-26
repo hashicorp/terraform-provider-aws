@@ -45,8 +45,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source` - (Required) Specify the natively-supported AWS service to add as a source in Security Lake.
 
 `source` supports the following:
@@ -54,7 +55,7 @@ The following arguments are required:
 * `accounts` - (Optional) Specify the AWS account information where you want to enable Security Lake.
   If not specified, uses all accounts included in the Security Lake.
 * `regions` - (Required) Specify the Regions where you want to enable Security Lake.
-* `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`.
+* `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`, `EKS_AUDIT`, `WAF`.
 * `source_version` - (Optional) The version for a AWS source.
   If not specified, the version will be the default.
   This must be a Regionally unique value.
@@ -88,4 +89,4 @@ Using `terraform import`, import AWS log sources using the source name. For exam
 % terraform import aws_securitylake_aws_log_source.example ROUTE53
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-80cac9a273b653c7a55d700a9f8a334aab233d2bd2ba1046a02cf3da1678c3bd -->
+<!-- cache-key: cdktf-0.20.8 input-010e7d4906539ca56835bf3bbcd64a45463baa252dae102012088aae01540345 -->

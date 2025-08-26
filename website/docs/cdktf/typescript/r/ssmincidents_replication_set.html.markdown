@@ -33,7 +33,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsmincidentsReplicationSet(this, "replicationSetName", {
-      region: [
+      regions: [
         {
           name: "us-west-2",
         },
@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsmincidentsReplicationSet(this, "replicationSetName", {
-      region: [
+      regions: [
         {
           name: "us-west-2",
         },
@@ -91,7 +91,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new SsmincidentsReplicationSet(this, "replicationSetName", {
-      region: [
+      regions: [
         {
           name: "us-west-2",
         },
@@ -121,7 +121,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const exampleKey = new KmsKey(this, "example_key", {});
     new SsmincidentsReplicationSet(this, "replicationSetName", {
-      region: [
+      regions: [
         {
           kmsKeyArn: exampleKey.arn,
           name: "us-west-2",
@@ -138,6 +138,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional, **Deprecated**) The replication set's Regions. Use `regions` instead.
+* `regions` - (Optional) The replication set's Regions.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
+
 ~> **NOTE:** The Region specified by a Terraform provider must always be one of the Regions specified for the replication set. This is especially important when you perform complex update operations.
 
 ~> **NOTE:** After a replication set is created, you can add or delete only one Region at a time.
@@ -148,16 +156,10 @@ class MyConvertedCode extends TerraformStack {
 
 ~> **NOTE:** If possible, create all the customer managed keys you need (using the `terraform apply` command) before you create the replication set, or create the keys and replication set in the same `terraform apply` command. Otherwise, to delete a replication set, you must run one `terraform apply` command to delete the replication set and another to delete the AWS KMS keys used by the replication set. Deleting the AWS KMS keys before deleting the replication set results in an error. In that case, you must manually reenable the deleted key using the AWS Management Console before you can delete the replication set.
 
-The `region` configuration block is required and supports the following arguments:
+The `regions` configuration block supports the following arguments:
 
 * `name` - (Required) The name of the Region, such as `ap-southeast-2`.
 * `kmsKeyArn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
-
-The following arguments are optional:
-
-* `tags` - Tags applied to the replication set.
-
-For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
 
 ## Attribute Reference
 
@@ -173,7 +175,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - The overall status of a replication set.
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 
-In addition to the preceding arguments, the `region` configuration block exports the following attributes for each Region:
+In addition to the preceding arguments, the `regions` configuration block exports the following attributes for each Region:
 
 * `status` - The current status of the Region.
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
@@ -224,4 +226,4 @@ Using `terraform import`, import an Incident Manager replication. For example:
 % terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-db40342720668c450b5bd2187447758810506f9aa388358f6b3d9c52cf3d9ebf -->
+<!-- cache-key: cdktf-0.20.8 input-d3406db768fba3d9a0d3f437de291bbcbe05aaa9b1442dd3f0690b8175268865 -->

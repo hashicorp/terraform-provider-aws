@@ -5,7 +5,6 @@ package sesv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,14 +37,14 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.current_signing_key_length", ""),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.last_key_generation_timestamp", ""),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "NOT_STARTED"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
@@ -75,14 +74,14 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`identity/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.current_signing_key_length", "RSA_2048_BIT"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "dkim_signing_attributes.0.last_key_generation_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "PENDING"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "DOMAIN"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
@@ -168,7 +167,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa2048Bit)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
 				),
 			},
@@ -181,7 +180,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa1024Bit)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
 				),
 			},
@@ -210,7 +209,7 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key1, selector1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key1),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector1),
 				),
@@ -225,54 +224,9 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key2, selector2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key2),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSESV2EmailIdentity_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	resourceName := "aws_sesv2_email_identity.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEmailIdentityConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEmailIdentityConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccEmailIdentityConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -290,41 +244,33 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.NotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.SESV2, create.ErrActionCheckingDestroyed, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("SESv2 Email Identity %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEmailIdentityExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckEmailIdentityExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -385,29 +331,4 @@ resource "aws_sesv2_email_identity" "test" {
   }
 }
 `, rName, domainSigningPrivateKey, domainSigningSelector)
-}
-
-func testAccEmailIdentityConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_email_identity" "test" {
-  email_identity = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccEmailIdentityConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_sesv2_email_identity" "test" {
-  email_identity = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

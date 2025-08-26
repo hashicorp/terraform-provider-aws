@@ -44,17 +44,12 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
-
 * `owners` - (Optional) Returns the snapshots owned by the specified owner id. Multiple owners can be specified.
-
 * `snapshot_ids` - (Optional) Returns information on a specific snapshot_id.
-
 * `restorable_by_user_ids` - (Optional) One or more AWS accounts IDs that can create volumes from the snapshot.
-
-* `filter` - (Optional) One or more name/value pairs to filter off of. There are
-several valid keys, for a full reference, check out
-[describe-snapshots in the AWS CLI reference][1].
+* `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-snapshots in the AWS CLI reference][1].
 
 ## Attribute Reference
 
@@ -71,6 +66,7 @@ This data source exports the following attributes in addition to the arguments a
 * `volume_size` - Size of the drive in GiBs.
 * `kms_key_id` - ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
+* `start_time` - Time stamp when the snapshot was initiated.
 * `state` - Snapshot state.
 * `storage_tier` - Storage tier in which the snapshot is stored.
 * `outpost_arn` - ARN of the Outpost on which the snapshot is stored.
@@ -84,4 +80,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.20.1 input-c8ad520ee1902fdd4beb1d909dcc090edcec79bd99fe9a2e9d973ce88eeefa44 -->
+<!-- cache-key: cdktf-0.20.8 input-c830a0db450dd61d816fbd0bd2c88db8820ad9386d09112631cee9215fc21845 -->

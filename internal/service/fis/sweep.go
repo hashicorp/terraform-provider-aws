@@ -4,44 +4,30 @@
 package fis
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_fis_experiment_template", &resource.Sweeper{
-		Name: "aws_fis_experiment_template",
-		F:    sweepExperimentTemplates,
-	})
+	awsv2.Register("aws_fis_experiment_template", sweepExperimentTemplates)
 }
 
-func sweepExperimentTemplates(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepExperimentTemplates(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.FISClient(ctx)
-	input := &fis.ListExperimentTemplatesInput{}
+	var input fis.ListExperimentTemplatesInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fis.NewListExperimentTemplatesPaginator(conn, input)
+	pages := fis.NewListExperimentTemplatesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping FIS Experiment Template sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing FIS Experiment Templates (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.ExperimentTemplates {
@@ -53,11 +39,5 @@ func sweepExperimentTemplates(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping FIS Experiment Templates (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

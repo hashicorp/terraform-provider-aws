@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The resource group's name. A resource group name can have a maximum of 127 characters, including letters, numbers, hyphens, dots, and underscores. The name cannot start with `AWS` or `aws`.
 * `configuration` - (Optional) A configuration associates the resource group with an AWS service and specifies how the service can interact with the resources in the group. See below for details.
 * `description` - (Optional) A description of the resource group.
@@ -102,4 +103,4 @@ Using `terraform import`, import resource groups using the `name`. For example:
 % terraform import aws_resourcegroups_group.foo resource-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ffd6b1c7348fc0bfb39edb3c57aaf4b3dc4b1a11fa63096a13a4a4883d2ab21d -->
+<!-- cache-key: cdktf-0.20.8 input-fd6a63bf64851135f30092d02ec89e75813275d248686468af41e395fb9ba085 -->

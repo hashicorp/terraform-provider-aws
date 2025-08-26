@@ -24,3 +24,8 @@ const (
 	keyValueStoreStatusProvisioning = "PROVISIONING"
 	keyValueStoreStatusReady        = "READY"
 )
+
+const (
+	vpcOriginStatusDeployed  = "Deployed"
+	vpcOriginStatusDeploying = "Deploying"
+)

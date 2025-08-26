@@ -49,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `trigger` - (Required) The name of the trigger.
     * `name` - (Required) The name of the trigger.
@@ -63,4 +64,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `configuration_id` - System-generated unique identifier.
 
-<!-- cache-key: cdktf-0.20.1 input-64d0507dd9a3e74264f53d83bdf059ff3d9ad3e20d558761501e6dbf7e913d3f -->
+<!-- cache-key: cdktf-0.20.8 input-03b73247a90115655a8ba2b39b287bf34f98cf448ed2e8b9dcaf1e57d192cbc6 -->

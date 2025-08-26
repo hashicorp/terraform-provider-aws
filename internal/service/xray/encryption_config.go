@@ -22,17 +22,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_xray_encryption_config")
+// @SDKResource("aws_xray_encryption_config", name="Encryption Config")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,
 		ReadWithoutTimeout:   resourceEncryptionConfigRead,
 		UpdateWithoutTimeout: resourceEncryptionPutConfig,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrKeyID: {
@@ -49,11 +50,11 @@ func resourceEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	input := &xray.PutEncryptionConfigInput{
+	input := xray.PutEncryptionConfigInput{
 		Type: types.EncryptionType(d.Get(names.AttrType).(string)),
 	}
 
@@ -61,13 +62,13 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 		input.KeyId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutEncryptionConfig(ctx, input)
+	_, err := conn.PutEncryptionConfig(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating XRay Encryption Config: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if _, err := waitEncryptionConfigAvailable(ctx, conn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for XRay Encryption Config (%s) create: %s", d.Id(), err)
@@ -76,7 +77,7 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
@@ -99,9 +100,9 @@ func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.EncryptionConfig, error) {
-	input := &xray.GetEncryptionConfigInput{}
+	input := xray.GetEncryptionConfigInput{}
 
-	output, err := conn.GetEncryptionConfig(ctx, input)
+	output, err := conn.GetEncryptionConfig(ctx, &input)
 
 	if err != nil {
 		return nil, err
@@ -115,7 +116,7 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 }
 
 func statusEncryptionConfig(ctx context.Context, conn *xray.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
 		if tfresource.NotFound(err) {

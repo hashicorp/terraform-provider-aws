@@ -65,6 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activate` - (Required) Specifies whether GuardDuty is to start using the uploaded IPSet.
 * `detectorId` - (Required) The detector ID of the GuardDuty.
 * `format` - (Required) The format of the file that contains the IPSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
@@ -77,7 +78,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the GuardDuty IPSet.
-* `id` - The ID of the GuardDuty IPSet.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -112,4 +112,4 @@ Using `terraform import`, import GuardDuty IPSet using the primary GuardDuty det
 % terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a9aeb8596a1584664d2e630a427541e8d151a5e9c5c5912959a88b2da9c2384 -->
+<!-- cache-key: cdktf-0.20.8 input-fc7f3a4eea3a86e9ad12e7a6423167c43c079dd21e20b165f3d57669b4ccceb2 -->

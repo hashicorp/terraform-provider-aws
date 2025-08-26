@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the namespace.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
 * `tags` - (Optional) A map of tags to assign to the namespace. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -84,4 +85,4 @@ Using `terraform import`, import Service Discovery Public DNS Namespace using th
 % terraform import aws_service_discovery_public_dns_namespace.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3f12246f59ce121e0bff5235dbb078efa0ee1d1e73f30312abd5b446e223694a -->
+<!-- cache-key: cdktf-0.20.8 input-a2cb69f2bd28b88e7a3a0a4b3861bdcb08a6749fe11af8dd3caaff2fd0566245 -->

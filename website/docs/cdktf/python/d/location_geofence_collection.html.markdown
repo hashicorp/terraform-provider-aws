@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `collection_name` - (Required) Name of the geofence collection.
 
 ## Attribute Reference
@@ -50,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the geofence collection.
 * `update_time` - Timestamp for when the geofence collection resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.1 input-412ec3161f32c61f58d8cc16f05d87cad980bf218e02a4e45e733843b249c8a5 -->
+<!-- cache-key: cdktf-0.20.8 input-1fec0c9656e29e888310da17b35999e3c80074d9b82d341d42c7e44dd1dcab3d -->

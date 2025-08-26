@@ -37,13 +37,13 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` -  (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN of the Detective Graph.
 * `graph_arn` - ARN of the Detective Graph.
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the Amazon Detective Graph was created.
 
@@ -72,4 +72,4 @@ Using `terraform import`, import `aws_detective_graph` using the ARN. For exampl
 % terraform import aws_detective_graph.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ee8961bdda24bd4636640d877e7c8cec4877ed2d26e63964d9fab2e0003f440c -->
+<!-- cache-key: cdktf-0.20.8 input-0de86f9b766c7e9cd6c921abb4f093a1d19f5d8e5e8dfb20ea812432f342610b -->

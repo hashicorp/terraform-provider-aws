@@ -32,7 +32,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     const analytics = new S3Bucket(this, "analytics", {
-      bucket: "analytics destination",
+      bucket: "analytics-destination",
     });
     const example = new S3Bucket(this, "example", {
       bucket: "example",
@@ -93,6 +93,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket this analytics configuration is associated with.
 * `name` - (Required) Unique identifier of the analytics configuration for the bucket.
 * `filter` - (Optional) Object filtering that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
@@ -159,4 +160,4 @@ Using `terraform import`, import S3 bucket analytics configurations using `bucke
 % terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2728c65e9310b798db450f104ac4301a6651e13ee77566ae83bf71307930d0dd -->
+<!-- cache-key: cdktf-0.20.8 input-2808748131b580b1da9bf784fc147c62ec5f37210675360cc38b05005ef94e3a -->

@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket.
 * `outpost_id` - (Required) Identifier of the Outpost to contain this bucket.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -77,4 +78,4 @@ Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (
 % terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2e4677b75d6cbb099b0dd2b2385879475c02ebb3643475b93a119fd3833d7929 -->
+<!-- cache-key: cdktf-0.20.8 input-32a2d5ee854ebd1032d54a174860683e18ce57538e46596fae6c97d24752b4a8 -->

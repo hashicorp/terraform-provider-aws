@@ -60,6 +60,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags, each pair of which must exactly match for desired security groups.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out [describe-security-groups in the AWS CLI reference][1].
 
@@ -80,4 +83,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-61bce3b277f527514fffcce8fa9eb4692ab442cb83160f5b9461f3e9c31d928a -->
+<!-- cache-key: cdktf-0.20.8 input-66c3b75164f2ea48d4b0767bab1ab8c1eabb7a981f537fdb07722006e5cdc5bb -->

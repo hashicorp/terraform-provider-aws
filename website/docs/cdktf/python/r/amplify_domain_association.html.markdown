@@ -61,6 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `certificate_settings` - (Optional) The type of SSL/TLS certificate to use for your custom domain. If you don't specify a certificate type, Amplify uses the default certificate that it provisions and manages for you.
 * `domain_name` - (Required) Domain name for the domain association.
@@ -70,8 +71,10 @@ This resource supports the following arguments:
 
 The `certificate_settings` configuration block supports the following arguments:
 
-* `type` - (Required) The certificate type. Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
+* `type` - (Required) The certificate type.
+  Valid values are `AMPLIFY_MANAGED` and `CUSTOM`.
 * `custom_certificate_arn` - (Optional) The Amazon resource name (ARN) for the custom certificate.
+  Required when `type` is `CUSTOM`.
 
 The `sub_domain` configuration block supports the following arguments:
 
@@ -115,4 +118,4 @@ Using `terraform import`, import Amplify domain association using `app_id` and `
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-be62188dd78c2bc3fe33b226ce5b4ddaa94e43d964007891a09d32a8b7f4f2bc -->
+<!-- cache-key: cdktf-0.20.8 input-7b6f4dac9b761f07225235661ffad26dbb3a46ee9f5d7b0d48281f887710543e -->

@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
-func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(map[string]interface{})
+func validEnvironment(v any, k string) (ws []string, errors []error) {
+	value := v.(map[string]any)
 	for envK, envV := range value {
 		if !regexache.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
 			errors = append(errors, fmt.Errorf(
@@ -34,7 +34,7 @@ func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validImage(v interface{}, k string) (ws []string, errors []error) {
+func validImage(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`[\S]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -48,7 +48,7 @@ func validImage(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
+func validModelDataURL(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -66,7 +66,7 @@ func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validName(v interface{}, k string) (ws []string, errors []error) {
+func validName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -84,7 +84,7 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validPrefix(v interface{}, k string) (ws []string, errors []error) {
+func validPrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

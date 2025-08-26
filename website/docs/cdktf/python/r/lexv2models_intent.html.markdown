@@ -178,6 +178,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `closing_setting` - (Optional) Configuration block for the response that Amazon Lex sends to the user when the intent is closed. See [`closing_setting`](#closing_setting).
 * `confirmation_setting` - (Optional) Configuration block for prompts that Amazon Lex sends to the user to confirm the completion of an intent. If the user answers "no," the settings contain a statement that is sent to the user to end the intent. If you configure this block without `prompt_specification.*.prompt_attempts_specification`, AWS will provide default configurations for `Initial` and `Retry1` `prompt_attempts_specification`s. This will cause Terraform to report differences. Use the `confirmation_setting` configuration above in the [Basic Usage](#basic-usage) example to avoid differences resulting from AWS default configuration. See [`confirmation_setting`](#confirmation_setting).
 * `description` - (Optional) Description of the intent. Use the description to help identify the intent in lists.
@@ -582,4 +583,4 @@ Using `terraform import`, import Lex V2 Models Intent using the `intent_id:bot_i
 % terraform import aws_lexv2models_intent.example intent-42874:bot-11376:DRAFT:en_US
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0876331bf551e29ba9e9733339842f2f92c0848356779ef9b53c82a6c9b7a11e -->
+<!-- cache-key: cdktf-0.20.8 input-ad5872f3514929a786393ffed4d7161b334fa0b984f6d73ffff19f8946d66132 -->

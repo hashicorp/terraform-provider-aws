@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandContactChannelAddress(deliveryAddress []interface{}) *types.ContactChannelAddress {
+func expandContactChannelAddress(deliveryAddress []any) *types.ContactChannelAddress {
 	if len(deliveryAddress) == 0 || deliveryAddress[0] == nil {
 		return nil
 	}
 
-	m := deliveryAddress[0].(map[string]interface{})
+	m := deliveryAddress[0].(map[string]any)
 
 	contactChannelAddress := &types.ContactChannelAddress{}
 
@@ -25,29 +25,29 @@ func expandContactChannelAddress(deliveryAddress []interface{}) *types.ContactCh
 	return contactChannelAddress
 }
 
-func flattenContactChannelAddress(contactChannelAddress *types.ContactChannelAddress) []interface{} {
-	m := map[string]interface{}{}
+func flattenContactChannelAddress(contactChannelAddress *types.ContactChannelAddress) []any {
+	m := map[string]any{}
 
 	if v := contactChannelAddress.SimpleAddress; v != nil {
 		m["simple_address"] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandStages(stages []interface{}) []types.Stage {
+func expandStages(stages []any) []types.Stage {
 	var stageList []types.Stage
 
 	for _, stage := range stages {
 		s := types.Stage{}
 
-		stageData := stage.(map[string]interface{})
+		stageData := stage.(map[string]any)
 
 		if v, ok := stageData["duration_in_minutes"].(int); ok {
 			s.DurationInMinutes = aws.Int32(int32(v))
 		}
 
-		if v, ok := stageData[names.AttrTarget].([]interface{}); ok {
+		if v, ok := stageData[names.AttrTarget].([]any); ok {
 			s.Targets = expandTargets(v)
 		}
 
@@ -57,11 +57,11 @@ func expandStages(stages []interface{}) []types.Stage {
 	return stageList
 }
 
-func flattenStages(stages []types.Stage) []interface{} {
-	var result []interface{}
+func flattenStages(stages []types.Stage) []any {
+	var result []any
 
 	for _, stage := range stages {
-		s := map[string]interface{}{}
+		s := map[string]any{}
 
 		if v := stage.DurationInMinutes; v != nil {
 			s["duration_in_minutes"] = aws.ToInt32(v)
@@ -77,7 +77,7 @@ func flattenStages(stages []types.Stage) []interface{} {
 	return result
 }
 
-func expandTargets(targets []interface{}) []types.Target {
+func expandTargets(targets []any) []types.Target {
 	targetList := make([]types.Target, 0)
 
 	for _, target := range targets {
@@ -87,13 +87,13 @@ func expandTargets(targets []interface{}) []types.Target {
 
 		t := types.Target{}
 
-		targetData := target.(map[string]interface{})
+		targetData := target.(map[string]any)
 
-		if v, ok := targetData["channel_target_info"].([]interface{}); ok {
+		if v, ok := targetData["channel_target_info"].([]any); ok {
 			t.ChannelTargetInfo = expandChannelTargetInfo(v)
 		}
 
-		if v, ok := targetData["contact_target_info"].([]interface{}); ok {
+		if v, ok := targetData["contact_target_info"].([]any); ok {
 			t.ContactTargetInfo = expandContactTargetInfo(v)
 		}
 
@@ -103,11 +103,11 @@ func expandTargets(targets []interface{}) []types.Target {
 	return targetList
 }
 
-func flattenTargets(targets []types.Target) []interface{} {
-	result := make([]interface{}, 0)
+func flattenTargets(targets []types.Target) []any {
+	result := make([]any, 0)
 
 	for _, target := range targets {
-		t := map[string]interface{}{}
+		t := map[string]any{}
 
 		if v := target.ChannelTargetInfo; v != nil {
 			t["channel_target_info"] = flattenChannelTargetInfo(v)
@@ -123,14 +123,14 @@ func flattenTargets(targets []types.Target) []interface{} {
 	return result
 }
 
-func expandChannelTargetInfo(channelTargetInfo []interface{}) *types.ChannelTargetInfo {
+func expandChannelTargetInfo(channelTargetInfo []any) *types.ChannelTargetInfo {
 	if len(channelTargetInfo) == 0 {
 		return nil
 	}
 
 	c := &types.ChannelTargetInfo{}
 
-	channelTargetInfoData := channelTargetInfo[0].(map[string]interface{})
+	channelTargetInfoData := channelTargetInfo[0].(map[string]any)
 
 	if v, ok := channelTargetInfoData["contact_channel_id"].(string); ok && v != "" {
 		c.ContactChannelId = aws.String(v)
@@ -143,10 +143,10 @@ func expandChannelTargetInfo(channelTargetInfo []interface{}) *types.ChannelTarg
 	return c
 }
 
-func flattenChannelTargetInfo(channelTargetInfo *types.ChannelTargetInfo) []interface{} {
-	var result []interface{}
+func flattenChannelTargetInfo(channelTargetInfo *types.ChannelTargetInfo) []any {
+	var result []any
 
-	c := make(map[string]interface{})
+	c := make(map[string]any)
 
 	if v := channelTargetInfo.ContactChannelId; v != nil {
 		c["contact_channel_id"] = aws.ToString(v)
@@ -161,14 +161,14 @@ func flattenChannelTargetInfo(channelTargetInfo *types.ChannelTargetInfo) []inte
 	return result
 }
 
-func expandContactTargetInfo(contactTargetInfo []interface{}) *types.ContactTargetInfo {
+func expandContactTargetInfo(contactTargetInfo []any) *types.ContactTargetInfo {
 	if len(contactTargetInfo) == 0 {
 		return nil
 	}
 
 	c := &types.ContactTargetInfo{}
 
-	contactTargetInfoData := contactTargetInfo[0].(map[string]interface{})
+	contactTargetInfoData := contactTargetInfo[0].(map[string]any)
 
 	if v, ok := contactTargetInfoData["is_essential"].(bool); ok {
 		c.IsEssential = aws.Bool(v)
@@ -181,10 +181,10 @@ func expandContactTargetInfo(contactTargetInfo []interface{}) *types.ContactTarg
 	return c
 }
 
-func flattenContactTargetInfo(contactTargetInfo *types.ContactTargetInfo) []interface{} {
-	var result []interface{}
+func flattenContactTargetInfo(contactTargetInfo *types.ContactTargetInfo) []any {
+	var result []any
 
-	c := make(map[string]interface{})
+	c := make(map[string]any)
 
 	if v := contactTargetInfo.IsEssential; v != nil {
 		c["is_essential"] = aws.ToBool(v)

@@ -7,10 +7,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -27,9 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Data Share Authorization")
-func newResourceDataShareAuthorization(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceDataShareAuthorization{}, nil
+// @FrameworkResource("aws_redshift_data_share_authorization", name="Data Share Authorization")
+func newDataShareAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &dataShareAuthorizationResource{}, nil
 }
 
 const (
@@ -38,15 +38,12 @@ const (
 	dataShareAuthorizationIDPartCount = 2
 )
 
-type resourceDataShareAuthorization struct {
-	framework.ResourceWithConfigure
+type dataShareAuthorizationResource struct {
+	framework.ResourceWithModel[dataShareAuthorizationResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceDataShareAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_data_share_authorization"
-}
-
-func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataShareAuthorizationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allow_writes": schema.BoolAttribute{
@@ -86,10 +83,10 @@ func (r *resourceDataShareAuthorization) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+func (r *dataShareAuthorizationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceDataShareAuthorizationData
+	var plan dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,10 +115,10 @@ func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resourc
 	}
 
 	if !plan.AllowWrites.IsNull() {
-		in.AllowWrites = aws.Bool(plan.AllowWrites.ValueBool())
+		in.AllowWrites = plan.AllowWrites.ValueBoolPointer()
 	}
 
-	out, err := conn.AuthorizeDataShareWithContext(ctx, in)
+	out, err := conn.AuthorizeDataShare(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Redshift, create.ErrActionCreating, ResNameDataShareAuthorization, id, err),
@@ -143,10 +140,10 @@ func (r *resourceDataShareAuthorization) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+func (r *dataShareAuthorizationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareAuthorizationData
+	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,29 +180,29 @@ func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataShareAuthorization) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataShareAuthorizationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Update is a no-op
 }
 
-func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().RedshiftConn(ctx)
+func (r *dataShareAuthorizationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceDataShareAuthorizationData
+	var state dataShareAuthorizationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &redshift.DeauthorizeDataShareInput{
-		DataShareArn:       aws.String(state.DataShareARN.ValueString()),
-		ConsumerIdentifier: aws.String(state.ConsumerIdentifier.ValueString()),
+		DataShareArn:       state.DataShareARN.ValueStringPointer(),
+		ConsumerIdentifier: state.ConsumerIdentifier.ValueStringPointer(),
 	}
 
-	_, err := conn.DeauthorizeDataShareWithContext(ctx, in)
+	_, err := conn.DeauthorizeDataShare(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeResourceNotFoundFault) ||
-			tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because the ARN doesn't exist.") ||
-			tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because you have already removed authorization from the data share.") {
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") ||
+			errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because you have already removed authorization from the data share.") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -216,11 +213,7 @@ func (r *resourceDataShareAuthorization) Delete(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceDataShareAuthorization) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.DataShare, error) {
+func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.DataShare, error) {
 	parts, err := intflex.ExpandResourceId(id, dataShareAuthorizationIDPartCount, false)
 	if err != nil {
 		return nil, err
@@ -230,9 +223,9 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift
 		DataShareArn: aws.String(parts[0]),
 	}
 
-	out, err := conn.DescribeDataSharesWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeResourceNotFoundFault) ||
-		tfawserr.ErrMessageContains(err, redshift.ErrCodeInvalidDataShareFault, "because the ARN doesn't exist.") {
+	out, err := conn.DescribeDataShares(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidDataShareFault](err, "because the ARN doesn't exist.") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -253,10 +246,10 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift
 	// status is one of "AUTHORIZED" or "ACTIVE".
 	share := out.DataShares[0]
 	for _, assoc := range share.DataShareAssociations {
-		if aws.StringValue(assoc.ConsumerIdentifier) == parts[1] {
-			switch aws.StringValue(assoc.Status) {
-			case redshift.DataShareStatusAuthorized, redshift.DataShareStatusActive:
-				return share, nil
+		if aws.ToString(assoc.ConsumerIdentifier) == parts[1] {
+			switch assoc.Status {
+			case awstypes.DataShareStatusAuthorized, awstypes.DataShareStatusActive:
+				return &share, nil
 			}
 		}
 	}
@@ -267,7 +260,8 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift
 	}
 }
 
-type resourceDataShareAuthorizationData struct {
+type dataShareAuthorizationResourceModel struct {
+	framework.WithRegionModel
 	AllowWrites        types.Bool   `tfsdk:"allow_writes"`
 	ConsumerIdentifier types.String `tfsdk:"consumer_identifier"`
 	DataShareARN       fwtypes.ARN  `tfsdk:"data_share_arn"`

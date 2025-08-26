@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +23,7 @@ func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIdentityProvider(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -9,12 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,7 +27,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_group.test"
 
 	expectedLogGroupClass := "STANDARD"
-	if acctest.Partition() != names.StandardPartitionID {
+	if acctest.Partition() != endpoints.AwsPartitionID {
 		expectedLogGroupClass = ""
 	}
 
@@ -39,14 +41,14 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", fmt.Sprintf("log-group:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", fmt.Sprintf("log-group:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "log_group_class", expectedLogGroupClass),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -192,7 +194,7 @@ func TestAccLogsGroup_logGroupClass(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// CloudWatch Logs IA is available in all AWS Commercial regions.
-			acctest.PreCheckPartition(t, names.StandardPartitionID)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -244,7 +246,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				Config: testAccGroupConfig_retentionPolicy(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 				),
 			},
 		},
@@ -330,6 +332,73 @@ func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
 	})
 }
 
+// Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is set.
+// Even if retention_in_days is changed in the configuration, the diff should be suppressed and the plan should be empty.
+func TestAccLogsGroup_logGroupClassDELIVERY1(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithRetentionInDays(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					// AWS API forces retention_in_days to 2 for DELIVERY log group class
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "2"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithRetentionInDays(rName, 60),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithoutRetentionInDays(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// Test whether the log group is successfully created with the DELIVERY log group class when retention_in_days is not set.
+func TestAccLogsGroup_logGroupClassDELIVERY2(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_logGroupClassDEVIVERYWithoutRetentionInDays(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
+					// AWS API forces retention_in_days to 2 for DELIVERY log group class
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLogGroupExists(ctx context.Context, t *testing.T, n string, v *types.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -362,7 +431,7 @@ func testAccCheckLogGroupDestroy(ctx context.Context, t *testing.T) resource.Tes
 
 			_, err := tflogs.FindLogGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -424,6 +493,7 @@ resource "aws_kms_key" "test" {
 
   description             = "%[1]s-${count.index}"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -479,6 +549,25 @@ func testAccGroupConfig_skipDestroy(rName string) string {
 resource "aws_cloudwatch_log_group" "test" {
   name         = %[1]q
   skip_destroy = true
+}
+`, rName)
+}
+
+func testAccGroupConfig_logGroupClassDEVIVERYWithRetentionInDays(rName string, retentionInDays int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name              = %[1]q
+  log_group_class   = "DELIVERY"
+  retention_in_days = %[2]d
+}
+`, rName, retentionInDays)
+}
+
+func testAccGroupConfig_logGroupClassDEVIVERYWithoutRetentionInDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name            = %[1]q
+  log_group_class = "DELIVERY"
 }
 `, rName)
 }

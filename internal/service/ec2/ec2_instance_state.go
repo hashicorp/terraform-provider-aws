@@ -58,7 +58,7 @@ func resourceInstanceState() *schema.Resource {
 	}
 }
 
-func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -78,7 +78,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
-func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -101,7 +101,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 

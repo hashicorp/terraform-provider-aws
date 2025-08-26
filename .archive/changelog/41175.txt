@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appflow_connector_profile: Add `connector_profile_config.connector_profile_properties.salesforce.use_privatelink_for_metadata_and_authorization` argument
+```

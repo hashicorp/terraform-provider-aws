@@ -63,6 +63,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `applicationId` - (Required, Forces new resource) AppConfig application ID. Must be between 4 and 7 characters in length.
 * `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
 * `description` - (Optional) Description of the environment. Can be at most 1024 characters.
@@ -119,4 +120,4 @@ Using `terraform import`, import AppConfig Environments using the environment ID
 % terraform import aws_appconfig_environment.example 71abcde:11xxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fbf604e2e551d298f98ef374aae241f630d53aa562269a500dee31fdf26530c5 -->
+<!-- cache-key: cdktf-0.20.8 input-d8a2ac62c08775b43a2d2f08ceaa4852d6b5f644f4da95c47056a9d648216f27 -->

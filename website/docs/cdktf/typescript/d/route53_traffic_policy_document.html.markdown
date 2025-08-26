@@ -36,11 +36,11 @@ class MyConvertedCode extends TerraformStack {
         {
           id: "my_elb",
           type: "elastic-load-balancer",
-          value: "elb-111111.${" + current.name + "}.elb.amazonaws.com",
+          value: "elb-111111.${" + current.region + "}.elb.amazonaws.com",
         },
         {
           id: "site_down_banner",
-          region: Token.asString(current.name),
+          region: Token.asString(current.region),
           type: "s3-website",
           value: "www.example.com",
         },
@@ -248,4 +248,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `json` - Standard JSON policy document rendered based on the arguments above.
 
-<!-- cache-key: cdktf-0.20.1 input-d5da9f957492c81a0818cf4e7ac99e776513cf79a34b5e4cc41b3f9e5ae17152 -->
+<!-- cache-key: cdktf-0.20.8 input-62140bbdd1bfd7ed7367c92c004d73b586b1aef3d973605fc6da26cbd56e520b -->

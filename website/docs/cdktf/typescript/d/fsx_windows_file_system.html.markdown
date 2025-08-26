@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) Identifier of the file system (e.g. `fs-12345678`).
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpcId` - The ID of the primary virtual private cloud (VPC) for the file system.
 * `weeklyMaintenanceStartTime` - The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-<!-- cache-key: cdktf-0.20.1 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->
+<!-- cache-key: cdktf-0.20.8 input-1c2d49fc2dc95362da84295212668c94b46f592ff7cb949b6c65270ac0672039 -->

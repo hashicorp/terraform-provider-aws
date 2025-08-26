@@ -5,11 +5,9 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -40,8 +38,6 @@ func resourceClientVPNEndpoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -135,6 +131,21 @@ func resourceClientVPNEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"client_route_enforcement_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforced": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"connection_log_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -160,6 +171,11 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"disconnect_on_session_timeout": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 			names.AttrDNSName: {
 				Type:     schema.TypeString,
@@ -231,7 +247,7 @@ func resourceClientVPNEndpoint() *schema.Resource {
 	}
 }
 
-func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -249,24 +265,32 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientConnectOptions = expandClientConnectOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConnectionLogOptions = expandConnectionLogOptions(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]interface{})) > 0 {
-		input.DnsServers = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("disconnect_on_session_timeout"); ok {
+		input.DisconnectOnSessionTimeout = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("dns_servers"); ok && len(v.([]any)) > 0 {
+		input.DnsServers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
@@ -296,9 +320,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 
@@ -312,43 +337,44 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientVPNEndpointARN(ctx, c, d.Id()))
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)
 	if ep.ClientConnectOptions != nil {
-		if err := d.Set("client_connect_options", []interface{}{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
+		if err := d.Set("client_connect_options", []any{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_connect_options: %s", err)
 		}
 	} else {
 		d.Set("client_connect_options", nil)
 	}
 	if ep.ClientLoginBannerOptions != nil {
-		if err := d.Set("client_login_banner_options", []interface{}{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
+		if err := d.Set("client_login_banner_options", []any{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting client_login_banner_options: %s", err)
 		}
 	} else {
 		d.Set("client_login_banner_options", nil)
 	}
+	if ep.ClientRouteEnforcementOptions != nil {
+		if err := d.Set("client_route_enforcement_options", []any{flattenClientRouteEnforcementOptions(ep.ClientRouteEnforcementOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting client_route_enforcement_options: %s", err)
+		}
+	} else {
+		d.Set("client_route_enforcement_options", nil)
+	}
 	if ep.ConnectionLogOptions != nil {
-		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
+		if err := d.Set("connection_log_options", []any{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_log_options: %s", err)
 		}
 	} else {
 		d.Set("connection_log_options", nil)
 	}
 	d.Set(names.AttrDescription, ep.Description)
+	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -367,7 +393,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -380,20 +406,26 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		if d.HasChange("client_connect_options") {
 			waitForClientConnectResponseOptionsUpdate = true
 
-			if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ClientConnectOptions = expandClientConnectOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientConnectOptions = expandClientConnectOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("client_login_banner_options") {
-			if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("client_login_banner_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientLoginBannerOptions = expandClientLoginBannerOptions(v.([]any)[0].(map[string]any))
+			}
+		}
+
+		if d.HasChange("client_route_enforcement_options") {
+			if v, ok := d.GetOk("client_route_enforcement_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ClientRouteEnforcementOptions = expandClientRouteEnforcementOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
 		if d.HasChange("connection_log_options") {
-			if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ConnectionLogOptions = expandConnectionLogOptions(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("connection_log_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ConnectionLogOptions = expandConnectionLogOptions(v.([]any)[0].(map[string]any))
 			}
 		}
 
@@ -401,8 +433,12 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
+		if d.HasChange("disconnect_on_session_timeout") {
+			input.DisconnectOnSessionTimeout = aws.Bool(d.Get("disconnect_on_session_timeout").(bool))
+		}
+
 		if d.HasChange("dns_servers") {
-			dnsServers := d.Get("dns_servers").([]interface{})
+			dnsServers := d.Get("dns_servers").([]any)
 			enabled := len(dnsServers) > 0
 
 			input.DnsServers = &awstypes.DnsServersOptionsModifyStructure{
@@ -457,14 +493,15 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
-	_, err := conn.DeleteClientVpnEndpoint(ctx, &ec2.DeleteClientVpnEndpointInput{
+	input := ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteClientVpnEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
 		return diags
@@ -481,7 +518,7 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandClientVPNAuthenticationRequest(tfMap map[string]interface{}) *awstypes.ClientVpnAuthenticationRequest {
+func expandClientVPNAuthenticationRequest(tfMap map[string]any) *awstypes.ClientVpnAuthenticationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -524,7 +561,7 @@ func expandClientVPNAuthenticationRequest(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func expandClientVPNAuthenticationRequests(tfList []interface{}) []awstypes.ClientVpnAuthenticationRequest {
+func expandClientVPNAuthenticationRequests(tfList []any) []awstypes.ClientVpnAuthenticationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -532,7 +569,7 @@ func expandClientVPNAuthenticationRequests(tfList []interface{}) []awstypes.Clie
 	var apiObjects []awstypes.ClientVpnAuthenticationRequest
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -550,8 +587,8 @@ func expandClientVPNAuthenticationRequests(tfList []interface{}) []awstypes.Clie
 	return apiObjects
 }
 
-func flattenClientVPNAuthentication(apiObject awstypes.ClientVpnAuthentication) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenClientVPNAuthentication(apiObject awstypes.ClientVpnAuthentication) map[string]any {
+	tfMap := map[string]any{}
 	tfMap[names.AttrType] = apiObject.Type
 
 	if apiObject.MutualAuthentication != nil {
@@ -575,12 +612,12 @@ func flattenClientVPNAuthentication(apiObject awstypes.ClientVpnAuthentication) 
 	return tfMap
 }
 
-func flattenClientVPNAuthentications(apiObjects []awstypes.ClientVpnAuthentication) []interface{} {
+func flattenClientVPNAuthentications(apiObjects []awstypes.ClientVpnAuthentication) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenClientVPNAuthentication(apiObject))
@@ -589,7 +626,7 @@ func flattenClientVPNAuthentications(apiObjects []awstypes.ClientVpnAuthenticati
 	return tfList
 }
 
-func expandClientConnectOptions(tfMap map[string]interface{}) *awstypes.ClientConnectOptions {
+func expandClientConnectOptions(tfMap map[string]any) *awstypes.ClientConnectOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -612,12 +649,12 @@ func expandClientConnectOptions(tfMap map[string]interface{}) *awstypes.ClientCo
 	return apiObject
 }
 
-func flattenClientConnectResponseOptions(apiObject *awstypes.ClientConnectResponseOptions) map[string]interface{} {
+func flattenClientConnectResponseOptions(apiObject *awstypes.ClientConnectResponseOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Enabled; v != nil {
 		tfMap[names.AttrEnabled] = v
@@ -630,7 +667,7 @@ func flattenClientConnectResponseOptions(apiObject *awstypes.ClientConnectRespon
 	return tfMap
 }
 
-func expandClientLoginBannerOptions(tfMap map[string]interface{}) *awstypes.ClientLoginBannerOptions {
+func expandClientLoginBannerOptions(tfMap map[string]any) *awstypes.ClientLoginBannerOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -653,12 +690,12 @@ func expandClientLoginBannerOptions(tfMap map[string]interface{}) *awstypes.Clie
 	return apiObject
 }
 
-func flattenClientLoginBannerResponseOptions(apiObject *awstypes.ClientLoginBannerResponseOptions) map[string]interface{} {
+func flattenClientLoginBannerResponseOptions(apiObject *awstypes.ClientLoginBannerResponseOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BannerText; v != nil {
 		tfMap["banner_text"] = aws.ToString(v)
@@ -671,7 +708,7 @@ func flattenClientLoginBannerResponseOptions(apiObject *awstypes.ClientLoginBann
 	return tfMap
 }
 
-func expandConnectionLogOptions(tfMap map[string]interface{}) *awstypes.ConnectionLogOptions {
+func expandConnectionLogOptions(tfMap map[string]any) *awstypes.ConnectionLogOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -698,12 +735,12 @@ func expandConnectionLogOptions(tfMap map[string]interface{}) *awstypes.Connecti
 	return apiObject
 }
 
-func flattenConnectionLogResponseOptions(apiObject *awstypes.ConnectionLogResponseOptions) map[string]interface{} {
+func flattenConnectionLogResponseOptions(apiObject *awstypes.ConnectionLogResponseOptions) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.CloudwatchLogGroup; v != nil {
 		tfMap["cloudwatch_log_group"] = aws.ToString(v)
@@ -718,4 +755,36 @@ func flattenConnectionLogResponseOptions(apiObject *awstypes.ConnectionLogRespon
 	}
 
 	return tfMap
+}
+
+func expandClientRouteEnforcementOptions(tfMap map[string]any) *awstypes.ClientRouteEnforcementOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ClientRouteEnforcementOptions{}
+
+	if v, ok := tfMap["enforced"].(bool); ok {
+		apiObject.Enforced = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenClientRouteEnforcementOptions(apiObject *awstypes.ClientRouteEnforcementResponseOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.Enforced; v != nil {
+		tfMap["enforced"] = v
+	}
+
+	return tfMap
+}
+
+func clientVPNEndpointARN(ctx context.Context, c *conns.AWSClient, clientVPNEndpointID string) string {
+	return c.RegionalARN(ctx, names.EC2, "client-vpn-endpoint/"+clientVPNEndpointID)
 }

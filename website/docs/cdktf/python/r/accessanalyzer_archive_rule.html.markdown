@@ -47,8 +47,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `analyzer_name` - (Required) Analyzer name.
 * `filter` - (Required) Filter criteria for the archive rule. See [Filter](#filter) for more details.
 * `rule_name` - (Required) Rule name.
@@ -94,4 +95,4 @@ Using `terraform import`, import AccessAnalyzer ArchiveRule using the `analyzer_
 % terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6c3a5ffb045f96a752c714c3e446067414c5c96251a4373be0b926978dc5643a -->
+<!-- cache-key: cdktf-0.20.8 input-c77620a5d28ca89b026b70785648f355942dd3687d273a07273452ee0b4832ac -->

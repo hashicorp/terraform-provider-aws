@@ -15,5 +15,20 @@ var (
 	ResourceTapePool              = resourceTapePool
 	ResourceUploadBuffer          = resourceUploadBuffer
 
-	CacheParseResourceID = cacheParseResourceID
+	FindCacheByTwoPartKey                = findCacheByTwoPartKey
+	FindCachediSCSIVolumeByARN           = findCachediSCSIVolumeByARN
+	FindFileSystemAssociationByARN       = findFileSystemAssociationByARN
+	FindGatewayByARN                     = findGatewayByARN
+	FindGatewayInfoByARN                 = findGatewayInfoByARN
+	FindNFSFileShareByARN                = findNFSFileShareByARN
+	FindSMBFileShareByARN                = findSMBFileShareByARN
+	FindStorediSCSIVolumeByARN           = findStorediSCSIVolumeByARN
+	FindTapePoolByARN                    = findTapePoolByARN
+	FindUploadBufferDiskIDByTwoPartKey   = findUploadBufferDiskIDByTwoPartKey
+	FindWorkingStorageDiskIDByTwoPartKey = findWorkingStorageDiskIDByTwoPartKey
+
+	CacheParseResourceID                      = cacheParseResourceID
+	ParseVolumeGatewayARNAndTargetNameFromARN = parseVolumeGatewayARNAndTargetNameFromARN
+	UploadBufferParseResourceID               = uploadBufferParseResourceID
+	WorkingStorageParseResourceID             = workingStorageParseResourceID
 )

@@ -62,12 +62,14 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
 * `option_group_description` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skip_destroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `option` Block
@@ -85,8 +87,8 @@ The `option` blocks support the following arguments:
 
 The `option_settings` blocks support the following arguments:
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 

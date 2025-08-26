@@ -1,0 +1,3 @@
+```release-note:bug
+ephemeral/aws_secrets_manager_random_password: Change `exclude_characters` from `Bool` to `String`
+```

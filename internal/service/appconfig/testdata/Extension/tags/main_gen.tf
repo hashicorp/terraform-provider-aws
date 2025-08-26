@@ -16,7 +16,7 @@ resource "aws_appconfig_extension" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name =var.rName
+  name = var.rName
 }
 
 data "aws_iam_policy_document" "test" {

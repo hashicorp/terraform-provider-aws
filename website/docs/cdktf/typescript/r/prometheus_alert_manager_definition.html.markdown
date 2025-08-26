@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workspaceId` - (Required) ID of the prometheus workspace the alert manager definition should be linked to
 * `definition` - (Required) the alert manager definition that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-alert-manager.html).
 
@@ -84,4 +85,4 @@ Using `terraform import`, import the prometheus alert manager definition using t
 % terraform import aws_prometheus_alert_manager_definition.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6a4a52d7d4acb917f5c7ab057a46d8d09f6db1143f23bbfd0bbd195ab2a7b439 -->
+<!-- cache-key: cdktf-0.20.8 input-e908ee073d9dc2374095a4720feb3b9f35ff0ecf77f7d2aabf597dde002238b8 -->

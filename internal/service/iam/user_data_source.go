@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_iam_user", name="User")
 // @Tags
+// @Testing(tagsIdentifierAttribute="user_name", tagsResourceType="User")
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
@@ -49,7 +50,7 @@ func dataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

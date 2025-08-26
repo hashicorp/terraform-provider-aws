@@ -12,7 +12,7 @@ Retrieves information about a Service Discovery private or public DNS namespace.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_service_discovery_dns_namespace" "test" {
   name = "example.terraform.local"
   type = "DNS_PRIVATE"
@@ -21,6 +21,9 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the namespace.
 * `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 

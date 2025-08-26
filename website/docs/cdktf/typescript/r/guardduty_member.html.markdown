@@ -52,6 +52,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Required) AWS account ID for member account.
 * `detectorId` - (Required) The detector ID of the GuardDuty account where you want to create member accounts.
 * `email` - (Required) Email address for member account.
@@ -63,7 +64,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the GuardDuty member
 * `relationshipStatus` - The status of the relationship between the member account and its primary account. More information can be found in [Amazon GuardDuty API Reference](https://docs.aws.amazon.com/guardduty/latest/ug/get-members.html).
 
 ## Timeouts
@@ -105,4 +105,4 @@ Using `terraform import`, import GuardDuty members using the primary GuardDuty d
 % terraform import aws_guardduty_member.MyMember 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8c795e9bdb95e2477dec1e7c539b60d6a51b31c90c42c663ecd2ece13c210023 -->
+<!-- cache-key: cdktf-0.20.8 input-c5e336d57f5bf72822b3e2253d69356130f927f1f97be4373acd113750a9d9aa -->

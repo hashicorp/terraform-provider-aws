@@ -74,7 +74,7 @@ func testAccCheckPackageAssociationExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
@@ -89,7 +89,7 @@ func testAccCheckPackageAssociationDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 

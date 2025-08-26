@@ -4,140 +4,178 @@ package route53resolver
 
 import (
 	"context"
+	"unique"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/vcr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
 
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
+	return []*inttypes.ServicePackageFrameworkDataSource{}
 }
 
-func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
+	return []*inttypes.ServicePackageFrameworkResource{}
 }
 
-func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
+	return []*inttypes.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceEndpoint,
+			Factory:  dataSourceEndpoint,
 			TypeName: "aws_route53_resolver_endpoint",
+			Name:     "Endpoint",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceFirewallConfig,
+			Factory:  dataSourceFirewallConfig,
 			TypeName: "aws_route53_resolver_firewall_config",
+			Name:     "Firewall Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceFirewallDomainList,
+			Factory:  dataSourceFirewallDomainList,
 			TypeName: "aws_route53_resolver_firewall_domain_list",
+			Name:     "Firewall Domain List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceFirewallRuleGroup,
+			Factory:  dataSourceFirewallRuleGroup,
 			TypeName: "aws_route53_resolver_firewall_rule_group",
+			Name:     "Firewall Rule Group",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceFirewallRuleGroupAssociation,
+			Factory:  dataSourceFirewallRuleGroupAssociation,
 			TypeName: "aws_route53_resolver_firewall_rule_group_association",
+			Name:     "Firewall Rule Group Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceResolverFirewallRules,
+			Factory:  dataSourceResolverFirewallRules,
 			TypeName: "aws_route53_resolver_firewall_rules",
+			Name:     "Firewall Rules",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceQueryLogConfig,
+			Factory:  dataSourceQueryLogConfig,
 			TypeName: "aws_route53_resolver_query_log_config",
+			Name:     "Query Log Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceRule,
+			Factory:  dataSourceRule,
 			TypeName: "aws_route53_resolver_rule",
+			Name:     "Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  DataSourceRules,
+			Factory:  dataSourceRules,
 			TypeName: "aws_route53_resolver_rules",
+			Name:     "Rules",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
 
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
+func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
+	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConfig,
+			Factory:  resourceConfig,
 			TypeName: "aws_route53_resolver_config",
+			Name:     "Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceDNSSECConfig,
+			Factory:  resourceDNSSECConfig,
 			TypeName: "aws_route53_resolver_dnssec_config",
+			Name:     "DNSSEC Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceEndpoint,
+			Factory:  resourceEndpoint,
 			TypeName: "aws_route53_resolver_endpoint",
 			Name:     "Endpoint",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceFirewallConfig,
+			Factory:  resourceFirewallConfig,
 			TypeName: "aws_route53_resolver_firewall_config",
+			Name:     "Firewall Config",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceFirewallDomainList,
+			Factory:  resourceFirewallDomainList,
 			TypeName: "aws_route53_resolver_firewall_domain_list",
 			Name:     "Firewall Domain List",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceFirewallRule,
+			Factory:  resourceFirewallRule,
 			TypeName: "aws_route53_resolver_firewall_rule",
+			Name:     "Firewall Rule",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceFirewallRuleGroup,
+			Factory:  resourceFirewallRuleGroup,
 			TypeName: "aws_route53_resolver_firewall_rule_group",
 			Name:     "Firewall Rule Group",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceFirewallRuleGroupAssociation,
+			Factory:  resourceFirewallRuleGroupAssociation,
 			TypeName: "aws_route53_resolver_firewall_rule_group_association",
-			Name:     "Rule Group Association",
-			Tags: &types.ServicePackageResourceTags{
+			Name:     "Firewall Rule Group Association",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceQueryLogConfig,
+			Factory:  resourceQueryLogConfig,
 			TypeName: "aws_route53_resolver_query_log_config",
 			Name:     "Query Log Config",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceQueryLogConfigAssociation,
+			Factory:  resourceQueryLogConfigAssociation,
 			TypeName: "aws_route53_resolver_query_log_config_association",
+			Name:     "Query Log Config Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceRule,
+			Factory:  resourceRule,
 			TypeName: "aws_route53_resolver_rule",
 			Name:     "Rule",
-			Tags: &types.ServicePackageResourceTags{
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
-			},
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceRuleAssociation,
+			Factory:  resourceRuleAssociation,
 			TypeName: "aws_route53_resolver_rule_association",
+			Name:     "Rule Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
 }
@@ -146,22 +184,50 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Route53Resolver
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*route53resolver_sdkv1.Route53Resolver, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53resolver.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	optFns := []func(*route53resolver.Options){
+		route53resolver.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *route53resolver.Options) {
+			if region := config[names.AttrRegion].(string); o.Region != region {
+				tflog.Info(ctx, "overriding provider-configured AWS API region", map[string]any{
+					"service":         p.ServicePackageName(),
+					"original_region": o.Region,
+					"override_region": region,
+				})
+				o.Region = region
+			}
+		},
+		func(o *route53resolver.Options) {
+			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
+				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+			}
+		},
+		withExtraOptions(ctx, p, config),
 	}
 
-	return route53resolver_sdkv1.New(sess.Copy(&cfg)), nil
+	return route53resolver.NewFromConfig(cfg, optFns...), nil
+}
+
+// withExtraOptions returns a functional option that allows this service package to specify extra API client options.
+// This option is always called after any generated options.
+func withExtraOptions(ctx context.Context, sp conns.ServicePackage, config map[string]any) func(*route53resolver.Options) {
+	if v, ok := sp.(interface {
+		withExtraOptions(context.Context, map[string]any) []func(*route53resolver.Options)
+	}); ok {
+		optFns := v.withExtraOptions(ctx, config)
+
+		return func(o *route53resolver.Options) {
+			for _, optFn := range optFns {
+				optFn(o)
+			}
+		}
+	}
+
+	return func(*route53resolver.Options) {}
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

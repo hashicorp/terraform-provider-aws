@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `budgetName` - (Required) Budget name.
 * `resourceId` - (Required) Resource identifier.
 
@@ -92,4 +93,4 @@ Using `terraform import`, import `aws_servicecatalog_budget_resource_association
 % terraform import aws_servicecatalog_budget_resource_association.example budget-pjtvyakdlyo3m:prod-dnigbtea24ste
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a2e52fd530130cd91bdd5732dbafc57e0d37162974732ff3d849486e557d12fa -->
+<!-- cache-key: cdktf-0.20.8 input-75b92ba952b550b5a09e346d3a5a3399df3c0b9f38bb7ea3d1cc9d4fad2cf1bc -->

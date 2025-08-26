@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appMonitorName` - (Required) The name of the CloudWatch RUM app monitor that will send the metrics.
 * `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `CloudWatch` and `Evidently`. If you specify `Evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.
 * `destinationArn` - (Optional) Use this parameter only if Destination is Evidently. This parameter specifies the ARN of the Evidently experiment that will receive the extended metrics.
@@ -78,4 +79,4 @@ Using `terraform import`, import Cloudwatch RUM Metrics Destination using the `i
 % terraform import aws_rum_metrics_destination.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b0a8bc87eed073c64dab3eea6177045d7d17087af1a9092e3e8b592be02eb910 -->
+<!-- cache-key: cdktf-0.20.8 input-a440bb2ff1cd0f243c24d636fdc5de6ed3419dabd5cf39071e9867681622c05f -->

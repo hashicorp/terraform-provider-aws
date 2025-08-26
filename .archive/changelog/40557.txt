@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_kms_custom_key_store: Add support for external key stores
+```
+```release-note:note
+resource/aws_kms_custom_key_store: We cannot acceptance test the support for external key stores added in this release. The impementation is best effort and we ask for community help in testing.
+```

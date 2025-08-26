@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_apigatewayv2_route: Fix retry handling of `ConflictException` error responses
+```
+```release-note:note
+provider: The retry handling in the `apigatewayv2` client has been updated to more extensively match `ConflictException` error responses. This change should be transparent to users, but if any unexpected changes in behavior with `apigatewayv2` resources occur following an upgrade to this release, please open a bug report.
+```

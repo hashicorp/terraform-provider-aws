@@ -36,7 +36,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The CIDR location ID.
+* `id` - (**Deprecated**) The ID of the CIDR collection concatenated with the name of the CIDR location.
 
 ## Import
 

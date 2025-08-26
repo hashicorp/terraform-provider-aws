@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `cidr_allow_list` - (Required) The IP addresses allowed to make calls, in CIDR format.
 * `calling_regions` - (Required) The countries to which calls are allowed, in ISO 3166-1 alpha-2 format.
@@ -85,4 +86,4 @@ Using `terraform import`, import Chime Voice Connector Termination using the `vo
 % terraform import aws_chime_voice_connector_termination.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9b91d0804f73c2e363dbd51b5e4d5f6a556c88d12ee33e47aece98cc8ef64a64 -->
+<!-- cache-key: cdktf-0.20.8 input-660ae9cccfa67c67234c60ad386fae4241e2048834e701aa710703b1ccd65a4e -->

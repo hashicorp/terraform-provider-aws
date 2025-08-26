@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -30,7 +31,7 @@ func testAccAppAuthorizationConnection_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -44,8 +45,8 @@ func testAccAppAuthorizationConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "app"),
 					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", appBudleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "app_authorization_arn", appAuthorization, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "auth_request.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auth_request.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", tenantID),
 				),
@@ -65,7 +66,7 @@ func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),

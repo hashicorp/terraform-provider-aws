@@ -172,6 +172,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
 * `size` - (Optional) (For `SimpleAD` and `ADConnector` types) The size of the directory (`Small` or `Large` are accepted values). `Large` by default.
@@ -252,4 +253,4 @@ Using `terraform import`, import DirectoryService directories using the director
 % terraform import aws_directory_service_directory.sample d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-49c24dcd4cf67951f7f5fa46955d3c67849291a777e1963a25110967098be86d -->
+<!-- cache-key: cdktf-0.20.8 input-c2aecef0a364e7156d19cfe8a226a33940e1e3c04ceae1a86c7841b7e7b69f47 -->

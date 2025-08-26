@@ -5,28 +5,27 @@ package licensemanager
 
 import (
 	"context"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResGrant = "Grant"
-)
-
-// @SDKResource("aws_licensemanager_grant")
-func ResourceGrant() *schema.Resource {
+// @SDKResource("aws_licensemanager_grant", name="Grant")
+func resourceGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGrantCreate,
 		ReadWithoutTimeout:   resourceGrantRead,
@@ -42,10 +41,10 @@ func ResourceGrant() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: len(licensemanager.AllowedOperation_Values()),
+				MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(licensemanager.AllowedOperation_Values(), true),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
 				},
 				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 			},
@@ -97,129 +96,130 @@ func ResourceGrant() *schema.Resource {
 	}
 }
 
-func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
-
-	in := &licensemanager.CreateGrantInput{
-		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
+	name := d.Get(names.AttrName).(string)
+	input := &licensemanager.CreateGrantInput{
+		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
 		ClientToken:       aws.String(id.UniqueId()),
-		GrantName:         aws.String(d.Get(names.AttrName).(string)),
-		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region),
+		GrantName:         aws.String(name),
+		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
-		Principals:        aws.StringSlice([]string{d.Get(names.AttrPrincipal).(string)}),
+		Principals:        []string{d.Get(names.AttrPrincipal).(string)},
 	}
 
-	out, err := conn.CreateGrantWithContext(ctx, in)
+	output, err := conn.CreateGrant(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionCreating, ResGrant, d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating License Manager Grant (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.GrantArn))
+	d.SetId(aws.ToString(output.GrantArn))
 
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
-func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
-
-	out, err := FindGrantByARN(ctx, conn, d.Id())
+	grant, err := findGrantByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
+		log.Printf("[WARN] License Manager Grant %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Grant (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allowed_operations", out.GrantedOperations)
-	d.Set(names.AttrARN, out.GrantArn)
-	d.Set("home_region", out.HomeRegion)
-	d.Set("license_arn", out.LicenseArn)
-	d.Set(names.AttrName, out.GrantName)
-	d.Set("parent_arn", out.ParentArn)
-	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
-	d.Set(names.AttrStatus, out.GrantStatus)
-	d.Set(names.AttrVersion, out.Version)
+	d.Set("allowed_operations", grant.GrantedOperations)
+	d.Set(names.AttrARN, grant.GrantArn)
+	d.Set("home_region", grant.HomeRegion)
+	d.Set("license_arn", grant.LicenseArn)
+	d.Set(names.AttrName, grant.GrantName)
+	d.Set("parent_arn", grant.ParentArn)
+	d.Set(names.AttrPrincipal, grant.GranteePrincipalArn)
+	d.Set(names.AttrStatus, grant.GrantStatus)
+	d.Set(names.AttrVersion, grant.Version)
 
 	return diags
 }
 
-func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
-
-	in := &licensemanager.CreateGrantVersionInput{
-		GrantArn:    aws.String(d.Id()),
+	input := &licensemanager.CreateGrantVersionInput{
 		ClientToken: aws.String(id.UniqueId()),
+		GrantArn:    aws.String(d.Id()),
 	}
 
 	if d.HasChange("allowed_operations") {
-		in.AllowedOperations = aws.StringSlice(d.Get("allowed_operations").([]string))
+		input.AllowedOperations = flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set))
 	}
 
 	if d.HasChange(names.AttrName) {
-		in.GrantName = aws.String(d.Get(names.AttrName).(string))
+		input.GrantName = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	_, err := conn.CreateGrantVersionWithContext(ctx, in)
+	_, err := conn.CreateGrantVersion(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionUpdating, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating License Manager Grant (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceGrantRead(ctx, d, meta)...)
 }
 
-func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
-
-	out, err := FindGrantByARN(ctx, conn, d.Id())
-
-	if tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.LicenseManager, create.ErrActionReading, ResGrant, d.Id())
-		return diags
-	}
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionReading, ResGrant, d.Id(), err)
-	}
-
-	in := &licensemanager.DeleteGrantInput{
+	_, err := conn.DeleteGrant(ctx, &licensemanager.DeleteGrantInput{
 		GrantArn: aws.String(d.Id()),
-		Version:  out.Version,
-	}
-
-	_, err = conn.DeleteGrantWithContext(ctx, in)
+		Version:  aws.String(names.AttrVersion),
+	})
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.LicenseManager, create.ErrActionDeleting, ResGrant, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting License Manager Grant (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, arn string) (*licensemanager.Grant, error) {
-	in := &licensemanager.GetGrantInput{
+func findGrantByARN(ctx context.Context, conn *licensemanager.Client, arn string) (*awstypes.Grant, error) {
+	input := &licensemanager.GetGrantInput{
 		GrantArn: aws.String(arn),
 	}
 
-	out, err := conn.GetGrantWithContext(ctx, in)
+	output, err := findGrant(ctx, conn, input)
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeResourceNotFoundException) {
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.GrantStatus; status == awstypes.GrantStatusDeleted || status == awstypes.GrantStatusRejected {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGrant(ctx context.Context, conn *licensemanager.Client, input *licensemanager.GetGrantInput) (*awstypes.Grant, error) {
+	output, err := conn.GetGrant(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -227,23 +227,9 @@ func FindGrantByARN(ctx context.Context, conn *licensemanager.LicenseManager, ar
 		return nil, err
 	}
 
-	if out == nil || out.Grant == nil || aws.StringValue(out.Grant.GrantStatus) == licensemanager.GrantStatusDeleted || aws.StringValue(out.Grant.GrantStatus) == licensemanager.GrantStatusRejected {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Grant == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Grant, nil
-}
-
-func expandAllowedOperations(rawOperations []interface{}) []string {
-	if rawOperations == nil {
-		return nil
-	}
-
-	operations := make([]string, 0, 8)
-
-	for _, item := range rawOperations {
-		operations = append(operations, item.(string))
-	}
-
-	return operations
+	return output.Grant, nil
 }

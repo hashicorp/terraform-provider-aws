@@ -51,24 +51,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_block` - (Optional) Cidr block of the desired VPC.
-
 * `dhcp_options_id` - (Optional) DHCP options id of the desired VPC.
-
 * `default` - (Optional) Boolean constraint on whether the desired VPC is
   the default VPC for the region.
-
 * `filter` - (Optional) Custom filter block as described below.
-
 * `id` - (Optional) ID of the specific VPC to retrieve.
-
 * `state` - (Optional) Current state of the desired VPC.
   Can be either `"pending"` or `"available"`.
-
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired VPC.
 
@@ -77,7 +70,6 @@ which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
@@ -113,4 +105,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-8f39db2d83eed4fb37599ca81ea8bafc32c666cbedeb2b7236ecabe2e981a42e -->
+<!-- cache-key: cdktf-0.20.8 input-a149abcdf6c93ceaf1a84563507c805586fc344d80b2fd597e9a8f4887a29342 -->

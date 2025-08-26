@@ -68,18 +68,17 @@ func ResourceSipMediaApplication() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	createInput := &chimesdkvoice.CreateSipMediaApplicationInput{
 		AwsRegion: aws.String(d.Get("aws_region").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Endpoints: expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
+		Endpoints: expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]any)),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -92,7 +91,7 @@ func resourceSipMediaApplicationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSipMediaApplicationRead(ctx, d, meta)...)
 }
 
-func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -118,7 +117,7 @@ func resourceSipMediaApplicationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -126,7 +125,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		updateInput := &chimesdkvoice.UpdateSipMediaApplicationInput{
 			SipMediaApplicationId: aws.String(d.Id()),
 			Name:                  aws.String(d.Get(names.AttrName).(string)),
-			Endpoints:             expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]interface{})),
+			Endpoints:             expandSipMediaApplicationEndpoints(d.Get(names.AttrEndpoints).([]any)),
 		}
 
 		if _, err := conn.UpdateSipMediaApplication(ctx, updateInput); err != nil {
@@ -137,7 +136,7 @@ func resourceSipMediaApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceSipMediaApplicationRead(ctx, d, meta)...)
 }
 
-func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -156,10 +155,10 @@ func resourceSipMediaApplicationDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandSipMediaApplicationEndpoints(data []interface{}) []awstypes.SipMediaApplicationEndpoint {
+func expandSipMediaApplicationEndpoints(data []any) []awstypes.SipMediaApplicationEndpoint {
 	var sipMediaApplicationEndpoint []awstypes.SipMediaApplicationEndpoint
 
-	tfMap, ok := data[0].(map[string]interface{})
+	tfMap, ok := data[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -169,11 +168,11 @@ func expandSipMediaApplicationEndpoints(data []interface{}) []awstypes.SipMediaA
 	return sipMediaApplicationEndpoint
 }
 
-func flattenSipMediaApplicationEndpoints(apiObject []awstypes.SipMediaApplicationEndpoint) []interface{} {
-	var rawSipMediaApplicationEndpoints []interface{}
+func flattenSipMediaApplicationEndpoints(apiObject []awstypes.SipMediaApplicationEndpoint) []any {
+	var rawSipMediaApplicationEndpoints []any
 
 	for _, e := range apiObject {
-		rawEndpoint := map[string]interface{}{
+		rawEndpoint := map[string]any{
 			"lambda_arn": aws.ToString(e.LambdaArn),
 		}
 		rawSipMediaApplicationEndpoints = append(rawSipMediaApplicationEndpoints, rawEndpoint)

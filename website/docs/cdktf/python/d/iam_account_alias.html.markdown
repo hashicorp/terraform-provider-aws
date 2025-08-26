@@ -29,14 +29,14 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         current = DataAwsIamAccountAlias(self, "current")
-        TerraformOutput(self, "account_id",
+        TerraformOutput(self, "account_alias",
             value=current.account_alias
         )
 ```
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source does not support any arguments.
 
 ## Attribute Reference
 
@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `account_alias` - Alias associated with the AWS account.
 * `id` - Alias associated with the AWS account.
 
-<!-- cache-key: cdktf-0.20.1 input-efa6f2304fc0569176238ebf28fc4c9ec839c206f798e565d2b074c39fb9dfb0 -->
+<!-- cache-key: cdktf-0.20.8 input-9cc998867b1932988436e31b65bf97ce022fd2a8fcc9bef4a6713334bd2e9310 -->

@@ -74,7 +74,7 @@ func resourcePublicKey() *schema.Resource {
 	}
 }
 
-func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -111,7 +111,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -138,7 +138,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -170,15 +170,16 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Public Key: %s", d.Id())
-	_, err := conn.DeletePublicKey(ctx, &cloudfront.DeletePublicKeyInput{
+	input := cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-	})
+	}
+	_, err := conn.DeletePublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return diags
@@ -216,7 +217,7 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	return output, nil
 }
 
-func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+func validPublicKeyName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -229,7 +230,7 @@ func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validPublicKeyNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

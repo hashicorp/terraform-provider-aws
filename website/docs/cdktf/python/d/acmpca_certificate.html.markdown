@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the certificate issued by the private certificate authority.
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.
 
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `certificate` - PEM-encoded certificate value.
 * `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
-<!-- cache-key: cdktf-0.20.1 input-f7804d061124fc6489bcc7d11d155c5a561ad1fe6aac3da7e0bdce8a5bdbf606 -->
+<!-- cache-key: cdktf-0.20.8 input-75e76535a182fc7ae6052f2f7c3982ee1921f82ac250dd4d8b98e12d63fc6d44 -->

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,19 +27,17 @@ import (
 )
 
 // @SDKResource("aws_ecs_capacity_provider", name="Capacity Provider")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @ArnFormat("capacity-provider/{name}")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
 		ReadWithoutTimeout:   resourceCapacityProviderRead,
 		UpdateWithoutTimeout: resourceCapacityProviderUpdate,
 		DeleteWithoutTimeout: resourceCapacityProviderDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceCapacityProviderImport,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -125,10 +122,10 @@ func resourceCapacityProvider() *schema.Resource {
 	}
 }
 
-func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := ecs.CreateCapacityProviderInput{
@@ -157,7 +154,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceCapacityProviderRead(ctx, d, meta)...)
 		}
 
@@ -169,7 +166,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceCapacityProviderRead(ctx, d, meta)...)
 }
 
-func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -196,7 +193,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -209,7 +206,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 		const (
 			timeout = 10 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.UpdateInProgressException](ctx, timeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateCapacityProvider(ctx, input)
 		})
 
@@ -225,7 +222,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceCapacityProviderRead(ctx, d, meta)...)
 }
 
-func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
@@ -253,21 +250,8 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set(names.AttrName, d.Id())
-	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Service:   "ecs",
-		Resource:  "capacity-provider/" + d.Id(),
-	}.String())
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func partitionFromConn(conn *ecs.Client) string {
-	return names.PartitionForRegion(conn.Options().Region)
+	return names.PartitionForRegion(conn.Options().Region).ID()
 }
 
 func findCapacityProvider(ctx context.Context, conn *ecs.Client, input *ecs.DescribeCapacityProvidersInput) (*awstypes.CapacityProvider, error) {
@@ -330,7 +314,7 @@ func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn string
 }
 
 func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -346,7 +330,7 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.Client, arn string) r
 }
 
 func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -397,17 +381,17 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn stri
 	return nil, err
 }
 
-func expandAutoScalingGroupProviderCreate(configured interface{}) *awstypes.AutoScalingGroupProvider {
+func expandAutoScalingGroupProviderCreate(configured any) *awstypes.AutoScalingGroupProvider {
 	if configured == nil {
 		return nil
 	}
 
-	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
 	prov := awstypes.AutoScalingGroupProvider{}
-	p := configured.([]interface{})[0].(map[string]interface{})
+	p := configured.([]any)[0].(map[string]any)
 	arn := p["auto_scaling_group_arn"].(string)
 	prov.AutoScalingGroupArn = aws.String(arn)
 
@@ -424,17 +408,17 @@ func expandAutoScalingGroupProviderCreate(configured interface{}) *awstypes.Auto
 	return &prov
 }
 
-func expandAutoScalingGroupProviderUpdate(configured interface{}) *awstypes.AutoScalingGroupProviderUpdate {
+func expandAutoScalingGroupProviderUpdate(configured any) *awstypes.AutoScalingGroupProviderUpdate {
 	if configured == nil {
 		return nil
 	}
 
-	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
 	prov := awstypes.AutoScalingGroupProviderUpdate{}
-	p := configured.([]interface{})[0].(map[string]interface{})
+	p := configured.([]any)[0].(map[string]any)
 
 	if mtp := p["managed_draining"].(string); len(mtp) > 0 {
 		prov.ManagedDraining = awstypes.ManagedDraining(mtp)
@@ -449,16 +433,16 @@ func expandAutoScalingGroupProviderUpdate(configured interface{}) *awstypes.Auto
 	return &prov
 }
 
-func expandManagedScaling(configured interface{}) *awstypes.ManagedScaling {
+func expandManagedScaling(configured any) *awstypes.ManagedScaling {
 	if configured == nil {
 		return nil
 	}
 
-	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+	if len(configured.([]any)) == 0 {
 		return nil
 	}
 
-	tfMap := configured.([]interface{})[0].(map[string]interface{})
+	tfMap := configured.([]any)[0].(map[string]any)
 
 	managedScaling := awstypes.ManagedScaling{}
 
@@ -481,20 +465,20 @@ func expandManagedScaling(configured interface{}) *awstypes.ManagedScaling {
 	return &managedScaling
 }
 
-func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider) []map[string]interface{} {
+func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider) []map[string]any {
 	if provider == nil {
 		return nil
 	}
 
-	p := map[string]interface{}{
+	p := map[string]any{
 		"auto_scaling_group_arn":         aws.ToString(provider.AutoScalingGroupArn),
 		"managed_draining":               string(provider.ManagedDraining),
-		"managed_scaling":                []map[string]interface{}{},
+		"managed_scaling":                []map[string]any{},
 		"managed_termination_protection": string(provider.ManagedTerminationProtection),
 	}
 
 	if provider.ManagedScaling != nil {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"instance_warmup_period":    aws.ToInt32(provider.ManagedScaling.InstanceWarmupPeriod),
 			"maximum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MaximumScalingStepSize),
 			"minimum_scaling_step_size": aws.ToInt32(provider.ManagedScaling.MinimumScalingStepSize),
@@ -502,9 +486,9 @@ func flattenAutoScalingGroupProvider(provider *awstypes.AutoScalingGroupProvider
 			"target_capacity":           aws.ToInt32(provider.ManagedScaling.TargetCapacity),
 		}
 
-		p["managed_scaling"] = []map[string]interface{}{m}
+		p["managed_scaling"] = []map[string]any{m}
 	}
 
-	result := []map[string]interface{}{p}
+	result := []map[string]any{p}
 	return result
 }

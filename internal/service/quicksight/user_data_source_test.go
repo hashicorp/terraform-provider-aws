@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,22 +29,23 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccUserDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "custom_permissions_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEmail, acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultUserNamespace),
-					resource.TestCheckResourceAttr(dataSourceName, "identity_type", quicksight.IdentityTypeQuicksight),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
+					resource.TestCheckResourceAttr(dataSourceName, "identity_type", string(awstypes.IdentityTypeQuicksight)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_role", quicksight.UserRoleReader),
+					resource.TestCheckResourceAttr(dataSourceName, "user_role", string(awstypes.UserRoleReader)),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserDataSourceConfig(rName string) string {
+func testAccUserDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_user" "test" {
   user_name     = %[1]q

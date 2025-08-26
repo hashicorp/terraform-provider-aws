@@ -46,6 +46,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enabled` - (Optional) Whether the user in the user pool is enabled.
 * `firstName` - (Optional) First name, or given name, of the user.
 * `lastName` - (Optional) Last name, or surname, of the user.
@@ -92,4 +93,4 @@ Using `terraform import`, import `aws_appstream_user` using the `userName` and `
 % terraform import aws_appstream_user.example UserName/AuthenticationType
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ae35608b7c30b00bd83bdb13090e3e240414ae668bedb32d7e62c4aff37c502 -->
+<!-- cache-key: cdktf-0.20.8 input-821460d64d163298478bc7133f151045b255c560dab96ee081bb00702c49b864 -->

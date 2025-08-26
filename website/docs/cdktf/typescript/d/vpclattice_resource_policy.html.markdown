@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) Resource ARN of the resource for which a policy is retrieved.
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `policy` - JSON-encoded string representation of the applied resource policy.
 
-<!-- cache-key: cdktf-0.20.1 input-8bbfef254a190e7f80aa5a7e593ea739d64afa50ba608c823c8b66809a5ca7a5 -->
+<!-- cache-key: cdktf-0.20.8 input-060474e8603ece553da500f4fb750fb21b95b971c1c0154bfaae82403adbc470 -->

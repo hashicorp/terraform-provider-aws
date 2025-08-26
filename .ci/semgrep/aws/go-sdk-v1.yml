@@ -1,0 +1,35 @@
+rules:
+  - id: aws-sdk-go-imports
+    languages: [go]
+    message: Do not use AWS SDK for Go v1
+    paths:
+      include:
+        - internal/
+      exclude:
+        - "internal/service/simpledb/*.go"
+        - "internal/conns/awsclient.go"
+    patterns:
+      - pattern: |
+          import ("$X")
+      - metavariable-regex:
+          metavariable: "$X"
+          regex: '^github.com/aws/aws-sdk-go/.+$'
+      - focus-metavariable: $X
+    severity: WARNING
+
+  - id: aws-sdk-go-base-awsv1shim-imports
+    languages: [go]
+    message: Do not use aws-sdk-go-base AWS SDK for Go v1 shims
+    paths:
+      include:
+        - internal/
+      exclude:
+        - "internal/service/simpledb/*.go"
+        - "internal/conns/config.go"
+    patterns:
+      - pattern: |
+          import ("$X")
+      - metavariable-regex:
+          metavariable: "$X"
+          regex: '^github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/?.*$'
+    severity: WARNING

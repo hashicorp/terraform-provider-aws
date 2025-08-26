@@ -36,11 +36,11 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -53,11 +53,11 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -81,11 +81,11 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "resource_group_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "applicationinsights", fmt.Sprintf("application/resource-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

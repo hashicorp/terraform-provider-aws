@@ -318,6 +318,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Rekognition"
     severity: WARNING
+  - id: resiliencehub-in-func-name
+    languages:
+      - go
+    message: Do not use "ResilienceHub" in func name inside resiliencehub package
+    paths:
+      include:
+        - internal/service/resiliencehub
+      exclude:
+        - internal/service/resiliencehub/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResilienceHub"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: resiliencehub-in-test-name
+    languages:
+      - go
+    message: Include "ResilienceHub" in test name
+    paths:
+      include:
+        - internal/service/resiliencehub/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccResilienceHub"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: resiliencehub-in-const-name
+    languages:
+      - go
+    message: Do not use "ResilienceHub" in const name inside resiliencehub package
+    paths:
+      include:
+        - internal/service/resiliencehub
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResilienceHub"
+    severity: WARNING
+  - id: resiliencehub-in-var-name
+    languages:
+      - go
+    message: Do not use "ResilienceHub" in var name inside resiliencehub package
+    paths:
+      include:
+        - internal/service/resiliencehub
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ResilienceHub"
+    severity: WARNING
   - id: resourceexplorer2-in-func-name
     languages:
       - go
@@ -1264,6 +1325,128 @@ rules:
           patterns:
             - pattern-regex: "(?i)S3Outposts"
     severity: WARNING
+  - id: s3tables-in-func-name
+    languages:
+      - go
+    message: Do not use "S3Tables" in func name inside s3tables package
+    paths:
+      include:
+        - internal/service/s3tables
+      exclude:
+        - internal/service/s3tables/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Tables"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: s3tables-in-test-name
+    languages:
+      - go
+    message: Include "S3Tables" in test name
+    paths:
+      include:
+        - internal/service/s3tables/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccS3Tables"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: s3tables-in-const-name
+    languages:
+      - go
+    message: Do not use "S3Tables" in const name inside s3tables package
+    paths:
+      include:
+        - internal/service/s3tables
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Tables"
+    severity: WARNING
+  - id: s3tables-in-var-name
+    languages:
+      - go
+    message: Do not use "S3Tables" in var name inside s3tables package
+    paths:
+      include:
+        - internal/service/s3tables
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Tables"
+    severity: WARNING
+  - id: s3vectors-in-func-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in func name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+      exclude:
+        - internal/service/s3vectors/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: s3vectors-in-test-name
+    languages:
+      - go
+    message: Include "S3Vectors" in test name
+    paths:
+      include:
+        - internal/service/s3vectors/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccS3Vectors"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: s3vectors-in-const-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in const name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+    severity: WARNING
+  - id: s3vectors-in-var-name
+    languages:
+      - go
+    message: Do not use "S3Vectors" in var name inside s3vectors package
+    paths:
+      include:
+        - internal/service/s3vectors
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)S3Vectors"
+    severity: WARNING
   - id: sagemaker-in-func-name
     languages:
       - go
@@ -1446,52 +1629,6 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Schemas"
-    severity: WARNING
-  - id: sdb-in-func-name
-    languages:
-      - go
-    message: Do not use "sdb" in func name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-      exclude:
-        - internal/service/simpledb/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)sdb"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: sdb-in-const-name
-    languages:
-      - go
-    message: Do not use "sdb" in const name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)sdb"
-    severity: WARNING
-  - id: sdb-in-var-name
-    languages:
-      - go
-    message: Do not use "sdb" in var name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)sdb"
     severity: WARNING
   - id: secretsmanager-in-func-name
     languages:
@@ -2378,67 +2515,6 @@ rules:
           patterns:
             - pattern-regex: "(?i)Signer"
     severity: WARNING
-  - id: simpledb-in-func-name
-    languages:
-      - go
-    message: Do not use "SimpleDB" in func name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-      exclude:
-        - internal/service/simpledb/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)SimpleDB"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: simpledb-in-test-name
-    languages:
-      - go
-    message: Include "SimpleDB" in test name
-    paths:
-      include:
-        - internal/service/simpledb/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccSimpleDB"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: simpledb-in-const-name
-    languages:
-      - go
-    message: Do not use "SimpleDB" in const name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)SimpleDB"
-    severity: WARNING
-  - id: simpledb-in-var-name
-    languages:
-      - go
-    message: Do not use "SimpleDB" in var name inside simpledb package
-    paths:
-      include:
-        - internal/service/simpledb
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)SimpleDB"
-    severity: WARNING
   - id: sns-in-func-name
     languages:
       - go
@@ -2743,6 +2819,67 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)SSMIncidents"
+    severity: WARNING
+  - id: ssmquicksetup-in-func-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in func name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+      exclude:
+        - internal/service/ssmquicksetup/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: ssmquicksetup-in-test-name
+    languages:
+      - go
+    message: Include "SSMQuickSetup" in test name
+    paths:
+      include:
+        - internal/service/ssmquicksetup/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccSSMQuickSetup"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: ssmquicksetup-in-const-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in const name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
+    severity: WARNING
+  - id: ssmquicksetup-in-var-name
+    languages:
+      - go
+    message: Do not use "SSMQuickSetup" in var name inside ssmquicksetup package
+    paths:
+      include:
+        - internal/service/ssmquicksetup
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)SSMQuickSetup"
     severity: WARNING
   - id: ssmsap-in-func-name
     languages:
@@ -3217,6 +3354,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Synthetics"
     severity: WARNING
+  - id: taxsettings-in-func-name
+    languages:
+      - go
+    message: Do not use "TaxSettings" in func name inside taxsettings package
+    paths:
+      include:
+        - internal/service/taxsettings
+      exclude:
+        - internal/service/taxsettings/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TaxSettings"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: taxsettings-in-test-name
+    languages:
+      - go
+    message: Include "TaxSettings" in test name
+    paths:
+      include:
+        - internal/service/taxsettings/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccTaxSettings"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: taxsettings-in-const-name
+    languages:
+      - go
+    message: Do not use "TaxSettings" in const name inside taxsettings package
+    paths:
+      include:
+        - internal/service/taxsettings
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TaxSettings"
+    severity: WARNING
+  - id: taxsettings-in-var-name
+    languages:
+      - go
+    message: Do not use "TaxSettings" in var name inside taxsettings package
+    paths:
+      include:
+        - internal/service/taxsettings
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TaxSettings"
+    severity: WARNING
   - id: timestreaminfluxdb-in-func-name
     languages:
       - go
@@ -3277,6 +3475,67 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)TimestreamInfluxDB"
+    severity: WARNING
+  - id: timestreamquery-in-func-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in func name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+      exclude:
+        - internal/service/timestreamquery/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: timestreamquery-in-test-name
+    languages:
+      - go
+    message: Include "TimestreamQuery" in test name
+    paths:
+      include:
+        - internal/service/timestreamquery/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccTimestreamQuery"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: timestreamquery-in-const-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in const name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
+    severity: WARNING
+  - id: timestreamquery-in-var-name
+    languages:
+      - go
+    message: Do not use "TimestreamQuery" in var name inside timestreamquery package
+    paths:
+      include:
+        - internal/service/timestreamquery
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)TimestreamQuery"
     severity: WARNING
   - id: timestreamwrite-in-func-name
     languages:
@@ -3962,67 +4221,6 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)WellArchitected"
-    severity: WARNING
-  - id: worklink-in-func-name
-    languages:
-      - go
-    message: Do not use "WorkLink" in func name inside worklink package
-    paths:
-      include:
-        - internal/service/worklink
-      exclude:
-        - internal/service/worklink/list_pages_gen.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)WorkLink"
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: worklink-in-test-name
-    languages:
-      - go
-    message: Include "WorkLink" in test name
-    paths:
-      include:
-        - internal/service/worklink/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccWorkLink"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: worklink-in-const-name
-    languages:
-      - go
-    message: Do not use "WorkLink" in const name inside worklink package
-    paths:
-      include:
-        - internal/service/worklink
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)WorkLink"
-    severity: WARNING
-  - id: worklink-in-var-name
-    languages:
-      - go
-    message: Do not use "WorkLink" in var name inside worklink package
-    paths:
-      include:
-        - internal/service/worklink
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)WorkLink"
     severity: WARNING
   - id: workspaces-in-func-name
     languages:

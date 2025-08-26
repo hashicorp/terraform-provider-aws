@@ -14,28 +14,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Input")
-func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceInput{}, nil
+// @FrameworkDataSource("aws_medialive_input", name="Input")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
+func newInputDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &inputDataSource{}, nil
 }
 
 const (
 	DSNameInput = "Input Data Source"
 )
 
-type dataSourceInput struct {
-	framework.DataSourceWithConfigure
+type inputDataSource struct {
+	framework.DataSourceWithModel[inputDataSourceModel]
 }
 
-func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_medialive_input"
-}
-
-func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *inputDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -43,10 +41,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
-			"destinations": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsDestination](ctx),
-				Computed:   true,
-			},
+			"destinations": framework.DataSourceComputedListOfObjectAttribute[dsDestination](ctx),
 			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
@@ -54,10 +49,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputClass](),
 				Computed:   true,
 			},
-			"input_devices": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputDevice](ctx),
-				Computed:   true,
-			},
+			"input_devices": framework.DataSourceComputedListOfObjectAttribute[dsInputDevice](ctx),
 			"input_partner_ids": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
@@ -66,10 +58,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.StringEnumType[awstypes.InputSourceType](),
 				Computed:   true,
 			},
-			"media_connect_flows": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMediaConnectFlow](ctx),
-				Computed:   true,
-			},
+			"media_connect_flows": framework.DataSourceComputedListOfObjectAttribute[dsMediaConnectFlow](ctx),
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
@@ -80,15 +69,12 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
-			"sources": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputSource](ctx),
-				Computed:   true,
-			},
+			"sources": framework.DataSourceComputedListOfObjectAttribute[dsInputSource](ctx),
 			names.AttrState: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
-			names.AttrTags: tags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,
@@ -97,16 +83,16 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 	}
 }
 
-func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *inputDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().MediaLiveClient(ctx)
 
-	var data dataSourceInputData
+	var data inputDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindInputByID(ctx, conn, data.ID.ValueString())
+	out, err := findInputByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MediaLive, create.ErrActionReading, DSNameInput, data.ID.String(), err),
@@ -121,12 +107,13 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceInputData struct {
+type inputDataSourceModel struct {
+	framework.WithRegionModel
 	ARN               types.String                                        `tfsdk:"arn"`
 	AttachedChannels  fwtypes.ListValueOf[types.String]                   `tfsdk:"attached_channels"`
 	Destinations      fwtypes.ListNestedObjectValueOf[dsDestination]      `tfsdk:"destinations"`
@@ -141,7 +128,7 @@ type dataSourceInputData struct {
 	SecurityGroups    fwtypes.ListValueOf[types.String]                   `tfsdk:"security_groups"`
 	Sources           fwtypes.ListNestedObjectValueOf[dsInputSource]      `tfsdk:"sources"`
 	State             fwtypes.StringEnum[awstypes.InputState]             `tfsdk:"state"`
-	Tags              types.Map                                           `tfsdk:"tags"`
+	Tags              tftags.Map                                          `tfsdk:"tags"`
 	Type              fwtypes.StringEnum[awstypes.InputType]              `tfsdk:"type"`
 }
 

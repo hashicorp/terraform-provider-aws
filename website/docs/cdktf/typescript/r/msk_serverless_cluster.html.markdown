@@ -55,6 +55,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clientAuthentication` - (Required) Specifies client authentication information for the serverless cluster. See below.
 * `clusterName` - (Required) The name of the serverless cluster.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -82,6 +83,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the serverless cluster.
+* `bootstrapBrokersSaslIam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `boot-abcdefg.c2.kafka-serverless.eu-central-1.amazonaws.com:9098`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `clusterUuid` - UUID of the serverless cluster, for use in IAM policies.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -124,4 +126,4 @@ Using `terraform import`, import MSK serverless clusters using the cluster `arn`
 % terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e874f0cb80a0744435c987dbba0dd6d2b31f5d0aeda927db3722774f9b044561 -->
+<!-- cache-key: cdktf-0.20.8 input-ca4f993aae88a8ba07107dfbce72c8bb6309e12f6bcd45153711313107c6d1e2 -->

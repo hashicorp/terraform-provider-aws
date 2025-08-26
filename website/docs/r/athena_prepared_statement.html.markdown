@@ -38,6 +38,7 @@ resource "aws_athena_prepared_statement" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the prepared statement. Maximum length of 256.
 * `workgroup` - (Required) The name of the workgroup to which the prepared statement belongs.
 * `query_statement` - (Required) The query string for the prepared statement.

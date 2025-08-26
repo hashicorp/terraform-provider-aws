@@ -74,6 +74,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - Description of the bot locale. Use this to help identify the bot locale in lists.
 * `voice_settings` - Amazon Polly voice ID that Amazon Lex uses for voice interaction with the user. See [`voice_settings`](#voice-settings).
 
@@ -122,4 +123,4 @@ Using `terraform import`, import Lex V2 Models Bot Locale using the `id`. For ex
 % terraform import aws_lexv2models_bot_locale.example en_US,abcd-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-52a787e5f74dce2092b63bd267846b6da565ed68558bf26ae03c42cb5ee7824e -->
+<!-- cache-key: cdktf-0.20.8 input-c9673609e909263ccddf502bb248a6d82b0f8ca8da74a4993cdbc3914bc28ff7 -->

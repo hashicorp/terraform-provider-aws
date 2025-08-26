@@ -64,7 +64,7 @@ func resourceSSHKey() *schema.Resource {
 	}
 }
 
-func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -87,7 +87,7 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSSHKeyRead(ctx, d, meta)...)
 }
 
-func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
@@ -126,11 +126,12 @@ func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer SSH Key: %s", d.Id())
-	_, err = conn.DeleteSshPublicKey(ctx, &transfer.DeleteSshPublicKeyInput{
+	input := transfer.DeleteSshPublicKeyInput{
 		UserName:       aws.String(userName),
 		ServerId:       aws.String(serverID),
 		SshPublicKeyId: aws.String(sshKeyID),
-	})
+	}
+	_, err = conn.DeleteSshPublicKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

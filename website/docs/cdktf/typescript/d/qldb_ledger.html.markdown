@@ -36,11 +36,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Friendly name of the ledger to match.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
 returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.1 input-0a3bcd75f129ece3016f3577ca775df98dda0b448d78fa027251b4d8bf803822 -->
+<!-- cache-key: cdktf-0.20.8 input-9420ace625360a1d6bb100e32daf20fe3fff9f47e52307404f2dbe3f0f5e4045 -->

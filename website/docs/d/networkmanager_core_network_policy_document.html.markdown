@@ -3,7 +3,7 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_core_network_policy_document"
 description: |-
-  Generates an Core Network policy document in JSON format
+  Generates a Core Network policy document in JSON format
 ---
 
 # Data Source: aws_networkmanager_core_network_policy_document
@@ -164,7 +164,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 ## Argument Reference
 
-The following arguments are available:
+This data source supports the following arguments:
 
 * `attachment_policies` (Optional) - In a core network, all attachments use the block argument `attachment_policies` section to map an attachment to a segment. Instead of manually associating a segment to each attachment, attachments use tags, and then the tags are used to associate the attachment to the specified segment. Detailed below.
 * `core_network_configuration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
@@ -181,7 +181,6 @@ The following arguments are available:
 * `conditions` (Required) - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
-* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `action`
 
@@ -212,6 +211,8 @@ The following arguments are available:
 * `inside_cidr_blocks` (Optional) - The Classless Inter-Domain Routing (CIDR) block range used to create tunnels for AWS Transit Gateway Connect. The format is standard AWS CIDR range (for example, `10.0.1.0/24`). You can optionally define the inside CIDR in the Core Network Edges section per Region. The minimum is a `/24` for IPv4 or `/64` for IPv6. You can provide multiple `/24` subnets or a larger CIDR range. If you define a larger CIDR range, new Core Network Edges will be automatically assigned `/24` and `/64` subnets from the larger CIDR. an Inside CIDR block is required for attaching Connect attachments to a Core Network Edge.
 * `vpn_ecmp_support` (Optional) - Indicates whether the core network forwards traffic over multiple equal-cost routes using VPN. The value can be either `true` or `false`. The default is `true`.
 * `edge_locations` (Required) - A block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
+* `dns_support` (Optional) - Indicates whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
+* `security_group_referencing_support` — (Optional) Indicates whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
 
 ### `edge_locations`
 
@@ -254,8 +255,9 @@ The following arguments are available:
 * `via` (Optional) - The network function groups and any edge overrides associated with the action.
     * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
     * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
-        * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
-        * `use_edge` (Optional) - The preferred edge to use.
+        * `edge_sets` (Optional) - A list of a list of strings. The list of edges associated with the network function group.
+        * `use_edge_location` (Optional) - The preferred edge to use.
+        * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
 
 ### `network_function_groups`
 

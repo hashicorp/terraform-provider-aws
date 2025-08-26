@@ -38,12 +38,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpointId` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 See the [`aws_dms_endpoint` resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_endpoint) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.20.1 input-998a5893daed445684f6f9e1f26e5c03b27e3ac275e8cdebccf3ef05a470a1a7 -->
+<!-- cache-key: cdktf-0.20.8 input-b551520f3665eb60b247a22700854259e8ed684ebc7520c637e7c7a39ed08f72 -->

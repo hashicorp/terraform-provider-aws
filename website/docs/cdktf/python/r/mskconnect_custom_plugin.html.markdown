@@ -56,16 +56,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required, Forces new resource) The name of the custom plugin..
 * `content_type` - (Required, Forces new resource) The type of the plugin file. Allowed values are `ZIP` and `JAR`.
+* `description` - (Optional, Forces new resource) A summary description of the custom plugin.
 * `location` - (Required, Forces new resource) Information about the location of a custom plugin. See [`location` Block](#location-block) for details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-The following arguments are optional:
-
-* `description` - (Optional, Forces new resource) A summary description of the custom plugin.
 
 ### `location` Block
 
@@ -122,4 +120,4 @@ Using `terraform import`, import MSK Connect Custom Plugin using the plugin's `a
 % terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-99c215706c4617e946d863efad19e9e7f54007211b1a1be9b44938c86187fe72 -->
+<!-- cache-key: cdktf-0.20.8 input-0f9575ee42765d36c7f1492f28e6e1300d8185461a507593380bcdc5ef298a83 -->

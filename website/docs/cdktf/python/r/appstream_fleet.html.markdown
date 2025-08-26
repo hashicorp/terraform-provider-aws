@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description to display.
 * `disconnect_timeout_in_seconds` - (Optional) Amount of time that a streaming session remains active after users disconnect.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream fleet.
@@ -132,4 +133,4 @@ Using `terraform import`, import `aws_appstream_fleet` using the id. For example
 % terraform import aws_appstream_fleet.example fleetNameExample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-44ac02a14cdcce689c53a619341188c26474b5fb6875cc762f2efa3d3721360c -->
+<!-- cache-key: cdktf-0.20.8 input-4bf23b179acf43136f029e145655ce0ea59494badf16f0de0825bb64c13edf31 -->

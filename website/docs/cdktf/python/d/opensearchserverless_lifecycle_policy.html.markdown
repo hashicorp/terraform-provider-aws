@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy
 * `type` - (Required) Type of lifecycle policy. Must be `retention`.
 
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `policy` - JSON policy document to use as the content for the new policy.
 * `policy_version` - Version of the policy.
 
-<!-- cache-key: cdktf-0.20.1 input-4af92a7e0f031a3d9210b749207a34094b4a83cc50b1eb80a7f84e3746d3a704 -->
+<!-- cache-key: cdktf-0.20.8 input-afb554dbc27457aae2b1b2c14ff8bbb63a88e909bbfa22eb184042245b17ee5b -->

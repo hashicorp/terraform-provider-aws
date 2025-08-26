@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -33,12 +33,12 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 				Config: testAccCoreNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`core-network/core-network-.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`core-network/core-network-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`core-network-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.CoreNetworkStateAvailable)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -68,51 +68,6 @@ func TestAccNetworkManagerCoreNetwork_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCoreNetwork(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"create_base_policy"},
-			},
-			{
-				Config: testAccCoreNetworkConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCoreNetworkConfig_tags1(acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -169,17 +124,17 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
+					resource.TestCheckNoResourceAttr(resourceName, "base_policy_regions"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct1,
+						"edge_locations.#":  "1",
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
+						"shared_segments.#": "0",
 					}),
 				),
 			},
@@ -188,45 +143,6 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"create_base_policy"},
-			},
-		},
-	})
-}
-
-func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_networkmanager_core_network.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCoreNetworkConfig_basePolicyDocumentWithRegion(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "base_policy_region", acctest.AlternateRegion()),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
-						"asn":                  "64512",
-						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": acctest.Ct0,
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct1,
-						"edge_locations.0":  acctest.AlternateRegion(),
-						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
-					}),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_policy_region", "create_base_policy"},
 			},
 		},
 	})
@@ -247,23 +163,23 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.AlternateRegion()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64513",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct2,
+						"edge_locations.#":  "2",
 						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
+						"shared_segments.#": "0",
 					}),
 				),
 			},
@@ -297,17 +213,17 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn1,
 						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn2,
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct2,
+						"edge_locations.#":  "2",
 						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
+						"shared_segments.#": "0",
 					}),
 				),
 			},
@@ -348,17 +264,16 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
-					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": acctest.Ct0,
+						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  acctest.Ct1,
+						"edge_locations.#":  "1",
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
-						"shared_segments.#": acctest.Ct0,
+						"shared_segments.#": "0",
 					}),
 				),
 			},
@@ -368,7 +283,7 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 
 func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_core_network" {
@@ -403,7 +318,7 @@ func testAccCheckCoreNetworkExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No Network Manager Core Network ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		_, err := tfnetworkmanager.FindCoreNetworkByID(ctx, conn, rs.Primary.ID)
 
@@ -418,35 +333,6 @@ resource "aws_networkmanager_global_network" "test" {}
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
 }`
-}
-
-func testAccCoreNetworkConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {}
-
-resource "aws_networkmanager_core_network" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccCoreNetworkConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {}
-
-resource "aws_networkmanager_core_network" "test" {
-  global_network_id = aws_networkmanager_global_network.test.id
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCoreNetworkConfig_description(description string) string {
@@ -469,18 +355,6 @@ resource "aws_networkmanager_core_network" "test" {
   create_base_policy = true
 }
 `
-}
-
-func testAccCoreNetworkConfig_basePolicyDocumentWithRegion() string {
-	return fmt.Sprintf(`
-resource "aws_networkmanager_global_network" "test" {}
-
-resource "aws_networkmanager_core_network" "test" {
-  global_network_id  = aws_networkmanager_global_network.test.id
-  base_policy_region = %[1]q
-  create_base_policy = true
-}
-`, acctest.AlternateRegion())
 }
 
 func testAccCoreNetworkConfig_basePolicyDocumentWithMultiRegion() string {

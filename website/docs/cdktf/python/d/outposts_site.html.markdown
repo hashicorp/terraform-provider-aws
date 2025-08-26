@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) Identifier of the Site.
 * `name` - (Optional) Name of the Site.
 
@@ -45,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `account_id` - AWS Account identifier.
 * `description` - Description.
 
-<!-- cache-key: cdktf-0.20.1 input-35136b0820f723be3d4e35e80bb8abd4839b40210fd445ddc0cbd77d3cf4f75f -->
+<!-- cache-key: cdktf-0.20.8 input-b2fc85a49d565403cd9b800e7d3731d14d5dfa17a895319467cd0365218910b9 -->

@@ -144,11 +144,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-Note - Only file_system_id or volume_id can be specified. file_system_id is used for Lustre and Windows, volume_id is used for ONTAP.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fileSystemId` - (Optional) The ID of the file system to back up. Required if backing up Lustre or Windows file systems.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copyTagsToBackups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `volumeId` - (Optional) The ID of the volume to back up. Required if backing up a ONTAP Volume.
+
+Note - One of `fileSystemId` or `volumeId` can be specified. `fileSystemId` is used for Lustre and Windows, `volumeId` is used for ONTAP.
 
 ## Attribute Reference
 
@@ -196,4 +197,4 @@ Using `terraform import`, import FSx Backups using the `id`. For example:
 % terraform import aws_fsx_backup.example fs-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0ec17c1115f996a3a9d6f257bcf0f3b19a4abf6354a302a0d56b57c97b46ab01 -->
+<!-- cache-key: cdktf-0.20.8 input-7a9fd1b87a9a13e98e5174879e4306424f0ea9b282a79fe50f854fcdeab806fc -->

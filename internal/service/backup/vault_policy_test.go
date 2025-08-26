@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -142,11 +143,24 @@ func TestAccBackupVaultPolicy_ignoreEquivalent(t *testing.T) {
 				Config: testAccVaultPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultPolicyExists(ctx, resourceName, &vault),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("\"Version\":\"2012-10-17\""))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("\"Version\":\"2012-10-17\"")),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
-				Config:   testAccVaultPolicyConfig_newOrder(rName),
-				PlanOnly: true,
+				Config: testAccVaultPolicyConfig_newOrder(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -178,15 +192,11 @@ func testAccCheckVaultPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckVaultPolicyExists(ctx context.Context, name string, vault *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
+func testAccCheckVaultPolicyExists(ctx context.Context, n string, v *backup.GetBackupVaultAccessPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault Policy ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
@@ -197,7 +207,7 @@ func testAccCheckVaultPolicyExists(ctx context.Context, name string, vault *back
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}
@@ -362,7 +372,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "${aws_iam_role.test.arn}"
+        AWS = aws_iam_role.test.arn
       }
       Action = [
         "backup:DescribeBackupVault",

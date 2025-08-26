@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the DocumentDB cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required, Forces new resource) The family of the DocumentDB cluster parameter group.
@@ -90,4 +91,4 @@ Using `terraform import`, import DocumentDB Cluster Parameter Groups using the `
 % terraform import aws_docdb_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-419b7174b76157b8619854ef58a66430a8d320805696c26428ef99ede67bae36 -->
+<!-- cache-key: cdktf-0.20.8 input-70e2ba6f5baf1153b3690ff983892fd57f2d4828ba4b54465204cd30e7ee3492 -->

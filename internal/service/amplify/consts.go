@@ -3,6 +3,14 @@
 
 package amplify
 
+import (
+	"time"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
 const (
 	stageNone = "NONE"
 )

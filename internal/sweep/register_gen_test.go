@@ -6,11 +6,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
@@ -24,13 +26,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cleanrooms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
@@ -46,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
@@ -55,6 +59,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/dsql"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
@@ -72,9 +77,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
@@ -109,48 +116,60 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -167,11 +186,13 @@ func registerSweepers() {
 	accessanalyzer.RegisterSweepers()
 	acm.RegisterSweepers()
 	acmpca.RegisterSweepers()
+	amp.RegisterSweepers()
 	amplify.RegisterSweepers()
 	apigateway.RegisterSweepers()
 	apigatewayv2.RegisterSweepers()
 	appautoscaling.RegisterSweepers()
 	appconfig.RegisterSweepers()
+	appfabric.RegisterSweepers()
 	appflow.RegisterSweepers()
 	applicationinsights.RegisterSweepers()
 	appmesh.RegisterSweepers()
@@ -185,13 +206,14 @@ func registerSweepers() {
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
 	bcmdataexports.RegisterSweepers()
+	bedrockagent.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
+	cleanrooms.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
 	cloudfront.RegisterSweepers()
 	cloudhsmv2.RegisterSweepers()
-	cloudsearch.RegisterSweepers()
 	cloudtrail.RegisterSweepers()
 	cloudwatch.RegisterSweepers()
 	codeartifact.RegisterSweepers()
@@ -207,6 +229,7 @@ func registerSweepers() {
 	cur.RegisterSweepers()
 	dataexchange.RegisterSweepers()
 	datasync.RegisterSweepers()
+	datazone.RegisterSweepers()
 	dax.RegisterSweepers()
 	deploy.RegisterSweepers()
 	devicefarm.RegisterSweepers()
@@ -216,6 +239,7 @@ func registerSweepers() {
 	docdb.RegisterSweepers()
 	docdbelastic.RegisterSweepers()
 	ds.RegisterSweepers()
+	dsql.RegisterSweepers()
 	dynamodb.RegisterSweepers()
 	ec2.RegisterSweepers()
 	ecr.RegisterSweepers()
@@ -233,9 +257,11 @@ func registerSweepers() {
 	emrserverless.RegisterSweepers()
 	events.RegisterSweepers()
 	evidently.RegisterSweepers()
+	evs.RegisterSweepers()
 	finspace.RegisterSweepers()
 	firehose.RegisterSweepers()
 	fis.RegisterSweepers()
+	fms.RegisterSweepers()
 	fsx.RegisterSweepers()
 	gamelift.RegisterSweepers()
 	glacier.RegisterSweepers()
@@ -270,48 +296,60 @@ func registerSweepers() {
 	mq.RegisterSweepers()
 	mwaa.RegisterSweepers()
 	neptune.RegisterSweepers()
+	neptunegraph.RegisterSweepers()
 	networkfirewall.RegisterSweepers()
 	networkmanager.RegisterSweepers()
+	notifications.RegisterSweepers()
+	notificationscontacts.RegisterSweepers()
 	opensearch.RegisterSweepers()
 	opensearchserverless.RegisterSweepers()
-	opsworks.RegisterSweepers()
+	organizations.RegisterSweepers()
+	osis.RegisterSweepers()
 	pinpoint.RegisterSweepers()
+	pinpointsmsvoicev2.RegisterSweepers()
 	pipes.RegisterSweepers()
+	qbusiness.RegisterSweepers()
 	qldb.RegisterSweepers()
 	quicksight.RegisterSweepers()
 	ram.RegisterSweepers()
 	rds.RegisterSweepers()
 	redshift.RegisterSweepers()
 	redshiftserverless.RegisterSweepers()
+	resiliencehub.RegisterSweepers()
 	resourceexplorer2.RegisterSweepers()
 	resourcegroups.RegisterSweepers()
 	route53.RegisterSweepers()
+	route53profiles.RegisterSweepers()
 	route53recoverycontrolconfig.RegisterSweepers()
 	route53resolver.RegisterSweepers()
 	rum.RegisterSweepers()
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
+	s3tables.RegisterSweepers()
 	sagemaker.RegisterSweepers()
 	scheduler.RegisterSweepers()
 	schemas.RegisterSweepers()
 	secretsmanager.RegisterSweepers()
+	securitylake.RegisterSweepers()
 	servicecatalog.RegisterSweepers()
+	servicecatalogappregistry.RegisterSweepers()
 	servicediscovery.RegisterSweepers()
 	ses.RegisterSweepers()
 	sesv2.RegisterSweepers()
 	sfn.RegisterSweepers()
 	shield.RegisterSweepers()
 	signer.RegisterSweepers()
-	simpledb.RegisterSweepers()
 	sns.RegisterSweepers()
 	sqs.RegisterSweepers()
 	ssm.RegisterSweepers()
 	ssmcontacts.RegisterSweepers()
 	ssmincidents.RegisterSweepers()
+	ssmquicksetup.RegisterSweepers()
 	ssoadmin.RegisterSweepers()
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()
 	synthetics.RegisterSweepers()
+	timestreaminfluxdb.RegisterSweepers()
 	timestreamwrite.RegisterSweepers()
 	transcribe.RegisterSweepers()
 	transfer.RegisterSweepers()

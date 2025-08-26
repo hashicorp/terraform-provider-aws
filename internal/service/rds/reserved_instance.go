@@ -5,31 +5,28 @@ package rds
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	ResNameReservedInstance = "Reserved Instance"
 )
 
 // @SDKResource("aws_rds_reserved_instance", name="Reserved Instance")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
-func ResourceReservedInstance() *schema.Resource {
+func resourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReservedInstanceCreate,
 		ReadWithoutTimeout:   resourceReservedInstanceRead,
@@ -45,6 +42,7 @@ func ResourceReservedInstance() *schema.Resource {
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -129,14 +127,12 @@ func ResourceReservedInstance() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
@@ -144,41 +140,42 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.Get(names.AttrInstanceCount).(int); ok && v > 0 {
-		input.DBInstanceCount = aws.Int64(int64(d.Get(names.AttrInstanceCount).(int)))
+		input.DBInstanceCount = aws.Int32(int32(d.Get(names.AttrInstanceCount).(int)))
 	}
 
 	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
 		input.ReservedDBInstanceId = aws.String(v)
 	}
 
-	resp, err := conn.PurchaseReservedDBInstancesOfferingWithContext(ctx, input)
+	output, err := conn.PurchaseReservedDBInstancesOffering(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.RDS, create.ErrActionCreating, ResNameReservedInstance, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Reserved Instance: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ReservedDBInstance.ReservedDBInstanceId))
+	d.SetId(aws.ToString(output.ReservedDBInstance.ReservedDBInstanceId))
 
-	if err := waitReservedInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForCreation, ResNameReservedInstance, d.Id(), err)
+	if _, err := waitReservedInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Reserved Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceReservedInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	reservation, err := FindReservedDBInstanceByID(ctx, conn, d.Id())
+	reservation, err := findReservedDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id())
+		log.Printf("[WARN] RDS Reserved Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Reserved Instance (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, reservation.ReservedDBInstanceArn)
@@ -194,50 +191,79 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedDBInstanceId)
-	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrStartTime, reservation.StartTime.Format(time.RFC3339))
 	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
 	return diags
 }
 
-func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceReservedInstanceRead(ctx, d, meta)
 }
 
-func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
+func findReservedDBInstanceByID(ctx context.Context, conn *rds.Client, id string) (*types.ReservedDBInstance, error) {
 	input := &rds.DescribeReservedDBInstancesInput{
 		ReservedDBInstanceId: aws.String(id),
 	}
-
-	output, err := conn.DescribeReservedDBInstancesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeReservedDBInstanceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+	output, err := findReservedDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.ReservedDBInstance]())
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.ReservedDBInstances) == 0 || output.ReservedDBInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	// Eventual consistency check.
+	if aws.ToString(output.ReservedDBInstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
-	if count := len(output.ReservedDBInstances); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ReservedDBInstances[0], nil
+	return output, nil
 }
 
-func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindReservedDBInstanceByID(ctx, conn, id)
+func findReservedDBInstance(ctx context.Context, conn *rds.Client, input *rds.DescribeReservedDBInstancesInput, filter tfslices.Predicate[*types.ReservedDBInstance]) (*types.ReservedDBInstance, error) {
+	output, err := findReservedDBInstances(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findReservedDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeReservedDBInstancesInput, filter tfslices.Predicate[*types.ReservedDBInstance]) ([]types.ReservedDBInstance, error) {
+	var output []types.ReservedDBInstance
+
+	pages := rds.NewDescribeReservedDBInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ReservedDBInstanceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ReservedDBInstances {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusReservedInstance(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findReservedDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -247,16 +273,14 @@ func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) retry
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, aws.ToString(output.State), nil
 	}
 }
 
-func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
+func waitReservedInstanceCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.ReservedDBInstance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ReservedInstanceStatePaymentPending,
-		},
-		Target:         []string{ReservedInstanceStateActive},
+		Pending:        []string{reservedInstanceStatePaymentPending},
+		Target:         []string{reservedInstanceStateActive},
 		Refresh:        statusReservedInstance(ctx, conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
@@ -264,25 +288,29 @@ func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, 
 		Delay:          30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*types.ReservedDBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interface{} {
-	if len(recurringCharges) == 0 {
-		return []interface{}{}
+func flattenRecurringCharges(apiObjects []types.RecurringCharge) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
 	}
 
-	var rawRecurringCharges []interface{}
-	for _, recurringCharge := range recurringCharges {
-		rawRecurringCharge := map[string]interface{}{
-			"recurring_charge_amount":    recurringCharge.RecurringChargeAmount,
-			"recurring_charge_frequency": aws.StringValue(recurringCharge.RecurringChargeFrequency),
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"recurring_charge_amount":    aws.ToFloat64(apiObject.RecurringChargeAmount),
+			"recurring_charge_frequency": aws.ToString(apiObject.RecurringChargeFrequency),
 		}
 
-		rawRecurringCharges = append(rawRecurringCharges, rawRecurringCharge)
+		tfList = append(tfList, tfMap)
 	}
 
-	return rawRecurringCharges
+	return tfList
 }

@@ -140,6 +140,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `policyStoreId` - (Required) Specifies the ID of the policy store in which you want to store this identity source.
 * `configuration`- (Required) Specifies the details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration) below.
 * `principalEntityType`- (Optional) Specifies the namespace and data type of the principals generated for identities authenticated by the new identity source.
@@ -224,4 +227,4 @@ Using `terraform import`, import Verified Permissions Identity Source using the 
 % terraform import aws_verifiedpermissions_identity_source.example policy-store-id-12345678:identity-source-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c51f466be9c9c75453250f283eaf4b9fef5041791e2b815c576a5f553eb2817a -->
+<!-- cache-key: cdktf-0.20.8 input-40fc3d53236ce6505da2ee2eb9ac375dab9980f28583f61953bb22abc101d905 -->

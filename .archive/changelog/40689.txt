@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_object_copy: Add `override_provider` configuration block, allowing tags inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) to be ignored
+```

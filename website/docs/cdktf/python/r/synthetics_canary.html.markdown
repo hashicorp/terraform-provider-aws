@@ -48,12 +48,13 @@ The following arguments are required:
 * `artifact_s3_location` - (Required) Location in Amazon S3 where Synthetics stores artifacts from the test runs of this canary.
 * `execution_role_arn` - (Required) ARN of the IAM role to be used to run the canary. see [AWS Docs](https://docs.aws.amazon.com/AmazonSynthetics/latest/APIReference/API_CreateCanary.html#API_CreateCanary_RequestSyntax) for permissions needs for IAM Role.
 * `handler` - (Required) Entry point to use for the source code when running the canary. This value must end with the string `.handler` .
-* `name` - (Required) Name for this canary. Has a maximum length of 21 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
+* `name` - (Required) Name for this canary. Has a maximum length of 255 characters. Valid characters are lowercase alphanumeric, hyphen, or underscore.
 * `runtime_version` - (Required) Runtime version to use for the canary. Versions change often so consult the [Amazon CloudWatch documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries_Library.html) for the latest valid versions. Values include `syn-python-selenium-1.0`, `syn-nodejs-puppeteer-3.0`, `syn-nodejs-2.2`, `syn-nodejs-2.1`, `syn-nodejs-2.0`, and `syn-1.0`.
 * `schedule` -  (Required) Configuration block providing how often the canary is to run and when these test runs are to stop. Detailed below.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
@@ -94,6 +95,7 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
+* `ipv6_allowed_for_dual_stack` - (Optional)  If `true`, allow outbound IPv6 traffic on VPC canaries that are connected to dual-stack subnets. The default is `false`.
 
 ## Attribute Reference
 
@@ -143,4 +145,4 @@ Using `terraform import`, import Synthetics Canaries using the `name`. For examp
 % terraform import aws_synthetics_canary.some some-canary
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7a9e3e1413440a0151e0d113031ae787861be1f778da70a162639b9434cfd1fb -->
+<!-- cache-key: cdktf-0.20.8 input-026340903bae3faf7869b7878802b7c7db736e1427732b3237fa083e62ad79a3 -->

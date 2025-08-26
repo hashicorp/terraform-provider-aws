@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pool_name` - (Required) The name of the new custom tape pool.
 * `storage_class` - (Required) The storage class that is associated with the new custom pool. When you use your backup application to eject the tape, the tape is archived directly into the storage class that corresponds to the pool. Possible values are `DEEP_ARCHIVE` or `GLACIER`.
 * `retention_lock_type` - (Required) Tape retention lock can be configured in two modes. When configured in governance mode, AWS accounts with specific IAM permissions are authorized to remove the tape retention lock from archived virtual tapes. When configured in compliance mode, the tape retention lock cannot be removed by any user, including the root AWS account. Possible values are `COMPLIANCE`, `GOVERNANCE`, and `NONE`. Default value is `NONE`.
@@ -74,4 +75,4 @@ Using `terraform import`, import `aws_storagegateway_tape_pool` using the volume
 % terraform import aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dba7df3eb905d7a9811189b7532fba2b7eb6c8127d9f909ad0446160863c1c13 -->
+<!-- cache-key: cdktf-0.20.8 input-21a95baad8cb0d41007116bfd77acb3cb949e86d1ab953480457f8716817e7c1 -->

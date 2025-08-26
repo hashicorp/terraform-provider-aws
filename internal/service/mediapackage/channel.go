@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,12 +84,10 @@ func ResourceChannel() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
@@ -110,7 +107,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
@@ -139,7 +136,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
@@ -156,7 +153,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
-func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
@@ -196,16 +193,16 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
+func flattenHLSIngest(h *types.HlsIngest) []map[string]any {
 	if h.IngestEndpoints == nil {
-		return []map[string]interface{}{
-			{"ingest_endpoints": []map[string]interface{}{}},
+		return []map[string]any{
+			{"ingest_endpoints": []map[string]any{}},
 		}
 	}
 
-	var ingestEndpoints []map[string]interface{}
+	var ingestEndpoints []map[string]any
 	for _, e := range h.IngestEndpoints {
-		endpoint := map[string]interface{}{
+		endpoint := map[string]any{
 			names.AttrPassword: aws.ToString(e.Password),
 			names.AttrURL:      aws.ToString(e.Url),
 			names.AttrUsername: aws.ToString(e.Username),
@@ -214,7 +211,7 @@ func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 		ingestEndpoints = append(ingestEndpoints, endpoint)
 	}
 
-	return []map[string]interface{}{
+	return []map[string]any{
 		{"ingest_endpoints": ingestEndpoints},
 	}
 }

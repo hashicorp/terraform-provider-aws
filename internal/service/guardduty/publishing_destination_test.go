@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -132,7 +132,7 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
@@ -148,7 +148,7 @@ data "aws_iam_policy_document" "kms_pol" {
     ]
 
     resources = [
-      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"
+      "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:key/*"
     ]
 
     principals {
@@ -176,6 +176,7 @@ resource "aws_s3_bucket_policy" "gd_bucket_policy" {
 resource "aws_kms_key" "gd_key" {
   description             = "Temporary key for AccTest of TF"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   policy                  = data.aws_iam_policy_document.kms_pol.json
 }
 
@@ -208,15 +209,15 @@ func testAccCheckPublishingDestinationExists(ctx context.Context, name string) r
 			DestinationId: aws.String(destination_id),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
-		_, err := conn.DescribePublishingDestinationWithContext(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		_, err := conn.DescribePublishingDestination(ctx, input)
 		return err
 	}
 }
 
 func testAccCheckPublishingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_publishing_destination" {
@@ -234,7 +235,7 @@ func testAccCheckPublishingDestinationDestroy(ctx context.Context) resource.Test
 				DestinationId: aws.String(destination_id),
 			}
 
-			_, err := conn.DescribePublishingDestinationWithContext(ctx, input)
+			_, err := conn.DescribePublishingDestination(ctx, input)
 			// Catch expected error.
 			if err == nil {
 				return fmt.Errorf("Resource still exists.")

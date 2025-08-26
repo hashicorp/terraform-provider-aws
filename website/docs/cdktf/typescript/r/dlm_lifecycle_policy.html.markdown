@@ -277,6 +277,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `executionRoleArn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policyDetails` - (Required) See the [`policyDetails` configuration](#policy-details-arguments) block. Max of 1.
@@ -288,11 +289,11 @@ This resource supports the following arguments:
 * `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
 * `eventSource` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`eventSource` configuration](#event-source-arguments) block.
 * `resourceTypes` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
-* `resourceLocations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
+* `resourceLocations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If the source resources are located in a Local Zone, specify `LOCAL_ZONE`. Valid values are `CLOUD`, `LOCAL_ZONE`, and `OUTPOST`.
 * `policyType` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `parameters` - (Optional) A set of optional parameters for snapshot and AMI lifecycle policies. See the [`parameters` configuration](#parameters-arguments) block.
 * `schedule` - (Optional) See the [`schedule` configuration](#schedule-arguments) block.
-* `targetTags` (Optional) A map of tag keys and their values. Any resources that match the `resourceTypes` and are tagged with _any_ of these tags will be targeted.
+* `targetTags` (Optional) A map of tag keys and their values. Any resources that match the `resourceTypes` and are tagged with _any_ of these tags will be targeted. Required when `policyType` is `EBS_SNAPSHOT_MANAGEMENT` or `IMAGE_MANAGEMENT`. Must not be specified when `policyType` is `EVENT_BASED_POLICY`.
 
 ~> Note: You cannot have overlapping lifecycle policies that share the same `targetTags`. Terraform is unable to detect this at plan time but it will fail during apply.
 
@@ -371,8 +372,8 @@ This resource supports the following arguments:
 #### Share Rule arguments
 
 * `targetAccounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
-* `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `intervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `unshareInterval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
+* `unshareIntervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 
@@ -433,4 +434,4 @@ Using `terraform import`, import DLM lifecycle policies using their policy ID. F
 % terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cd52275658ea26bb97d5ff6b8e5c283dfc879cf7239a8546704deb3cc7ac57ec -->
+<!-- cache-key: cdktf-0.20.8 input-fbe9f7eaa2f73d253826d6f46b4de258e54bed0da70a1aea8908fc9b043c7b8b -->

@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 
 ## Attribute Reference
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
 * `node_arn` - ARN of the node
 
-<!-- cache-key: cdktf-0.20.1 input-bff2642a3e21e8b608fc7f2ec749ea4dc2c86d2f7735aae811865faa68478e8c -->
+<!-- cache-key: cdktf-0.20.8 input-1458c2244ae404e6c7ce5cfd13660974ee673942fa8e94753829a9582c946cfe -->

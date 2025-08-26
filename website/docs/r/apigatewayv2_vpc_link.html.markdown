@@ -31,6 +31,7 @@ resource "aws_apigatewayv2_vpc_link" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the VPC Link. Must be between 1 and 128 characters in length.
 * `security_group_ids` - (Required) Security group IDs for the VPC Link.
 * `subnet_ids` - (Required) Subnet IDs for the VPC Link.

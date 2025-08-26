@@ -41,6 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `groupName` - (Required) The name of the group.
 * `filterExpression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
 * `insightsConfiguration` - (Optional) Configuration options for enabling insights.
@@ -93,4 +96,4 @@ Using `terraform import`, import XRay Groups using the ARN. For example:
 % terraform import aws_xray_group.example arn:aws:xray:us-west-2:1234567890:group/example-group/TNGX7SW5U6QY36T4ZMOUA3HVLBYCZTWDIOOXY3CJAXTHSS3YCWUA
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9e9af30b9adec288e781cee25a67533fbf3d979628ed12ff8336468434aab2be -->
+<!-- cache-key: cdktf-0.20.8 input-b16a02d32dcaacfd78a2c178d8fde77358e6e27aec823774b99ac9bde485d276 -->

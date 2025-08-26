@@ -12,7 +12,7 @@ import (
 )
 
 func statusApplication(ctx context.Context, conn *kinesisanalytics.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		applicationDetail, err := findApplicationDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

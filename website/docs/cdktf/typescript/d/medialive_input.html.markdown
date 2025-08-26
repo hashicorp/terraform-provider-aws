@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Required) The ID of the Input.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags assigned to the Input.
 * `type` - The type of the input.
 
-<!-- cache-key: cdktf-0.20.1 input-dba95fb8bef3ac56723ab53ab8c04244e1ea1dbeb59b13d494aa6d8b9332e781 -->
+<!-- cache-key: cdktf-0.20.8 input-75134135084f2d7560aec620f4293e259ea2d83369c0808f52745209fde52c54 -->

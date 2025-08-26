@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the namespace.
 * `vpc` - (Required) The ID of VPC that you want to associate the namespace with.
 * `description` - (Optional) The description that you specify for the namespace when you create it.
@@ -83,4 +84,4 @@ Using `terraform import`, import Service Discovery Private DNS Namespace using t
 % terraform import aws_service_discovery_private_dns_namespace.example 0123456789:vpc-123345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f146701ebde1d502a5742b49eee835afec6daf02f5ca55955ff340c638c7c5b -->
+<!-- cache-key: cdktf-0.20.8 input-d6c1ed864d293a758ae77c9c19ff9a4838756189f976fb27557d8890e92245e0 -->

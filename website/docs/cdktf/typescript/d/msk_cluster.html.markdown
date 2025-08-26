@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterName` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `zookeeperConnectString` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphbetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 * `zookeeperConnectStringTls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
-<!-- cache-key: cdktf-0.20.1 input-284a977e04ce4581d3dedc9fee705b1b12bd7feba0e15de9010a3cb282e7c367 -->
+<!-- cache-key: cdktf-0.20.8 input-43acc2b940c32e5b386455d366849234674b820759d723597bc57ae2d700077d -->
