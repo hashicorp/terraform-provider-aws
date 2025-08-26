@@ -165,7 +165,7 @@ func (r *accountSettingsResource) ImportState(ctx context.Context, request resou
 }
 
 func updateAccountSettings(ctx context.Context, conn *quicksight.Client, input *quicksight.UpdateAccountSettingsInput, timeout time.Duration) (*awstypes.AccountSettings, error) {
-	return tfresource.RetryGWhen(ctx, timeout,
+	return tfresource.RetryWhen(ctx, timeout,
 		func(ctx context.Context) (*awstypes.AccountSettings, error) {
 			_, err := conn.UpdateAccountSettings(ctx, input)
 

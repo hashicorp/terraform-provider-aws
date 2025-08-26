@@ -211,7 +211,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {

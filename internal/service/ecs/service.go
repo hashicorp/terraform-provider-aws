@@ -1772,7 +1772,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		)
 		operationTime := time.Now().UTC()
 		_, err := tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateService(ctx, &input)
 			},
 			func(err error) (bool, error) {
@@ -1843,7 +1843,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	_, err = tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteService(ctx, &ecs.DeleteServiceInput{
 				Cluster: aws.String(cluster),
 				Force:   aws.Bool(forceDelete),
@@ -1913,7 +1913,7 @@ func retryServiceCreate(ctx context.Context, conn *ecs.Client, input *ecs.Create
 		timeout              = propagationTimeout + serviceCreateTimeout
 	)
 	outputRaw, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateService(ctx, input)
 		},
 		func(err error) (bool, error) {
