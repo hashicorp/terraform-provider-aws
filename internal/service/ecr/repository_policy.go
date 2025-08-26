@@ -23,17 +23,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecr_repository_policy", name="Repsitory Policy")
+// @SDKResource("aws_ecr_repository_policy", name="Repository Policy")
+// @IdentityAttribute("repository")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(idAttrDuplicates="repository")
 func resourceRepositoryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPolicyPut,
 		ReadWithoutTimeout:   resourceRepositoryPolicyRead,
 		UpdateWithoutTimeout: resourceRepositoryPolicyPut,
 		DeleteWithoutTimeout: resourceRepositoryPolicyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
