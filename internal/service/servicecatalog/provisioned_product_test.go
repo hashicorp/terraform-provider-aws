@@ -1240,10 +1240,12 @@ resource "aws_iam_role" "launch_role" {
   })
 }
 
+data "aws_partition" "current" {}
+
 # Attach admin policy to launch role (for demo purposes only)
 resource "aws_iam_role_policy_attachment" "launch_role" {
   role       = aws_iam_role.launch_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
 }
 `, rName, useNewVersion, simulateFailure, extraParam))
 }
