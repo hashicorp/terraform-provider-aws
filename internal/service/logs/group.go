@@ -199,7 +199,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
-		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}) {
+		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
 			if err != nil {
 				result = list.ListResult{
 					Diagnostics: fwdiag.Diagnostics{
@@ -233,7 +233,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
-			resourceGroupSet(ctx, rd, output)
+			resourceGroupFlatten(ctx, rd, output)
 
 			result.Identity.SetAttribute(ctx, path.Root(names.AttrAccountID), awsClient.AccountID(ctx))
 			result.Identity.SetAttribute(ctx, path.Root(names.AttrRegion), awsClient.Region(ctx))
@@ -266,7 +266,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			result.DisplayName = fmt.Sprintf("x%s (%s)x", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
+			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
 			params.when = After
 			for interceptor := range tfslices.BackwardValues(interceptors) {
@@ -292,7 +292,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 	}
 }
 
-func resourceGroupSet(ctx context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
 	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
 	d.Set("log_group_class", lg.LogGroupClass)
@@ -470,10 +470,19 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 }
 
 func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
-	return tfresource.AssertSingleValueResultIterErr(listLogGroups(ctx, conn, input))
+	var output []awstypes.LogGroup
+	for value, err := range listLogGroups(ctx, conn, input, filter) {
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, value)
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput) iter.Seq2[awstypes.LogGroup, error] {
+func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) iter.Seq2[awstypes.LogGroup, error] {
 	return func(yield func(awstypes.LogGroup, error) bool) {
 		pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
 		for pages.HasMorePages() {
@@ -484,8 +493,10 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 			}
 
 			for _, v := range page.LogGroups {
-				if !yield(v, nil) {
-					return
+				if filter(&v) {
+					if !yield(v, nil) {
+						return
+					}
 				}
 			}
 		}
