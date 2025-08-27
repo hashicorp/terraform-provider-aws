@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -43,6 +44,10 @@ func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types
 
 func FlattenFrameworkStringValueSetOfString(ctx context.Context, vs []string) fwtypes.SetOfString {
 	return fwtypes.SetValueOf[basetypes.StringValue]{SetValue: FlattenFrameworkStringValueSet(ctx, vs)}
+}
+
+func FlattenFrameworkStringyValueSetOfStringEnum[T enum.Valueser[T]](ctx context.Context, vs []T) fwtypes.SetOfStringEnum[T] {
+	return fwtypes.SetValueOf[fwtypes.StringEnum[T]]{SetValue: FlattenFrameworkStringValueSet(ctx, vs)}
 }
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.
