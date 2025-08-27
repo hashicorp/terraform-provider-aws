@@ -42,7 +42,7 @@ resource "aws_workspacesweb_session_logger" "example" {
   display_name = "example-session-logger"
 
   event_filter {
-    all = true
+    all {}
   }
 
   log_configuration {
@@ -175,7 +175,7 @@ The following arguments are optional:
 
 Exactly one of the following must be specified:
 
-* `all` - (Optional) Boolean that specifies to monitor all events. Set to `true` to monitor all events.
+* `all` - (Optional) Block that specifies to monitor all events. Set to `{}` to monitor all events.
 * `include` - (Optional) List of specific events to monitor. Valid values include session events like `SessionStart`, `SessionEnd`, etc.
 
 ### S3 Configuration
