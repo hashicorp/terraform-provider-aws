@@ -743,7 +743,7 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.S
 	})
 }
 
-func testAccClientVPNEndpoint_endpointIpAddressType(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccClientVPNEndpoint_endpointIPAddressType(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -759,7 +759,7 @@ func testAccClientVPNEndpoint_endpointIpAddressType(t *testing.T, semaphore tfsy
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNEndpointConfig_endpointIpAddressType(t, rName, string(awstypes.EndpointIpAddressTypeIpv6)),
+				Config: testAccClientVPNEndpointConfig_endpointIPAddressType(t, rName, string(awstypes.EndpointIpAddressTypeIpv6)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -777,7 +777,7 @@ func testAccClientVPNEndpoint_endpointIpAddressType(t *testing.T, semaphore tfsy
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientVPNEndpointConfig_endpointIpAddressType(t, rName, string(awstypes.EndpointIpAddressTypeDualStack)),
+				Config: testAccClientVPNEndpointConfig_endpointIPAddressType(t, rName, string(awstypes.EndpointIpAddressTypeDualStack)),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
@@ -798,7 +798,7 @@ func testAccClientVPNEndpoint_endpointIpAddressType(t *testing.T, semaphore tfsy
 	})
 }
 
-func testAccClientVPNEndpoint_trafficIpAddressType(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccClientVPNEndpoint_trafficIPAddressType(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v awstypes.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -814,7 +814,7 @@ func testAccClientVPNEndpoint_trafficIpAddressType(t *testing.T, semaphore tfsyn
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNEndpointConfig_trafficIpAddressTypeIPv6(t, rName),
+				Config: testAccClientVPNEndpointConfig_trafficIPAddressTypeIPv6(t, rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -832,7 +832,7 @@ func testAccClientVPNEndpoint_trafficIpAddressType(t *testing.T, semaphore tfsyn
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientVPNEndpointConfig_trafficIpAddressTypeDualStack(t, rName),
+				Config: testAccClientVPNEndpointConfig_trafficIPAddressTypeDualStack(t, rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
@@ -1456,7 +1456,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName, nSecurityGroups))
 }
 
-func testAccClientVPNEndpointConfig_endpointIpAddressType(t *testing.T, rName, endpointIpAddressType string) string {
+func testAccClientVPNEndpointConfig_endpointIPAddressType(t *testing.T, rName, endpointIPAddressType string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -1477,10 +1477,10 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     Name = %[1]q
   }
 }
-`, rName, endpointIpAddressType))
+`, rName, endpointIPAddressType))
 }
 
-func testAccClientVPNEndpointConfig_trafficIpAddressTypeIPv6(t *testing.T, rName string) string {
+func testAccClientVPNEndpointConfig_trafficIPAddressTypeIPv6(t *testing.T, rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
@@ -1503,7 +1503,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 `, rName))
 }
 
-func testAccClientVPNEndpointConfig_trafficIpAddressTypeDualStack(t *testing.T, rName string) string {
+func testAccClientVPNEndpointConfig_trafficIPAddressTypeDualStack(t *testing.T, rName string) string {
 	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
