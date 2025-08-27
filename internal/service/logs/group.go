@@ -120,8 +120,8 @@ func resourceGroup() *schema.Resource {
 
 var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
 
-// @List
-func LogGroupResourceAsListResource() list.ListResourceWithConfigure {
+// @SDKListResource("aws_cloudwatch_log_group")
+func logGroupResourceAsListResource() list.ListResourceWithConfigure {
 	l := logGroupListResource{}
 	l.resource = resourceGroup()
 	l.schemaIdentity = &schema.ResourceIdentity{
