@@ -1021,6 +1021,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 				Config: testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
+					testAccCheckProvisionedProductStatus(ctx, resourceName, "AVAILABLE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
