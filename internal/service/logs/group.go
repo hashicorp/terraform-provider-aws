@@ -120,6 +120,7 @@ func resourceGroup() *schema.Resource {
 
 var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
 
+// @List
 func LogGroupResourceAsListResource() list.ListResourceWithConfigure {
 	l := logGroupListResource{}
 	l.resource = resourceGroup()
@@ -155,11 +156,6 @@ type logGroupListResource struct {
 type logGroupListResourceModel struct {
 	framework.WithRegionModel
 }
-
-//func (l *logGroupListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-//	// This method does not call down to the inner resource.
-//	response.TypeName = "aws_cloudwatch_log_group"
-//}
 
 func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
