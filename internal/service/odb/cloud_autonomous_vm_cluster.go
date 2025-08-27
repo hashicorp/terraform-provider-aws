@@ -447,7 +447,6 @@ func (r *resourceCloudAutonomousVmCluster) Read(ctx context.Context, req resourc
 }
 
 func (r *resourceCloudAutonomousVmCluster) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	var plan, state cloudAutonomousVmClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -474,7 +473,6 @@ func (r *resourceCloudAutonomousVmCluster) Update(ctx context.Context, req resou
 }
 
 func (r *resourceCloudAutonomousVmCluster) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().ODBClient(ctx)
 
 	var state cloudAutonomousVmClusterResourceModel

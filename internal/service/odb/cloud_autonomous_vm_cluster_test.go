@@ -276,8 +276,8 @@ func (autonomousVMClusterResourceTest) avmcBasic() string {
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 
-	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
-	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterResourceTestEntity.odbNet(odbNetworkDisplayName)
 	res := fmt.Sprintf(`
 %s
 
@@ -320,8 +320,8 @@ func (autonomousVMClusterResourceTest) avmcNoTagWithTag() (string, string) {
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 
-	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
-	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterResourceTestEntity.odbNet(odbNetworkDisplayName)
 	noTag := fmt.Sprintf(`
 %s
 
@@ -401,8 +401,8 @@ func (autonomousVMClusterResourceTest) avmcAllParamsConfig() string {
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
 
-	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
-	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	exaInfraRes := autonomousVMClusterResourceTestEntity.exaInfra(exaInfraDisplayName)
+	odbNetRes := autonomousVMClusterResourceTestEntity.odbNet(odbNetworkDisplayName)
 	res := fmt.Sprintf(`
 %s
 
@@ -487,17 +487,4 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
 `, exaDisplayName)
 
 	return resource
-}
-func (autonomousVMClusterResourceTest) odbNetwork(odbNetDisplayName string) string {
-	return fmt.Sprintf(`
-	resource "aws_odb_network" "test" {
-  		display_name          = %[1]q
-  		availability_zone_id = "use1-az6"
-  		client_subnet_cidr   = "10.2.0.0/24"
-  		backup_subnet_cidr   = "10.2.1.0/24"
-  		s3_access = "DISABLED"
-  		zero_etl_access = "DISABLED"
-	}
-`, odbNetDisplayName)
-
 }
