@@ -8,10 +8,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +52,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	var arns, logGroupNames []string
-	for output, err := range listLogGroups(ctx, conn, &input) {
+	for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
 		}
