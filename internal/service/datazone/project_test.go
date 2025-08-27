@@ -126,7 +126,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			_, err := conn.DeleteDomain(ctx, &input)
 
 			if err != nil {
-				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameDomain, rs.Primary.ID, err)
+				return create.Error(names.DataZone, create.ErrActionCheckingDestroyed, tfdatazone.ResNameProject, rs.Primary.ID, err)
 			}
 		}
 		return nil

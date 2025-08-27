@@ -81,6 +81,10 @@ func dataSourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
+			"available_security_updates_compliance_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -240,6 +244,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
 	}
+	d.Set("available_security_updates_compliance_status", output.AvailableSecurityUpdatesComplianceStatus)
 	d.Set("default_baseline", baseline.DefaultBaseline)
 	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {

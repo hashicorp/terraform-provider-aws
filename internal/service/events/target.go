@@ -29,34 +29,25 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_target", name="Target")
+// @IdentityAttribute("event_bus_name")
+// @IdentityAttribute("rule")
+// @IdentityAttribute("target_id")
+// @ImportIDHandler("targetImportID")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge/types;types.Target")
+// @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
 		ReadWithoutTimeout:   resourceTargetRead,
 		UpdateWithoutTimeout: resourceTargetUpdate,
 		DeleteWithoutTimeout: resourceTargetDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				busName, ruleName, targetID, err := targetParseImportID(d.Id())
-				if err != nil {
-					return []*schema.ResourceData{}, err
-				}
-
-				id := targetCreateResourceID(busName, ruleName, targetID)
-				d.SetId(id)
-				d.Set("target_id", targetID)
-				d.Set(names.AttrRule, ruleName)
-				d.Set("event_bus_name", busName)
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -753,52 +744,6 @@ func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 	}
 
 	return output, nil
-}
-
-// Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
-const (
-	targetResourceIDSeparator = "-"
-	targetImportIDSeparator   = "/"
-)
-
-func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
-	var parts []string
-
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
-		parts = []string{ruleName, targetID}
-	} else {
-		parts = []string{eventBusName, ruleName, targetID}
-	}
-
-	id := strings.Join(parts, targetResourceIDSeparator)
-
-	return id
-}
-
-func targetParseImportID(id string) (string, string, string, error) {
-	parts := strings.Split(id, targetImportIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return DefaultEventBusName, parts[0], parts[1], nil
-	}
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-	if len(parts) > 3 {
-		iTarget := strings.LastIndex(id, targetImportIDSeparator)
-		targetID := id[iTarget+1:]
-		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
-		eventBusName := id[:iRule]
-		ruleName := id[iRule+1 : iTarget]
-		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
-			return eventBusName, ruleName, targetID, nil
-		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
-			return eventBusName, ruleName, targetID, nil
-		}
-	}
-
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME%[2]sTARGETID or RULENAME%[2]sTARGETID", id, targetImportIDSeparator)
 }
 
 func putTargetError(apiObject types.PutTargetsResultEntry) error {
@@ -1527,4 +1472,76 @@ func expandAppSyncParameters(tfList []any) *types.AppSyncParameters {
 	}
 
 	return apiObject
+}
+
+// Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
+const (
+	targetResourceIDSeparator = "-"
+	targetImportIDSeparator   = "/"
+)
+
+func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
+	var parts []string
+
+	if eventBusName == "" || eventBusName == DefaultEventBusName {
+		parts = []string{ruleName, targetID}
+	} else {
+		parts = []string{eventBusName, ruleName, targetID}
+	}
+
+	id := strings.Join(parts, targetResourceIDSeparator)
+
+	return id
+}
+
+func targetParseImportID(id string) (string, string, string, error) {
+	parts := strings.Split(id, targetImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return DefaultEventBusName, parts[0], parts[1], nil
+	}
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+	if len(parts) > 3 {
+		iTarget := strings.LastIndex(id, targetImportIDSeparator)
+		targetID := id[iTarget+1:]
+		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
+		eventBusName := id[:iRule]
+		ruleName := id[iRule+1 : iTarget]
+		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME%[2]sTARGETID or RULENAME%[2]sTARGETID", id, targetImportIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = targetImportID{}
+
+type targetImportID struct{}
+
+func (targetImportID) Create(d *schema.ResourceData) string {
+	eventBusName := d.Get("event_bus_name").(string)
+	rule := d.Get(names.AttrRule).(string)
+	targetID := d.Get("target_id").(string)
+	return targetCreateResourceID(eventBusName, rule, targetID)
+}
+
+func (targetImportID) Parse(id string) (string, map[string]string, error) {
+	eventBusName, rule, targetID, err := targetParseImportID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]string{
+		"event_bus_name": eventBusName,
+		names.AttrRule:   rule,
+		"target_id":      targetID,
+	}
+
+	return targetCreateResourceID(eventBusName, rule, targetID), results, nil
 }

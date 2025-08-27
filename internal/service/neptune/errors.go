@@ -4,5 +4,7 @@
 package neptune
 
 const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
+	errCodeInvalidParameterValue          = "InvalidParameterValue"
+	errCodeInvalidParameterCombination    = "InvalidParameterCombination"
+	errCodeInvalidGlobalClusterStateFault = "InvalidGlobalClusterStateFault"
 )

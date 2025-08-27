@@ -524,7 +524,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDeploymentGroup(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -718,7 +718,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDeploymentGroup(ctx, input)
 			},
 			func(err error) (bool, error) {

@@ -19,14 +19,14 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
 resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 ```
 
@@ -37,7 +37,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 
@@ -54,7 +54,7 @@ resource "aws_vpc_ipam_pool_cidr" "parent_test" {
 resource "aws_vpc_ipam_pool" "child" {
   address_family      = "ipv4"
   ipam_scope_id       = aws_vpc_ipam.example.private_default_scope_id
-  locale              = data.aws_region.current.name
+  locale              = data.aws_region.current.region
   source_ipam_pool_id = aws_vpc_ipam_pool.parent.id
 }
 
@@ -69,6 +69,7 @@ resource "aws_vpc_ipam_pool_cidr" "child_test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
 * `allocation_default_netmask_length` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.

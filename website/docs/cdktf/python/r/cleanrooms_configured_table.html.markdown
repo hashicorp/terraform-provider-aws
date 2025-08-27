@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) - The name of the configured table.
 * `description` - (Optional) - A description for the configured table.
 * `analysis_method` - (Required) - The analysis method for the configured table. The only valid value is currently `DIRECT_QUERY`.
@@ -98,4 +99,4 @@ Using `terraform import`, import `aws_cleanrooms_configured_table` using the `id
 % terraform import aws_cleanrooms_configured_table.table 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-453a78d0a031324d090ad2bc765ccc4d2f1ec41c65c0d162ac12a0a01d1fb07d -->
+<!-- cache-key: cdktf-0.20.8 input-e1777f2f449586e0f3edfd950cbcaf9a609653a1d4d1a6184f76be209efceb44 -->

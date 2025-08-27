@@ -25,34 +25,40 @@ func dataSourceVPCEndpoint() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCreatedDate: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The date the endpoint was created.",
 			},
 			names.AttrVPCEndpointID: {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The unique identifier of the endpoint.",
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexache.MustCompile(`^vpce-[0-9a-z]*$`), `must start with "vpce-" and can include any lower case letter or number`),
 				),
 			},
 			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The name of the endpoint.",
 			},
 			names.AttrSecurityGroupIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The IDs of the security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrSubnetIDs: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The IDs of the subnets from which you access OpenSearch Serverless.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The ID of the VPC from which you access OpenSearch Serverless.",
 			},
 		},
 	}

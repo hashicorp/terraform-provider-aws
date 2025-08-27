@@ -105,6 +105,10 @@ func dataSourceWorkgroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"track_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"workgroup_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -139,6 +143,7 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrPubliclyAccessible, resource.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
+	d.Set("track_name", resource.TrackName)
 	d.Set("workgroup_id", resource.WorkgroupId)
 
 	return diags

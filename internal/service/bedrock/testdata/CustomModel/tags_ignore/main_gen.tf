@@ -83,7 +83,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnEquals": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
       }
     }
   }]

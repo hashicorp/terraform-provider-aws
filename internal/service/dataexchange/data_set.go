@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,12 +25,14 @@ import (
 
 // @SDKResource("aws_dataexchange_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
-func ResourceDataSet() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
 		ReadWithoutTimeout:   resourceDataSetRead,
 		UpdateWithoutTimeout: resourceDataSetUpdate,
 		DeleteWithoutTimeout: resourceDataSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -85,7 +88,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
-	dataSet, err := FindDataSetById(ctx, conn, d.Id())
+	dataSet, err := findDataSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataExchange DataSet (%s) not found, removing from state", d.Id())
@@ -152,4 +155,28 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+func findDataSetByID(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetDataSetOutput, error) {
+	input := dataexchange.GetDataSetInput{
+		DataSetId: aws.String(id),
+	}
+	output, err := conn.GetDataSet(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

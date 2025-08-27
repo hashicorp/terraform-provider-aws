@@ -60,8 +60,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Profile Resource Association.
 * `profile_id` - (Required) ID of the profile associated with the VPC.
 * `resource_arn` - (Required) Resource ID of the resource to be associated with the profile.
@@ -104,10 +105,10 @@ class MyConvertedCode(TerraformStack):
         Route53ProfilesResourceAssociation.generate_config_for_import(self, "example", "rpa-id-12345678")
 ```
 
-Using `terraform import`, import Route 53 Profiles Resource Association using the `example_id_arg`. For example:
+Using `terraform import`, import Route 53 Profiles Resource Association using the `id`. For example:
 
 ```console
 % terraform import aws_route53profiles_resource_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e19b5cf3e7989f3d050a32e6b470779a272fce0b5118d964b3eb31a970c708e6 -->
+<!-- cache-key: cdktf-0.20.8 input-0b46c01a3c3fadabea064a8b22b479536c164a954ec874b8f32dba0642f30cdb -->

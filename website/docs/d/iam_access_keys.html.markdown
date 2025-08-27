@@ -21,7 +21,7 @@ data "aws_iam_access_keys" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `user` - (Required) Name of the IAM user associated with the access keys.
 

@@ -17,11 +17,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
+func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
+		"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_serial_console_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -3,8 +3,8 @@ package ssm
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -94,7 +94,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 		_, err := conn.RemoveTagsFromResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -110,7 +110,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 		_, err := conn.AddTagsToResource(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

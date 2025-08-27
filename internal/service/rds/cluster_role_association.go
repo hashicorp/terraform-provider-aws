@@ -70,26 +70,19 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get(names.AttrRoleARN).(string)
 	id := clusterRoleAssociationCreateResourceID(dbClusterID, roleARN)
-	input := &rds.AddRoleToDBClusterInput{
+	input := rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
 	}
 
-	_, err := conn.AddRoleToDBCluster(ctx, input)
-
-	// check if the cluster is in a valid state to add the role association
-	if errs.IsA[*types.InvalidDBClusterStateFault](err) {
-		if _, err := waitDBClusterAvailable(ctx, conn, dbClusterID, true, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", dbClusterID, err)
-		}
-
-		_, err = conn.AddRoleToDBCluster(ctx, input)
-	}
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return conn.AddRoleToDBCluster(ctx, &input)
+	})
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
-		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-			return conn.AddRoleToDBCluster(ctx, input)
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.AddRoleToDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
 	}
 
@@ -144,10 +137,13 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster IAM Role Association: %s", d.Id())
-	_, err = conn.RemoveRoleFromDBCluster(ctx, &rds.RemoveRoleFromDBClusterInput{
+	input := rds.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
+	}
+	_, err = tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.RemoveRoleFromDBCluster(ctx, &input)
 	})
 
 	if errs.IsA[*types.DBClusterNotFoundFault](err) || errs.IsA[*types.DBClusterRoleNotFoundFault](err) {

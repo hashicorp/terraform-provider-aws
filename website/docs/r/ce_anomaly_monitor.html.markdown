@@ -51,7 +51,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the monitor.
 * `monitor_type` - (Required) The possible type values. Valid values: `DIMENSIONAL` | `CUSTOM`.

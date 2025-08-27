@@ -198,6 +198,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
@@ -221,6 +222,7 @@ When uploading a certificate, the following arguments are supported:
 
 ### endpoint_configuration
 
+* `ip_address_type` - (Optional) The IP address types that can invoke a DomainName. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke a DomainName, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke a DomainName. For the `PRIVATE` endpoint type, only `dualstack` is supported. Terraform performs drift detection for this argument only when the value is provided.
 * `types` - (Required) A list of endpoint types of an API or its custom domain name. For an edge-optimized API and its custom domain name, the endpoint type is `EDGE`. For a regional API and its custom domain name, the endpoint type is `REGIONAL`. For a private API, the endpoint type is `PRIVATE`.
 
 ### mutual_tls_authentication
@@ -290,4 +292,4 @@ For a private custom domain name:
 % terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com/abcde12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-25ec150889c5d422ac9e72f75a16bbcaecf570d192a7d605d5469b259ce6bff5 -->
+<!-- cache-key: cdktf-0.20.8 input-3cdb6972bf7ecb4602cc09b75e070689c5b1e2a8229df1502c68b114fb26f3e8 -->

@@ -50,6 +50,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc.html):
 
 * The `cidrBlock` and `instanceTenancy` arguments become computed attributes
@@ -94,4 +96,4 @@ Using `terraform import`, import Default VPCs using the VPC `id`. For example:
 % terraform import aws_default_vpc.default vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23d964c1dc88c45ec1734d4089d10399fa0b6a694656d6ed659894a9f0b6dd98 -->
+<!-- cache-key: cdktf-0.20.8 input-4835b9bc17ad186a1703d08750efb5d17642302c2b2608733af35573882eea29 -->

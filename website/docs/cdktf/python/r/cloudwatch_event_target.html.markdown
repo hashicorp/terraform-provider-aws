@@ -14,6 +14,12 @@ Provides an EventBridge Target resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+-> **Note:** In order to be able to have your AWS Lambda function or
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+
 ## Example Usage
 
 ### Kinesis Usage
@@ -620,12 +626,6 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
--> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
-   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
-
 The following arguments are required:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the target.
@@ -633,6 +633,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appsync_target` - (Optional) Parameters used when you are using the rule to invoke an AppSync GraphQL API mutation. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
@@ -787,4 +788,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d47d898aa34d7974cef10a825a43943ac9b009a37a2cb01e8736afdd751dd905 -->
+<!-- cache-key: cdktf-0.20.8 input-4c16b50e4d084f2bdd73c8f93285521d5ad87e9bd6a834dd34651580561c90b2 -->

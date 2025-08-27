@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Required) Key-value map of tags that are used to select the EC2 instances to be included in an [Amazon Inspector assessment target](/docs/providers/aws/r/inspector_assessment_target.html).
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The resource group ARN.
 
-<!-- cache-key: cdktf-0.20.8 input-2e81e0db78f9615ccb5ac22138c773a37a41a7eac278a0a1a0e8c3b36c5946d7 -->
+<!-- cache-key: cdktf-0.20.8 input-27783f2b64c52ac9337e2f0df3940824ab9f26985899385024397b844d63d906 -->

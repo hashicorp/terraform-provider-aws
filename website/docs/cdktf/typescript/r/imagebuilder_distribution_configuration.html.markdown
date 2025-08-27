@@ -62,6 +62,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the distribution configuration.
 * `tags` - (Optional) Key-value map of resource tags for the distribution configuration. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -73,17 +74,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amiDistributionConfiguration` - (Optional) Configuration block with Amazon Machine Image (AMI) distribution settings. Detailed below.
 * `containerDistributionConfiguration` - (Optional) Configuration block with container distribution settings. Detailed below.
 * `fastLaunchConfiguration` - (Optional) Set of Windows faster-launching configurations to use for AMI distribution. Detailed below.
 * `launchTemplateConfiguration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `licenseConfigurationArns` - (Optional) Set of Amazon Resource Names (ARNs) of License Manager License Configurations.
 * `s3ExportConfiguration` - (Optional) Configuration block with S3 export settings. Detailed below.
+* `ssmParameterConfiguration` - (Optional) Configuration block with SSM parameter configuration to use as AMI id output. Detailed below.
 
 ### ami_distribution_configuration
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `amiTags` - (Optional) Key-value map of tags to apply to the distributed AMI.
 * `description` - (Optional) Description to apply to the distributed AMI.
 * `kmsKeyId` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key to encrypt the distributed AMI.
@@ -95,6 +99,7 @@ The following arguments are optional:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `organizationArns` - (Optional) Set of AWS Organization ARNs to assign.
 * `organizationalUnitArns` - (Optional) Set of AWS Organizational Unit ARNs to assign.
 * `userGroups` - (Optional) Set of EC2 launch permission user groups to assign. Use `all` to distribute a public AMI.
@@ -142,6 +147,12 @@ The following arguments are optional:
 * `s3Bucket` - (Required) The name of the S3 bucket to store the exported image in. The bucket needs to exist before the export configuration is created.
 * `s3Prefix` - (Optional) The prefix for the exported image.
 
+### ssm_parameter_configuration
+
+* `parameterName` - (Required) Name of the SSM parameter that will store the AMI ID after distribution.
+* `amiAccountId` - (Optional) AWS account ID that will own the parameter in the given region. This account must be specified as a target account in the distribution settings.
+* `dataType` - (Optional) Data type of the SSM parameter. Valid values are `text` and `aws:ec2:image`. AWS recommends using `aws:ec2:image`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -183,4 +194,4 @@ Using `terraform import`, import `aws_imagebuilder_distribution_configurations` 
 % terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7f7c8761b4f82592281b29755627d2977b88ed7794603283f70099569ca04841 -->
+<!-- cache-key: cdktf-0.20.8 input-f9faa4794eda6c230dcd5f57573d2d7707728a43771c86f2c5c64525d6585cbe -->

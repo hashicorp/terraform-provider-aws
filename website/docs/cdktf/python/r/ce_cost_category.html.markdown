@@ -68,11 +68,11 @@ The following arguments are required:
 * `name` - (Required) Unique name for the Cost Category.
 * `rule` - (Required) Configuration block for the Cost Category rules used to categorize costs. See below.
 * `rule_version` - (Required) Rule schema version in this particular Cost Category.
-* `effective_start`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 
 The following arguments are optional:
 
 * `default_value` - (Optional) Default value for the cost category.
+* `effective_start`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 * `split_charge_rule` - (Optional) Configuration block for the split charge rules used to allocate your charges between your Cost Category values. See below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -161,4 +161,4 @@ Using `terraform import`, import `aws_ce_cost_category` using the id. For exampl
 % terraform import aws_ce_cost_category.example costCategoryARN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d32509d874b0d724dcb62ee9ca6ed83a7cb80815f66336ea0a19f4b9bd60e60 -->
+<!-- cache-key: cdktf-0.20.8 input-b2b39c60cbc0c8a25b73429cbba03ec3e73496da550be36a8d32f8fc287b2c48 -->

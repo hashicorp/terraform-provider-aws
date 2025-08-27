@@ -46,8 +46,9 @@ data "aws_codebuild_fleet" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Fleet name.
 
 ## Attribute Reference
@@ -58,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
 * `base_capacity` - Number of machines allocated to the ﬂeet.
 * `compute_configuration` - Compute configuration of the compute fleet.
     * `disk` - Amount of disk space of the instance type included in the fleet.
+    * `instance_type` - EC2 instance type in the fleet.
     * `machine_type` - Machine type of the instance type included in the fleet.
     * `memory` - Amount of memory of the instance type included in the fleet.
     * `vcpu` - Number of vCPUs of the instance type included in the fleet.

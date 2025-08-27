@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### authentication_mode Configuration Block
@@ -102,4 +103,4 @@ Using `terraform import`, import a user using the `user_name`. For example:
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.
 
-<!-- cache-key: cdktf-0.20.8 input-9cb948691289b51e16a4dca053535c6a00a0065c7a66bbc25fef67a5e000e4cf -->
+<!-- cache-key: cdktf-0.20.8 input-784499a957a32f052a64474efdbb67951ecc0b2d1bc628691e6c85f35037ee5a -->

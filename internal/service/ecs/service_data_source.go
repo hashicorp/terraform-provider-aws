@@ -43,6 +43,54 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"load_balancer": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"container_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"elb_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"target_group_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"advanced_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"alternate_target_group_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"production_listener_rule": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"test_listener_rule": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrRoleARN: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"scheduling_strategy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,6 +125,11 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
+	if service.LoadBalancers != nil {
+		if err := d.Set("load_balancer", flattenServiceLoadBalancers(service.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
+	}
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("task_definition", service.TaskDefinition)

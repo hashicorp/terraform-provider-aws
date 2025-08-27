@@ -22,15 +22,15 @@ import (
 )
 
 // @EphemeralResource(aws_kms_secrets, name="Secrets")
-func newEphemeralSecrets(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralSecrets{}, nil
+func newSecretsEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &secretsEphemeralResource{}, nil
 }
 
-type ephemeralSecrets struct {
-	framework.EphemeralResourceWithConfigure
+type secretsEphemeralResource struct {
+	framework.EphemeralResourceWithModel[secretsEphemeralResourceModel]
 }
 
-func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+func (e *secretsEphemeralResource) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"plaintext": schema.MapAttribute{
@@ -75,8 +75,8 @@ func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest
 	}
 }
 
-func (e *ephemeralSecrets) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	var data epSecretData
+func (e *secretsEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	var data secretsEphemeralResourceModel
 	conn := e.Meta().KMSClient(ctx)
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
@@ -128,15 +128,16 @@ func (e *ephemeralSecrets) Open(ctx context.Context, request ephemeral.OpenReque
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
-type epSecretData struct {
-	Plaintext fwtypes.MapValueOf[types.String]          `tfsdk:"plaintext"`
+type secretsEphemeralResourceModel struct {
+	framework.WithRegionModel
+	Plaintext fwtypes.MapOfString                       `tfsdk:"plaintext"`
 	Secrets   fwtypes.SetNestedObjectValueOf[epSecrets] `tfsdk:"secret"`
 }
 
 type epSecrets struct {
-	Context             fwtypes.MapValueOf[types.String]                     `tfsdk:"context"`
+	Context             fwtypes.MapOfString                                  `tfsdk:"context"`
 	EncryptionAlgorithm fwtypes.StringEnum[awstypes.EncryptionAlgorithmSpec] `tfsdk:"encryption_algorithm"`
-	GrantTokens         fwtypes.ListValueOf[types.String]                    `tfsdk:"grant_tokens"`
+	GrantTokens         fwtypes.ListOfString                                 `tfsdk:"grant_tokens"`
 	KeyID               types.String                                         `tfsdk:"key_id"`
 	Name                types.String                                         `tfsdk:"name"`
 	Payload             types.String                                         `tfsdk:"payload"`

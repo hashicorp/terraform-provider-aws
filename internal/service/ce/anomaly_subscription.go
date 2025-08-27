@@ -31,17 +31,17 @@ const (
 )
 
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalySubscription")
+// @Testing(emailAddress="email_address")
 func resourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
 		ReadWithoutTimeout:   resourceAnomalySubscriptionRead,
 		UpdateWithoutTimeout: resourceAnomalySubscriptionUpdate,
 		DeleteWithoutTimeout: resourceAnomalySubscriptionDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAccountID: {

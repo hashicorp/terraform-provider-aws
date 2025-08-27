@@ -167,6 +167,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `closing_setting` - (Optional) Configuration block for the response that Amazon Lex sends to the user when the intent is closed. See [`closing_setting`](#closing_setting).
 * `confirmation_setting` - (Optional) Configuration block for prompts that Amazon Lex sends to the user to confirm the completion of an intent. If the user answers "no," the settings contain a statement that is sent to the user to end the intent. If you configure this block without `prompt_specification.*.prompt_attempts_specification`, AWS will provide default configurations for `Initial` and `Retry1` `prompt_attempts_specification`s. This will cause Terraform to report differences. Use the `confirmation_setting` configuration above in the [Basic Usage](#basic-usage) example to avoid differences resulting from AWS default configuration. See [`confirmation_setting`](#confirmation_setting).
 * `description` - (Optional) Description of the intent. Use the description to help identify the intent in lists.

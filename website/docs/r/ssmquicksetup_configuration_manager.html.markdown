@@ -47,7 +47,7 @@ resource "aws_ssmquicksetup_configuration_manager" "example" {
       "ConfigurationOptionsPatchOperation" : "Scan",
       "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
       "ConfigurationOptionsScanNextInterval" : "false",
-      "PatchBaselineRegion" : data.aws_region.current.name,
+      "PatchBaselineRegion" : data.aws_region.current.region,
       "PatchBaselineUseDefault" : "default",
       "PatchPolicyName" : "example",
       "SelectedPatchBaselines" : local.selected_patch_baselines,
@@ -56,7 +56,7 @@ resource "aws_ssmquicksetup_configuration_manager" "example" {
       "RateControlErrorThreshold" : "2%",
       "IsPolicyAttachAllowed" : "false",
       "TargetAccounts" : data.aws_caller_identity.current.account_id,
-      "TargetRegions" : data.aws_region.current.name,
+      "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
   }
@@ -72,6 +72,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the configuration manager.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

@@ -12,28 +12,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_cloudwatch_contributor_managed_insight_rules", name="Contributor Managed Insight Rules")
-func newDataSourceContributorManagedInsightRules(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceContributorManagedInsightRules{}, nil
+func newContributorManagedInsightRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &contributorManagedInsightRulesDataSource{}, nil
 }
 
 const (
 	DSNameContributorManagedInsightRules = "Contributor Managed Insight Rules Data Source"
 )
 
-type dataSourceContributorManagedInsightRules struct {
-	framework.DataSourceWithConfigure
+type contributorManagedInsightRulesDataSource struct {
+	framework.DataSourceWithModel[contributorManagedInsightRulesDataSourceModel]
 }
 
-func (d *dataSourceContributorManagedInsightRules) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *contributorManagedInsightRulesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrResourceARN: schema.StringAttribute{
@@ -44,11 +44,11 @@ func (d *dataSourceContributorManagedInsightRules) Schema(ctx context.Context, r
 	}
 }
 
-func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().CloudWatchClient(ctx)
 
-	var data dataSourceContributorManagedInsightRulesData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	var data contributorManagedInsightRulesDataSourceModel
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -61,29 +61,27 @@ func (d *dataSourceContributorManagedInsightRules) Read(ctx context.Context, req
 
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionReading, DSNameContributorManagedInsightRules, data.ResourceARN.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ResourceARN.String())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(
 		ctx,
 		struct {
 			ManagedRules []awstypes.ManagedRuleDescription
 		}{
 			ManagedRules: output,
 		},
-		&data)...)
+		&data), smerr.ID, data.ResourceARN.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ResourceARN.String())
 }
 
-type dataSourceContributorManagedInsightRulesData struct {
+type contributorManagedInsightRulesDataSourceModel struct {
+	framework.WithRegionModel
 	ResourceARN  types.String                                            `tfsdk:"resource_arn"`
 	ManagedRules fwtypes.ListNestedObjectValueOf[managedRuleDescription] `tfsdk:"managed_rules"`
 }

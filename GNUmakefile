@@ -178,6 +178,7 @@ docs-check: ## Check provider documentation (Legacy, use caution)
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
+		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
 		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
@@ -234,7 +235,7 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find internal -name "*.go" -type f -exec goimports -w {} \;
+	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
@@ -253,7 +254,7 @@ gen: prereq-go ## Run all Go generators
 	@echo "make: Running Go generators..."
 	$(GO_VER) generate ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
-	$(GO_VER) generate ./internal/provider
+	$(GO_VER) generate ./internal/provider/...
 	$(GO_VER) generate ./internal/sweep
 
 gen-check: gen ## [CI] Provider Checks / go_generate
@@ -334,6 +335,16 @@ modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individ
 	@echo "make: Fixing checks for modern Go code..."
 	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test $(TEST)
 
+pr-target-check: ## [CI] Check for pull request target
+	@echo "make: Checking for pull request target..."
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
+	if [ -n "$$disallowed_files" ]; then \
+		echo "Error: 'pull_request_target' found in disallowed files:"; \
+		echo "$$disallowed_files"; \
+		exit 1; \
+	fi
+	@echo "make: pr-target-check passed."
+
 prereq-go: ## If $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
 		echo "make: $(GO_VER) not found" ; \
@@ -371,6 +382,9 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS001=false \
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
+
+quick-fix: fmt testacc-lint-fix fix-imports modern-fix semgrep-fix ## Some quick fixes
+	@echo "make: Quick fixes..."
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
@@ -490,8 +504,7 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml \
-		--config .ci/.semgrep-test-constants-temp.yml
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -563,6 +576,14 @@ semgrep-validate: ## Validate Semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
+semgrep-vcr: ## Enable VCR support with Semgrep --autofix
+	@echo "make: Enable VCR support with Semgrep --autofix"
+	@echo "WARNING: Because some autofixes are inside code blocks replaced by other rules,"
+	@echo "this target may need to be run twice."
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config internal/vcr/.semgrep-vcr.yml
+
 skaff: prereq-go ## Install skaff
 	@echo "make: Installing skaff..."
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -609,7 +630,7 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m -vet=off
+	$(GO_VER) test $(TEST) -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout 15m -vet=off
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -681,12 +702,17 @@ tfproviderdocs: go-build ## [CI] Provider Checks / tfproviderdocs
 	tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
+		-ignore-contents-check-data-sources aws_kms_secrets,aws_kms_secret \
 		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
 		-provider-source registry.terraform.io/hashicorp/aws \
 		-providers-schema-json terraform-providers-schema/schema.json \
 		-require-resource-subcategory \
-		-ignore-cdktf-missing-files
+		-ignore-cdktf-missing-files \
+		-ignore-enhanced-region-check-subcategories-file website/ignore-enhanced-region-check-subcategories.txt \
+		-ignore-enhanced-region-check-data-sources-file website/ignore-enhanced-region-check-data-sources.txt \
+		-ignore-enhanced-region-check-resources-file website/ignore-enhanced-region-check-resources.txt \
+		-enable-enhanced-region-check
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	@echo "make: Installing tfsdk2fw..."
@@ -697,13 +723,14 @@ tools: prereq-go ## Install tools
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
-	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
+	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
@@ -725,6 +752,12 @@ update: prereq-go ## Update dependencies
 	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
 	cd ./skaff && $(GO_VER) get -u ./... && $(GO_VER) mod tidy
+
+vcr-enable: ## Enable VCR testing
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) semgrep-vcr || true
+	$(MAKE) fmt
+	goimports -w ./$(PKG_NAME)/
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -856,96 +889,100 @@ yamllint: ## [CI] YAML Linting / yamllint
 	acctest-lint \
 	build \
 	changelog-misspell \
-	ci-quick \
 	ci \
+	ci-quick \
+	clean \
 	clean-go \
 	clean-make-tests \
 	clean-tidy \
-	clean \
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
-	docs-lint-fix \
 	docs-lint \
+	docs-lint-fix \
 	docs-markdown-lint \
 	docs-misspell \
-	docs \
 	examples-tflint \
 	fix-constants \
 	fix-imports \
-	fmt-check \
 	fmt \
+	fmt-check \
 	fumpt \
-	gen-check \
 	gen \
+	gen-check \
 	generate-changelog \
 	gh-workflows-lint \
 	go-build \
 	go-misspell \
+	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
-	golangci-lint \
 	help \
 	import-lint \
 	install \
-	lint-fix \
 	lint \
+	lint-fix \
 	misspell \
 	modern-check \
 	modern-fix \
+	pr-target-check \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	quick-fix \
 	sane \
 	sanity \
+	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
-	semgrep-naming-cae \
 	semgrep-naming \
+	semgrep-naming-cae \
 	semgrep-service-naming \
 	semgrep-validate \
-	semgrep \
-	skaff-check-compile \
+	semgrep-vcr \
 	skaff \
+	skaff-check-compile \
 	smoke \
 	sweep \
+	sweeper \
 	sweeper-check \
 	sweeper-linked \
 	sweeper-unlinked \
-	sweeper \
 	t \
-	test-compile \
 	test \
-	testacc-lint-fix \
+	test-compile \
+	testacc \
 	testacc-lint \
+	testacc-lint-fix \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
 	testacc-tflint-embedded \
-	testacc \
 	tflint-init \
 	tfproviderdocs \
 	tfsdk2fw \
 	tools \
 	ts \
 	update \
+	vcr-enable \
+	website \
+	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \
-	website-link-check \
-	website-lint-fix \
 	website-lint \
+	website-lint-fix \
 	website-markdown-lint \
 	website-misspell \
 	website-terrafmt \
 	website-tflint \
-	website \
 	yamllint

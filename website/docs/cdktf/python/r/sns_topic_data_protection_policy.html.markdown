@@ -59,6 +59,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) The ARN of the SNS topic
 * `policy` - (Required) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
@@ -91,4 +92,4 @@ Using `terraform import`, import SNS Data Protection Topic Policy using the topi
 % terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-451e4286e0b857b4d59c301bbaebb3b1b5ebeb8f11950844d90d7191c3d499eb -->
+<!-- cache-key: cdktf-0.20.8 input-fa6285f071ab1063e4f4c21bca9a097eb24f2c329073952be63105a08db4aebb -->

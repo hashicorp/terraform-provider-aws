@@ -34,14 +34,14 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
     const awsVpcIpamPoolExample = new VpcIpamPool(this, "example_2", {
       addressFamily: "ipv4",
       ipamScopeId: example.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
@@ -71,7 +71,7 @@ class MyConvertedCode extends TerraformStack {
     const example = new VpcIpam(this, "example", {
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
     });
@@ -86,7 +86,7 @@ class MyConvertedCode extends TerraformStack {
     const child = new VpcIpamPool(this, "child", {
       addressFamily: "ipv4",
       ipamScopeId: example.privateDefaultScopeId,
-      locale: Token.asString(current.name),
+      locale: Token.asString(current.region),
       sourceIpamPoolId: parent.id,
     });
     new VpcIpamPoolCidr(this, "child_test", {
@@ -102,6 +102,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addressFamily` - (Required) The IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
 * `allocationDefaultNetmaskLength` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocationMaxNetmaskLength` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.
@@ -160,4 +161,4 @@ Using `terraform import`, import IPAMs using the IPAM pool `id`. For example:
 % terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0691c6863d4ed9f80ea5c189984553f9fee2e100bc4e7dbe9dd5b6bb4a149e1f -->
+<!-- cache-key: cdktf-0.20.8 input-5e75736b1363d462eb25f8dfe2ff410a237ca7eea642a77ab07c7c6aa03b5ee4 -->

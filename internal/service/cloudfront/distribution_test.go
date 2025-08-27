@@ -585,16 +585,16 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.name`)),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`null`, `data.aws_region.current.region`)),
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtFalse, `""`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"US East (Ohio)"`)),
-				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
+				ExpectError: regexache.MustCompile(`.*doesn't look like AWS Region.*`),
 			},
 			{
 				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003

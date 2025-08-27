@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "example_agent_trust" {
     }
     condition {
       test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:agent/*"]
       variable = "AWS:SourceArn"
     }
   }
@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "example_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/anthropic.claude-v2",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}::foundation-model/anthropic.claude-v2",
     ]
   }
 }
@@ -77,12 +77,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_collaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customer_encryption_key_arn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
 * `guardrail_configuration` - (Optional) Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block) for details.
 * `idle_session_ttl_in_seconds` - (Optional) Number of seconds for which Amazon Bedrock keeps information about a user's conversation with the agent. A user interaction remains active for the amount of time specified. If no conversation occurs during this time, the session expires and Amazon Bedrock deletes any data provided before the timeout.
-* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 8000 characters.
+* `instruction` - (Optional) Instructions that tell the agent what it should do and how it should interact with users. The valid range is 40 - 20000 characters.
 * `memory_configuration` (Optional) Configurations for the agent's ability to retain the conversational context.
 * `prepare_agent` (Optional) Whether to prepare the agent after creation or modification. Defaults to `true`.
 * `prompt_override_configuration` (Optional) Configurations to override prompt templates in different parts of an agent sequence. For more information, see [Advanced prompts](https://docs.aws.amazon.com/bedrock/latest/userguide/advanced-prompts.html). See [`prompt_override_configuration` Block](#prompt_override_configuration-block) for details.
@@ -139,6 +140,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `agent_id` - Unique identifier of the agent.
 * `agent_version` - Version of the agent.
 * `id` - Unique identifier of the agent.
+* `prepared_at` - Timestamp of when the agent was last prepared.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

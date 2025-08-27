@@ -735,6 +735,7 @@ resource "aws_kinesis_stream" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -862,6 +863,7 @@ resource "aws_kms_key" "key" {
 
   description             = "%[1]s-${count.index}"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kinesis_stream" "test" {

@@ -6,6 +6,7 @@ package acctest
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,6 +37,20 @@ func ImportCheckResourceAttr(key, expected string) resource.ImportStateCheckFunc
 		rs := is[0]
 		if rs.Attributes[key] != expected {
 			return fmt.Errorf("Attribute '%s' expected %s, got %s", key, expected, rs.Attributes[key])
+		}
+		return nil
+	}
+}
+
+func ImportMatchResourceAttr(key string, r *regexp.Regexp) resource.ImportStateCheckFunc {
+	return func(is []*terraform.InstanceState) error {
+		if len(is) != 1 {
+			return fmt.Errorf("Attribute '%s' expected 1 instance state, got %d", key, len(is))
+		}
+
+		rs := is[0]
+		if !r.MatchString(rs.Attributes[key]) {
+			return fmt.Errorf("Attribute '%s' didn't match %q, got %#v", key, r.String(), rs.Attributes[key])
 		}
 		return nil
 	}

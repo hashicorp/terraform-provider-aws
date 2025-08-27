@@ -59,14 +59,14 @@ class MyConvertedCode(TerraformStack):
             catalog_id="123456789012",
             configuration=[GlueCatalogTableOptimizerConfiguration(
                 enabled=True,
-                retention_configuration=[{
-                    "iceberg_configuration": [{
-                        "clean_expired_files": True,
-                        "number_of_snapshots_to_retain": 3,
-                        "snapshot_retention_period_in_days": 7
-                    }
+                retention_configuration=[GlueCatalogTableOptimizerConfigurationRetentionConfiguration(
+                    iceberg_configuration=[GlueCatalogTableOptimizerConfigurationRetentionConfigurationIcebergConfiguration(
+                        clean_expired_files=True,
+                        number_of_snapshots_to_retain=3,
+                        snapshot_retention_period_in_days=7
+                    )
                     ]
-                }
+                )
                 ],
                 role_arn="arn:aws:iam::123456789012:role/example-role"
             )
@@ -95,13 +95,13 @@ class MyConvertedCode(TerraformStack):
             catalog_id="123456789012",
             configuration=[GlueCatalogTableOptimizerConfiguration(
                 enabled=True,
-                orphan_file_deletion_configuration=[{
-                    "iceberg_configuration": [{
-                        "location": "s3://example-bucket/example_table/",
-                        "orphan_file_retention_period_in_days": 7
-                    }
+                orphan_file_deletion_configuration=[GlueCatalogTableOptimizerConfigurationOrphanFileDeletionConfiguration(
+                    iceberg_configuration=[GlueCatalogTableOptimizerConfigurationOrphanFileDeletionConfigurationIcebergConfiguration(
+                        location="s3://example-bucket/example_table/",
+                        orphan_file_retention_period_in_days=7
+                    )
                     ]
-                }
+                )
                 ],
                 role_arn="arn:aws:iam::123456789012:role/example-role"
             )
@@ -114,8 +114,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Required) The Catalog ID of the table.
 * `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
 * `database_name` - (Required) The name of the database in the catalog in which the table resides.
@@ -171,4 +172,4 @@ Using `terraform import`, import Glue Catalog Table Optimizer using the `catalog
 % terraform import aws_glue_catalog_table_optimizer.example 123456789012,example_database,example_table,compaction
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-66d7bc6bd6620ab4de741d3c7340652d5a1bea26f1da8ed953c0435628f6e242 -->
+<!-- cache-key: cdktf-0.20.8 input-5cb17126b69dfd13d7795225555ce6d4a4323885f16e8cbe02161e9d8e8e1455 -->

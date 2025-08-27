@@ -80,6 +80,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cak` - (Optional) The MAC Security (MACsec) CAK to associate with the dedicated connection. The valid values are 64 hexadecimal characters (0-9, A-E). Required if using `ckn`.
 * `ckn` - (Optional) The MAC Security (MACsec) CKN to associate with the dedicated connection. The valid values are 64 hexadecimal characters (0-9, A-E). Required if using `cak`.
 * `connection_id` - (Required) The ID of the dedicated Direct Connect connection. The connection must be a dedicated connection in the `AVAILABLE` state.
@@ -95,4 +96,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `start_on` - The date in UTC format that the MAC Security (MACsec) secret key takes effect.
 * `state` -  The state of the MAC Security (MACsec) secret key. The possible values are: associating, associated, disassociating, disassociated. See [MacSecKey](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_MacSecKey.html#DX-Type-MacSecKey-state) for descriptions of each state.
 
-<!-- cache-key: cdktf-0.20.8 input-50e631d31892cfa79cc6641d788fa0436c1b909e5a7fa4536b04ed0e3acb3b04 -->
+<!-- cache-key: cdktf-0.20.8 input-1ab628f9f00694502df6c2317eae763181da8fdcc8b94fcb6a995e514f8c2c97 -->

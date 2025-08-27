@@ -51,6 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The display name of a backup plan.
 * `rule` - (Required) A rule object that specifies a scheduled task that is used to back up a selection of resources.
 * `advanced_backup_setting` - (Optional) An object that specifies backup options for each resource type.
@@ -127,4 +128,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-826f12ea1a977c3111ab982ec617895faf024ed3b6b3e4bcf7de41f5a62b6aeb -->
+<!-- cache-key: cdktf-0.20.8 input-9c7e3e4c6a45a8200e713e04f6087a89faf7edbe3ca3bb94731bd01df14fe659 -->

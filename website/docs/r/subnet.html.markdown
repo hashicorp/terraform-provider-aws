@@ -48,6 +48,7 @@ resource "aws_subnet" "in_secondary_cidr" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`

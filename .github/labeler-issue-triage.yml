@@ -77,6 +77,8 @@ service/appstream:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appstream_'
 service/appsync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appsync_'
+service/arcregionswitch:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_arcregionswitch_'
 service/athena:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_athena_'
 service/auditmanager:
@@ -97,6 +99,8 @@ service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
 service/bedrockagent:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
+service/bedrockagentcore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagentcore_'
 service/billing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billing_'
 service/billingconductor:
@@ -170,7 +174,7 @@ service/codestarnotifications:
 service/cognitoidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_identity_(?!provider)'
 service/cognitoidp:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk|log)'
 service/cognitosync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognitosync_'
 service/comprehend:
@@ -283,6 +287,8 @@ service/events:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudwatch_event_'
 service/evidently:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evidently_'
+service/evs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_evs_'
 service/finspace:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_finspace_'
 service/finspacedata:
@@ -497,8 +503,14 @@ service/networkmonitor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkmonitor_'
 service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
+service/notifications:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notifications_'
+service/notificationscontacts:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_notificationscontacts_'
 service/oam:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_oam_'
+service/odb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_odb_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
 service/opensearchserverless:
@@ -605,6 +617,8 @@ service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
 service/s3tables:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
+service/s3vectors:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3vectors_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:

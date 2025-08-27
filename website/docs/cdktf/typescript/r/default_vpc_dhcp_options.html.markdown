@@ -49,6 +49,8 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
 The arguments of an `aws_default_vpc_dhcp_options` differ slightly from `aws_vpc_dhcp_options`  resources.
 Namely, the `domainName`, `domainNameServers` and `ntpServers` arguments are computed.
 The following arguments are still supported:
@@ -104,4 +106,4 @@ Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. F
 % terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-21aa3abe1b6cf1b9d60f1d171804683cdd303ce6ce4e6aea648ed7c2d5d6b7c2 -->
+<!-- cache-key: cdktf-0.20.8 input-791298a5aab0626e78c86e799d4302a193caf94a5cca2bd13b69b1dfe4ef3dbd -->

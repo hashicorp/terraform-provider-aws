@@ -32,7 +32,8 @@ func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_allAZs(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrGroupName, acctest.Region()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
@@ -61,7 +62,8 @@ func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrGroupName, acctest.Region()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
@@ -90,6 +92,7 @@ func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_type("local-zone"),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
@@ -119,7 +122,8 @@ func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrGroupName, acctest.Region()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
@@ -148,6 +152,7 @@ func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_type("wavelength-zone"),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
@@ -177,7 +182,8 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 			{
 				Config: testAccAvailabilityZoneDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrGroupName, acctest.Region()),
+					resource.TestCheckResourceAttrSet(dataSourceName, "group_long_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),

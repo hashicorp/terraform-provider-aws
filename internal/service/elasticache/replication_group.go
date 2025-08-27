@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/go-cty/cty/gocty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -85,7 +85,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AuthTokenUpdateStrategyType](),
-				Default:          awstypes.AuthTokenUpdateStrategyTypeRotate,
+				RequiredWith:     []string{"auth_token"},
 			},
 			names.AttrAutoMinorVersionUpgrade: {
 				Type:         nullable.TypeNullableBool,
@@ -124,10 +124,19 @@ func resourceReplicationGroup() *schema.Resource {
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+					// While the existing validator makes it technically possible to provide an
+					// uppercase engine value, the absence of a diff suppression function makes
+					// it impractical to do so (a persistent diff will be present). To be
+					// conservative we will still run the deprecation validator to notify
+					// practitioners that stricter validation will be enforced in v7.0.0.
+					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+				),
+				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -137,6 +146,7 @@ func resourceReplicationGroup() *schema.Resource {
 					validRedisVersionString,
 					validValkeyVersionString,
 				),
+				DiffSuppressFunc: suppressDiffIfBelongsToGlobalReplicationGroup,
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -258,7 +268,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.HasPrefix(old, "global-datastore-")
+					return suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new, d)
 				},
 			},
 			names.AttrPort: {
@@ -371,7 +381,7 @@ func resourceReplicationGroup() *schema.Resource {
 			},
 		},
 
-		SchemaVersion: 2,
+		SchemaVersion: 3,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
@@ -386,8 +396,15 @@ func resourceReplicationGroup() *schema.Resource {
 			// must be written to state via a state upgrader.
 			{
 				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
-				Upgrade: replicationGroupStateUpgradeV1,
+				Upgrade: replicationGroupStateUpgradeFromV1,
 				Version: 1,
+			},
+			// v6.0.0 removed the default auth_token_update_strategy value. To prevent
+			// differences, the default value is removed when auth_token is not set.
+			{
+				Type:    resourceReplicationGroupConfigV2().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeFromV2,
+				Version: 2,
 			},
 		},
 
@@ -400,15 +417,7 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
-			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				if !diff.HasChange(names.AttrEngine) {
-					return false
-				}
-				if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
-					return false
-				}
-				return true
-			}),
+			customizeDiffEngineForceNewOnDowngrade(),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
@@ -477,8 +486,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
-		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+
+		// backwards-compatibility; imply redis engine if empty and not part of global replication group
+		if e, ok := d.GetOk(names.AttrEngine); ok {
+			input.Engine = aws.String(e.(string))
+		} else {
+			input.Engine = aws.String(engineRedis)
+		}
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -647,7 +662,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	rgp, err := findReplicationGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -666,8 +681,6 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 	}
-
-	d.Set(names.AttrEngine, rgp.Engine)
 
 	switch rgp.AutomaticFailover {
 	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
@@ -715,7 +728,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if rgp.ConfigurationEndpoint != nil {
 		d.Set(names.AttrPort, rgp.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint_address", rgp.ConfigurationEndpoint.Address)
-	} else {
+	} else if len(rgp.NodeGroups) > 0 {
 		log.Printf("[DEBUG] ElastiCache Replication Group (%s) Configuration Endpoint is nil", d.Id())
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
@@ -847,7 +860,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+		if old, new := d.GetChange(names.AttrEngine); old.(string) != new.(string) && new.(string) == engineValkey {
 			if !d.HasChange(names.AttrEngineVersion) {
 				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
 			}
@@ -857,6 +870,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+			if input.Engine == nil {
+				// backwards-compatibility; imply redis engine if just given engine version
+				if e, ok := d.GetOk(names.AttrEngine); ok {
+					input.Engine = aws.String(e.(string))
+				} else {
+					input.Engine = aws.String(engineRedis)
+				}
+			}
 			requestUpdate = true
 		}
 
@@ -1067,7 +1088,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		timeout = 10 * time.Minute // 10 minutes should give any creating/deleting cache clusters or snapshots time to complete.
 	)
 	log.Printf("[INFO] Deleting ElastiCache Replication Group: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteReplicationGroup(ctx, input)
 	})
 
@@ -1099,7 +1120,7 @@ func disassociateReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		ReplicationGroupRegion:   aws.String(region),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DisassociateGlobalReplicationGroup(ctx, input)
 	})
 
@@ -1290,8 +1311,7 @@ func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input 
 
 		if errs.IsA[*awstypes.ReplicationGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -1309,11 +1329,11 @@ func findReplicationGroups(ctx context.Context, conn *elasticache.Client, input 
 	return output, nil
 }
 
-func statusReplicationGroup(ctx context.Context, conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationGroup(conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationGroupByID(ctx, conn, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1342,7 +1362,7 @@ func waitReplicationGroupAvailable(ctx context.Context, conn *elasticache.Client
 			replicationGroupStatusSnapshotting,
 		},
 		Target:     []string{replicationGroupStatusAvailable},
-		Refresh:    statusReplicationGroup(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroup(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      delay,
@@ -1365,7 +1385,7 @@ func waitReplicationGroupDeleted(ctx context.Context, conn *elasticache.Client, 
 			replicationGroupStatusDeleting,
 		},
 		Target:     []string{},
-		Refresh:    statusReplicationGroup(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroup(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1404,11 +1424,11 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 
 // statusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func statusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReplicationGroupMemberClusters(conn *elasticache.Client, replicationGroupID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1437,7 +1457,7 @@ func waitReplicationGroupMemberClustersAvailable(ctx context.Context, conn *elas
 			cacheClusterStatusSnapshotting,
 		},
 		Target:     []string{cacheClusterStatusAvailable},
-		Refresh:    statusReplicationGroupMemberClusters(ctx, conn, replicationGroupID),
+		Refresh:    statusReplicationGroupMemberClusters(conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -1484,4 +1504,9 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 		return nil
 	}
 	return errors.New(`"num_cache_clusters": must be at least 2 if automatic_failover_enabled is true`)
+}
+
+func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
+	_, has_global_replication_group := d.GetOk("global_replication_group_id")
+	return has_global_replication_group && !d.IsNewResource()
 }

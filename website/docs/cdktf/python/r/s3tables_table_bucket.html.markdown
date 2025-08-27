@@ -35,17 +35,27 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the table bucket.
   Must be between 3 and 63 characters in length.
   Can consist of lowercase letters, numbers, and hyphens, and must begin and end with a lowercase letter or number.
   A full list of bucket naming rules can be found in the [S3 Tables documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-buckets-naming.html#table-buckets-naming-rules).
 
-The following argument is optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `encryption_configuration` - (Optional) A single table bucket encryption configuration object.
+  [See `encryption_configuration` below](#encryption_configuration).
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
+
+### `encryption_configuration`
+
+The `encryption_configuration` object supports the following arguments:
+
+* `kms_key_arn` - (Optional) The ARN of a KMS Key to be used with `aws:kms` `sse_algorithm`
+* `sse_algorithm` - (Required) One of `aws:kms` or `AES256`
 
 ### `maintenance_configuration`
 
@@ -105,4 +115,4 @@ Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For exa
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f9317df876a0daeedf264a027d2ca947a205340cdbb3a2d3d6ea113167a47fcc -->
+<!-- cache-key: cdktf-0.20.8 input-0d912a47569a48a79eab390ea4f794eff612e2c0c957303abdd7d34e0b3730cd -->

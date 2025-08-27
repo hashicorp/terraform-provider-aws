@@ -15,7 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_ssmincidents_response_plan", name="Response Plan")
-func DataSourceResponsePlan() *schema.Resource {
+func dataSourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 

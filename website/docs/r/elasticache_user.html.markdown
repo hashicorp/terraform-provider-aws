@@ -63,6 +63,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authentication_mode` - (Optional) Denotes the user's authentication properties. Detailed below.
 * `no_password_required` - (Optional) Indicates a password is not required for this user.
 * `passwords` - (Optional) Passwords used for this user. You can create up to two passwords for each user.

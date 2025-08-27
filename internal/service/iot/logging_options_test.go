@@ -19,6 +19,7 @@ func TestAccIoTLoggingOptions_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccLoggingOptions_basic,
 		"update":        testAccLoggingOptions_update,
+		"Identity":      testAccIoTLoggingOptions_IdentitySerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -97,7 +98,7 @@ EOF
 
 resource "aws_iam_role_policy" "test" {
   name = %[1]q
-  role = aws_iam_role.test.id
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {

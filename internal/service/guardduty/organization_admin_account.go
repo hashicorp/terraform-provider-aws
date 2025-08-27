@@ -18,7 +18,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_organization_admin_account", name="Organization Admin Account")
-func ResourceOrganizationAdminAccount() *schema.Resource {
+func resourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
@@ -68,7 +68,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
-	adminAccount, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
+	adminAccount, err := getOrganizationAdminAccount(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
@@ -106,25 +106,24 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func GetOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	input := &guardduty.ListOrganizationAdminAccountsInput{}
-	result := awstypes.AdminAccount{}
+func getOrganizationAdminAccount(ctx context.Context, conn *guardduty.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+	var input guardduty.ListOrganizationAdminAccountsInput
 
-	pages := guardduty.NewListOrganizationAdminAccountsPaginator(conn, input)
+	pages := guardduty.NewListOrganizationAdminAccountsPaginator(conn, &input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return &result, err
+			return nil, err
 		}
-		for _, adminAccount := range page.AdminAccounts {
-			if aws.ToString(adminAccount.AdminAccountId) == adminAccountID {
-				result = adminAccount
-				break
+
+		for _, account := range page.AdminAccounts {
+			if aws.ToString(account.AdminAccountId) == adminAccountID {
+				return &account, nil
 			}
 		}
 	}
 
-	return &result, nil
+	return nil, nil
 }

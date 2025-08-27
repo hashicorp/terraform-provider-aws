@@ -80,6 +80,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agentArns` - (Required) A list of DataSync Agent ARNs with which this location will be associated.
 * `authenticationType` - (Required) The type of authentication used to determine the identity of the user. Valid values are `SIMPLE` and `KERBEROS`.
 * `blockSize` - (Optional) The size of data blocks to write into the HDFS cluster. The block size must be a multiple of 512 bytes. The default block size is 128 mebibytes (MiB).
@@ -145,4 +146,4 @@ Using `terraform import`, import `aws_datasync_location_hdfs` using the Amazon R
 % terraform import aws_datasync_location_hdfs.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0a9e34d58329d5bd59f8c52e981b7f1adf8e01f5bbf5526376dbd6449663fed2 -->
+<!-- cache-key: cdktf-0.20.8 input-3213fbfb6057908b4a74ba545538629a8dbddd906b8f8e0eae60a8d39acc547c -->

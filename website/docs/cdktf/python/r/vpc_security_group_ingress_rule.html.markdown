@@ -57,8 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr_ipv4` - (Optional) The source IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) The source IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
@@ -69,6 +68,8 @@ This resource supports the following arguments:
 * `security_group_id` - (Required) The ID of the security group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `to_port` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
+
+~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
 ## Attribute Reference
 
@@ -103,4 +104,4 @@ Using `terraform import`, import security group ingress rules using the `securit
 % terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-368b6061d5c57b1ac267c61ed32f50072bc715ca7dc711b8daffe4d0ee4cdb34 -->
+<!-- cache-key: cdktf-0.20.8 input-c1416cf32b27999d870855d27eb3ab85a0e2df5a8a496e06aa9b44de65cb0d65 -->

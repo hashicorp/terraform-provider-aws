@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainId` - (Required) The ID of the associated Domain.
 * `singleSignOnUserIdentifier` - (Optional) A specifier for the type of value specified in `singleSignOnUserValue`. Currently, the only supported value is `UserName`. If the Domain's AuthMode is SSO, this field is required. If the Domain's AuthMode is not SSO, this field cannot be specified.
 * `singleSignOnUserValue` - (Required) The username of the associated AWS Single Sign-On User for this User Profile. If the Domain's AuthMode is SSO, this field is required, and must match a valid username of a user in your directory. If the Domain's AuthMode is not SSO, this field cannot be specified.
@@ -239,7 +240,6 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The user profile Amazon Resource Name (ARN).
 * `arn` - The user profile Amazon Resource Name (ARN).
 * `homeEfsFileSystemUid` - The ID of the user's profile in the Amazon Elastic File System (EFS) volume.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -276,4 +276,4 @@ Using `terraform import`, import SageMaker AI User Profiles using the `arn`. For
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-862f8c6ca3a0837d61834f0e5fe8da74586e71de0f24b2b44c80ca762ae7c610 -->
+<!-- cache-key: cdktf-0.20.8 input-160cea31c108cf861440fa1416fbac986168574be32d139743ef5bc41deb6d7a -->

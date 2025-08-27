@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the ElastiCache parameter group.
 * `family` - (Required) The family of the ElastiCache parameter group.
 * `description` - (Optional) The description of the ElastiCache parameter group. Defaults to "Managed by Terraform".
@@ -102,4 +103,4 @@ Using `terraform import`, import ElastiCache Parameter Groups using the `name`. 
 % terraform import aws_elasticache_parameter_group.default redis-params
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1858c11d21ea62b961241aaf317216a7b9adcdbbfcf280755e49cbf394b01a06 -->
+<!-- cache-key: cdktf-0.20.8 input-7d9203044f895d86b1a7977fe072d089f9a1c38d58185976712414c53f792c4b -->

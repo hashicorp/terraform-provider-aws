@@ -23,16 +23,17 @@ import (
 )
 
 // @SDKResource("aws_xray_encryption_config", name="Encryption Config")
+// @SingletonIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
+// @Testing(generator=false)
+// @Testing(checkDestroyNoop=true)
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,
 		ReadWithoutTimeout:   resourceEncryptionConfigRead,
 		UpdateWithoutTimeout: resourceEncryptionPutConfig,
 		DeleteWithoutTimeout: schema.NoopContext,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrKeyID: {

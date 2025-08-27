@@ -724,6 +724,7 @@ func testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -757,11 +758,13 @@ locals {
 resource "aws_kms_key" "test" {
   description             = "KMS Key"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "KMS Key 2"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_connect_instance_storage_config" "test" {
@@ -852,11 +855,13 @@ locals {
 resource "aws_kms_key" "test" {
   description             = "KMS Key for Bucket 1"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key" "test2" {
   description             = "KMS Key for Bucket 2"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 

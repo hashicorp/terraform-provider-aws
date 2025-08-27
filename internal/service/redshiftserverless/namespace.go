@@ -303,8 +303,8 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, namespaceDeletedTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, namespaceDeletedTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteNamespace(ctx, &redshiftserverless.DeleteNamespaceInput{
 				NamespaceName: aws.String(d.Id()),
 			})

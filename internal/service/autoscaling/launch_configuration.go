@@ -366,7 +366,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
 	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -405,7 +404,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -416,7 +415,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 			return false, err
 		})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
@@ -518,8 +516,8 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseFault](ctx, propagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseFault](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteLaunchConfiguration(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
@@ -785,7 +783,6 @@ func userDataHashSum(userData string) string {
 
 func findLaunchConfiguration(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLaunchConfigurationsInput) (*awstypes.LaunchConfiguration, error) {
 	output, err := findLaunchConfigurations(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -800,7 +797,6 @@ func findLaunchConfigurations(ctx context.Context, conn *autoscaling.Client, inp
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
 		if err != nil {
 			return nil, err
 		}
@@ -817,7 +813,6 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 	}
 
 	output, err := findLaunchConfiguration(ctx, conn, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -834,7 +829,6 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 
 func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID string) (string, error) {
 	image, err := tfec2.FindImageByID(ctx, conn, imageID)
-
 	if err != nil {
 		return "", err
 	}
