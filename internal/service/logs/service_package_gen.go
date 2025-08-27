@@ -85,7 +85,8 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) []*inttypes
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			}),
-			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			Identity:      inttypes.RegionalSingleParameterIdentity(names.AttrName),
+			SDKv2Resource: resourceGroup(),
 		},
 	}
 }

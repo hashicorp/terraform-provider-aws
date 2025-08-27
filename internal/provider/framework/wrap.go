@@ -661,6 +661,10 @@ func newWrappedListResource(spec *inttypes.ServicePackageFrameworkListResource, 
 		v.SetIdentitySpec(spec.Identity, inttypes.FrameworkImport{})
 	}
 
+	if v, ok := inner.(inttypes.SDKv2Identityer); ok {
+		v.WithTranslatedIdentity(spec.Identity.Attributes)
+	}
+
 	return &wrappedListResource{
 		inner:              inner,
 		servicePackageName: servicePackageName,
