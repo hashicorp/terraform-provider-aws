@@ -210,8 +210,9 @@ The `s3Location` configuration block supports the following arguments:
 
 The `storageConfiguration` configuration block supports the following arguments:
 
-* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`.
-* `opensearchServerlessConfiguration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service. See [`opensearchServerlessConfiguration` block](#opensearch_serverless_configuration-block) for details.
+* `type` - (Required) Vector store service in which the knowledge base is stored. Valid Values: `OPENSEARCH_SERVERLESS`, `OPENSEARCH_MANAGED_CLUSTER`, `PINECONE`, `REDIS_ENTERPRISE_CLOUD`, `RDS`.
+* `opensearchServerlessConfiguration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Serverless. See [`opensearchServerlessConfiguration` block](#opensearch_serverless_configuration-block) for details.
+* `opensearchManagedClusterConfiguration` - (Optional) The storage configuration of the knowledge base in Amazon OpenSearch Service Managed Cluster. See [`opensearchManagedClusterConfiguration` block](#opensearch_managed_cluster_configuration-block) for details.
 * `pineconeConfiguration` - (Optional)  The storage configuration of the knowledge base in Pinecone. See [`pineconeConfiguration` block](#pinecone_configuration-block) for details.
 * `rdsConfiguration` - (Optional) Details about the storage configuration of the knowledge base in Amazon RDS. For more information, see [Create a vector index in Amazon RDS](https://docs.aws.amazon.com/bedrock/latest/userguide/knowledge-base-setup.html). See [`rdsConfiguration` block](#rds_configuration-block) for details.
 * `redisEnterpriseCloudConfiguration` - (Optional) The storage configuration of the knowledge base in Redis Enterprise Cloud. See [`redisEnterpriseCloudConfiguration` block](#redis_enterprise_cloud_configuration-block) for details.
@@ -221,6 +222,18 @@ The `storageConfiguration` configuration block supports the following arguments:
 The `opensearchServerlessConfiguration` configuration block supports the following arguments:
 
 * `collectionArn` - (Required) ARN of the OpenSearch Service vector store.
+* `fieldMapping` - (Required) The names of the fields to which to map information about the vector store. This block supports the following arguments:
+    * `metadataField` - (Required) Name of the field in which Amazon Bedrock stores metadata about the vector store.
+    * `textField` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
+    * `vectorField` - (Required) Name of the field in which Amazon Bedrock stores the vector embeddings for your data sources.
+* `vectorIndexName` - (Required) Name of the vector store.
+
+### `opensearchManagedClusterConfiguration` block
+
+The `opensearchManagedClusterConfiguration` configuration block supports the following arguments:
+
+* `domainArn` - (Required) ARN of the OpenSearch domain.
+* `domainEndpoint` - (Required) Endpoint URL of the OpenSearch domain.
 * `fieldMapping` - (Required) The names of the fields to which to map information about the vector store. This block supports the following arguments:
     * `metadataField` - (Required) Name of the field in which Amazon Bedrock stores metadata about the vector store.
     * `textField` - (Required) Name of the field in which Amazon Bedrock stores the raw text from your data. The text is split according to the chunking strategy you choose.
