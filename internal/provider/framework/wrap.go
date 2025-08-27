@@ -748,8 +748,8 @@ func (w *wrappedListResource) Metadata(_ context.Context, request resource.Metad
 	response.TypeName = w.spec.TypeName
 }
 
-func (w *wrappedListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
-	if v, ok := w.inner.(list.ListResourceWithProtoSchemas); ok {
+func (w *wrappedListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	if v, ok := w.inner.(list.ListResourceWithRawV5Schemas); ok {
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
@@ -758,6 +758,6 @@ func (w *wrappedListResource) Schemas(ctx context.Context, response *list.Schema
 			})
 		}
 
-		v.Schemas(ctx, response)
+		v.RawV5Schemas(ctx, request, response)
 	}
 }
