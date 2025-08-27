@@ -1,4 +1,5 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package odb_test
 
@@ -86,11 +87,8 @@ func (autonomousVMClusterDSTest) testAccCheckCloudAutonomousVmClusterDestroy(ctx
 }
 func (autonomousVMClusterDSTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListCloudAutonomousVmClustersInput{}
-
-	_, err := conn.ListCloudAutonomousVmClusters(ctx, input)
-
+	input := odb.ListCloudAutonomousVmClustersInput{}
+	_, err := conn.ListCloudAutonomousVmClusters(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -103,9 +101,10 @@ func (autonomousVMClusterDSTest) avmcBasic() string {
 	exaInfraDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.exaInfraDisplayNamePrefix)
 	odbNetworkDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.odbNetDisplayNamePrefix)
 	avmcDisplayName := sdkacctest.RandomWithPrefix(autonomousVMClusterDSTestEntity.autonomousVmClusterDisplayNamePrefix)
-
-	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName)
-	odbNetRes := autonomousVMClusterDSTestEntity.odbNet(odbNetworkDisplayName)
+	domain := acctest.RandomDomainName()
+	emailAddress := acctest.RandomEmailAddress(domain)
+	exaInfraRes := autonomousVMClusterDSTestEntity.exaInfra(exaInfraDisplayName, emailAddress)
+	odbNetRes := autonomousVMClusterDSTestEntity.oracleDBNetwork(odbNetworkDisplayName)
 	res := fmt.Sprintf(`
 %s
 
@@ -116,31 +115,29 @@ data "aws_odb_db_servers_list" "test" {
 }
 
 resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
-    cloud_exadata_infrastructure_id         = aws_odb_cloud_exadata_infrastructure.test.id
-  	odb_network_id                          =aws_odb_network.test.id
-	display_name             				= %[3]q
-  	autonomous_data_storage_size_in_tbs     = 5
-  	memory_per_oracle_compute_unit_in_gbs   = 2
-  	total_container_databases               = 1
-  	cpu_core_count_per_node                 = 40
-    license_model                                = "LICENSE_INCLUDED"
-    db_servers								   = [ for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
-    scan_listener_port_tls = 8561
-    scan_listener_port_non_tls = 1024
-    maintenance_window = {
-		 preference = "NO_PREFERENCE"
-		 days_of_week =	[]
-         hours_of_day =	[]
-         months = []
-         weeks_of_month =[]
-         lead_time_in_weeks = 0
-    }
+  cloud_exadata_infrastructure_id       = aws_odb_cloud_exadata_infrastructure.test.id
+  odb_network_id                        = aws_odb_network.test.id
+  display_name                          = %[3]q
+  autonomous_data_storage_size_in_tbs   = 5
+  memory_per_oracle_compute_unit_in_gbs = 2
+  total_container_databases             = 1
+  cpu_core_count_per_node               = 40
+  license_model                         = "LICENSE_INCLUDED"
+  db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
+  scan_listener_port_tls                = 8561
+  scan_listener_port_non_tls            = 1024
+  maintenance_window {
+    custom_action_timeout_in_mins    = 16
+    is_custom_action_timeout_enabled = true
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
+  }
 
 }
 
 
 data "aws_odb_cloud_autonomous_vm_cluster" "test" {
-  id             = aws_odb_cloud_autonomous_vm_cluster.test.id
+  id = aws_odb_cloud_autonomous_vm_cluster.test.id
 
 }
 `, exaInfraRes, odbNetRes, avmcDisplayName)
@@ -148,47 +145,53 @@ data "aws_odb_cloud_autonomous_vm_cluster" "test" {
 	return res
 }
 
-func (autonomousVMClusterDSTest) odbNet(odbNetName string) string {
+func (autonomousVMClusterDSTest) oracleDBNetwork(odbNetName string) string {
 	networkRes := fmt.Sprintf(`
 
 
+
+
 resource "aws_odb_network" "test" {
-  display_name          = %[1]q
+  display_name         = %[1]q
   availability_zone_id = "use1-az6"
   client_subnet_cidr   = "10.2.0.0/24"
   backup_subnet_cidr   = "10.2.1.0/24"
-  s3_access = "DISABLED"
-  zero_etl_access = "DISABLED"
+  s3_access            = "DISABLED"
+  zero_etl_access      = "DISABLED"
 }
+
 
 `, odbNetName)
 	return networkRes
 }
 
-func (autonomousVMClusterDSTest) exaInfra(exaInfraName string) string {
+func (autonomousVMClusterDSTest) exaInfra(exaInfraName, emailAddress string) string {
 	exaInfraRes := fmt.Sprintf(`
 
 
+
+
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name          = %[1]q
-  shape             	= "Exadata.X9M"
-  storage_count      	= 3
-  compute_count         = 2
-  availability_zone_id 	= "use1-az6"
-  customer_contacts_to_send_to_oci = ["abc@example.com"]
-maintenance_window = {
-  		custom_action_timeout_in_mins = 16
-		days_of_week =	[]
-        hours_of_day =	[]
-        is_custom_action_timeout_enabled = true
-        lead_time_in_weeks = 0
-        months = []
-        patching_mode = "ROLLING"
-        preference = "NO_PREFERENCE"
-		weeks_of_month =[]
+  display_name                     = %[1]q
+  shape                            = "Exadata.X9M"
+  storage_count                    = 3
+  compute_count                    = 2
+  availability_zone_id             = "use1-az6"
+  customer_contacts_to_send_to_oci = ["%[2]s"]
+  maintenance_window = {
+    custom_action_timeout_in_mins    = 16
+    days_of_week                     = []
+    hours_of_day                     = []
+    is_custom_action_timeout_enabled = true
+    lead_time_in_weeks               = 0
+    months                           = []
+    patching_mode                    = "ROLLING"
+    preference                       = "NO_PREFERENCE"
+    weeks_of_month                   = []
   }
 }
 
-`, exaInfraName)
+
+`, exaInfraName, emailAddress)
 	return exaInfraRes
 }
