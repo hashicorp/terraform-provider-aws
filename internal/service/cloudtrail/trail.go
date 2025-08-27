@@ -312,7 +312,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -500,7 +500,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {

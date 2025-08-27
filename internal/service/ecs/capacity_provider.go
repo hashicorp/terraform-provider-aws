@@ -206,7 +206,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 		const (
 			timeout = 10 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.UpdateInProgressException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.UpdateInProgressException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateCapacityProvider(ctx, input)
 		})
 

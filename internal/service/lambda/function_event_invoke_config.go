@@ -128,7 +128,7 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 
 	// Retry for destination validation eventual consistency errors.
 	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutFunctionEventInvokeConfig(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -212,7 +212,7 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 
 	// Retry for destination validation eventual consistency errors.
 	_, err = tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.PutFunctionEventInvokeConfig(ctx, input)
 		},
 		func(err error) (bool, error) {

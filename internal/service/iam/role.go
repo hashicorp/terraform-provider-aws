@@ -375,7 +375,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		}
 
 		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateAssumeRolePolicy(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -562,7 +562,7 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 		RoleName: aws.String(roleName),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.DeleteConflictException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.DeleteConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteRole(ctx, input)
 	})
 
@@ -609,7 +609,7 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.Client, roleName 
 
 func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateRole(ctx, input)
 		},
 		func(err error) (bool, error) {
