@@ -1158,10 +1158,10 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 }
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     name         = "%[1]s - Initial"
