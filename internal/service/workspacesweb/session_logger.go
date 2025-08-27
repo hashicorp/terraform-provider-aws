@@ -257,12 +257,19 @@ func (r *sessionLoggerResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := conn.UpdateSessionLogger(ctx, &input)
+		output, err := conn.UpdateSessionLogger(ctx, &input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Session Logger (%s)", old.SessionLoggerARN.ValueString()), err.Error())
 			return
 		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, output.SessionLogger, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	} else {
+		new.LogConfiguration = old.LogConfiguration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, new)...)
