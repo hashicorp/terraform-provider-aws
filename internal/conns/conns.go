@@ -33,6 +33,11 @@ type ServicePackageWithFrameworkListResources interface {
 	FrameworkListResources(context.Context) iter.Seq[*types.ServicePackageFrameworkListResource]
 }
 
+type ServicePackageWithSDKListResources interface {
+	ServicePackage
+	SDKListResources(ctx context.Context) iter.Seq[*types.ServicePackageSDKListResource]
+}
+
 type (
 	contextKeyType int
 )
