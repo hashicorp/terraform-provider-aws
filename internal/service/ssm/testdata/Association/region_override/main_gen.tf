@@ -1,9 +1,9 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource "aws_ssm_association" "test" {
+  region = var.region
+
   name                = aws_ssm_document.test.name
   schedule_expression = "cron(0 16 ? * WED *)"
 
@@ -11,14 +11,11 @@ resource "aws_ssm_association" "test" {
     key    = "tag:Name"
     values = ["acceptanceTest"]
   }
-
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-    (var.knownTagKey)   = var.knownTagValue
-  }
 }
 
 resource "aws_ssm_document" "test" {
+  region = var.region
+
   name          = var.rName
   document_type = "Command"
 
@@ -43,25 +40,14 @@ resource "aws_ssm_document" "test" {
 DOC
 }
 
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagKey" {
-  type     = string
-  nullable = false
-}
-
-variable "knownTagValue" {
-  type     = string
-  nullable = false
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }

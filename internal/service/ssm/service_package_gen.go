@@ -102,7 +102,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 				IdentifierAttribute: names.AttrID,
 				ResourceType:        "Association",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrAssociationID),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  resourceDefaultPatchBaseline,
