@@ -119,7 +119,8 @@ func TestAccWorkSpacesWebSessionLogger_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.folder_structure", string(awstypes.FolderStructureFlat)),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.log_file_format", string(awstypes.LogFileFormatJson)),
-					resource.TestCheckResourceAttr(resourceName, "event_filter.0.all.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_filter.0.all.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_filter.0.include.#", "0"),
 				),
 			},
 			{
@@ -130,6 +131,7 @@ func TestAccWorkSpacesWebSessionLogger_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.folder_structure", string(awstypes.FolderStructureNestedByDate)),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.log_file_format", string(awstypes.LogFileFormatJsonLines)),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3.0.key_prefix", "updated-logs/"),
+					resource.TestCheckResourceAttr(resourceName, "event_filter.0.all.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.include.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_filter.0.include.*", string(awstypes.EventSessionStart)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_filter.0.include.*", string(awstypes.EventSessionEnd)),
