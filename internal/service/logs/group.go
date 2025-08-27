@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -114,27 +115,55 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
+var _ list.ListResourceWithProtoSchemas = &logGroupListResource{}
+
 func LogGroupResourceAsListResource() list.ListResourceWithConfigure {
 	return &logGroupListResource{}
 }
 
 type logGroupListResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByIdentity
+	framework.ListResourceWithConfigure
+	// framework.WithImportByIdentity
 }
 
 type logGroupListResourceModel struct {
 	framework.WithRegionModel
 }
 
+func (l *logGroupListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	// This method does not call down to the inner resource.
+	response.TypeName = "aws_cloudwatch_log_group"
+}
+
 func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{},
+		Attributes: map[string]listschema.Attribute{
+			"region": listschema.StringAttribute{
+				Optional: true,
+			},
+		},
 	}
 }
 
 func (l *logGroupListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
 	rg := resourceGroup()
+	rg.Identity = &schema.ResourceIdentity{
+		Version: 0,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type: schema.TypeString,
+				},
+				names.AttrRegion: {
+					Type: schema.TypeString,
+				},
+				names.AttrName: {
+					Type: schema.TypeString,
+				},
+			}
+		},
+	}
+
 	response.ProtoV5Schema = rg.ProtoSchema(ctx)
 	response.ProtoV5IdentitySchema = rg.ProtoIdentitySchema(ctx)
 }
@@ -153,9 +182,9 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 	interceptors := []listResultInterceptor{
 		populateIdentityInterceptor{},
-		identityInterceptor{
-			attributes: l.IdentitySpec().Attributes,
-		},
+		//identityInterceptor{
+		//	attributes: l.IdentitySpec().Attributes,
+		//},
 		//setResourceInterceptor{},
 		//tagsInterceptor{
 		//	HTags: interceptors.HTags(unique.Make(inttypes.ServicePackageResourceTags{
@@ -197,8 +226,58 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			logGroupResource := resourceGroup()
-			rg := logGroupResource.Data(&terraform.InstanceState{ID: aws.ToString(output.LogGroupName)})
-			resourceGroupSet(ctx, rg, output)
+			logGroupResource.Identity = &schema.ResourceIdentity{
+				Version: 0,
+				SchemaFunc: func() map[string]*schema.Schema {
+					return map[string]*schema.Schema{
+						names.AttrAccountID: {
+							Type: schema.TypeString,
+						},
+						names.AttrRegion: {
+							Type: schema.TypeString,
+						},
+						names.AttrName: {
+							Type: schema.TypeString,
+						},
+					}
+				},
+			}
+
+			rd := logGroupResource.Data(&terraform.InstanceState{ID: aws.ToString(output.LogGroupName)})
+			resourceGroupSet(ctx, rd, output)
+
+			//tfTypeIdentity := rd.TfTypeIdentityState()
+
+			result.Identity.SetAttribute(ctx, path.Root(names.AttrAccountID), awsClient.AccountID(ctx))
+			result.Identity.SetAttribute(ctx, path.Root(names.AttrRegion), awsClient.Region(ctx))
+			result.Identity.SetAttribute(ctx, path.Root(names.AttrName), types.StringValue(aws.ToString(output.LogGroupName)))
+			//if err := result.Identity.Set(ctx, tfTypeIdentity); err != nil {
+			//	result = list.ListResult{
+			//		Diagnostics: fwdiag.Diagnostics{
+			//			fwdiag.NewErrorDiagnostic(
+			//				"Error Listing Remote Resources",
+			//				fmt.Sprintf("Error: %s", err),
+			//			),
+			//		},
+			//	}
+			//	yield(result)
+			//	return
+			//}
+
+			//tfTypeResource := rd.TfTypeResourceState()
+			//
+			//if err := result.Resource.Set(ctx, tfTypeResource); err != nil {
+			//	result = list.ListResult{
+			//		Diagnostics: fwdiag.Diagnostics{
+			//			fwdiag.NewErrorDiagnostic(
+			//				"Error Listing Remote Resources",
+			//				fmt.Sprintf("Error: %s", err),
+			//			),
+			//		},
+			//	}
+			//	yield(result)
+			//	return
+			//}
 
 			result.DisplayName = fmt.Sprintf("x%s (%s)x", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 

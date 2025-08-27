@@ -29,3 +29,13 @@ func (r *ResourceWithConfigure) Configure(_ context.Context, request resource.Co
 		r.meta = v
 	}
 }
+
+type ListResourceWithConfigure struct {
+	withMeta
+}
+
+func (r *ListResourceWithConfigure) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		r.meta = v
+	}
+}
