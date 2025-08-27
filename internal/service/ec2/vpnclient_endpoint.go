@@ -85,7 +85,7 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			"client_cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
@@ -266,7 +266,6 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
-		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
@@ -277,6 +276,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("authentication_options"); ok && v.(*schema.Set).Len() > 0 {
 		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("client_cidr_block"); ok {
+		input.ClientCidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
