@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newTrustStoreAssociationResource(_ context.Context) (resource.ResourceWithC
 	return &trustStoreAssociationResource{}, nil
 }
 
-const (
-	ResNameTrustStoreAssociation = "Trust Store Association"
-)
-
 type trustStoreAssociationResource struct {
 	framework.ResourceWithModel[trustStoreAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *trustStoreAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"trust_store_arn": schema.StringAttribute{
-				Required: true,
+			"portal_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"portal_arn": schema.StringAttribute{
-				Required: true,
+			"trust_store_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *trustStoreAssociationResource) Create(ctx context.Context, request reso
 	_, err := conn.AssociateTrustStore(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameTrustStoreAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Trust Store Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *trustStoreAssociationResource) Read(ctx context.Context, request resour
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameTrustStoreAssociation, data.TrustStoreARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Trust Store Association (%s)", data.TrustStoreARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *trustStoreAssociationResource) Read(ctx context.Context, request resour
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *trustStoreAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *trustStoreAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *trustStoreAssociationResource) Delete(ctx context.Context, request reso
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameTrustStoreAssociation, data.TrustStoreARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Trust Store Association (%s)", data.TrustStoreARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *trustStoreAssociationResource) ImportState(ctx context.Context, request
 
 type trustStoreAssociationResourceModel struct {
 	framework.WithRegionModel
-	TrustStoreARN types.String `tfsdk:"trust_store_arn"`
-	PortalARN     types.String `tfsdk:"portal_arn"`
+	PortalARN     fwtypes.ARN `tfsdk:"portal_arn"`
+	TrustStoreARN fwtypes.ARN `tfsdk:"trust_store_arn"`
 }
