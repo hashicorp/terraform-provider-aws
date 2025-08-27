@@ -26,6 +26,8 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
+	ResourceInboundIntegration = newInboundIntegrationResource
+
 	FindCatalogTableOptimizer    = findCatalogTableOptimizer
 	FindClassifierByName         = findClassifierByName
 	FindConnectionByTwoPartKey   = findConnectionByTwoPartKey
@@ -41,4 +43,6 @@ var (
 	FindSchemaByID               = findSchemaByID
 	FindTableByName              = findTableByName
 	FindTriggerByName            = findTriggerByName
+
+	FindInboundIntegrationByARN = findInboundIntegrationByARN
 )

@@ -1,0 +1,5 @@
+```release-note:new-resource
+aws_glue_inbound_integration
+```
+
+
