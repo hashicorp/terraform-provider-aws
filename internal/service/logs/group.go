@@ -123,34 +123,15 @@ var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
 // @SDKListResource("aws_cloudwatch_log_group")
 func logGroupResourceAsListResource() list.ListResourceWithConfigure {
 	l := logGroupListResource{}
-	l.resource = resourceGroup()
-	l.schemaIdentity = &schema.ResourceIdentity{
-		Version: 0,
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				names.AttrAccountID: {
-					Type: schema.TypeString,
-				},
-				names.AttrRegion: {
-					Type: schema.TypeString,
-				},
-				names.AttrName: {
-					Type: schema.TypeString,
-				},
-			}
-		},
-	}
-
-	l.resource.Identity = l.schemaIdentity
+	l.SetResource(resourceGroup())
 
 	return &l
 }
 
 type logGroupListResource struct {
 	framework.ResourceWithConfigure
-	// framework.WithImportByIdentity
-	resource       *schema.Resource
-	schemaIdentity *schema.ResourceIdentity
+	framework.ListResourceWithSDKv2Identity
+	framework.WithImportByIdentity
 }
 
 type logGroupListResourceModel struct {
@@ -168,8 +149,8 @@ func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, req
 }
 
 func (l *logGroupListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
-	response.ProtoV5Schema = l.resource.ProtoSchema(ctx)()
-	response.ProtoV5IdentitySchema = l.resource.ProtoIdentitySchema(ctx)()
+	response.ProtoV5Schema = l.GetResource().ProtoSchema(ctx)()
+	response.ProtoV5IdentitySchema = l.GetResource().ProtoIdentitySchema(ctx)()
 }
 
 func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -229,7 +210,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				}
 			}
 
-			logGroupResource := l.resource
+			logGroupResource := l.GetResource()
 
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))

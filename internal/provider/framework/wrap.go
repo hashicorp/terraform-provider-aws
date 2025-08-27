@@ -781,16 +781,8 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 
 	inner := spec.Factory()
 
-	if v, ok := inner.(framework.Identityer); ok {
-		v.SetIdentitySpec(spec.Identity)
-	}
-
-	if v, ok := inner.(framework.Lister); ok {
-		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
-
-		if !tfunique.IsHandleNil(spec.Tags) {
-			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
-		}
+	if v, ok := inner.(inttypes.SDKv2Identityer); ok {
+		v.WithTranslatedIdentity(spec.Identity.Attributes)
 	}
 
 	return &wrappedListResourceSDK{
