@@ -85,12 +85,13 @@ type ServicePackageFrameworkResource struct {
 }
 
 type ServicePackageFrameworkListResource struct {
-	Factory  func() list.ListResourceWithConfigure
-	TypeName string
-	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
-	Region   unique.Handle[ServicePackageResourceRegion]
-	Identity Identity
+	Factory       func() list.ListResourceWithConfigure
+	TypeName      string
+	Name          string
+	Tags          unique.Handle[ServicePackageResourceTags]
+	Region        unique.Handle[ServicePackageResourceRegion]
+	Identity      Identity
+	SDKv2Resource *schema.Resource
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
@@ -431,4 +432,8 @@ type SDKv2Import struct {
 	WrappedImport bool
 	CustomImport  bool
 	ImportID      SDKv2ImportID // Multi-Parameter
+}
+
+type SDKv2Identityer interface {
+	WithTranslatedIdentity([]IdentityAttribute)
 }
