@@ -30,7 +30,7 @@ type ServicePackageWithEphemeralResources interface {
 type ServicePackageWithFrameworkListResource interface {
 	ServicePackage
 
-	FrameworkListResource(ctx context.Context) []*types.ServicePackageFrameworkListResource
+	FrameworkListResources(ctx context.Context) []*types.ServicePackageFrameworkListResource
 }
 
 type (

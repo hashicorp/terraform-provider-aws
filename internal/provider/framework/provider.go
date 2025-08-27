@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
@@ -388,25 +387,8 @@ func (p *frameworkProvider) Functions(_ context.Context) []func() function.Funct
 	}
 }
 
-func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.ListResource {
-	spec := &inttypes.ServicePackageFrameworkListResource{
-		TypeName: "aws_cloudwatch_log_group",
-		Factory:  logs.LogGroupResourceAsListResource,
-		Name:     "Log Group",
-		Tags: unique.Make(inttypes.ServicePackageResourceTags{
-			IdentifierAttribute: names.AttrARN,
-		}),
-		Region:   unique.Make(inttypes.ResourceRegionDefault()),
-		Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
-	}
-
-	return []func() list.ListResource{
-		func() list.ListResource {
-			return newWrappedListResource(spec, names.Logs)
-		},
-	}
-
-	//return []func() list.ListResource{}
+func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListResource {
+	return slices.Clone(p.listResources)
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
@@ -437,7 +419,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 		}
 
 		if v, ok := sp.(conns.ServicePackageWithFrameworkListResource); ok {
-			for _, listResourceSpec := range v.FrameworkListResource(ctx) {
+			for _, listResourceSpec := range v.FrameworkListResources(ctx) {
 				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
 					return newWrappedListResource(listResourceSpec, servicePackageName)
 				})

@@ -59,11 +59,12 @@ func main() {
 		v := &visitor{
 			g: g,
 
-			ephemeralResources:   make(map[string]ResourceDatum, 0),
-			frameworkDataSources: make(map[string]ResourceDatum, 0),
-			frameworkResources:   make(map[string]ResourceDatum, 0),
-			sdkDataSources:       make(map[string]ResourceDatum, 0),
-			sdkResources:         make(map[string]ResourceDatum, 0),
+			ephemeralResources:     make(map[string]ResourceDatum, 0),
+			frameworkDataSources:   make(map[string]ResourceDatum, 0),
+			frameworkResources:     make(map[string]ResourceDatum, 0),
+			frameworkListResources: make(map[string]ResourceDatum, 0),
+			sdkDataSources:         make(map[string]ResourceDatum, 0),
+			sdkResources:           make(map[string]ResourceDatum, 0),
 		}
 
 		v.processDir(".")
@@ -84,6 +85,22 @@ func main() {
 			}
 		}
 
+		if len(v.frameworkListResources) > 0 {
+			for key, value := range v.frameworkListResources {
+				if val, exists := v.sdkResources[key]; exists {
+					value.IdentityAttributes = val.IdentityAttributes
+					value.IdentityDuplicateAttrs = val.IdentityDuplicateAttrs
+					value.ARNIdentity = val.ARNIdentity
+					value.SingletonIdentity = val.SingletonIdentity
+					value.TransparentTagging = val.TransparentTagging
+					value.TagsResourceType = val.TagsResourceType
+					value.TagsIdentifierAttribute = val.TagsIdentifierAttribute
+
+					v.frameworkListResources[key] = value
+				}
+			}
+		}
+
 		s := ServiceDatum{
 			GenerateClient:          l.GenerateClient(),
 			IsGlobal:                l.IsGlobal(),
@@ -94,6 +111,7 @@ func main() {
 			EphemeralResources:      v.ephemeralResources,
 			FrameworkDataSources:    v.frameworkDataSources,
 			FrameworkResources:      v.frameworkResources,
+			FrameworkListResources:  v.frameworkListResources,
 			SDKDataSources:          v.sdkDataSources,
 			SDKResources:            v.sdkResources,
 		}
@@ -232,6 +250,7 @@ type ServiceDatum struct {
 	EphemeralResources      map[string]ResourceDatum
 	FrameworkDataSources    map[string]ResourceDatum
 	FrameworkResources      map[string]ResourceDatum
+	FrameworkListResources  map[string]ResourceDatum
 	SDKDataSources          map[string]ResourceDatum
 	SDKResources            map[string]ResourceDatum
 	GoImports               []goImport
@@ -257,11 +276,12 @@ type visitor struct {
 	functionName string
 	packageName  string
 
-	ephemeralResources   map[string]ResourceDatum
-	frameworkDataSources map[string]ResourceDatum
-	frameworkResources   map[string]ResourceDatum
-	sdkDataSources       map[string]ResourceDatum
-	sdkResources         map[string]ResourceDatum
+	ephemeralResources     map[string]ResourceDatum
+	frameworkDataSources   map[string]ResourceDatum
+	frameworkResources     map[string]ResourceDatum
+	frameworkListResources map[string]ResourceDatum
+	sdkDataSources         map[string]ResourceDatum
+	sdkResources           map[string]ResourceDatum
 }
 
 // processDir scans a single service package directory and processes contained Go sources files.
@@ -643,6 +663,25 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkResources[typeName] = d
+				}
+
+			case "List":
+				if len(args.Positional) == 0 {
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				typeName := args.Positional[0]
+
+				if !validTypeName.MatchString(typeName) {
+					v.errs = append(v.errs, fmt.Errorf("invalid type name (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
+				}
+
+				if _, ok := v.frameworkListResources[typeName]; ok {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework List Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.frameworkListResources[typeName] = d
 				}
 
 			case "IdentityAttribute", "ArnIdentity", "ImportIDHandler", "MutableIdentity", "SingletonIdentity", "Region", "Tags", "WrappedImport", "V60SDKv2Fix", "IdentityFix", "CustomImport":
