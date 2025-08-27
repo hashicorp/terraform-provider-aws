@@ -5,7 +5,7 @@ resource "aws_workspacesweb_session_logger" "test" {
   display_name = var.rName
 
   event_filter {
-    all = {}
+    all {}
   }
 
   log_configuration {
