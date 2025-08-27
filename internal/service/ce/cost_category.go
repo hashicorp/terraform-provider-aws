@@ -316,8 +316,8 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, d.Timeout(schema.TimeoutCreate),
+		func(ctx context.Context) (any, error) {
 			return conn.CreateCostCategoryDefinition(ctx, input)
 		})
 

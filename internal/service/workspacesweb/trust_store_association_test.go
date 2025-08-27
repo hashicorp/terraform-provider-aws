@@ -68,13 +68,10 @@ func TestAccWorkSpacesWebTrustStoreAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebTrustStoreAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebTrustStoreAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var trustStore1, trustStore2 awstypes.TrustStore
+	var trustStore awstypes.TrustStore
 	resourceName := "aws_workspacesweb_trust_store_association.test"
-	trustStoreResourceName1 := "aws_workspacesweb_trust_store.test"
-	trustStoreResourceName2 := "aws_workspacesweb_trust_store.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -89,18 +86,10 @@ func TestAccWorkSpacesWebTrustStoreAssociation_update(t *testing.T) {
 			{
 				Config: testAccTrustStoreAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore1),
-					resource.TestCheckResourceAttrPair(resourceName, "trust_store_arn", trustStoreResourceName1, "trust_store_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceTrustStoreAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccTrustStoreAssociationConfig_updated(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTrustStoreAssociationExists(ctx, resourceName, &trustStore2),
-					resource.TestCheckResourceAttrPair(resourceName, "trust_store_arn", trustStoreResourceName2, "trust_store_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -236,33 +225,6 @@ resource "aws_workspacesweb_trust_store" "test" {
 
 resource "aws_workspacesweb_trust_store_association" "test" {
   trust_store_arn = aws_workspacesweb_trust_store.test.trust_store_arn
-  portal_arn      = aws_workspacesweb_portal.test.portal_arn
-}
-`)
-}
-
-func testAccTrustStoreAssociationConfig_updated() string {
-	return acctest.ConfigCompose(
-		testAccTrustStoreAssociationConfig_acmBase(),
-		`
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_trust_store" "test" {
-  certificate {
-    body = aws_acmpca_certificate.test1.certificate
-  }
-}
-
-resource "aws_workspacesweb_trust_store" "test2" {
-  certificate {
-    body = aws_acmpca_certificate.test2.certificate
-  }
-}
-
-resource "aws_workspacesweb_trust_store_association" "test" {
-  trust_store_arn = aws_workspacesweb_trust_store.test2.trust_store_arn
   portal_arn      = aws_workspacesweb_portal.test.portal_arn
 }
 `)

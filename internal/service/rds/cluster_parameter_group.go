@@ -267,7 +267,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	input := rds.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDBClusterParameterGroup(ctx, &input)
 	})
 

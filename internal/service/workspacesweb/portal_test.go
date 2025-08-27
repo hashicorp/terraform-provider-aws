@@ -92,6 +92,7 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),

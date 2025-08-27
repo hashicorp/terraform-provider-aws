@@ -31,21 +31,21 @@ var (
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
-	DeleteCacheCluster                        = deleteCacheCluster
-	DiffVersion                               = diffVersion
-	EmptyDescription                          = emptyDescription
-	EngineMemcached                           = engineMemcached
-	EngineRedis                               = engineRedis
-	EngineValkey                              = engineValkey
-	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
-	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
-	GlobalReplicationGroupRegionPrefixFormat  = globalReplicationGroupRegionPrefixFormat
-	NormalizeEngineVersion                    = normalizeEngineVersion
-	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
-	ValidateClusterEngineVersion              = validateClusterEngineVersion
-	ValidMemcachedVersionString               = validMemcachedVersionString
-	ValidRedisVersionString                   = validRedisVersionString
-	ValidValkeyVersionString                  = validValkeyVersionString
+	DeleteCacheCluster                                = deleteCacheCluster
+	DiffVersion                                       = diffVersion
+	EmptyDescription                                  = emptyDescription
+	EngineMemcached                                   = engineMemcached
+	EngineRedis                                       = engineRedis
+	EngineValkey                                      = engineValkey
+	EngineVersionForceNewOnDowngrade                  = engineVersionForceNewOnDowngrade
+	EngineVersionIsDowngrade                          = engineVersionIsDowngrade
+	GlobalReplicationGroupRegionPrefixFormat          = globalReplicationGroupRegionPrefixFormat
+	NormalizeEngineVersion                            = normalizeEngineVersion
+	ParamGroupNameRequiresEngineOrMajorVersionUpgrade = paramGroupNameRequiresEngineOrMajorVersionUpgrade
+	ValidateClusterEngineVersion                      = validateClusterEngineVersion
+	ValidMemcachedVersionString                       = validMemcachedVersionString
+	ValidRedisVersionString                           = validRedisVersionString
+	ValidValkeyVersionString                          = validValkeyVersionString
 )
 
 type (
