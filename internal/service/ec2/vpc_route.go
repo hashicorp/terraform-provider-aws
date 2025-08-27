@@ -51,8 +51,8 @@ var routeValidTargets = []string{
 
 // @SDKResource("aws_route", name="Route")
 // @IdentityAttribute("route_table_id")
+// @IdentityAttribute("destination_cidr_block", optional="true", testNotNull="true")
 // @IdentityAttribute("destination_ipv6_cidr_block", optional="true")
-// @IdentityAttribute("destination_cidr_block", optional="true")
 // @IdentityAttribute("destination_prefix_list_id", optional="true")
 // @ImportIDHandler("routeImportID")
 // @Testing(preIdentityVersion="6.8.0")
@@ -487,28 +487,6 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-// func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-// 	idParts := strings.Split(d.Id(), "_")
-// 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-// 		return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())
-// 	}
-//
-// 	routeTableID := idParts[0]
-// 	destination := idParts[1]
-// 	d.Set("route_table_id", routeTableID)
-// 	if strings.Contains(destination, ":") {
-// 		d.Set(routeDestinationIPv6CIDRBlock, destination)
-// 	} else if strings.Contains(destination, ".") {
-// 		d.Set(routeDestinationCIDRBlock, destination)
-// 	} else {
-// 		d.Set(routeDestinationPrefixListID, destination)
-// 	}
-//
-// 	d.SetId(routeCreateID(routeTableID, destination))
-//
-// 	return []*schema.ResourceData{d}, nil
-// }
-
 // routeDestinationAttribute returns the attribute key and value of the route's destination.
 func routeDestinationAttribute(d *schema.ResourceData) (string, string, error) {
 	for _, key := range routeValidDestinations {
@@ -540,7 +518,8 @@ func (routeImportID) Create(d *schema.ResourceData) string {
 	// TODO: can we implement any error handling here?
 	_, destination, _ := routeDestinationAttribute(d)
 	routeTableID := d.Get("route_table_id").(string)
-	return routeCreateID(routeTableID, destination)
+	// TODO: fix magic separator
+	return fmt.Sprintf("%s_%s", routeTableID, destination)
 }
 
 func (routeImportID) Parse(id string) (string, map[string]string, error) {

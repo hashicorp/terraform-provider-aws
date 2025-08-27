@@ -51,8 +51,8 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
 						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.NotNull(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
-						"destination_cidr_block":      knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
@@ -83,8 +83,8 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
@@ -103,8 +103,8 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
@@ -142,8 +142,8 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.AlternateRegion()),
 						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.NotNull(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
-						"destination_cidr_block":      knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
@@ -178,8 +178,8 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
@@ -199,8 +199,8 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_cidr_block"), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_ipv6_cidr_block"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("destination_prefix_list_id"), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
@@ -260,8 +260,8 @@ func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 						names.AttrAccountID:           tfknownvalue.AccountID(),
 						names.AttrRegion:              knownvalue.StringExact(acctest.Region()),
 						"route_table_id":              knownvalue.NotNull(),
+						"destination_cidr_block":      knownvalue.NotNull(),
 						"destination_ipv6_cidr_block": knownvalue.Null(),
-						"destination_cidr_block":      knownvalue.Null(),
 						"destination_prefix_list_id":  knownvalue.Null(),
 					}),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("route_table_id")),
