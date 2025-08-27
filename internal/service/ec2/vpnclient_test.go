@@ -37,6 +37,8 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
 			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
+			"endpointIpAddressType":        testAccClientVPNEndpoint_endpointIpAddressType,
+			"trafficIpAddressType":         testAccClientVPNEndpoint_trafficIpAddressType,
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {
