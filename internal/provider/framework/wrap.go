@@ -802,6 +802,8 @@ type wrappedListResourceFramework struct {
 	interceptors       interceptorInvocations
 }
 
+var _ list.ListResourceWithConfigure = &wrappedListResourceFramework{}
+
 func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
@@ -928,6 +930,9 @@ type wrappedListResourceSDK struct {
 	interceptors       interceptorInvocations
 }
 
+var _ list.ListResourceWithConfigure = &wrappedListResourceSDK{}
+var _ list.ListResourceWithRawV5Schemas = &wrappedListResourceSDK{}
+
 func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) list.ListResourceWithConfigure {
 	var interceptors interceptorInvocations
 
@@ -1037,8 +1042,8 @@ func (w *wrappedListResourceSDK) ListResourceConfigSchema(ctx context.Context, r
 	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
 }
 
-func (w *wrappedListResourceSDK) Schemas(ctx context.Context, response *list.SchemaResponse) {
-	if v, ok := w.inner.(list.ListResourceWithProtoSchemas); ok {
+func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	if v, ok := w.inner.(list.ListResourceWithRawV5Schemas); ok {
 		ctx, diags := w.context(ctx, nil, w.meta)
 		if diags.HasError() {
 			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
@@ -1047,6 +1052,6 @@ func (w *wrappedListResourceSDK) Schemas(ctx context.Context, response *list.Sch
 			})
 		}
 
-		v.Schemas(ctx, response)
+		v.RawV5Schemas(ctx, request, response)
 	}
 }
