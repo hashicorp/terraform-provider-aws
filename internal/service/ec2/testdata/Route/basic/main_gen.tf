@@ -19,8 +19,3 @@ resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}

@@ -58,6 +58,7 @@ var routeValidTargets = []string{
 // @Testing(preIdentityVersion="6.10.0")
 // @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Route")
+// @Testing(generator=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
