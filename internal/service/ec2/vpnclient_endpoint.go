@@ -229,6 +229,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"traffic_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
+			},
 			"transport_protocol": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -316,6 +323,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.SessionTimeoutHours = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("traffic_ip_address_type"); ok {
+		input.TrafficIpAddressType = awstypes.TrafficIpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.VpcId = aws.String(v.(string))
 	}
@@ -396,6 +407,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
