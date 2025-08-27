@@ -404,6 +404,8 @@ func (p *frameworkProvider) ListResources(ctx context.Context) []func() list.Lis
 			return newWrappedListResource(spec, names.Logs)
 		},
 	}
+
+	//return []func() list.ListResource{}
 }
 
 // initialize is called from `New` to perform any Terraform Framework-style initialization.

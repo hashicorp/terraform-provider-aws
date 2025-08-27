@@ -747,3 +747,17 @@ func (w *wrappedListResource) Metadata(_ context.Context, request resource.Metad
 	// This method does not call down to the inner resource.
 	response.TypeName = w.spec.TypeName
 }
+
+func (w *wrappedListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
+	if v, ok := w.inner.(list.ListResourceWithProtoSchemas); ok {
+		ctx, diags := w.context(ctx, nil, w.meta)
+		if diags.HasError() {
+			tflog.Warn(ctx, "wrapping Schemas", map[string]any{
+				"resource":               w.spec.TypeName,
+				"bootstrapContext error": fwdiag.DiagnosticsString(diags),
+			})
+		}
+
+		v.Schemas(ctx, response)
+	}
+}

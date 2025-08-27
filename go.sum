@@ -676,8 +676,8 @@ github.com/hashicorp/terraform-plugin-framework-validators v0.18.0 h1:OQnlOt98ua
 github.com/hashicorp/terraform-plugin-framework-validators v0.18.0/go.mod h1:lZvZvagw5hsJwuY7mAY6KUz45/U6fiDR0CzQAwWD0CA=
 github.com/hashicorp/terraform-plugin-go v0.29.0-beta.1 h1:xeHlRQYev3iMXwX2W7+D1bSfLRBs9jojZXqE6hmNxMI=
 github.com/hashicorp/terraform-plugin-go v0.29.0-beta.1/go.mod h1:5pww/UULn9C2tItq6o5sbScEkJxBUt9X9kI4DkeRsIw=
-github.com/hashicorp/terraform-plugin-mux v0.20.0 h1:3QpBnI9uCuL0Yy2Rq/kR9cOdmOFNhw88A2GoZtk5aXM=
-github.com/hashicorp/terraform-plugin-mux v0.20.0/go.mod h1:wSIZwJjSYk86NOTX3fKUlThMT4EAV1XpBHz9SAvjQr4=
+github.com/hashicorp/terraform-plugin-mux v0.21.0-alpha.1 h1:2v959uebw7YnCsJ8eAgGkmDuwaotbwKw9mTg7ddzM0I=
+github.com/hashicorp/terraform-plugin-mux v0.21.0-alpha.1/go.mod h1:ZGuUsqp+MPihZ7ZpUbsUQ5+oPBWt0dd7ET/cPcxZyxQ=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250825121101-e57a28bb86e7 h1:FpsmIyHbYu2YE+y12ozL4Ge/oF6G+h4XGBwslOOA0JI=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250825121101-e57a28bb86e7/go.mod h1:muFJDkb/wnsf/QzxuKewCwKnsUrlEwx0GObo4dRr56o=
 github.com/hashicorp/terraform-plugin-testing v1.13.3 h1:QLi/khB8Z0a5L54AfPrHukFpnwsGL8cwwswj4RZduCo=
@@ -784,8 +784,8 @@ github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:
 github.com/xeipuuv/gojsonschema v1.2.0 h1:LhYJRs+L4fBtjZUfuSZIKGeVu0QRy8e5Xi7D17UxZ74=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-github.com/zclconf/go-cty v1.16.3 h1:osr++gw2T61A8KVYHoQiFbFd1Lh3JOCXc/jFLJXKTxk=
-github.com/zclconf/go-cty v1.16.3/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=
+github.com/zclconf/go-cty v1.16.4 h1:QGXaag7/7dCzb+odlGrgr+YmYZFaOCMW6DEpS+UD1eE=
+github.com/zclconf/go-cty v1.16.4/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940 h1:4r45xpDWB6ZMSMNJFMOjqrGHynW3DIBuR2H9j0ug+Mo=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940/go.mod h1:CmBdvvj3nqzfzJ6nTCIwDTPZ56aVGvDrmztiO5g3qrM=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
