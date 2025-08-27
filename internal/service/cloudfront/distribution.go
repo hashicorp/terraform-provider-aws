@@ -821,11 +821,11 @@ func resourceDistribution() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"comment": {
+															names.AttrComment: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"default_value": {
+															names.AttrDefaultValue: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -839,7 +839,7 @@ func resourceDistribution() *schema.Resource {
 											},
 										},
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1031,9 +1031,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
-	if distributionConfig.ContinuousDeploymentPolicyId != nil {
-		d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
-	}
+	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 	if distributionConfig.CustomErrorResponses != nil {
 		if err := d.Set("custom_error_response", flattenCustomErrorResponses(distributionConfig.CustomErrorResponses)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_error_response: %s", err)
@@ -1049,11 +1047,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("http_version", distributionConfig.HttpVersion)
 	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
-	if distributionConfig.IsIPV6Enabled != nil {
-		d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
-	} else {
-		d.Set("is_ipv6_enabled", false)
-	}
+	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
 	if distributionConfig.Logging != nil && aws.ToBool(distributionConfig.Logging.Enabled) {
 		if err := d.Set("logging_config", flattenLoggingConfig(distributionConfig.Logging)); err != nil {
@@ -1087,11 +1081,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting restrictions: %s", err)
 		}
 	}
-	if distributionConfig.Staging != nil {
-		d.Set("staging", distributionConfig.Staging)
-	} else {
-		d.Set("staging", false)
-	}
+	d.Set("staging", distributionConfig.Staging)
 	d.Set(names.AttrStatus, output.Distribution.Status)
 	if distributionConfig.TenantConfig != nil {
 		if err := d.Set("tenant_config", flattenTenantConfig(distributionConfig.TenantConfig)); err != nil {
@@ -2970,7 +2960,7 @@ func flattenParameterDefinition(apiObject *awstypes.ParameterDefinition) map[str
 		tfMap["definition"] = []any{flattenDefinition(apiObject.Definition)}
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.ToString(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
 	return tfMap
@@ -2998,10 +2988,10 @@ func flattenStringSchema(apiObject *awstypes.StringSchemaConfig) map[string]any 
 	tfMap := make(map[string]any)
 
 	if apiObject.Comment != nil {
-		tfMap["comment"] = aws.ToString(apiObject.Comment)
+		tfMap[names.AttrComment] = aws.ToString(apiObject.Comment)
 	}
 	if apiObject.DefaultValue != nil {
-		tfMap["default_value"] = aws.ToString(apiObject.DefaultValue)
+		tfMap[names.AttrDefaultValue] = aws.ToString(apiObject.DefaultValue)
 	}
 	tfMap["required"] = aws.ToBool(apiObject.Required)
 
@@ -3050,7 +3040,7 @@ func expandParameterDefinition(tfMap map[string]any) *awstypes.ParameterDefiniti
 	}
 
 	apiObject := &awstypes.ParameterDefinition{
-		Name: aws.String(tfMap["name"].(string)),
+		Name: aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	if v, ok := tfMap["definition"]; ok {
@@ -3089,11 +3079,11 @@ func expandStringSchema(tfMap map[string]any) *awstypes.StringSchemaConfig {
 		Required: aws.Bool(tfMap["required"].(bool)),
 	}
 
-	if v, ok := tfMap["comment"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrComment]; ok && v.(string) != "" {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["default_value"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrDefaultValue]; ok && v.(string) != "" {
 		apiObject.DefaultValue = aws.String(v.(string))
 	}
 

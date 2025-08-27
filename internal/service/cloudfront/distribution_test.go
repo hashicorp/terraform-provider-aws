@@ -1576,7 +1576,7 @@ func TestAccCloudFrontDistribution_multiTenantWithConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.0.name", "tenantName"),
-					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.0.definition.0.string_schema.0.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.0.definition.0.string_schema.0.required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.0.definition.0.string_schema.0.comment", "tenantName"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definitions.0.definition.0.string_schema.0.default_value", "root"),
 				),
@@ -4790,7 +4790,7 @@ resource "aws_cloudfront_distribution" "test" {
     cloudfront_default_certificate = true
   }
 
-  retain_on_delete     = false
+  retain_on_delete = false
 }
 `
 }
