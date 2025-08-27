@@ -27,6 +27,12 @@ type ServicePackageWithEphemeralResources interface {
 	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
 }
 
+type ServicePackageWithFrameworkListResource interface {
+	ServicePackage
+
+	FrameworkListResource(ctx context.Context) []*types.ServicePackageFrameworkListResource
+}
+
 type (
 	contextKeyType int
 )

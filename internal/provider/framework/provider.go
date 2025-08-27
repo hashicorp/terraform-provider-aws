@@ -52,6 +52,7 @@ var (
 type frameworkProvider struct {
 	dataSources        []func() datasource.DataSource
 	ephemeralResources []func() ephemeral.EphemeralResource
+	listResources      []func() list.ListResource
 	primary            interface{ Meta() any }
 	resources          []func() resource.Resource
 	servicePackages    iter.Seq[conns.ServicePackage]
@@ -433,6 +434,14 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 			p.resources = append(p.resources, func() resource.Resource { //nolint:contextcheck // must be a func()
 				return newWrappedResource(resourceSpec, servicePackageName)
 			})
+		}
+
+		if v, ok := sp.(conns.ServicePackageWithFrameworkListResource); ok {
+			for _, listResourceSpec := range v.FrameworkListResource(ctx) {
+				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
+					return newWrappedListResource(listResourceSpec, servicePackageName)
+				})
+			}
 		}
 	}
 }
