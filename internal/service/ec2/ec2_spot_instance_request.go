@@ -85,6 +85,10 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			}
+			s["network_interface"].Elem.(*schema.Resource).Schema["network_card_index"] = &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			}
 			s["primary_network_interface"] = &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,

@@ -16,6 +16,7 @@ var (
 	ResourceNetworkSettingsAssociation           = newNetworkSettingsAssociationResource
 	ResourcePortal                               = newPortalResource
 	ResourceTrustStore                           = newTrustStoreResource
+	ResourceTrustStoreAssociation                = newTrustStoreAssociationResource
 	ResourceUserAccessLoggingSettings            = newUserAccessLoggingSettingsResource
 	ResourceUserAccessLoggingSettingsAssociation = newUserAccessLoggingSettingsAssociationResource
 	ResourceUserSettings                         = newUserSettingsResource

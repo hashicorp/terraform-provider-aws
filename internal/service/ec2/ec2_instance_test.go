@@ -3475,9 +3475,10 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 
 					statecheck.ExpectKnownValue(eniSecondaryResourceName, tfjsonpath.New("attachment"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attachment_id": knownvalue.NotNull(),
-							"device_index":  knownvalue.Int64Exact(1),
-							"instance":      knownvalue.NotNull(),
+							"attachment_id":      knownvalue.NotNull(),
+							"device_index":       knownvalue.Int64Exact(1),
+							"instance":           knownvalue.NotNull(),
+							"network_card_index": knownvalue.Int64Exact(0),
 						}),
 					})),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), eniSecondaryResourceName, tfjsonpath.New("attachment").AtSliceIndex(0).AtMapKey("instance"), compare.ValuesSame()),
