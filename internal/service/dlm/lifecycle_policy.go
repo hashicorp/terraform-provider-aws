@@ -52,15 +52,15 @@ func resourceLifecyclePolicy() *schema.Resource {
 					validation.StringLenBetween(1, 500),
 				),
 			},
-			names.AttrExecutionRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"default_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
+			},
+			names.AttrExecutionRoleARN: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"policy_details": {
 				Type:     schema.TypeList,
@@ -236,48 +236,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
-							RequiredWith:     []string{"default_policy"},
-						},
-						"resource_types": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							},
-							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
-						},
-						"resource_locations": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
-							},
-						},
-						"retain_interval": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Default:       7,
-							ValidateFunc:  validation.IntBetween(2, 14),
-							ConflictsWith: []string{"policy_details.0.schedule"},
-							RequiredWith:  []string{"default_policy"},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("default_policy").(string) == "" {
-									if old == "0" && new == "7" {
-										return true
-									}
-								}
-								return false
-							},
-						},
 						names.AttrParameters: {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -306,6 +264,48 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Optional:         true,
 							Default:          awstypes.PolicyTypeValuesEbsSnapshotManagement,
 							ValidateDiagFunc: enum.Validate[awstypes.PolicyTypeValues](),
+						},
+						"resource_locations": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceLocationValues](),
+							},
+						},
+						names.AttrResourceType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
+							RequiredWith:     []string{"default_policy"},
+						},
+						"resource_types": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+							},
+							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
+						},
+						"retain_interval": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							Default:       7,
+							ValidateFunc:  validation.IntBetween(2, 14),
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("default_policy").(string) == "" {
+									if old == "0" && new == "7" {
+										return true
+									}
+								}
+								return false
+							},
 						},
 						names.AttrSchedule: {
 							Type:     schema.TypeList,
