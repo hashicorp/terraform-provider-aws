@@ -55,7 +55,8 @@ var routeValidTargets = []string{
 // @IdentityAttribute("destination_ipv6_cidr_block", optional="true")
 // @IdentityAttribute("destination_prefix_list_id", optional="true")
 // @ImportIDHandler("routeImportID")
-// @Testing(preIdentityVersion="6.8.0")
+// @Testing(preIdentityVersion="6.10.0")
+// @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Route")
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
@@ -515,11 +516,9 @@ var _ inttypes.SDKv2ImportID = routeImportID{}
 type routeImportID struct{}
 
 func (routeImportID) Create(d *schema.ResourceData) string {
-	// TODO: can we implement any error handling here?
 	_, destination, _ := routeDestinationAttribute(d)
 	routeTableID := d.Get("route_table_id").(string)
-	// TODO: fix magic separator
-	return fmt.Sprintf("%s_%s", routeTableID, destination)
+	return routeCreateID(routeTableID, destination)
 }
 
 func (routeImportID) Parse(id string) (string, map[string]string, error) {
@@ -541,5 +540,5 @@ func (routeImportID) Parse(id string) (string, map[string]string, error) {
 		result[routeDestinationPrefixListID] = destination
 	}
 
-	return id, result, nil
+	return routeCreateID(routeTableID, destination), result, nil
 }

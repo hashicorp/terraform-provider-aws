@@ -66,6 +66,7 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -77,9 +78,10 @@ func TestAccVPCRoute_Identity_Basic(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
-				ResourceName:    resourceName,
-				ImportState:     true,
-				ImportStateKind: resource.ImportBlockWithID,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
@@ -158,7 +160,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 					"region":        config.StringVariable(acctest.AlternateRegion()),
 				},
 				ImportStateKind:   resource.ImportCommandWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteImportStateIdFunc),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -174,7 +176,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateKind:   resource.ImportBlockWithID,
-				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.CrossRegionImportStateIdFuncAdapter(resourceName, testAccRouteImportStateIdFunc),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("route_table_id"), knownvalue.NotNull()),
@@ -210,7 +212,7 @@ func TestAccVPCRoute_Identity_RegionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.8.0
+// Resource Identity was added after v6.10.0
 func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -228,7 +230,7 @@ func TestAccVPCRoute_Identity_ExistingResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Route/basic_v6.8.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Route/basic_v6.10.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
