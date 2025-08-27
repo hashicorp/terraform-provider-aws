@@ -1,5 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_ssm_document" "test" {
-{{- template "region" }}
+  region = var.region
+
   document_type = "Command"
   name          = var.rName
 
@@ -22,6 +26,16 @@ resource "aws_ssm_document" "test" {
   }
 }
 DOC
+}
 
-{{- template "tags" . }}
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "region" {
+  description = "Region to deploy resource in"
+  type        = string
+  nullable    = false
 }
