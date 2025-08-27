@@ -640,7 +640,6 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		}
 
 		err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
-
 	}
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
