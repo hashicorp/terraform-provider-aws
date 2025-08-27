@@ -54,7 +54,7 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 			{
 				Config: autonomousVMClusterDSTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "display_name", *avmc1.DisplayName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDisplayName, *avmc1.DisplayName),
 				),
 			},
 		},

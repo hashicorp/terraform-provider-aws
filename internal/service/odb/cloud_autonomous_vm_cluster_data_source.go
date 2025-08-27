@@ -87,7 +87,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "he percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the Autonomous VM cluster was created.",
@@ -110,15 +110,15 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				ElementType: types.StringType,
 				Description: "The list of database servers associated with the Autonomous VM cluster.",
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed:    true,
 				Description: "The user-provided description of the Autonomous VM cluster.",
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Computed:    true,
 				Description: "The display name of the Autonomous VM cluster.",
 			},
-			"domain": schema.StringAttribute{
+			names.AttrDomain: schema.StringAttribute{
 				Computed:    true,
 				Description: "The domain name of the Autonomous VM cluster.",
 			},

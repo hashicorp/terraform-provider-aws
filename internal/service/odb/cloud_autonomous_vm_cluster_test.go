@@ -131,7 +131,7 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccODBCloudAutonomousVmClusterTagging(t *testing.T) {
 				Config: withTag,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &avmc2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 					resource.ComposeTestCheckFunc(func(state *terraform.State) error {
 						if strings.Compare(*(avmc1.CloudAutonomousVmClusterId), *(avmc2.CloudAutonomousVmClusterId)) != 0 {

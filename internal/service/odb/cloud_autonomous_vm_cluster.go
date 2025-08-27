@@ -123,7 +123,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Computed:    true,
 				Description: "The percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "The date and time when the Autonomous VM cluster was created.",
@@ -149,7 +149,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				},
 				Description: "The database servers in the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -157,7 +157,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				},
 				Description: "The description of the Autonomous VM cluster.",
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Required:   true,
 				Validators: stringLengthBetween1And255Validator,
 				PlanModifiers: []planmodifier.String{
@@ -165,7 +165,7 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				},
 				Description: "The display name of the Autonomous VM cluster. Changing this will force terraform to create new resource.",
 			},
-			"domain": schema.StringAttribute{
+			names.AttrDomain: schema.StringAttribute{
 				Computed:    true,
 				Description: "The domain name of the Autonomous VM cluster.",
 			},
@@ -283,12 +283,12 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 				Computed:    true,
 				Description: "The shape of the Exadata infrastructure for the Autonomous VM cluster.",
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType:  status,
 				Computed:    true,
 				Description: "The status of the Autonomous VM cluster. Possible values include CREATING, AVAILABLE , UPDATING , DELETING , DELETED , FAILED ",
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Computed:    true,
 				Description: "Additional information about the current status of the Autonomous VM cluster.",
 			},
