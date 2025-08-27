@@ -1,3 +1,7 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+// lintignore:AWSAT003,AWSAT005
 package arcregionswitch_test
 
 import (
@@ -6,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
@@ -26,8 +31,8 @@ func TestAccARCRegionSwitchPlanDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPlanDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtName, resourceName, acctest.CtName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role", resourceName, "execution_role"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "recovery_approach", resourceName, "recovery_approach"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "regions", resourceName, "regions"),
@@ -56,8 +61,8 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecks(t *testing.T) {
 			{
 				Config: testAccPlanDataSourceConfig_route53HealthChecks(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtName, resourceName, acctest.CtName),
 					// Verify Route53 health checks API integration works
 					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "2"),
 					// Verify health check metadata is immediately available
@@ -81,7 +86,7 @@ func testAccPlanDataSourceConfig_basic(rName string) string {
 data "aws_arcregionswitch_plan" "test" {
   arn = aws_arcregionswitch_plan.test.arn
 }
-`, testAccPlanConfig_basic(rName))
+`, testAccPlanConfig_basic(rName, acctest.AlternateRegion(), acctest.Region()))
 }
 
 func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing.T) {
@@ -106,8 +111,8 @@ func TestAccARCRegionSwitchPlanDataSource_route53HealthChecksWithWait(t *testing
 			{
 				Config: testAccPlanDataSourceConfig_route53HealthChecksWithWait(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtName, resourceName, acctest.CtName),
 					// Verify health check IDs are populated after waiting
 					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "2"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "route53_health_checks.0.health_check_id"),
@@ -151,8 +156,8 @@ func TestAccARCRegionSwitchPlanDataSource_withoutWaitFlags(t *testing.T) {
 			{
 				Config: testAccPlanDataSourceConfig_withoutWaitFlags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtName, resourceName, acctest.CtName),
 					// Verify health checks exist but IDs may be empty without wait
 					resource.TestCheckResourceAttr(dataSourceName, "route53_health_checks.#", "2"),
 				),
@@ -204,29 +209,29 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activePassive"
-  regions           = ["us-east-1", "us-west-2"]
-  primary_region    = "us-east-1"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = "us-west-2"
+    workflow_target_region = %[3]q
 
     step {
       name                 = "route53-health-check-step"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
-        hosted_zone_id = "Z123456789012345678"
-        record_name    = "test.example.com"
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
         timeout_minutes = 10
 
         record_sets {
           record_set_identifier = "primary"
-          region               = "us-east-1"
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
-          region               = "us-west-2"
+          region                = %[3]q
         }
       }
     }
@@ -234,28 +239,28 @@ resource "aws_arcregionswitch_plan" "test" {
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = "us-east-1"
+    workflow_target_region = %[2]q
 
     step {
-      name                 = "route53-health-check-step-east"
+      name                 = "route53-health-check-step-primary"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
-        hosted_zone_id = "Z123456789012345678"
-        record_name    = "test.example.com"
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
         timeout_minutes = 10
 
         record_sets {
           record_set_identifier = "primary"
-          region               = "us-east-1"
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
-          region               = "us-west-2"
+          region                = %[3]q
         }
       }
     }
   }
 }
-`, rName)
+`, rName, acctest.Region(), acctest.AlternateRegion())
 }

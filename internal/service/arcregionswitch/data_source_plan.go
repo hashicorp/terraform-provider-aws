@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package arcregionswitch
 
 import (
@@ -12,8 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_arcregionswitch_plan", name="Plan")
@@ -26,7 +32,7 @@ func DataSourcePlan() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -48,7 +54,7 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,14 +62,14 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +115,7 @@ func DataSourcePlan() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +132,7 @@ func DataSourcePlan() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +148,7 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -154,7 +160,7 @@ func DataSourcePlan() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -167,7 +173,7 @@ func DataSourcePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"condition": {
+									names.AttrCondition: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -182,14 +188,14 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,60 +203,61 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ARCRegionSwitchClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 	plan, err := FindPlanByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("reading ARC Region Switch Plan (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading ARC Region Switch Plan (%s): %s", arn, err)
 	}
 
 	d.SetId(arn)
-	d.Set("arn", plan.Arn)
-	d.Set("name", plan.Name)
+	d.Set(names.AttrARN, plan.Arn)
+	d.Set(names.AttrName, plan.Name)
 	d.Set("execution_role", plan.ExecutionRole)
 	d.Set("recovery_approach", plan.RecoveryApproach)
 	d.Set("regions", plan.Regions)
-	d.Set("description", plan.Description)
+	d.Set(names.AttrDescription, plan.Description)
 	d.Set("primary_region", plan.PrimaryRegion)
 	d.Set("recovery_time_objective_minutes", plan.RecoveryTimeObjectiveMinutes)
-	d.Set("owner", plan.Owner)
+	d.Set(names.AttrOwner, plan.Owner)
 	if plan.UpdatedAt != nil {
 		d.Set("updated_at", plan.UpdatedAt.Format(time.RFC3339))
 	}
-	d.Set("version", plan.Version)
+	d.Set(names.AttrVersion, plan.Version)
 
 	if err := d.Set("workflow", flattenWorkflows(plan.Workflows)); err != nil {
-		return diag.Errorf("setting workflow: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting workflow: %s", err)
 	}
 
 	if err := d.Set("associated_alarms", flattenAssociatedAlarms(plan.AssociatedAlarms)); err != nil {
-		return diag.Errorf("setting associated_alarms: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting associated_alarms: %s", err)
 	}
 
 	if err := d.Set("trigger", flattenTriggers(plan.Triggers)); err != nil {
-		return diag.Errorf("setting trigger: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("listing tags for ARC Region Switch Plan (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ARC Region Switch Plan (%s): %s", arn, err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	// Fetch Route53 health checks for this plan
@@ -277,21 +284,30 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 			return nil
 		})
+		if tfresource.TimedOut(err) {
+			healthChecks, err := listRoute53HealthChecks(ctx, conn, arn)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Route53 health checks: %s", err)
+			}
+			if err := d.Set("route53_health_checks", flattenRoute53HealthChecks(healthChecks)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting route53_health_checks: %s", err)
+			}
+		}
 		if err != nil {
-			return diag.Errorf("waiting for Route53 health checks: %s", err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 health checks: %s", err)
 		}
 	} else {
 		// Fetch health checks without waiting
 		healthChecks, err := listRoute53HealthChecks(ctx, conn, arn)
 		if err != nil {
-			return diag.Errorf("listing Route53 health checks: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing Route53 health checks: %s", err)
 		}
 		if err := d.Set("route53_health_checks", flattenRoute53HealthChecks(healthChecks)); err != nil {
-			return diag.Errorf("setting route53_health_checks: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting route53_health_checks: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func dataSourceStepSchema() map[string]*schema.Schema {
@@ -325,12 +341,12 @@ func dataSourceStepSchema() map[string]*schema.Schema {
 }
 
 func listRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]types.Route53HealthCheck, error) {
-	input := &arcregionswitch.ListRoute53HealthChecksInput{
+	input := arcregionswitch.ListRoute53HealthChecksInput{
 		Arn: aws.String(planArn),
 	}
 
 	var healthChecks []types.Route53HealthCheck
-	paginator := arcregionswitch.NewListRoute53HealthChecksPaginator(conn, input)
+	paginator := arcregionswitch.NewListRoute53HealthChecksPaginator(conn, &input)
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
@@ -344,18 +360,18 @@ func listRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, 
 	return healthChecks, nil
 }
 
-func flattenRoute53HealthChecks(healthChecks []types.Route53HealthCheck) []interface{} {
+func flattenRoute53HealthChecks(healthChecks []types.Route53HealthCheck) []any {
 	if len(healthChecks) == 0 {
 		return nil
 	}
 
-	var result []interface{}
+	var result []any
 	for _, hc := range healthChecks {
-		result = append(result, map[string]interface{}{
-			"health_check_id": aws.ToString(hc.HealthCheckId),
-			"hosted_zone_id":  aws.ToString(hc.HostedZoneId),
-			"record_name":     aws.ToString(hc.RecordName),
-			"region":          aws.ToString(hc.Region),
+		result = append(result, map[string]any{
+			"health_check_id":      aws.ToString(hc.HealthCheckId),
+			names.AttrHostedZoneID: aws.ToString(hc.HostedZoneId),
+			"record_name":          aws.ToString(hc.RecordName),
+			names.AttrRegion:       aws.ToString(hc.Region),
 		})
 	}
 	return result

@@ -1,3 +1,7 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+// lintignore:AWSAT003,AWSAT005
 package arcregionswitch
 
 import (
@@ -8,12 +12,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandWorkflows(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
-		input    []interface{}
+		input    []any
 		expected []types.Workflow
 	}{
 		{
@@ -23,13 +29,13 @@ func TestExpandWorkflows(t *testing.T) {
 		},
 		{
 			name:     "empty",
-			input:    []interface{}{},
+			input:    []any{},
 			expected: nil,
 		},
 		{
 			name: "basic workflow",
-			input: []interface{}{
-				map[string]interface{}{
+			input: []any{
+				map[string]any{
 					"workflow_target_action": "activate",
 					"workflow_target_region": "us-west-2",
 					"workflow_description":   "Test workflow",
@@ -47,6 +53,7 @@ func TestExpandWorkflows(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := expandWorkflows(tc.input)
 
 			// Use IgnoreUnexported to ignore unexported fields in the AWS SDK types
@@ -76,9 +83,10 @@ func TestExpandWorkflows(t *testing.T) {
 }
 
 func TestExpandSteps(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
-		input    []interface{}
+		input    []any
 		expected []types.Step
 	}{
 		{
@@ -88,18 +96,18 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name:     "empty",
-			input:    []interface{}{},
+			input:    []any{},
 			expected: nil,
 		},
 		{
 			name: "ManualApproval step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "approval-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "approval-step",
 					"execution_block_type": "ManualApproval",
-					"description":          "Approval step",
-					"execution_approval_config": []interface{}{
-						map[string]interface{}{
+					names.AttrDescription:  "Approval step",
+					"execution_approval_config": []any{
+						map[string]any{
 							"approval_role":   "arn:aws:iam::123456789012:role/test-role",
 							"timeout_minutes": 60,
 						},
@@ -122,21 +130,21 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "CustomActionLambda step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "lambda-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "lambda-step",
 					"execution_block_type": "CustomActionLambda",
-					"description":          "Lambda step",
-					"custom_action_lambda_config": []interface{}{
-						map[string]interface{}{
+					names.AttrDescription:  "Lambda step",
+					"custom_action_lambda_config": []any{
+						map[string]any{
 							"region_to_run":          "activatingRegion",
 							"retry_interval_minutes": 5.0,
 							"timeout_minutes":        30,
-							"lambda": []interface{}{
-								map[string]interface{}{
-									"arn":                "arn:aws:lambda:us-west-2:123456789012:function/test-function",
+							"lambda": []any{
+								map[string]any{
+									names.AttrARN:        "arn:aws:lambda:us-west-2:123456789012:function/test-function",
 									"cross_account_role": "arn:aws:iam::123456789012:role/test-role",
-									"external_id":        "test-id",
+									names.AttrExternalID: "test-id",
 								},
 							},
 						},
@@ -167,20 +175,20 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "Route53HealthCheck step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "health-check-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "health-check-step",
 					"execution_block_type": "Route53HealthCheck",
-					"description":          "Health check step",
-					"route53_health_check_config": []interface{}{
-						map[string]interface{}{
-							"hosted_zone_id":  "Z1D633PJN98FT9",
-							"record_name":     "example.com",
-							"timeout_minutes": 30,
-							"record_sets": []interface{}{
-								map[string]interface{}{
+					names.AttrDescription:  "Health check step",
+					"route53_health_check_config": []any{
+						map[string]any{
+							names.AttrHostedZoneID: "Z1D633PJN98FT9",
+							"record_name":          "example.com",
+							"timeout_minutes":      30,
+							"record_sets": []any{
+								map[string]any{
 									"record_set_identifier": "test-identifier",
-									"region":                "us-west-2",
+									names.AttrRegion:        "us-west-2",
 								},
 							},
 						},
@@ -210,18 +218,18 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "ECSServiceScaling step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "ecs-scaling-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "ecs-scaling-step",
 					"execution_block_type": "ECSServiceScaling",
-					"description":          "ECS scaling step",
-					"ecs_capacity_increase_config": []interface{}{
-						map[string]interface{}{
+					names.AttrDescription:  "ECS scaling step",
+					"ecs_capacity_increase_config": []any{
+						map[string]any{
 							"capacity_monitoring_approach": "sampledMaxInLast24Hours",
 							"target_percent":               80,
 							"timeout_minutes":              30,
-							"services": []interface{}{
-								map[string]interface{}{
+							"services": []any{
+								map[string]any{
 									"cluster_arn": "arn:aws:ecs:us-west-2:123456789012:cluster/test-cluster",
 									"service_arn": "arn:aws:ecs:us-west-2:123456789012:service/test-cluster/test-service",
 								},
@@ -253,16 +261,16 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "ARCRegionSwitchPlan step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "region-switch-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "region-switch-step",
 					"execution_block_type": "ARCRegionSwitchPlan",
-					"description":          "Region switch plan step",
-					"region_switch_plan_config": []interface{}{
-						map[string]interface{}{
-							"arn":                "arn:aws:arcregionswitch:us-west-2:123456789012:plan/test-plan",
+					names.AttrDescription:  "Region switch plan step",
+					"region_switch_plan_config": []any{
+						map[string]any{
+							names.AttrARN:        "arn:aws:arcregionswitch:us-west-2:123456789012:plan/test-plan",
 							"cross_account_role": "arn:aws:iam::123456789012:role/test-role",
-							"external_id":        "test-id",
+							names.AttrExternalID: "test-id",
 						},
 					},
 				},
@@ -284,37 +292,37 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "Parallel step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "parallel-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "parallel-step",
 					"execution_block_type": "Parallel",
-					"description":          "Parallel execution step",
-					"parallel_config": []interface{}{
-						map[string]interface{}{
-							"step": []interface{}{
-								map[string]interface{}{
-									"name":                 "nested-approval-step",
+					names.AttrDescription:  "Parallel execution step",
+					"parallel_config": []any{
+						map[string]any{
+							"step": []any{
+								map[string]any{
+									names.AttrName:         "nested-approval-step",
 									"execution_block_type": "ManualApproval",
-									"description":          "Nested approval step",
-									"execution_approval_config": []interface{}{
-										map[string]interface{}{
+									names.AttrDescription:  "Nested approval step",
+									"execution_approval_config": []any{
+										map[string]any{
 											"approval_role":   "arn:aws:iam::123456789012:role/nested-role",
 											"timeout_minutes": 30,
 										},
 									},
 								},
-								map[string]interface{}{
-									"name":                 "nested-lambda-step",
+								map[string]any{
+									names.AttrName:         "nested-lambda-step",
 									"execution_block_type": "CustomActionLambda",
-									"description":          "Nested lambda step",
-									"custom_action_lambda_config": []interface{}{
-										map[string]interface{}{
+									names.AttrDescription:  "Nested lambda step",
+									"custom_action_lambda_config": []any{
+										map[string]any{
 											"region_to_run":          "deactivatingRegion",
 											"retry_interval_minutes": 2.0,
 											"timeout_minutes":        15,
-											"lambda": []interface{}{
-												map[string]interface{}{
-													"arn": "arn:aws:lambda:us-east-1:123456789012:function/nested-function",
+											"lambda": []any{
+												map[string]any{
+													names.AttrARN: "arn:aws:lambda:us-east-1:123456789012:function/nested-function",
 												},
 											},
 										},
@@ -369,24 +377,24 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "AuroraGlobalDatabase step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "aurora-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "aurora-step",
 					"execution_block_type": "AuroraGlobalDatabase",
-					"description":          "Aurora global database step",
-					"global_aurora_config": []interface{}{
-						map[string]interface{}{
+					names.AttrDescription:  "Aurora global database step",
+					"global_aurora_config": []any{
+						map[string]any{
 							"behavior":                  "switchoverOnly",
 							"global_cluster_identifier": "test-global-cluster",
-							"database_cluster_arns": []interface{}{
+							"database_cluster_arns": []any{
 								"arn:aws:rds:us-west-2:123456789012:cluster:test-cluster-1",
 								"arn:aws:rds:us-east-1:123456789012:cluster:test-cluster-2",
 							},
 							"cross_account_role": "arn:aws:iam::123456789012:role/aurora-role",
-							"external_id":        "aurora-external-id",
+							names.AttrExternalID: "aurora-external-id",
 							"timeout_minutes":    45,
-							"ungraceful": []interface{}{
-								map[string]interface{}{
+							"ungraceful": []any{
+								map[string]any{
 									"ungraceful": "failover",
 								},
 							},
@@ -420,28 +428,28 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "EC2AutoScaling step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "ec2-scaling-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "ec2-scaling-step",
 					"execution_block_type": "EC2AutoScaling",
-					"description":          "EC2 Auto Scaling step",
-					"ec2_asg_capacity_increase_config": []interface{}{
-						map[string]interface{}{
-							"asgs": []interface{}{
-								map[string]interface{}{
-									"arn":                "arn:aws:autoscaling:us-west-2:123456789012:autoScalingGroup:test-asg-1",
+					names.AttrDescription:  "EC2 Auto Scaling step",
+					"ec2_asg_capacity_increase_config": []any{
+						map[string]any{
+							"asgs": []any{
+								map[string]any{
+									names.AttrARN:        "arn:aws:autoscaling:us-west-2:123456789012:autoScalingGroup:test-asg-1",
 									"cross_account_role": "arn:aws:iam::123456789012:role/ec2-role",
-									"external_id":        "ec2-external-id",
+									names.AttrExternalID: "ec2-external-id",
 								},
-								map[string]interface{}{
-									"arn": "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:test-asg-2",
+								map[string]any{
+									names.AttrARN: "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:test-asg-2",
 								},
 							},
 							"capacity_monitoring_approach": "autoscalingMaxInLast24Hours",
 							"target_percent":               75,
 							"timeout_minutes":              60,
-							"ungraceful": []interface{}{
-								map[string]interface{}{
+							"ungraceful": []any{
+								map[string]any{
 									"minimum_success_percentage": 80,
 								},
 							},
@@ -479,30 +487,30 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "ARCRoutingControl step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "routing-control-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "routing-control-step",
 					"execution_block_type": "ARCRoutingControl",
-					"description":          "ARC routing control step",
-					"arc_routing_control_config": []interface{}{
-						map[string]interface{}{
-							"region_and_routing_controls": []interface{}{
-								map[string]interface{}{
-									"region": "us-west-2",
-									"routing_control_arns": []interface{}{
+					names.AttrDescription:  "ARC routing control step",
+					"arc_routing_control_config": []any{
+						map[string]any{
+							"region_and_routing_controls": []any{
+								map[string]any{
+									names.AttrRegion: "us-west-2",
+									"routing_control_arns": []any{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457",
 									},
 								},
-								map[string]interface{}{
-									"region": "us-east-1",
-									"routing_control_arns": []interface{}{
+								map[string]any{
+									names.AttrRegion: "us-east-1",
+									"routing_control_arns": []any{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458",
 									},
 								},
 							},
 							"cross_account_role": "arn:aws:iam::123456789012:role/routing-control-role",
-							"external_id":        "routing-control-external-id",
+							names.AttrExternalID: "routing-control-external-id",
 							"timeout_minutes":    30,
 						},
 					},
@@ -543,31 +551,31 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "EKSResourceScaling step",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "eks-scaling-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "eks-scaling-step",
 					"execution_block_type": "EKSResourceScaling",
-					"description":          "EKS resource scaling step",
-					"eks_resource_scaling_config": []interface{}{
-						map[string]interface{}{
-							"kubernetes_resource_type": []interface{}{
-								map[string]interface{}{
+					names.AttrDescription:  "EKS resource scaling step",
+					"eks_resource_scaling_config": []any{
+						map[string]any{
+							"kubernetes_resource_type": []any{
+								map[string]any{
 									"api_version": "apps/v1",
 									"kind":        "Deployment",
 								},
 							},
-							"eks_clusters": []interface{}{
-								map[string]interface{}{
+							"eks_clusters": []any{
+								map[string]any{
 									"cluster_arn":        "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster",
 									"cross_account_role": "arn:aws:iam::123456789012:role/eks-role",
-									"external_id":        "eks-external-id",
+									names.AttrExternalID: "eks-external-id",
 								},
 							},
 							"capacity_monitoring_approach": "sampledMaxInLast24Hours",
 							"target_percent":               90,
 							"timeout_minutes":              45,
-							"ungraceful": []interface{}{
-								map[string]interface{}{
+							"ungraceful": []any{
+								map[string]any{
 									"minimum_success_percentage": 85,
 								},
 							},
@@ -606,21 +614,21 @@ func TestExpandSteps(t *testing.T) {
 		},
 		{
 			name: "EKSResourceScaling step with scaling resources",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "eks-scaling-with-resources-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "eks-scaling-with-resources-step",
 					"execution_block_type": "EKSResourceScaling",
-					"description":          "EKS resource scaling step with scaling resources",
-					"eks_resource_scaling_config": []interface{}{
-						map[string]interface{}{
-							"kubernetes_resource_type": []interface{}{
-								map[string]interface{}{
+					names.AttrDescription:  "EKS resource scaling step with scaling resources",
+					"eks_resource_scaling_config": []any{
+						map[string]any{
+							"kubernetes_resource_type": []any{
+								map[string]any{
 									"api_version": "apps/v1",
 									"kind":        "Deployment",
 								},
 							},
-							"eks_clusters": []interface{}{
-								map[string]interface{}{
+							"eks_clusters": []any{
+								map[string]any{
 									"cluster_arn": "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster",
 								},
 							},
@@ -661,6 +669,7 @@ func TestExpandSteps(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := expandSteps(tc.input, "activate")
 
 			// Use IgnoreUnexported to ignore unexported fields in the AWS SDK types
@@ -708,10 +717,11 @@ func TestExpandSteps(t *testing.T) {
 	}
 }
 func TestFlattenWorkflows(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		input    []types.Workflow
-		expected []interface{}
+		expected []any
 	}{
 		{
 			name:     "nil",
@@ -733,8 +743,8 @@ func TestFlattenWorkflows(t *testing.T) {
 					Steps:                []types.Step{},
 				},
 			},
-			expected: []interface{}{
-				map[string]interface{}{
+			expected: []any{
+				map[string]any{
 					"workflow_target_action": "activate",
 					"workflow_target_region": "us-west-2",
 					"workflow_description":   "Test workflow",
@@ -745,6 +755,7 @@ func TestFlattenWorkflows(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := flattenWorkflows(tc.input)
 
 			if diff := cmp.Diff(tc.expected, got); diff != "" {
@@ -755,10 +766,11 @@ func TestFlattenWorkflows(t *testing.T) {
 }
 
 func TestFlattenSteps(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name     string
 		input    []types.Step
-		expected []interface{}
+		expected []any
 	}{
 		{
 			name:     "nil",
@@ -785,13 +797,13 @@ func TestFlattenSteps(t *testing.T) {
 					},
 				},
 			},
-			expected: []interface{}{
-				map[string]interface{}{
-					"name":                 "approval-step",
+			expected: []any{
+				map[string]any{
+					names.AttrName:         "approval-step",
 					"execution_block_type": "ManualApproval",
-					"description":          "Approval step",
-					"execution_approval_config": []interface{}{
-						map[string]interface{}{
+					names.AttrDescription:  "Approval step",
+					"execution_approval_config": []any{
+						map[string]any{
 							"approval_role":   "arn:aws:iam::123456789012:role/test-role",
 							"timeout_minutes": int32(60),
 						},
@@ -829,31 +841,31 @@ func TestFlattenSteps(t *testing.T) {
 					},
 				},
 			},
-			expected: []interface{}{
-				map[string]interface{}{
-					"name":                 "eks-scaling-step",
+			expected: []any{
+				map[string]any{
+					names.AttrName:         "eks-scaling-step",
 					"execution_block_type": "EKSResourceScaling",
-					"description":          "EKS resource scaling step",
-					"eks_resource_scaling_config": []interface{}{
-						map[string]interface{}{
-							"kubernetes_resource_type": []interface{}{
-								map[string]interface{}{
+					names.AttrDescription:  "EKS resource scaling step",
+					"eks_resource_scaling_config": []any{
+						map[string]any{
+							"kubernetes_resource_type": []any{
+								map[string]any{
 									"api_version": "apps/v1",
 									"kind":        "Deployment",
 								},
 							},
-							"eks_clusters": []interface{}{
-								map[string]interface{}{
+							"eks_clusters": []any{
+								map[string]any{
 									"cluster_arn":        "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster",
 									"cross_account_role": "arn:aws:iam::123456789012:role/eks-role",
-									"external_id":        "eks-external-id",
+									names.AttrExternalID: "eks-external-id",
 								},
 							},
 							"capacity_monitoring_approach": "sampledMaxInLast24Hours",
 							"target_percent":               int32(90),
 							"timeout_minutes":              int32(45),
-							"ungraceful": []interface{}{
-								map[string]interface{}{
+							"ungraceful": []any{
+								map[string]any{
 									"minimum_success_percentage": int32(85),
 								},
 							},
@@ -896,22 +908,22 @@ func TestFlattenSteps(t *testing.T) {
 					},
 				},
 			},
-			expected: []interface{}{
-				map[string]interface{}{
-					"name":                 "routing-control-step",
+			expected: []any{
+				map[string]any{
+					names.AttrName:         "routing-control-step",
 					"execution_block_type": "ARCRoutingControl",
-					"description":          "ARC routing control step",
-					"arc_routing_control_config": []interface{}{
-						map[string]interface{}{
-							"region_and_routing_controls": []interface{}{
-								map[string]interface{}{
-									"region": "us-east-1",
+					names.AttrDescription:  "ARC routing control step",
+					"arc_routing_control_config": []any{
+						map[string]any{
+							"region_and_routing_controls": []any{
+								map[string]any{
+									names.AttrRegion: "us-east-1",
 									"routing_control_arns": []string{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789014/routingcontrol/1234567890123458",
 									},
 								},
-								map[string]interface{}{
-									"region": "us-west-2",
+								map[string]any{
+									names.AttrRegion: "us-west-2",
 									"routing_control_arns": []string{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457",
@@ -919,7 +931,7 @@ func TestFlattenSteps(t *testing.T) {
 								},
 							},
 							"cross_account_role": "arn:aws:iam::123456789012:role/routing-control-role",
-							"external_id":        "routing-control-external-id",
+							names.AttrExternalID: "routing-control-external-id",
 							"timeout_minutes":    int32(30),
 						},
 					},
@@ -930,6 +942,7 @@ func TestFlattenSteps(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := flattenSteps(tc.input)
 
 			if diff := cmp.Diff(tc.expected, got); diff != "" {
@@ -941,7 +954,8 @@ func TestFlattenSteps(t *testing.T) {
 
 // TestExpandEksResourceScalingConfigWithScalingResources tests the complex scaling_resources field
 // which requires schema.Set handling
-func TestExpandEksResourceScalingConfigWithScalingResources(t *testing.T) {
+func TestExpandEKSResourceScalingConfigWithScalingResources(t *testing.T) {
+	t.Parallel()
 	// Create a mock schema.Set for the resources field
 	resourcesSchema := &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -949,11 +963,11 @@ func TestExpandEksResourceScalingConfigWithScalingResources(t *testing.T) {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namespace": {
+			names.AttrNamespace: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -964,45 +978,45 @@ func TestExpandEksResourceScalingConfigWithScalingResources(t *testing.T) {
 		},
 	}
 
-	resourcesSet := schema.NewSet(schema.HashResource(resourcesSchema), []interface{}{
-		map[string]interface{}{
-			"resource_name": "my-deployment",
-			"name":          "my-app",
-			"namespace":     "default",
-			"hpa_name":      "my-app-hpa",
+	resourcesSet := schema.NewSet(schema.HashResource(resourcesSchema), []any{
+		map[string]any{
+			"resource_name":     "my-deployment",
+			names.AttrName:      "my-app",
+			names.AttrNamespace: "default",
+			"hpa_name":          "my-app-hpa",
 		},
-		map[string]interface{}{
-			"resource_name": "my-service",
-			"name":          "my-service",
-			"namespace":     "default",
+		map[string]any{
+			"resource_name":     "my-service",
+			names.AttrName:      "my-service",
+			names.AttrNamespace: "default",
 		},
 	})
 
-	input := map[string]interface{}{
-		"kubernetes_resource_type": []interface{}{
-			map[string]interface{}{
+	input := map[string]any{
+		"kubernetes_resource_type": []any{
+			map[string]any{
 				"api_version": "apps/v1",
 				"kind":        "Deployment",
 			},
 		},
-		"eks_clusters": []interface{}{
-			map[string]interface{}{
+		"eks_clusters": []any{
+			map[string]any{
 				"cluster_arn":        "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster",
 				"cross_account_role": "arn:aws:iam::123456789012:role/eks-role",
-				"external_id":        "eks-external-id",
+				names.AttrExternalID: "eks-external-id",
 			},
 		},
-		"scaling_resources": []interface{}{
-			map[string]interface{}{
-				"namespace": "default",
-				"resources": resourcesSet,
+		"scaling_resources": []any{
+			map[string]any{
+				names.AttrNamespace: "default",
+				names.AttrResources: resourcesSet,
 			},
 		},
 		"capacity_monitoring_approach": "sampledMaxInLast24Hours",
 		"target_percent":               90,
 		"timeout_minutes":              45,
-		"ungraceful": []interface{}{
-			map[string]interface{}{
+		"ungraceful": []any{
+			map[string]any{
 				"minimum_success_percentage": 85,
 			},
 		},
@@ -1043,7 +1057,7 @@ func TestExpandEksResourceScalingConfigWithScalingResources(t *testing.T) {
 		},
 	}
 
-	got := expandEksResourceScalingConfig(input)
+	got := expandEKSResourceScalingConfig(input)
 
 	// Use IgnoreUnexported to ignore unexported fields in the AWS SDK types
 	opts := cmpopts.IgnoreUnexported(
@@ -1061,26 +1075,27 @@ func TestExpandEksResourceScalingConfigWithScalingResources(t *testing.T) {
 
 // TestExpandStepsWithWorkflowAction tests that routing control states are correctly set based on workflow action
 func TestExpandStepsWithWorkflowAction(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name           string
 		workflowAction string
-		input          []interface{}
+		input          []any
 		expectedState  types.RoutingControlStateChange
 	}{
 		{
 			name:           "activate workflow sets routing controls to On",
 			workflowAction: "activate",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "routing-control-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "routing-control-step",
 					"execution_block_type": "ARCRoutingControl",
-					"description":          "ARC routing control step",
-					"arc_routing_control_config": []interface{}{
-						map[string]interface{}{
-							"region_and_routing_controls": []interface{}{
-								map[string]interface{}{
-									"region": "us-west-2",
-									"routing_control_arns": []interface{}{
+					names.AttrDescription:  "ARC routing control step",
+					"arc_routing_control_config": []any{
+						map[string]any{
+							"region_and_routing_controls": []any{
+								map[string]any{
+									names.AttrRegion: "us-west-2",
+									"routing_control_arns": []any{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 									},
 								},
@@ -1095,17 +1110,17 @@ func TestExpandStepsWithWorkflowAction(t *testing.T) {
 		{
 			name:           "deactivate workflow sets routing controls to Off",
 			workflowAction: "deactivate",
-			input: []interface{}{
-				map[string]interface{}{
-					"name":                 "routing-control-step",
+			input: []any{
+				map[string]any{
+					names.AttrName:         "routing-control-step",
 					"execution_block_type": "ARCRoutingControl",
-					"description":          "ARC routing control step",
-					"arc_routing_control_config": []interface{}{
-						map[string]interface{}{
-							"region_and_routing_controls": []interface{}{
-								map[string]interface{}{
-									"region": "us-west-2",
-									"routing_control_arns": []interface{}{
+					names.AttrDescription:  "ARC routing control step",
+					"arc_routing_control_config": []any{
+						map[string]any{
+							"region_and_routing_controls": []any{
+								map[string]any{
+									names.AttrRegion: "us-west-2",
+									"routing_control_arns": []any{
 										"arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456",
 									},
 								},
@@ -1121,6 +1136,7 @@ func TestExpandStepsWithWorkflowAction(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := expandSteps(tc.input, tc.workflowAction)
 
 			if len(got) != 1 {

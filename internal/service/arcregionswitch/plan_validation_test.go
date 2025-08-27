@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+// lintignore:AWSAT003,AWSAT005
 package arcregionswitch_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,15 +28,15 @@ func TestAccARCRegionSwitchPlan_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPlanConfig_invalidRecoveryApproach(rName),
-				ExpectError: regexp.MustCompile(`expected recovery_approach to be one of`),
+				ExpectError: regexache.MustCompile(`expected recovery_approach to be one of`),
 			},
 			{
 				Config:      testAccPlanConfig_invalidExecutionRole(rName),
-				ExpectError: regexp.MustCompile(`invalid ARN`),
+				ExpectError: regexache.MustCompile(`invalid ARN`),
 			},
 			{
 				Config:      testAccPlanConfig_singleRegion(rName),
-				ExpectError: regexp.MustCompile(`Member must have length greater than or equal to 2`),
+				ExpectError: regexache.MustCompile(`Member must have length greater than or equal to 2`),
 			},
 		},
 	})
@@ -61,12 +65,12 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "invalidApproach"
-  regions           = ["us-east-1", "us-west-2"]
-  primary_region    = "us-east-1"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = "us-west-2"
+    workflow_target_region = %[3]q
 
     step {
       name                 = "basic-step"
@@ -79,7 +83,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName)
+`, rName, acctest.Region(), acctest.AlternateRegion())
 }
 
 func testAccPlanConfig_invalidExecutionRole(rName string) string {
@@ -88,12 +92,12 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = "invalid-arn"
   recovery_approach = "activePassive"
-  regions           = ["us-east-1", "us-west-2"]
-  primary_region    = "us-east-1"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = "us-west-2"
+    workflow_target_region = %[3]q
 
     step {
       name                 = "basic-step"
@@ -106,7 +110,7 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName)
+`, rName, acctest.Region(), acctest.AlternateRegion())
 }
 
 func testAccPlanConfig_singleRegion(rName string) string {
@@ -132,12 +136,12 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activePassive"
-  regions           = ["us-east-1"]
-  primary_region    = "us-east-1"
+  regions           = [%[2]q]
+  primary_region    = %[2]q
 
   workflow {
     workflow_target_action = "activate"
-    workflow_target_region = "us-east-1"
+    workflow_target_region = %[2]q
 
     step {
       name                 = "single-region-step"
@@ -150,48 +154,5 @@ resource "aws_arcregionswitch_plan" "test" {
     }
   }
 }
-`, rName)
-}
-
-func testAccPlanConfig_missingRegions(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "arc-region-switch.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_arcregionswitch_plan" "test" {
-  name              = %[1]q
-  execution_role    = aws_iam_role.test.arn
-  recovery_approach = "activePassive"
-  primary_region    = "us-east-1"
-
-  workflow {
-    workflow_target_action = "activate"
-    workflow_target_region = "us-west-2"
-
-    step {
-      name                 = "basic-step"
-      execution_block_type = "ManualApproval"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 60
-      }
-    }
-  }
-}
-`, rName)
+`, rName, acctest.Region())
 }

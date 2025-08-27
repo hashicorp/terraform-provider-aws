@@ -1,31 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package arcregionswitch
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenSteps(apiObject []types.Step) []interface{} {
+func flattenSteps(apiObject []types.Step) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, step := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"execution_block_type": string(step.ExecutionBlockType),
 		}
 
 		if step.Name != nil {
-			tfMap["name"] = aws.ToString(step.Name)
+			tfMap[names.AttrName] = aws.ToString(step.Name)
 		}
 
 		if step.Description != nil {
-			tfMap["description"] = aws.ToString(step.Description)
+			tfMap[names.AttrDescription] = aws.ToString(step.Description)
 		}
 
 		// Handle different execution block configuration types
@@ -38,15 +42,15 @@ func flattenSteps(apiObject []types.Step) []interface{} {
 			case *types.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
 				tfMap["arc_routing_control_config"] = flattenArcRoutingControlConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-				tfMap["ec2_asg_capacity_increase_config"] = flattenEc2AsgCapacityIncreaseConfig(config.Value)
+				tfMap["ec2_asg_capacity_increase_config"] = flattenEC2ASGCapacityIncreaseConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 				tfMap["global_aurora_config"] = flattenGlobalAuroraConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberParallelConfig:
 				tfMap["parallel_config"] = flattenParallelConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-				tfMap["ecs_capacity_increase_config"] = flattenEcsCapacityIncreaseConfig(config.Value)
+				tfMap["ecs_capacity_increase_config"] = flattenECSCapacityIncreaseConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
-				tfMap["eks_resource_scaling_config"] = flattenEksResourceScalingConfig(config.Value)
+				tfMap["eks_resource_scaling_config"] = flattenEKSResourceScalingConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 				tfMap["route53_health_check_config"] = flattenRoute53HealthCheckConfig(config.Value)
 			case *types.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
@@ -60,8 +64,8 @@ func flattenSteps(apiObject []types.Step) []interface{} {
 	return tfList
 }
 
-func flattenExecutionApprovalConfig(apiObject types.ExecutionApprovalConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenExecutionApprovalConfig(apiObject types.ExecutionApprovalConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if apiObject.ApprovalRole != nil {
 		tfMap["approval_role"] = aws.ToString(apiObject.ApprovalRole)
@@ -71,11 +75,11 @@ func flattenExecutionApprovalConfig(apiObject types.ExecutionApprovalConfigurati
 		tfMap["timeout_minutes"] = aws.ToInt32(apiObject.TimeoutMinutes)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenCustomActionLambdaConfig(apiObject types.CustomActionLambdaConfiguration) []interface{} {
-	tfMap := map[string]interface{}{
+func flattenCustomActionLambdaConfig(apiObject types.CustomActionLambdaConfiguration) []any {
+	tfMap := map[string]any{
 		"region_to_run": string(apiObject.RegionToRun),
 	}
 
@@ -92,28 +96,28 @@ func flattenCustomActionLambdaConfig(apiObject types.CustomActionLambdaConfigura
 	}
 
 	if apiObject.Ungraceful != nil {
-		tfMap["ungraceful"] = []interface{}{
-			map[string]interface{}{
+		tfMap["ungraceful"] = []any{
+			map[string]any{
 				"behavior": string(apiObject.Ungraceful.Behavior),
 			},
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLambdas(apiObject []types.Lambdas) []interface{} {
+func flattenLambdas(apiObject []types.Lambdas) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, lambda := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if lambda.Arn != nil {
-			tfMap["arn"] = aws.ToString(lambda.Arn)
+			tfMap[names.AttrARN] = aws.ToString(lambda.Arn)
 		}
 
 		if lambda.CrossAccountRole != nil {
@@ -121,7 +125,7 @@ func flattenLambdas(apiObject []types.Lambdas) []interface{} {
 		}
 
 		if lambda.ExternalId != nil {
-			tfMap["external_id"] = aws.ToString(lambda.ExternalId)
+			tfMap[names.AttrExternalID] = aws.ToString(lambda.ExternalId)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -130,19 +134,19 @@ func flattenLambdas(apiObject []types.Lambdas) []interface{} {
 	return tfList
 }
 
-func flattenArcRoutingControlConfig(apiObject types.ArcRoutingControlConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenArcRoutingControlConfig(apiObject types.ArcRoutingControlConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if len(apiObject.RegionAndRoutingControls) > 0 {
 		// Flatten to list of objects with region and routing_control_arns
-		var regionControlsList []interface{}
+		var regionControlsList []any
 
 		// Sort regions for consistent ordering
 		var regions []string
 		for region := range apiObject.RegionAndRoutingControls {
 			regions = append(regions, region)
 		}
-		sort.Strings(regions)
+		slices.Sort(regions)
 
 		for _, region := range regions {
 			controls := apiObject.RegionAndRoutingControls[region]
@@ -152,8 +156,8 @@ func flattenArcRoutingControlConfig(apiObject types.ArcRoutingControlConfigurati
 					controlArns = append(controlArns, aws.ToString(control.RoutingControlArn))
 				}
 			}
-			regionControlsList = append(regionControlsList, map[string]interface{}{
-				"region":               region,
+			regionControlsList = append(regionControlsList, map[string]any{
+				names.AttrRegion:       region,
 				"routing_control_arns": controlArns,
 			})
 		}
@@ -165,21 +169,21 @@ func flattenArcRoutingControlConfig(apiObject types.ArcRoutingControlConfigurati
 	}
 
 	if apiObject.ExternalId != nil {
-		tfMap["external_id"] = aws.ToString(apiObject.ExternalId)
+		tfMap[names.AttrExternalID] = aws.ToString(apiObject.ExternalId)
 	}
 
 	if apiObject.TimeoutMinutes != nil {
 		tfMap["timeout_minutes"] = aws.ToInt32(apiObject.TimeoutMinutes)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEc2AsgCapacityIncreaseConfig(apiObject types.Ec2AsgCapacityIncreaseConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEC2ASGCapacityIncreaseConfig(apiObject types.Ec2AsgCapacityIncreaseConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if len(apiObject.Asgs) > 0 {
-		tfMap["asgs"] = flattenAsgs(apiObject.Asgs)
+		tfMap["asgs"] = flattenASGs(apiObject.Asgs)
 	}
 
 	if apiObject.CapacityMonitoringApproach != "" {
@@ -195,28 +199,28 @@ func flattenEc2AsgCapacityIncreaseConfig(apiObject types.Ec2AsgCapacityIncreaseC
 	}
 
 	if apiObject.Ungraceful != nil {
-		tfMap["ungraceful"] = []interface{}{
-			map[string]interface{}{
+		tfMap["ungraceful"] = []any{
+			map[string]any{
 				"minimum_success_percentage": aws.ToInt32(apiObject.Ungraceful.MinimumSuccessPercentage),
 			},
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAsgs(apiObject []types.Asg) []interface{} {
+func flattenASGs(apiObject []types.Asg) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, asg := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if asg.Arn != nil {
-			tfMap["arn"] = aws.ToString(asg.Arn)
+			tfMap[names.AttrARN] = aws.ToString(asg.Arn)
 		}
 
 		if asg.CrossAccountRole != nil {
@@ -224,7 +228,7 @@ func flattenAsgs(apiObject []types.Asg) []interface{} {
 		}
 
 		if asg.ExternalId != nil {
-			tfMap["external_id"] = aws.ToString(asg.ExternalId)
+			tfMap[names.AttrExternalID] = aws.ToString(asg.ExternalId)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -233,8 +237,8 @@ func flattenAsgs(apiObject []types.Asg) []interface{} {
 	return tfList
 }
 
-func flattenGlobalAuroraConfig(apiObject types.GlobalAuroraConfiguration) []interface{} {
-	tfMap := map[string]interface{}{
+func flattenGlobalAuroraConfig(apiObject types.GlobalAuroraConfiguration) []any {
+	tfMap := map[string]any{
 		"behavior":                  string(apiObject.Behavior),
 		"global_cluster_identifier": aws.ToString(apiObject.GlobalClusterIdentifier),
 	}
@@ -248,7 +252,7 @@ func flattenGlobalAuroraConfig(apiObject types.GlobalAuroraConfiguration) []inte
 	}
 
 	if apiObject.ExternalId != nil {
-		tfMap["external_id"] = aws.ToString(apiObject.ExternalId)
+		tfMap[names.AttrExternalID] = aws.ToString(apiObject.ExternalId)
 	}
 
 	if apiObject.TimeoutMinutes != nil {
@@ -256,28 +260,28 @@ func flattenGlobalAuroraConfig(apiObject types.GlobalAuroraConfiguration) []inte
 	}
 
 	if apiObject.Ungraceful != nil {
-		tfMap["ungraceful"] = []interface{}{
-			map[string]interface{}{
+		tfMap["ungraceful"] = []any{
+			map[string]any{
 				"ungraceful": string(apiObject.Ungraceful.Ungraceful),
 			},
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenParallelConfig(apiObject types.ParallelExecutionBlockConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenParallelConfig(apiObject types.ParallelExecutionBlockConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if len(apiObject.Steps) > 0 {
 		tfMap["step"] = flattenSteps(apiObject.Steps)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEcsCapacityIncreaseConfig(apiObject types.EcsCapacityIncreaseConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenECSCapacityIncreaseConfig(apiObject types.EcsCapacityIncreaseConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if len(apiObject.Services) > 0 {
 		tfMap["services"] = flattenServices(apiObject.Services)
@@ -296,25 +300,25 @@ func flattenEcsCapacityIncreaseConfig(apiObject types.EcsCapacityIncreaseConfigu
 	}
 
 	if apiObject.Ungraceful != nil {
-		tfMap["ungraceful"] = []interface{}{
-			map[string]interface{}{
+		tfMap["ungraceful"] = []any{
+			map[string]any{
 				"minimum_success_percentage": aws.ToInt32(apiObject.Ungraceful.MinimumSuccessPercentage),
 			},
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenServices(apiObject []types.Service) []interface{} {
+func flattenServices(apiObject []types.Service) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, service := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if service.ClusterArn != nil {
 			tfMap["cluster_arn"] = aws.ToString(service.ClusterArn)
@@ -329,7 +333,7 @@ func flattenServices(apiObject []types.Service) []interface{} {
 		}
 
 		if service.ExternalId != nil {
-			tfMap["external_id"] = aws.ToString(service.ExternalId)
+			tfMap[names.AttrExternalID] = aws.ToString(service.ExternalId)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -338,12 +342,12 @@ func flattenServices(apiObject []types.Service) []interface{} {
 	return tfList
 }
 
-func flattenEksResourceScalingConfig(apiObject types.EksResourceScalingConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEKSResourceScalingConfig(apiObject types.EksResourceScalingConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if apiObject.KubernetesResourceType != nil {
-		tfMap["kubernetes_resource_type"] = []interface{}{
-			map[string]interface{}{
+		tfMap["kubernetes_resource_type"] = []any{
+			map[string]any{
 				"api_version": aws.ToString(apiObject.KubernetesResourceType.ApiVersion),
 				"kind":        aws.ToString(apiObject.KubernetesResourceType.Kind),
 			},
@@ -351,7 +355,7 @@ func flattenEksResourceScalingConfig(apiObject types.EksResourceScalingConfigura
 	}
 
 	if len(apiObject.EksClusters) > 0 {
-		tfMap["eks_clusters"] = flattenEksClusters(apiObject.EksClusters)
+		tfMap["eks_clusters"] = flattenEKSClusters(apiObject.EksClusters)
 	}
 
 	if apiObject.CapacityMonitoringApproach != "" {
@@ -367,8 +371,8 @@ func flattenEksResourceScalingConfig(apiObject types.EksResourceScalingConfigura
 	}
 
 	if apiObject.Ungraceful != nil {
-		tfMap["ungraceful"] = []interface{}{
-			map[string]interface{}{
+		tfMap["ungraceful"] = []any{
+			map[string]any{
 				"minimum_success_percentage": aws.ToInt32(apiObject.Ungraceful.MinimumSuccessPercentage),
 			},
 		}
@@ -376,42 +380,42 @@ func flattenEksResourceScalingConfig(apiObject types.EksResourceScalingConfigura
 
 	// Handle complex scaling_resources structure
 	if len(apiObject.ScalingResources) > 0 {
-		var scalingResourcesList []interface{}
+		var scalingResourcesList []any
 		for _, resourceMap := range apiObject.ScalingResources {
 			for namespace, resources := range resourceMap {
-				var resourcesList []interface{}
+				var resourcesList []any
 				for resourceName, resource := range resources {
-					resourceData := map[string]interface{}{
-						"resource_name": resourceName,
-						"name":          aws.ToString(resource.Name),
-						"namespace":     aws.ToString(resource.Namespace),
+					resourceData := map[string]any{
+						"resource_name":     resourceName,
+						names.AttrName:      aws.ToString(resource.Name),
+						names.AttrNamespace: aws.ToString(resource.Namespace),
 					}
 					if resource.HpaName != nil {
 						resourceData["hpa_name"] = aws.ToString(resource.HpaName)
 					}
 					resourcesList = append(resourcesList, resourceData)
 				}
-				scalingResourcesList = append(scalingResourcesList, map[string]interface{}{
-					"namespace": namespace,
-					"resources": resourcesList,
+				scalingResourcesList = append(scalingResourcesList, map[string]any{
+					names.AttrNamespace: namespace,
+					names.AttrResources: resourcesList,
 				})
 			}
 		}
 		tfMap["scaling_resources"] = scalingResourcesList
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEksClusters(apiObject []types.EksCluster) []interface{} {
+func flattenEKSClusters(apiObject []types.EksCluster) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, cluster := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if cluster.ClusterArn != nil {
 			tfMap["cluster_arn"] = aws.ToString(cluster.ClusterArn)
@@ -422,7 +426,7 @@ func flattenEksClusters(apiObject []types.EksCluster) []interface{} {
 		}
 
 		if cluster.ExternalId != nil {
-			tfMap["external_id"] = aws.ToString(cluster.ExternalId)
+			tfMap[names.AttrExternalID] = aws.ToString(cluster.ExternalId)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -431,11 +435,11 @@ func flattenEksClusters(apiObject []types.EksCluster) []interface{} {
 	return tfList
 }
 
-func flattenRoute53HealthCheckConfig(apiObject types.Route53HealthCheckConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRoute53HealthCheckConfig(apiObject types.Route53HealthCheckConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if apiObject.HostedZoneId != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(apiObject.HostedZoneId)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(apiObject.HostedZoneId)
 	}
 
 	if apiObject.RecordName != nil {
@@ -451,32 +455,32 @@ func flattenRoute53HealthCheckConfig(apiObject types.Route53HealthCheckConfigura
 	}
 
 	if apiObject.ExternalId != nil {
-		tfMap["external_id"] = aws.ToString(apiObject.ExternalId)
+		tfMap[names.AttrExternalID] = aws.ToString(apiObject.ExternalId)
 	}
 
 	if apiObject.TimeoutMinutes != nil {
 		tfMap["timeout_minutes"] = aws.ToInt32(apiObject.TimeoutMinutes)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRoute53ResourceRecordSets(apiObject []types.Route53ResourceRecordSet) []interface{} {
+func flattenRoute53ResourceRecordSets(apiObject []types.Route53ResourceRecordSet) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, recordSet := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if recordSet.RecordSetIdentifier != nil {
 			tfMap["record_set_identifier"] = aws.ToString(recordSet.RecordSetIdentifier)
 		}
 
 		if recordSet.Region != nil {
-			tfMap["region"] = aws.ToString(recordSet.Region)
+			tfMap[names.AttrRegion] = aws.ToString(recordSet.Region)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -485,11 +489,11 @@ func flattenRoute53ResourceRecordSets(apiObject []types.Route53ResourceRecordSet
 	return tfList
 }
 
-func flattenRegionSwitchPlanConfig(apiObject types.RegionSwitchPlanConfiguration) []interface{} {
-	tfMap := map[string]interface{}{}
+func flattenRegionSwitchPlanConfig(apiObject types.RegionSwitchPlanConfiguration) []any {
+	tfMap := map[string]any{}
 
 	if apiObject.Arn != nil {
-		tfMap["arn"] = aws.ToString(apiObject.Arn)
+		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
 	}
 
 	if apiObject.CrossAccountRole != nil {
@@ -497,21 +501,21 @@ func flattenRegionSwitchPlanConfig(apiObject types.RegionSwitchPlanConfiguration
 	}
 
 	if apiObject.ExternalId != nil {
-		tfMap["external_id"] = aws.ToString(apiObject.ExternalId)
+		tfMap[names.AttrExternalID] = aws.ToString(apiObject.ExternalId)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenWorkflows(apiObject []types.Workflow) []interface{} {
+func flattenWorkflows(apiObject []types.Workflow) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, workflow := range apiObject {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"workflow_target_action": string(workflow.WorkflowTargetAction),
 		}
 
@@ -533,16 +537,16 @@ func flattenWorkflows(apiObject []types.Workflow) []interface{} {
 	return tfList
 }
 
-func flattenAssociatedAlarms(apiObject map[string]types.AssociatedAlarm) []interface{} {
+func flattenAssociatedAlarms(apiObject map[string]types.AssociatedAlarm) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for alarmName, alarm := range apiObject {
-		alarmMap := map[string]interface{}{
-			"name":                alarmName,
+		alarmMap := map[string]any{
+			names.AttrName:        alarmName,
 			"alarm_type":          string(alarm.AlarmType),
 			"resource_identifier": aws.ToString(alarm.ResourceIdentifier),
 		}
@@ -552,7 +556,7 @@ func flattenAssociatedAlarms(apiObject map[string]types.AssociatedAlarm) []inter
 		}
 
 		if alarm.ExternalId != nil {
-			alarmMap["external_id"] = aws.ToString(alarm.ExternalId)
+			alarmMap[names.AttrExternalID] = aws.ToString(alarm.ExternalId)
 		}
 
 		tfList = append(tfList, alarmMap)
@@ -561,30 +565,30 @@ func flattenAssociatedAlarms(apiObject map[string]types.AssociatedAlarm) []inter
 	return tfList
 }
 
-func flattenTriggers(apiObject []types.Trigger) []interface{} {
+func flattenTriggers(apiObject []types.Trigger) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, trigger := range apiObject {
-		tfMap := map[string]interface{}{
-			"action":                               string(trigger.Action),
+		tfMap := map[string]any{
+			names.AttrAction:                       string(trigger.Action),
 			"min_delay_minutes_between_executions": aws.ToInt32(trigger.MinDelayMinutesBetweenExecutions),
 			"target_region":                        aws.ToString(trigger.TargetRegion),
 		}
 
 		if trigger.Description != nil {
-			tfMap["description"] = aws.ToString(trigger.Description)
+			tfMap[names.AttrDescription] = aws.ToString(trigger.Description)
 		}
 
 		if len(trigger.Conditions) > 0 {
-			var conditions []interface{}
+			var conditions []any
 			for _, condition := range trigger.Conditions {
-				conditionMap := map[string]interface{}{
+				conditionMap := map[string]any{
 					"associated_alarm_name": aws.ToString(condition.AssociatedAlarmName),
-					"condition":             string(condition.Condition),
+					names.AttrCondition:     string(condition.Condition),
 				}
 				conditions = append(conditions, conditionMap)
 			}

@@ -1,3 +1,7 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+// lintignore:AWSAT003,AWSAT005,AT004
 package arcregionswitch_test
 
 import (
@@ -32,10 +36,10 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName),
+				Config: testAccPlanConfig_route53HealthCheck(rName, zoneName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -46,8 +50,8 @@ func TestAccARCRegionSwitchPlan_route53HealthCheck(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "route53_health_checks.1.health_check_id"),
 
 					// Verify Route53 records reference health check IDs
-					resource.TestCheckResourceAttrSet("aws_route53_record.east", "health_check_id"),
-					resource.TestCheckResourceAttrSet("aws_route53_record.west", "health_check_id"),
+					resource.TestCheckResourceAttrSet("aws_route53_record.primary", "health_check_id"),
+					resource.TestCheckResourceAttrSet("aws_route53_record.secondary", "health_check_id"),
 
 					// Verify private hosted zone
 					resource.TestCheckResourceAttr("aws_route53_zone.private", "vpc.#", "2"),
@@ -77,10 +81,10 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_complex(rName),
+				Config: testAccPlanConfig_complex(rName, acctest.AlternateRegion(), acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activeActive"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
@@ -94,63 +98,63 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 					}),
 
 					// Verify basic attributes
-					resource.TestCheckResourceAttr(resourceName, "description", "Complex test plan with multiple execution block types"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Complex test plan with multiple execution block types"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_time_objective_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "associated_alarms.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 
 					// Verify CustomActionLambda execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "CustomActionLambda",
-						"name":                 "custom-lambda-step",
+						acctest.CtName:         "custom-lambda-step",
 					}),
 
 					// Verify ManualApproval execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ManualApproval",
-						"name":                 "manual-approval-step",
+						acctest.CtName:         "manual-approval-step",
 					}),
 
 					// Verify AuroraGlobalDatabase execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "AuroraGlobalDatabase",
-						"name":                 "aurora-global-step",
+						acctest.CtName:         "aurora-global-step",
 					}),
 
 					// Verify EC2AutoScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "EC2AutoScaling",
-						"name":                 "ec2-asg-step",
+						acctest.CtName:         "ec2-asg-step",
 					}),
 
 					// Verify ECSServiceScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ECSServiceScaling",
-						"name":                 "ecs-scaling-step",
+						acctest.CtName:         "ecs-scaling-step",
 					}),
 
 					// Verify EKSResourceScaling execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "EKSResourceScaling",
-						"name":                 "eks-scaling-step",
+						acctest.CtName:         "eks-scaling-step",
 					}),
 
 					// Verify Route53HealthCheck execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "Route53HealthCheck",
-						"name":                 "route53-health-check-step-activate",
+						acctest.CtName:         "route53-health-check-step-activate",
 					}),
 
 					// Verify Parallel execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "Parallel",
-						"name":                 "parallel-step",
+						acctest.CtName:         "parallel-step",
 					}),
 
 					// Verify ARCRoutingControl execution block
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
 						"execution_block_type": "ARCRoutingControl",
-						"name":                 "arc-routing-control-step",
+						acctest.CtName:         "arc-routing-control-step",
 					}),
 
 					// Verify specific configuration values are stored correctly
@@ -196,15 +200,15 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 
 					// Route53HealthCheck config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.route53_health_check_config.*", map[string]string{
-						"hosted_zone_id":  "Z123456789012345678",
-						"timeout_minutes": "10",
-						"record_name":     "test.example.com",
+						names.AttrHostedZoneID: "Z123456789012345678",
+						"timeout_minutes":      "10",
+						"record_name":          "test.example.com",
 					}),
 
 					// ARCRoutingControl config
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.arc_routing_control_config.*", map[string]string{
 						"cross_account_role": "arn:aws:iam::123456789012:role/RoutingControlRole",
-						"external_id":        "routing-external-id",
+						names.AttrExternalID: "routing-external-id",
 						"timeout_minutes":    "15",
 					}),
 				),
@@ -228,7 +232,7 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 	})
 }
 
-func testAccPlanConfig_complex(rName string) string {
+func testAccPlanConfig_complex(rName, primaryRegion, alternateRegion string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -248,18 +252,18 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_arcregionswitch_plan" "test" {
-  name                             = %[1]q
-  execution_role                   = aws_iam_role.test.arn
-  recovery_approach                = "activeActive"
-  regions                          = ["us-east-1", "us-west-2"]
-  primary_region                   = "us-east-1"
-  description                      = "Complex test plan with multiple execution block types"
-  recovery_time_objective_minutes  = 60
+  name                            = %[1]q
+  execution_role                  = aws_iam_role.test.arn
+  recovery_approach               = "activeActive"
+  regions                         = [%[2]q, %[3]q]
+  primary_region                  = %[2]q
+  description                     = "Complex test plan with multiple execution block types"
+  recovery_time_objective_minutes = 60
 
   associated_alarms {
     name                = "test-alarm-1"
     alarm_type          = "applicationHealth"
-    resource_identifier = "arn:aws:cloudwatch:us-east-1:123456789012:alarm:test-alarm-1"
+    resource_identifier = "arn:aws:cloudwatch:%[2]s:123456789012:alarm:test-alarm-1"
   }
 
   # Activate workflow with multiple execution block types
@@ -274,15 +278,15 @@ resource "aws_arcregionswitch_plan" "test" {
       description          = "Custom Lambda execution step"
 
       custom_action_lambda_config {
-        region_to_run           = "activatingRegion"
-        retry_interval_minutes  = 5.0
-        timeout_minutes         = 30
+        region_to_run          = "activatingRegion"
+        retry_interval_minutes = 5.0
+        timeout_minutes        = 30
 
         lambda {
-          arn = "arn:aws:lambda:us-west-2:123456789012:function:test-function"
+          arn = "arn:aws:lambda:%[3]s:123456789012:function:test-function"
         }
         lambda {
-          arn = "arn:aws:lambda:us-east-1:123456789012:function:test-function-east"
+          arn = "arn:aws:lambda:%[2]s:123456789012:function:test-function-primary"
         }
 
         ungraceful {
@@ -298,8 +302,8 @@ resource "aws_arcregionswitch_plan" "test" {
       description          = "Manual approval step"
 
       execution_approval_config {
-        approval_role    = aws_iam_role.test.arn
-        timeout_minutes  = 30
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 30
       }
     }
 
@@ -310,11 +314,11 @@ resource "aws_arcregionswitch_plan" "test" {
       description          = "Aurora Global Database step"
 
       global_aurora_config {
-        behavior                   = "switchoverOnly"
-        global_cluster_identifier  = "test-global-cluster"
-        database_cluster_arns      = [
-          "arn:aws:rds:us-east-1:123456789012:cluster:test-cluster-1",
-          "arn:aws:rds:us-west-2:123456789012:cluster:test-cluster-2"
+        behavior                  = "switchoverOnly"
+        global_cluster_identifier = "test-global-cluster"
+        database_cluster_arns = [
+          "arn:aws:rds:%[2]s:123456789012:cluster:test-cluster-1",
+          "arn:aws:rds:%[3]s:123456789012:cluster:test-cluster-2"
         ]
         timeout_minutes = 45
 
@@ -332,16 +336,16 @@ resource "aws_arcregionswitch_plan" "test" {
 
       ec2_asg_capacity_increase_config {
         asgs {
-          arn                 = "arn:aws:autoscaling:us-west-2:123456789012:autoScalingGroup:12345678-1234-1234-1234-123456789012:autoScalingGroupName/test-asg-1"
-          cross_account_role  = "arn:aws:iam::123456789012:role/ASGRole"
-          external_id         = "asg-external-id"
+          arn                = "arn:aws:autoscaling:%[3]s:123456789012:autoScalingGroup:12345678-1234-1234-1234-123456789012:autoScalingGroupName/test-asg-1"
+          cross_account_role = "arn:aws:iam::123456789012:role/ASGRole"
+          external_id        = "asg-external-id"
         }
         asgs {
-          arn = "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:11111111-1111-1111-1111-111111111111:autoScalingGroupName/test-asg-east"
+          arn = "arn:aws:autoscaling:%[2]s:123456789012:autoScalingGroup:11111111-1111-1111-1111-111111111111:autoScalingGroupName/test-asg-primary"
         }
         capacity_monitoring_approach = "sampledMaxInLast24Hours"
-        target_percent              = 150
-        timeout_minutes             = 20
+        target_percent               = 150
+        timeout_minutes              = 20
 
         ungraceful {
           minimum_success_percentage = 80
@@ -357,18 +361,18 @@ resource "aws_arcregionswitch_plan" "test" {
 
       ecs_capacity_increase_config {
         services {
-          cluster_arn         = "arn:aws:ecs:us-west-2:123456789012:cluster/test-cluster"
-          service_arn         = "arn:aws:ecs:us-west-2:123456789012:service/test-cluster/test-service"
-          cross_account_role  = "arn:aws:iam::123456789012:role/ECSRole"
-          external_id         = "ecs-external-id"
+          cluster_arn        = "arn:aws:ecs:%[3]s:123456789012:cluster/test-cluster"
+          service_arn        = "arn:aws:ecs:%[3]s:123456789012:service/test-cluster/test-service"
+          cross_account_role = "arn:aws:iam::123456789012:role/ECSRole"
+          external_id        = "ecs-external-id"
         }
         services {
-          cluster_arn = "arn:aws:ecs:us-east-1:123456789012:cluster/test-cluster-east"
-          service_arn = "arn:aws:ecs:us-east-1:123456789012:service/test-cluster-east/test-service-east"
+          cluster_arn = "arn:aws:ecs:%[2]s:123456789012:cluster/test-cluster-primary"
+          service_arn = "arn:aws:ecs:%[2]s:123456789012:service/test-cluster-primary/test-service-primary"
         }
         capacity_monitoring_approach = "containerInsightsMaxInLast24Hours"
-        target_percent              = 200
-        timeout_minutes             = 25
+        target_percent               = 200
+        timeout_minutes              = 25
 
         ungraceful {
           minimum_success_percentage = 90
@@ -389,33 +393,33 @@ resource "aws_arcregionswitch_plan" "test" {
         }
 
         eks_clusters {
-          cluster_arn         = "arn:aws:eks:us-west-2:123456789012:cluster/test-cluster"
-          cross_account_role  = "arn:aws:iam::123456789012:role/EKSRole"
-          external_id         = "eks-external-id"
+          cluster_arn        = "arn:aws:eks:%[3]s:123456789012:cluster/test-cluster"
+          cross_account_role = "arn:aws:iam::123456789012:role/EKSRole"
+          external_id        = "eks-external-id"
         }
         eks_clusters {
-          cluster_arn = "arn:aws:eks:us-east-1:123456789012:cluster/test-cluster-east"
+          cluster_arn = "arn:aws:eks:%[2]s:123456789012:cluster/test-cluster-primary"
         }
 
         scaling_resources {
           namespace = "default"
           resources {
-            resource_name = "us-west-2"
-            name          = "test-deployment-west"
+            resource_name = %[3]q
+            name          = "test-deployment-secondary"
             namespace     = "default"
-            hpa_name      = "test-hpa-west"
+            hpa_name      = "test-hpa-secondary"
           }
           resources {
-            resource_name = "us-east-1"
-            name          = "test-deployment-east"
+            resource_name = %[2]q
+            name          = "test-deployment-primary"
             namespace     = "default"
-            hpa_name      = "test-hpa-east"
+            hpa_name      = "test-hpa-primary"
           }
         }
 
         capacity_monitoring_approach = "sampledMaxInLast24Hours"
-        target_percent              = 175
-        timeout_minutes             = 35
+        target_percent               = 175
+        timeout_minutes              = 35
 
         ungraceful {
           minimum_success_percentage = 85
@@ -431,11 +435,11 @@ resource "aws_arcregionswitch_plan" "test" {
 
       arc_routing_control_config {
         region_and_routing_controls {
-          region = "us-east-1"
+          region               = %[2]q
           routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"]
         }
         region_and_routing_controls {
-          region = "us-west-2"
+          region               = %[3]q
           routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"]
         }
         cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
@@ -451,17 +455,17 @@ resource "aws_arcregionswitch_plan" "test" {
       description          = "Route53 Health Check step for activate"
 
       route53_health_check_config {
-        hosted_zone_id = "Z123456789012345678"
-        record_name    = "test.example.com"
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
         timeout_minutes = 10
 
         record_sets {
           record_set_identifier = "primary"
-          region               = "us-east-1"
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
-          region               = "us-west-2"
+          region                = %[3]q
         }
       }
     }
@@ -479,15 +483,15 @@ resource "aws_arcregionswitch_plan" "test" {
           description          = "First parallel lambda"
 
           custom_action_lambda_config {
-            region_to_run           = "activatingRegion"
-            retry_interval_minutes  = 2.0
-            timeout_minutes         = 15
+            region_to_run          = "activatingRegion"
+            retry_interval_minutes = 2.0
+            timeout_minutes        = 15
 
             lambda {
-              arn = "arn:aws:lambda:us-west-2:123456789012:function:parallel-function-1"
+              arn = "arn:aws:lambda:%[3]s:123456789012:function:parallel-function-1"
             }
             lambda {
-              arn = "arn:aws:lambda:us-east-1:123456789012:function:parallel-function-1-east"
+              arn = "arn:aws:lambda:%[2]s:123456789012:function:parallel-function-1-primary"
             }
           }
         }
@@ -498,15 +502,15 @@ resource "aws_arcregionswitch_plan" "test" {
           description          = "Second parallel lambda"
 
           custom_action_lambda_config {
-            region_to_run           = "deactivatingRegion"
-            retry_interval_minutes  = 3.0
-            timeout_minutes         = 20
+            region_to_run          = "deactivatingRegion"
+            retry_interval_minutes = 3.0
+            timeout_minutes        = 20
 
             lambda {
-              arn = "arn:aws:lambda:us-east-1:123456789012:function:parallel-function-2"
+              arn = "arn:aws:lambda:%[2]s:123456789012:function:parallel-function-2"
             }
             lambda {
-              arn = "arn:aws:lambda:us-west-2:123456789012:function:parallel-function-2-west"
+              arn = "arn:aws:lambda:%[3]s:123456789012:function:parallel-function-2-secondary"
             }
           }
         }
@@ -526,26 +530,26 @@ resource "aws_arcregionswitch_plan" "test" {
       description          = "Route53 Health Check step"
 
       route53_health_check_config {
-        hosted_zone_id = "Z123456789012345678"
-        record_name    = "test.example.com"
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
         timeout_minutes = 10
 
         record_sets {
           record_set_identifier = "primary"
-          region               = "us-east-1"
+          region                = %[2]q
         }
         record_sets {
           record_set_identifier = "secondary"
-          region               = "us-west-2"
+          region                = %[3]q
         }
       }
     }
   }
 }
-`, rName)
+`, rName, primaryRegion, alternateRegion)
 }
 
-func testAccPlanConfig_route53HealthCheck(rName, zoneName string) string {
+func testAccPlanConfig_route53HealthCheck(rName, zoneName, primaryRegion, alternateRegion string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -565,24 +569,24 @@ resource "aws_iam_role" "test" {
 }
 
 # VPCs for private hosted zone
-resource "aws_vpc" "east" {
+resource "aws_vpc" "primary" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "%[1]s-east"
+    Name = "%[1]s-primary"
   }
 }
 
-resource "aws_vpc" "west" {
-  provider             = aws.west
+resource "aws_vpc" "secondary" {
+  provider             = aws.secondary
   cidr_block           = "10.2.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "%[1]s-west"
+    Name = "%[1]s-secondary"
   }
 }
 
@@ -591,12 +595,12 @@ resource "aws_route53_zone" "private" {
   name = "%[2]s"
 
   vpc {
-    vpc_id = aws_vpc.east.id
+    vpc_id = aws_vpc.primary.id
   }
 
   vpc {
-    vpc_id     = aws_vpc.west.id
-    vpc_region = "us-west-2"
+    vpc_id     = aws_vpc.secondary.id
+    vpc_region = %[4]q
   }
 }
 
@@ -605,31 +609,31 @@ resource "aws_arcregionswitch_plan" "test" {
   name              = %[1]q
   execution_role    = aws_iam_role.test.arn
   recovery_approach = "activeActive"
-  regions           = ["us-east-1", "us-west-2"]
-  primary_region    = "us-east-1"
+  regions           = [%[3]q, %[4]q]
+  primary_region    = %[3]q
   description       = "Route53 health check integration test"
 
   workflow {
     workflow_target_action = "activate"
 
     step {
-      name                 = "route53-health-check-east"
+      name                 = "route53-health-check-primary"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
         hosted_zone_id  = aws_route53_zone.private.zone_id
-        record_name     = "api-east.%[2]s"
+        record_name     = "api-primary.%[2]s"
         timeout_minutes = 60
       }
     }
 
     step {
-      name                 = "route53-health-check-west"
+      name                 = "route53-health-check-secondary"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
         hosted_zone_id  = aws_route53_zone.private.zone_id
-        record_name     = "api-west.%[2]s"
+        record_name     = "api-secondary.%[2]s"
         timeout_minutes = 60
       }
     }
@@ -639,23 +643,23 @@ resource "aws_arcregionswitch_plan" "test" {
     workflow_target_action = "deactivate"
 
     step {
-      name                 = "route53-health-check-east"
+      name                 = "route53-health-check-primary"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
         hosted_zone_id  = aws_route53_zone.private.zone_id
-        record_name     = "api-east.%[2]s"
+        record_name     = "api-primary.%[2]s"
         timeout_minutes = 60
       }
     }
 
     step {
-      name                 = "route53-health-check-west"
+      name                 = "route53-health-check-secondary"
       execution_block_type = "Route53HealthCheck"
 
       route53_health_check_config {
         hosted_zone_id  = aws_route53_zone.private.zone_id
-        record_name     = "api-west.%[2]s"
+        record_name     = "api-secondary.%[2]s"
         timeout_minutes = 60
       }
     }
@@ -678,27 +682,27 @@ data "aws_arcregionswitch_plan" "test" {
 
 # Filter health checks by region
 locals {
-  east_health_check = [
-    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks : 
-    hc if hc.region == "us-east-1"
+  primary_health_check = [
+    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks :
+    hc if hc.region == %[3]q
   ][0]
-  
-  west_health_check = [
-    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks : 
-    hc if hc.region == "us-west-2"
+
+  secondary_health_check = [
+    for hc in data.aws_arcregionswitch_plan.test.route53_health_checks :
+    hc if hc.region == %[4]q
   ][0]
 }
 
 # Route53 records using health check IDs with weighted routing
-resource "aws_route53_record" "east" {
+resource "aws_route53_record" "primary" {
   zone_id         = aws_route53_zone.private.zone_id
   name            = "api"
   type            = "A"
   ttl             = 300
   records         = ["10.1.1.100"]
-  health_check_id = local.east_health_check.health_check_id
-  set_identifier  = "east"
-  
+  health_check_id = local.primary_health_check.health_check_id
+  set_identifier  = "primary"
+
   weighted_routing_policy {
     weight = 100
   }
@@ -712,15 +716,15 @@ resource "aws_route53_record" "east" {
   }
 }
 
-resource "aws_route53_record" "west" {
+resource "aws_route53_record" "secondary" {
   zone_id         = aws_route53_zone.private.zone_id
   name            = "api"
   type            = "A"
   ttl             = 300
   records         = ["10.2.1.100"]
-  health_check_id = local.west_health_check.health_check_id
-  set_identifier  = "west"
-  
+  health_check_id = local.secondary_health_check.health_check_id
+  set_identifier  = "secondary"
+
   weighted_routing_policy {
     weight = 100
   }
@@ -734,10 +738,10 @@ resource "aws_route53_record" "west" {
   }
 }
 
-# Provider configuration for west region
+# Provider configuration for secondary region
 provider "aws" {
-  alias  = "west"
-  region = "us-west-2"
+  alias  = "secondary"
+  region = %[4]q
 }
-`, rName, zoneName)
+`, rName, zoneName, primaryRegion, alternateRegion)
 }
