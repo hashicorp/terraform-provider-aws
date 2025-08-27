@@ -251,7 +251,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 					EngineVersion:       aws.String(engineVersion),
 				}
 
-				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 					return conn.ModifyDBCluster(ctx, input)
 				}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
 

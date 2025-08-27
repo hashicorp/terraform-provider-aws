@@ -70,13 +70,10 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebNetworkSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebNetworkSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkSettings1, networkSettings2 awstypes.NetworkSettings
+	var networkSettings awstypes.NetworkSettings
 	resourceName := "aws_workspacesweb_network_settings_association.test"
-	networkSettingsResourceName1 := "aws_workspacesweb_network_settings.test"
-	networkSettingsResourceName2 := "aws_workspacesweb_network_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,18 +89,10 @@ func TestAccWorkSpacesWebNetworkSettingsAssociation_update(t *testing.T) {
 			{
 				Config: testAccNetworkSettingsAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "network_settings_arn", networkSettingsResourceName1, "network_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceNetworkSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccNetworkSettingsAssociationConfig_updated(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkSettingsAssociationExists(ctx, resourceName, &networkSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "network_settings_arn", networkSettingsResourceName2, "network_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -191,31 +180,6 @@ resource "aws_workspacesweb_network_settings" "test" {
 
 resource "aws_workspacesweb_network_settings_association" "test" {
   network_settings_arn = aws_workspacesweb_network_settings.test.network_settings_arn
-  portal_arn           = aws_workspacesweb_portal.test.portal_arn
-}
-`)
-}
-
-func testAccNetworkSettingsAssociationConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccNetworkSettingsConfig_base(rName), `
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_network_settings" "test" {
-  vpc_id             = aws_vpc.test.id
-  subnet_ids         = [aws_subnet.test[0].id, aws_subnet.test[1].id]
-  security_group_ids = [aws_security_group.test[0].id, aws_security_group.test[1].id]
-}
-
-resource "aws_workspacesweb_network_settings" "test2" {
-  vpc_id             = aws_vpc.test2.id
-  subnet_ids         = [aws_subnet.test2[0].id, aws_subnet.test2[1].id]
-  security_group_ids = [aws_security_group.test2[0].id, aws_security_group.test2[1].id]
-}
-
-resource "aws_workspacesweb_network_settings_association" "test" {
-  network_settings_arn = aws_workspacesweb_network_settings.test2.network_settings_arn
   portal_arn           = aws_workspacesweb_portal.test.portal_arn
 }
 `)

@@ -35,17 +35,15 @@ import (
 // @SDKResource("aws_secretsmanager_secret", name="Secret")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
+// @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
+// @ArnIdentity
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
 		ReadWithoutTimeout:   resourceSecretRead,
 		UpdateWithoutTimeout: resourceSecretUpdate,
 		DeleteWithoutTimeout: resourceSecretDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -176,7 +174,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// Retry for secret recreation after deletion.
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateSecret(ctx, input)
 		},
 		func(err error) (bool, error) {

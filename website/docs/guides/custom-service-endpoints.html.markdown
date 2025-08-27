@@ -102,6 +102,7 @@ provider "aws" {
 |App Runner|`apprunner`|`AWS_ENDPOINT_URL_APPRUNNER`|`apprunner`|
 |AppStream 2.0|`appstream`|`AWS_ENDPOINT_URL_APPSTREAM`|`appstream`|
 |AppSync|`appsync`|`AWS_ENDPOINT_URL_APPSYNC`|`appsync`|
+|Application Resilience Controller Region Switch|`arcregionswitch`|`AWS_ENDPOINT_URL_ARC_REGION_SWITCH`|`arc_region_switch`|
 |Athena|`athena`|`AWS_ENDPOINT_URL_ATHENA`|`athena`|
 |Audit Manager|`auditmanager`|`AWS_ENDPOINT_URL_AUDITMANAGER`|`auditmanager`|
 |Auto Scaling|`autoscaling`|`AWS_ENDPOINT_URL_AUTO_SCALING`|`auto_scaling`|

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,16 +76,6 @@ func (r *sessionLoggerResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrDisplayName: schema.StringAttribute{
 				Optional: true,
 			},
-			"event_filter": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[eventFilterModel](ctx),
-				Required:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-			},
 			"session_logger_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -96,12 +86,51 @@ func (r *sessionLoggerResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"event_filter": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[eventFilterModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"include": schema.SetAttribute{
+							CustomType: fwtypes.SetOfStringEnumType[awstypes.Event](),
+							Validators: []validator.Set{
+								setvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("all"),
+									path.MatchRelative().AtParent().AtName("include"),
+								),
+							},
+							Optional: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"all": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[eventFilterAllModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{},
+						},
+					},
+				},
+			},
 			"log_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[logConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"s3": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3LogConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucket: schema.StringAttribute{
@@ -112,13 +141,15 @@ func (r *sessionLoggerResource) Schema(ctx context.Context, request resource.Sch
 										Computed: true,
 									},
 									"folder_structure": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.FolderStructure](),
+										Required:   true,
 									},
 									"key_prefix": schema.StringAttribute{
 										Optional: true,
 									},
 									"log_file_format": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.LogFileFormat](),
+										Required:   true,
 									},
 								},
 							},
@@ -140,7 +171,6 @@ func (r *sessionLoggerResource) Create(ctx context.Context, request resource.Cre
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	var input workspacesweb.CreateSessionLoggerInput
-
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -161,6 +191,7 @@ func (r *sessionLoggerResource) Create(ctx context.Context, request resource.Cre
 
 	// Get the session logger details to populate other fields
 	sessionLogger, err := findSessionLoggerByARN(ctx, conn, data.SessionLoggerARN.ValueString())
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Session Logger (%s)", data.SessionLoggerARN.ValueString()), err.Error())
 		return
@@ -184,6 +215,7 @@ func (r *sessionLoggerResource) Read(ctx context.Context, request resource.ReadR
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	output, err := findSessionLoggerByARN(ctx, conn, data.SessionLoggerARN.ValueString())
+
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
@@ -205,7 +237,6 @@ func (r *sessionLoggerResource) Read(ctx context.Context, request resource.ReadR
 
 func (r *sessionLoggerResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new sessionLoggerResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -214,10 +245,9 @@ func (r *sessionLoggerResource) Update(ctx context.Context, request resource.Upd
 	if response.Diagnostics.HasError() {
 		return
 	}
+
 	if !new.DisplayName.Equal(old.DisplayName) ||
 		!new.EventFilter.Equal(old.EventFilter) ||
-		!new.CustomerManagedKey.Equal(old.CustomerManagedKey) ||
-		!new.AdditionalEncryptionContext.Equal(old.AdditionalEncryptionContext) ||
 		!new.LogConfiguration.Equal(old.LogConfiguration) {
 		conn := r.Meta().WorkSpacesWebClient(ctx)
 
@@ -228,16 +258,18 @@ func (r *sessionLoggerResource) Update(ctx context.Context, request resource.Upd
 		}
 
 		output, err := conn.UpdateSessionLogger(ctx, &input)
+
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Session Logger (%s)", old.SessionLoggerARN.ValueString()), err.Error())
 			return
 		}
 
-		// Use new as base and flatten the response into it
 		response.Diagnostics.Append(fwflex.Flatten(ctx, output.SessionLogger, &new)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		new.LogConfiguration = old.LogConfiguration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, new)...)
@@ -313,9 +345,11 @@ type logConfigurationModel struct {
 }
 
 type eventFilterModel struct {
-	All     types.Object        `tfsdk:"all"`
-	Include fwtypes.SetOfString `tfsdk:"include"`
+	All     fwtypes.ListNestedObjectValueOf[eventFilterAllModel] `tfsdk:"all"`
+	Include fwtypes.SetOfStringEnum[awstypes.Event]              `tfsdk:"include"`
 }
+
+type eventFilterAllModel struct{}
 
 var (
 	_ fwflex.Expander  = eventFilterModel{}
@@ -324,46 +358,39 @@ var (
 
 func (m eventFilterModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	var v awstypes.EventFilter
 
-	if !m.All.IsNull() {
-		return &awstypes.EventFilterMemberAll{Value: awstypes.Unit{}}, nil
+	switch {
+	case !m.All.IsNull():
+		v = &awstypes.EventFilterMemberAll{Value: awstypes.Unit{}}
+	case !m.Include.IsNull():
+		v = &awstypes.EventFilterMemberInclude{Value: fwflex.ExpandFrameworkStringyValueSet[awstypes.Event](ctx, m.Include)}
 	}
-	if !m.Include.IsNull() {
-		var events []awstypes.Event
-		for _, event := range m.Include.Elements() {
-			events = append(events, awstypes.Event(event.(types.String).ValueString()))
-		}
-		return &awstypes.EventFilterMemberInclude{Value: events}, nil
-	}
-	return nil, diags
+
+	return v, diags
 }
 
 func (m *eventFilterModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch val := v.(type) {
+	switch t := v.(type) {
 	case awstypes.EventFilterMemberAll:
-		m.All = types.ObjectValueMust(map[string]attr.Type{}, map[string]attr.Value{})
-		m.Include = fwtypes.NewSetValueOfNull[types.String](ctx)
+		var data eventFilterAllModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.All = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.EventFilterMemberInclude:
-		m.All = types.ObjectNull(map[string]attr.Type{})
-		var events []string
-		for _, event := range val.Value {
-			events = append(events, string(event))
-		}
-		var elements []attr.Value
-		for _, event := range events {
-			elements = append(elements, types.StringValue(event))
-		}
-		m.Include, _ = fwtypes.NewSetValueOf[types.String](ctx, elements)
+		m.Include = fwflex.FlattenFrameworkStringyValueSetOfStringEnum(ctx, t.Value)
 	}
 	return diags
 }
 
 type s3LogConfigurationModel struct {
-	Bucket          types.String `tfsdk:"bucket"`
-	BucketOwner     types.String `tfsdk:"bucket_owner"`
-	FolderStructure types.String `tfsdk:"folder_structure"`
-	KeyPrefix       types.String `tfsdk:"key_prefix"`
-	LogFileFormat   types.String `tfsdk:"log_file_format"`
+	Bucket          types.String                                 `tfsdk:"bucket"`
+	BucketOwner     types.String                                 `tfsdk:"bucket_owner"`
+	FolderStructure fwtypes.StringEnum[awstypes.FolderStructure] `tfsdk:"folder_structure"`
+	KeyPrefix       types.String                                 `tfsdk:"key_prefix"`
+	LogFileFormat   fwtypes.StringEnum[awstypes.LogFileFormat]   `tfsdk:"log_file_format"`
 }

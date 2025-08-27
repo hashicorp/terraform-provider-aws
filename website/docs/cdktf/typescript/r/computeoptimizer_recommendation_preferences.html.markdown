@@ -93,7 +93,7 @@ This resource supports the following arguments:
 * `inferredWorkloadTypes` - (Optional) The status of the inferred workload types recommendation preference. Valid values: `Active`, `Inactive`.
 * `lookBackPeriod` - (Optional) The preference to control the number of days the utilization metrics of the AWS resource are analyzed. Valid values: `DAYS_14`, `DAYS_32`, `DAYS_93`.
 * `preferredResource` - (Optional) The preference to control which resource type values are considered when generating rightsizing recommendations. See [Preferred Resources](#preferred-resources) below.
-* `resourceType` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`.
+* `resourceType` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`, `AuroraDBClusterStorage`.
 * `savingsEstimationMode` - (Optional) The status of the savings estimation mode preference. Valid values: `AfterDiscounts`, `BeforeDiscounts`.
 * `scope` - (Required) The scope of the recommendation preferences. See [Scope](#scope) below.
 * `utilizationPreference` - (Optional) The preference to control the resource’s CPU utilization threshold, CPU utilization headroom, and memory utilization headroom. See [Utilization Preferences](#utilization-preferences) below.
@@ -159,4 +159,4 @@ Using `terraform import`, import recommendation preferences using the resource t
 % terraform import aws_computeoptimizer_recommendation_preferences.example Ec2Instance,AccountId,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5f250081869182e482d3bdc4a1d2842305382867a71a84589055345c28a07897 -->
+<!-- cache-key: cdktf-0.20.8 input-9010f0808e9da6121d1f04b5b7f3ef5f673e8b557f0b628ed5cb41d288fcd4e7 -->

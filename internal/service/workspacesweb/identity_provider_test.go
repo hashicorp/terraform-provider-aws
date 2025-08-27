@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,6 +19,53 @@ import (
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPortalARNFromIdentityProviderARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		identityProviderARN string
+		wantPortalARN       string
+		wantErr             bool
+	}{
+		"empty ARN": {
+			wantErr: true,
+		},
+		"unparsable ARN": {
+			identityProviderARN: "test",
+			wantErr:             true,
+		},
+		"invalid ARN service": {
+			identityProviderARN: "arn:aws:workspaces:us-west-2:123456789012:identityProvider/portal-123/ip-456", //lintignore:AWSAT003,AWSAT005
+			wantErr:             true,
+		},
+		"invalid ARN resource parts": {
+			identityProviderARN: "arn:aws:workspaces-web:us-west-2:123456789012:browserSettings/bs-789", //lintignore:AWSAT003,AWSAT005
+			wantErr:             true,
+		},
+		"valid ARN": {
+			identityProviderARN: "arn:aws:workspaces-web:us-west-2:123456789012:identityProvider/portal-123/ip-456", //lintignore:AWSAT003,AWSAT005
+			wantPortalARN:       "arn:aws:workspaces-web:us-west-2:123456789012:portal/portal-123",                  //lintignore:AWSAT003,AWSAT005
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfworkspacesweb.PortalARNFromIdentityProviderARN(testCase.identityProviderARN)
+
+			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("PortalARNFromIdentityProviderARN(%s) err %t, want %t", testCase.identityProviderARN, got, want)
+			}
+			if err == nil {
+				if diff := cmp.Diff(got, testCase.wantPortalARN); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+				}
+			}
+		})
+	}
+}
 
 func TestAccWorkSpacesWebIdentityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)

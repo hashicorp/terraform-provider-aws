@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newUserAccessLoggingSettingsAssociationResource(_ context.Context) (resourc
 	return &userAccessLoggingSettingsAssociationResource{}, nil
 }
 
-const (
-	ResNameUserAccessLoggingSettingsAssociation = "User Access Logging Settings Association"
-)
-
 type userAccessLoggingSettingsAssociationResource struct {
 	framework.ResourceWithModel[userAccessLoggingSettingsAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *userAccessLoggingSettingsAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"user_access_logging_settings_arn": schema.StringAttribute{
-				Required: true,
+			"portal_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"portal_arn": schema.StringAttribute{
-				Required: true,
+			"user_access_logging_settings_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *userAccessLoggingSettingsAssociationResource) Create(ctx context.Contex
 	_, err := conn.AssociateUserAccessLoggingSettings(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameUserAccessLoggingSettingsAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb User Access Logging Settings Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *userAccessLoggingSettingsAssociationResource) Read(ctx context.Context,
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameUserAccessLoggingSettingsAssociation, data.UserAccessLoggingSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb User Access Logging Settings Association (%s)", data.UserAccessLoggingSettingsARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *userAccessLoggingSettingsAssociationResource) Read(ctx context.Context,
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *userAccessLoggingSettingsAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *userAccessLoggingSettingsAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *userAccessLoggingSettingsAssociationResource) Delete(ctx context.Contex
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameUserAccessLoggingSettingsAssociation, data.UserAccessLoggingSettingsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb User Access Logging Settings Association (%s)", data.UserAccessLoggingSettingsARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *userAccessLoggingSettingsAssociationResource) ImportState(ctx context.C
 
 type userAccessLoggingSettingsAssociationResourceModel struct {
 	framework.WithRegionModel
-	UserAccessLoggingSettingsARN types.String `tfsdk:"user_access_logging_settings_arn"`
-	PortalARN                    types.String `tfsdk:"portal_arn"`
+	PortalARN                    fwtypes.ARN `tfsdk:"portal_arn"`
+	UserAccessLoggingSettingsARN fwtypes.ARN `tfsdk:"user_access_logging_settings_arn"`
 }

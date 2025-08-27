@@ -64,6 +64,24 @@ resource "github_repository_webhook" "example" {
 }
 ```
 
+### For CodeBuild Runner Project
+
+To create a CodeBuild project as a Runner Project, the following `aws_codebuild_webhook` resource is required for the project.
+See thr [AWS Documentation](https://docs.aws.amazon.com/codebuild/latest/userguide/action-runner.html) for more information about CodeBuild Runner Projects.
+
+```terraform
+resource "aws_codebuild_webhook" "example" {
+  project_name = aws_codebuild_project.example.name
+  build_type   = "BUILD"
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "WORKFLOW_JOB_QUEUED"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
