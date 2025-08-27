@@ -14,7 +14,11 @@ import (
 )
 
 func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) inttypes.Set[string] {
-	var output []string
+	return ExpandFrameworkStringyValueSet[string](ctx, v)
+}
+
+func ExpandFrameworkStringyValueSet[E ~string](ctx context.Context, v basetypes.SetValuable) inttypes.Set[E] {
+	var output []E
 
 	must(Expand(ctx, v, &output))
 
