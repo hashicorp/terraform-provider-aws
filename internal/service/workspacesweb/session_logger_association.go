@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -31,25 +31,24 @@ func newSessionLoggerAssociationResource(_ context.Context) (resource.ResourceWi
 	return &sessionLoggerAssociationResource{}, nil
 }
 
-const (
-	ResNameSessionLoggerAssociation = "Session Logger Association"
-)
-
 type sessionLoggerAssociationResource struct {
 	framework.ResourceWithModel[sessionLoggerAssociationResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *sessionLoggerAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"portal_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"session_logger_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +74,7 @@ func (r *sessionLoggerAssociationResource) Create(ctx context.Context, request r
 	_, err := conn.AssociateSessionLogger(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameSessionLoggerAssociation), err.Error())
+		response.Diagnostics.AddError("creating WorkSpacesWeb Session Logger Association", err.Error())
 		return
 	}
 
@@ -100,7 +99,7 @@ func (r *sessionLoggerAssociationResource) Read(ctx context.Context, request res
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameSessionLoggerAssociation, data.SessionLoggerARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Session Logger Association (%s)", data.SessionLoggerARN.ValueString()), err.Error())
 		return
 	}
 
@@ -112,11 +111,6 @@ func (r *sessionLoggerAssociationResource) Read(ctx context.Context, request res
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *sessionLoggerAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// This resource requires replacement on update since there's no true update operation
-	response.Diagnostics.AddError("Update not supported", "This resource must be replaced to update")
 }
 
 func (r *sessionLoggerAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -139,7 +133,7 @@ func (r *sessionLoggerAssociationResource) Delete(ctx context.Context, request r
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameSessionLoggerAssociation, data.SessionLoggerARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Session Logger Association (%s)", data.SessionLoggerARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -165,6 +159,6 @@ func (r *sessionLoggerAssociationResource) ImportState(ctx context.Context, requ
 
 type sessionLoggerAssociationResourceModel struct {
 	framework.WithRegionModel
-	PortalARN        types.String `tfsdk:"portal_arn"`
-	SessionLoggerARN types.String `tfsdk:"session_logger_arn"`
+	PortalARN        fwtypes.ARN `tfsdk:"portal_arn"`
+	SessionLoggerARN fwtypes.ARN `tfsdk:"session_logger_arn"`
 }

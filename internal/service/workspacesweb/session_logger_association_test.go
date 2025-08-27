@@ -70,14 +70,11 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebSessionLoggerAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebSessionLoggerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sessionLogger1, sessionLogger2 awstypes.SessionLogger
+	var sessionLogger awstypes.SessionLogger
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspacesweb_session_logger_association.test"
-	sessionLoggerResourceName1 := "aws_workspacesweb_session_logger.test"
-	sessionLoggerResourceName2 := "aws_workspacesweb_session_logger.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -92,18 +89,10 @@ func TestAccWorkSpacesWebSessionLoggerAssociation_update(t *testing.T) {
 			{
 				Config: testAccSessionLoggerAssociationConfig_basic(rName, rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger1),
-					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName1, "session_logger_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceSessionLoggerAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccSessionLoggerAssociationConfig_updated(rName, string(awstypes.FolderStructureFlat), string(awstypes.LogFileFormatJson)),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSessionLoggerAssociationExists(ctx, resourceName, &sessionLogger2),
-					resource.TestCheckResourceAttrPair(resourceName, "session_logger_arn", sessionLoggerResourceName2, "session_logger_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -219,7 +208,7 @@ resource "aws_workspacesweb_session_logger" "test" {
   display_name = %[1]q
 
   event_filter {
-    all = {}
+    all {}
   }
 
   log_configuration {
@@ -238,49 +227,4 @@ resource "aws_workspacesweb_session_logger_association" "test" {
   session_logger_arn = aws_workspacesweb_session_logger.test.session_logger_arn
 }
 `, sessionLoggerName, folderStructureType, logFileFormat)
-}
-
-func testAccSessionLoggerAssociationConfig_updated(rName, folderStructureType, logFileFormat string) string {
-	return testAccSessionLoggerAssociationConfig_base(rName) + fmt.Sprintf(`
-resource "aws_workspacesweb_session_logger" "test" {
-  display_name = %[1]q
-
-  event_filter {
-    all = {}
-  }
-
-  log_configuration {
-    s3 {
-      bucket           = aws_s3_bucket.test.id
-      folder_structure = %[2]q
-      log_file_format  = %[3]q
-    }
-  }
-
-  depends_on = [aws_s3_bucket_policy.allow_write_access]
-}
-
-resource "aws_workspacesweb_session_logger" "test2" {
-  display_name = "%[1]s-2"
-
-  event_filter {
-    all = {}
-  }
-
-  log_configuration {
-    s3 {
-      bucket           = aws_s3_bucket.test.id
-      folder_structure = %[2]q
-      log_file_format  = %[3]q
-    }
-  }
-
-  depends_on = [aws_s3_bucket_policy.allow_write_access]
-}
-
-resource "aws_workspacesweb_session_logger_association" "test" {
-  portal_arn         = aws_workspacesweb_portal.test.portal_arn
-  session_logger_arn = aws_workspacesweb_session_logger.test2.session_logger_arn
-}
-`, rName, folderStructureType, logFileFormat)
 }
