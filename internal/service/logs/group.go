@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,6 +54,10 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -115,39 +118,12 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-var _ list.ListResourceWithProtoSchemas = &logGroupListResource{}
+var _ list.ListResourceWithRawV5Schemas = &logGroupListResource{}
 
 func LogGroupResourceAsListResource() list.ListResourceWithConfigure {
-	return &logGroupListResource{}
-}
-
-type logGroupListResource struct {
-	framework.ListResourceWithConfigure
-	// framework.WithImportByIdentity
-}
-
-type logGroupListResourceModel struct {
-	framework.WithRegionModel
-}
-
-func (l *logGroupListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	// This method does not call down to the inner resource.
-	response.TypeName = "aws_cloudwatch_log_group"
-}
-
-func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
-		Attributes: map[string]listschema.Attribute{
-			"region": listschema.StringAttribute{
-				Optional: true,
-			},
-		},
-	}
-}
-
-func (l *logGroupListResource) Schemas(ctx context.Context, response *list.SchemaResponse) {
-	rg := resourceGroup()
-	rg.Identity = &schema.ResourceIdentity{
+	l := logGroupListResource{}
+	l.resource = resourceGroup()
+	l.schemaIdentity = &schema.ResourceIdentity{
 		Version: 0,
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -164,8 +140,40 @@ func (l *logGroupListResource) Schemas(ctx context.Context, response *list.Schem
 		},
 	}
 
-	response.ProtoV5Schema = rg.ProtoSchema(ctx)
-	response.ProtoV5IdentitySchema = rg.ProtoIdentitySchema(ctx)
+	l.resource.Identity = l.schemaIdentity
+
+	return &l
+}
+
+type logGroupListResource struct {
+	framework.ResourceWithConfigure
+	// framework.WithImportByIdentity
+	resource       *schema.Resource
+	schemaIdentity *schema.ResourceIdentity
+}
+
+type logGroupListResourceModel struct {
+	framework.WithRegionModel
+}
+
+//func (l *logGroupListResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+//	// This method does not call down to the inner resource.
+//	response.TypeName = "aws_cloudwatch_log_group"
+//}
+
+func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"region": listschema.StringAttribute{
+				Optional: true,
+			},
+		},
+	}
+}
+
+func (l *logGroupListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	response.ProtoV5Schema = l.resource.ProtoSchema(ctx)()
+	response.ProtoV5IdentitySchema = l.resource.ProtoIdentitySchema(ctx)()
 }
 
 func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -225,59 +233,42 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				}
 			}
 
-			logGroupResource := resourceGroup()
-			logGroupResource.Identity = &schema.ResourceIdentity{
-				Version: 0,
-				SchemaFunc: func() map[string]*schema.Schema {
-					return map[string]*schema.Schema{
-						names.AttrAccountID: {
-							Type: schema.TypeString,
-						},
-						names.AttrRegion: {
-							Type: schema.TypeString,
-						},
-						names.AttrName: {
-							Type: schema.TypeString,
-						},
-					}
-				},
-			}
+			logGroupResource := l.resource
 
-			rd := logGroupResource.Data(&terraform.InstanceState{ID: aws.ToString(output.LogGroupName)})
+			rd := logGroupResource.Data(&terraform.InstanceState{})
+			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupSet(ctx, rd, output)
-
-			//tfTypeIdentity := rd.TfTypeIdentityState()
 
 			result.Identity.SetAttribute(ctx, path.Root(names.AttrAccountID), awsClient.AccountID(ctx))
 			result.Identity.SetAttribute(ctx, path.Root(names.AttrRegion), awsClient.Region(ctx))
 			result.Identity.SetAttribute(ctx, path.Root(names.AttrName), types.StringValue(aws.ToString(output.LogGroupName)))
-			//if err := result.Identity.Set(ctx, tfTypeIdentity); err != nil {
-			//	result = list.ListResult{
-			//		Diagnostics: fwdiag.Diagnostics{
-			//			fwdiag.NewErrorDiagnostic(
-			//				"Error Listing Remote Resources",
-			//				fmt.Sprintf("Error: %s", err),
-			//			),
-			//		},
-			//	}
-			//	yield(result)
-			//	return
-			//}
 
-			//tfTypeResource := rd.TfTypeResourceState()
-			//
-			//if err := result.Resource.Set(ctx, tfTypeResource); err != nil {
-			//	result = list.ListResult{
-			//		Diagnostics: fwdiag.Diagnostics{
-			//			fwdiag.NewErrorDiagnostic(
-			//				"Error Listing Remote Resources",
-			//				fmt.Sprintf("Error: %s", err),
-			//			),
-			//		},
-			//	}
-			//	yield(result)
-			//	return
-			//}
+			tfTypeResource, err := rd.TfTypeResourceState()
+			if err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
+				}
+				yield(result)
+				return
+			}
+
+			if err := result.Resource.Set(ctx, *tfTypeResource); err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
+				}
+				yield(result)
+				return
+			}
 
 			result.DisplayName = fmt.Sprintf("x%s (%s)x", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
@@ -345,7 +336,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 			return conn.PutRetentionPolicy(ctx, &input)
 		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -396,7 +387,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 				return conn.PutRetentionPolicy(ctx, &input)
 			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
