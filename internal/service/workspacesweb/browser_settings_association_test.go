@@ -75,26 +75,15 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkSpacesWebBrowserSettingsAssociation_update(t *testing.T) {
+func TestAccWorkSpacesWebBrowserSettingsAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var browserSettings1, browserSettings2 awstypes.BrowserSettings
+	var browserSettings awstypes.BrowserSettings
 	resourceName := "aws_workspacesweb_browser_settings_association.test"
-	browserSettingsResourceName1 := "aws_workspacesweb_browser_settings.test"
-	browserSettingsResourceName2 := "aws_workspacesweb_browser_settings.test2"
-	portalResourceName := "aws_workspacesweb_portal.test"
 	browserPolicy1 := `{
 		"chromePolicies":
 		{
 			"DefaultDownloadDirectory": {
 				"value": "/home/as2-streaming-user/MyFiles/TemporaryFiles1"
-			}
-		}
-	} `
-	browserPolicy2 := `{
-		"chromePolicies":
-		{
-			"DefaultDownloadDirectory": {
-				"value": "/home/as2-streaming-user/MyFiles/TemporaryFiles2"
 			}
 		}
 	} `
@@ -111,18 +100,10 @@ func TestAccWorkSpacesWebBrowserSettingsAssociation_update(t *testing.T) {
 			{
 				Config: testAccBrowserSettingsAssociationConfig_basic(browserPolicy1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings1),
-					resource.TestCheckResourceAttrPair(resourceName, "browser_settings_arn", browserSettingsResourceName1, "browser_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
+					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceBrowserSettingsAssociation, resourceName),
 				),
-			},
-			{
-				Config: testAccBrowserSettingsAssociationConfig_updated(browserPolicy1, browserPolicy2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBrowserSettingsAssociationExists(ctx, resourceName, &browserSettings2),
-					resource.TestCheckResourceAttrPair(resourceName, "browser_settings_arn", browserSettingsResourceName2, "browser_settings_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "portal_arn", portalResourceName, "portal_arn"),
-				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -185,6 +166,17 @@ func testAccCheckBrowserSettingsAssociationExists(ctx context.Context, n string,
 	}
 }
 
+func testAccBrowserSettingsAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["browser_settings_arn"], rs.Primary.Attributes["portal_arn"]), nil
+	}
+}
+
 func testAccBrowserSettingsAssociationConfig_basic(browserPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_workspacesweb_portal" "test" {
@@ -200,36 +192,4 @@ resource "aws_workspacesweb_browser_settings_association" "test" {
   portal_arn           = aws_workspacesweb_portal.test.portal_arn
 }
 `, browserPolicy)
-}
-
-func testAccBrowserSettingsAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["browser_settings_arn"], rs.Primary.Attributes["portal_arn"]), nil
-	}
-}
-
-func testAccBrowserSettingsAssociationConfig_updated(browserPolicy1, browserPolicy2 string) string {
-	return fmt.Sprintf(`
-resource "aws_workspacesweb_portal" "test" {
-  display_name = "test"
-}
-
-resource "aws_workspacesweb_browser_settings" "test" {
-  browser_policy = %[1]q
-}
-
-resource "aws_workspacesweb_browser_settings" "test2" {
-  browser_policy = %[2]q
-}
-
-resource "aws_workspacesweb_browser_settings_association" "test" {
-  browser_settings_arn = aws_workspacesweb_browser_settings.test2.browser_settings_arn
-  portal_arn           = aws_workspacesweb_portal.test.portal_arn
-}
-`, browserPolicy1, browserPolicy2)
 }

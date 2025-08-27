@@ -5,15 +5,21 @@ package workspacesweb
 
 // Exports for use in tests only.
 var (
-	ResourceBrowserSettings           = newBrowserSettingsResource
-	ResourceDataProtectionSettings    = newDataProtectionSettingsResource
-	ResourceIdentityProvider          = newIdentityProviderResource
-	ResourceIPAccessSettings          = newIPAccessSettingsResource
-	ResourceNetworkSettings           = newNetworkSettingsResource
-	ResourcePortal                    = newPortalResource
-	ResourceTrustStore                = newTrustStoreResource
-	ResourceUserAccessLoggingSettings = newUserAccessLoggingSettingsResource
-	ResourceUserSettings              = newUserSettingsResource
+	ResourceBrowserSettings                      = newBrowserSettingsResource
+	ResourceBrowserSettingsAssociation           = newBrowserSettingsAssociationResource
+	ResourceDataProtectionSettings               = newDataProtectionSettingsResource
+	ResourceDataProtectionSettingsAssociation    = newDataProtectionSettingsAssociationResource
+	ResourceIdentityProvider                     = newIdentityProviderResource
+	ResourceIPAccessSettings                     = newIPAccessSettingsResource
+	ResourceIPAccessSettingsAssociation          = newIPAccessSettingsAssociationResource
+	ResourceNetworkSettings                      = newNetworkSettingsResource
+	ResourceNetworkSettingsAssociation           = newNetworkSettingsAssociationResource
+	ResourcePortal                               = newPortalResource
+	ResourceTrustStore                           = newTrustStoreResource
+	ResourceUserAccessLoggingSettings            = newUserAccessLoggingSettingsResource
+	ResourceUserAccessLoggingSettingsAssociation = newUserAccessLoggingSettingsAssociationResource
+	ResourceUserSettings                         = newUserSettingsResource
+	ResourceUserSettingsAssociation              = newUserSettingsAssociationResource
 
 	FindBrowserSettingsByARN           = findBrowserSettingsByARN
 	FindDataProtectionSettingsByARN    = findDataProtectionSettingsByARN
@@ -24,4 +30,6 @@ var (
 	FindTrustStoreByARN                = findTrustStoreByARN
 	FindUserAccessLoggingSettingsByARN = findUserAccessLoggingSettingsByARN
 	FindUserSettingsByARN              = findUserSettingsByARN
+
+	PortalARNFromIdentityProviderARN = portalARNFromIdentityProviderARN
 )

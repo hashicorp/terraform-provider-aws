@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -40,10 +41,6 @@ func newIdentityProviderResource(_ context.Context) (resource.ResourceWithConfig
 	return &identityProviderResource{}, nil
 }
 
-const (
-	ResNameIdentityProvider = "Identity Provider"
-)
-
 type identityProviderResource struct {
 	framework.ResourceWithModel[identityProviderResourceModel]
 }
@@ -70,7 +67,8 @@ func (r *identityProviderResource) Schema(ctx context.Context, request resource.
 				Required:   true,
 			},
 			"portal_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -90,6 +88,7 @@ func (r *identityProviderResource) Create(ctx context.Context, request resource.
 
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
+	name := fwflex.StringValueFromFramework(ctx, data.IdentityProviderName)
 	var input workspacesweb.CreateIdentityProviderInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
@@ -103,7 +102,7 @@ func (r *identityProviderResource) Create(ctx context.Context, request resource.
 	output, err := conn.CreateIdentityProvider(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb %s", ResNameIdentityProvider), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating WorkSpacesWeb Identity Provider (%s)", name), err.Error())
 		return
 	}
 
@@ -112,11 +111,11 @@ func (r *identityProviderResource) Create(ctx context.Context, request resource.
 	// Get the identity provider details to populate other fields
 	identityProvider, portalARN, err := findIdentityProviderByARN(ctx, conn, data.IdentityProviderARN.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameIdentityProvider, data.IdentityProviderARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Identity Provider (%s)", data.IdentityProviderARN.ValueString()), err.Error())
 		return
 	}
 
-	data.PortalARN = types.StringValue(portalARN)
+	data.PortalARN = fwtypes.ARNValue(portalARN)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, identityProvider, &data)...)
 	if response.Diagnostics.HasError() {
@@ -143,11 +142,11 @@ func (r *identityProviderResource) Read(ctx context.Context, request resource.Re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb %s (%s)", ResNameIdentityProvider, data.IdentityProviderARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading WorkSpacesWeb Identity Provider (%s)", data.IdentityProviderARN.ValueString()), err.Error())
 		return
 	}
 
-	data.PortalARN = types.StringValue(portalARN)
+	data.PortalARN = fwtypes.ARNValue(portalARN)
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -184,7 +183,7 @@ func (r *identityProviderResource) Update(ctx context.Context, request resource.
 		output, err := conn.UpdateIdentityProvider(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb %s (%s)", ResNameIdentityProvider, new.IdentityProviderARN.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating WorkSpacesWeb Identity Provider (%s)", new.IdentityProviderARN.ValueString()), err.Error())
 			return
 		}
 
@@ -216,7 +215,7 @@ func (r *identityProviderResource) Delete(ctx context.Context, request resource.
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb %s (%s)", ResNameIdentityProvider, data.IdentityProviderARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting WorkSpacesWeb Identity Provider (%s)", data.IdentityProviderARN.ValueString()), err.Error())
 		return
 	}
 }
@@ -225,22 +224,42 @@ func (r *identityProviderResource) ImportState(ctx context.Context, request reso
 	resource.ImportStatePassthroughID(ctx, path.Root("identity_provider_arn"), request, response)
 }
 
+const (
+	arnResourceSeparator = "/"
+	arnService           = "workspaces-web"
+)
+
 func portalARNFromIdentityProviderARN(identityProviderARN string) (string, error) {
 	// Identity Provider ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
 	// Portal ARN format: arn:{PARTITION}:workspaces-web:{REGION}:{ACCOUNT_ID}:portal/{PORTAL_ID}
-	parts := strings.Split(identityProviderARN, ":")
-	if len(parts) != 6 {
-		return "", fmt.Errorf("invalid identity provider ARN format: %s", identityProviderARN)
+	parsedARN, err := arn.Parse(identityProviderARN)
+
+	if err != nil {
+		return "", fmt.Errorf("parsing ARN (%s): %w", identityProviderARN, err)
 	}
 
-	resourcePart := parts[5] // identityProvider/{PORTAL_ID}/{IDP_RESOURCE_ID}
-	resourceParts := strings.Split(resourcePart, "/")
-	if len(resourceParts) != 3 || resourceParts[0] != "identityProvider" {
-		return "", fmt.Errorf("invalid identity provider ARN resource format: %s", identityProviderARN)
+	if actual, expected := parsedARN.Service, arnService; actual != expected {
+		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, identityProviderARN, actual)
 	}
 
-	portalID := resourceParts[1]
-	portalARN := fmt.Sprintf("%s:%s:%s:%s:%s:portal/%s", parts[0], parts[1], parts[2], parts[3], parts[4], portalID)
+	resourceParts := strings.Split(parsedARN.Resource, arnResourceSeparator)
+
+	if actual, expected := len(resourceParts), 3; actual != expected {
+		return "", fmt.Errorf("expected %d resource parts in ARN (%s), got: %d", expected, identityProviderARN, actual)
+	}
+
+	if actual, expected := resourceParts[0], "identityProvider"; actual != expected {
+		return "", fmt.Errorf("expected %s in ARN (%s), got: %s", expected, identityProviderARN, actual)
+	}
+
+	portalARN := arn.ARN{
+		Partition: parsedARN.Partition,
+		Service:   parsedARN.Service,
+		Region:    parsedARN.Region,
+		AccountID: parsedARN.AccountID,
+		Resource:  "portal" + arnResourceSeparator + resourceParts[1],
+	}.String()
+
 	return portalARN, nil
 }
 
@@ -279,7 +298,7 @@ type identityProviderResourceModel struct {
 	IdentityProviderDetails fwtypes.MapOfString                               `tfsdk:"identity_provider_details"`
 	IdentityProviderName    types.String                                      `tfsdk:"identity_provider_name"`
 	IdentityProviderType    fwtypes.StringEnum[awstypes.IdentityProviderType] `tfsdk:"identity_provider_type"`
-	PortalARN               types.String                                      `tfsdk:"portal_arn"`
+	PortalARN               fwtypes.ARN                                       `tfsdk:"portal_arn"`
 	Tags                    tftags.Map                                        `tfsdk:"tags"`
 	TagsAll                 tftags.Map                                        `tfsdk:"tags_all"`
 }

@@ -617,7 +617,7 @@ func userTags(ctx context.Context, conn *iam.Client, identifier string, optFns .
 
 func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUserInput) (*iam.CreateUserOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateUser(ctx, input)
 		},
 		func(err error) (bool, error) {

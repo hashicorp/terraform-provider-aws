@@ -610,7 +610,7 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
 	})
 

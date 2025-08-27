@@ -303,7 +303,7 @@ func {{ template "testname" . }}_Identity_Basic(t *testing.T) {
 								names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 							{{ end -}}
 							{{ range .IdentityAttributes -}}
-								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
@@ -422,7 +422,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 							names.AttrAccountID: tfknownvalue.AccountID(),
 							names.AttrRegion:    knownvalue.StringExact(acctest.AlternateRegion()),
 							{{ range .IdentityAttributes -}}
-								{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								{{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 							{{ end }}
 						}),
 						{{ range .IdentityAttributes -}}
@@ -600,7 +600,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								    {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
@@ -659,7 +659,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								    {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
@@ -717,7 +717,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								    {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
@@ -848,7 +848,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 									names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 								{{ end -}}
 								{{ range .IdentityAttributes -}}
-									{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								    {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 								{{ end }}
 							}),
 							{{ range .IdentityAttributes -}}
@@ -937,7 +937,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								        {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
@@ -1027,7 +1027,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								        {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}
@@ -1084,7 +1084,7 @@ func {{ template "testname" . }}_Identity_RegionOverride(t *testing.T) {
 										names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
 									{{ end -}}
 									{{ range .IdentityAttributes -}}
-										{{ .Name }}: {{ if .Optional }}knownvalue.Null(){{ else }}knownvalue.NotNull(){{ end }},
+								        {{ .Name }}: {{ if or (not .Optional) .TestNotNull }}knownvalue.NotNull(){{ else }}knownvalue.Null(){{ end }},
 									{{ end }}
 								}),
 								{{ range .IdentityAttributes -}}

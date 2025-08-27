@@ -585,7 +585,7 @@ func retryDataLakeConflictWithMutex[T any](ctx context.Context, f func() (T, err
 
 	const dataLakeTimeout = 2 * time.Minute
 
-	raw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, dataLakeTimeout, func() (any, error) {
+	raw, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, dataLakeTimeout, func(ctx context.Context) (any, error) {
 		return f()
 	})
 	if err != nil {

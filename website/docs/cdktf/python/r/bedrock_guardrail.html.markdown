@@ -36,15 +36,23 @@ resource "aws_bedrock_guardrail" "example" {
 
   sensitive_information_policy_config {
     pii_entities_config {
-      action = "BLOCK"
-      type   = "NAME"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "ANONYMIZE"
+      input_enabled  = true
+      output_enabled = true
+      type           = "NAME"
     }
 
     regexes_config {
-      action      = "BLOCK"
-      description = "example regex"
-      name        = "regex_example"
-      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "BLOCK"
+      input_enabled  = true
+      output_enabled = false
+      description    = "example regex"
+      name           = "regex_example"
+      pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
 
@@ -231,4 +239,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0e8aa08fd30b7183d6e1a65ac3c7f49d59ca062bb79bb51c1249e9c3c4178cdc -->
+<!-- cache-key: cdktf-0.20.8 input-b4dfe998c380eaf21dac559c0ea1efe19394fa5e41979c505c46fe22b78d0ffb -->

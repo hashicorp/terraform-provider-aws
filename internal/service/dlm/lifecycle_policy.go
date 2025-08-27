@@ -498,7 +498,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:             getTagsIn(ctx),
 	}
 
-	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (any, error) {
+	out, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, createRetryTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateLifecyclePolicy(ctx, &input)
 	})
 
