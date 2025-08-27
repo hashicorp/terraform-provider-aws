@@ -186,6 +186,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"endpoint_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
+			},
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -293,6 +300,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.DnsServers = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_type"); ok {
+		input.EndpointIpAddressType = awstypes.EndpointIpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -374,6 +385,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
 	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
 	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
