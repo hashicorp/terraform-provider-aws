@@ -113,7 +113,9 @@ import {
 }
 
 resource "aws_route" "example" {
-  ### Configuration omitted for brevity ###
+  route_table_id            = "rtb-656C65616E6F72"
+  destination_cidr_block    = "10.42.0.0/16"
+  vpc_peering_connection_id = "pcx-45ff3dc1"
 }
 ```
 
