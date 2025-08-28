@@ -6,16 +6,17 @@ package batch
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,7 +141,7 @@ func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRe
 
 func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -155,12 +157,12 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(fwflex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder))
 		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -171,8 +173,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	output, err := conn.CreateJobQueue(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Batch Job Queue (%s)", name), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
 
@@ -181,17 +182,16 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 
 	if _, err := waitJobQueueCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) create", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, data))
 }
 
 func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -201,36 +201,35 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 	jobQueue, err := findJobQueueByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.EnrichAppend(ctx, &response.Diagnostics, frameworkdiag.Diagnostics{fwdiag.NewResourceNotFoundWarningDiagnostic(err)})
 		response.State.RemoveResource(ctx)
 
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 
 	// Set attributes for import.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue"))...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue")))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, jobQueue.Tags)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
 }
 
 func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new jobQueueResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.Plan.Get(ctx, &new))
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &old))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -243,7 +242,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !new.ComputeEnvironmentOrder.IsNull() && !new.ComputeEnvironmentOrder.Equal(old.ComputeEnvironmentOrder) {
-		response.Diagnostics.Append(fwflex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.ComputeEnvironmentOrder, &input.ComputeEnvironmentOrder))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -251,7 +250,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !new.JobStateTimeLimitActions.Equal(old.JobStateTimeLimitActions) {
-		response.Diagnostics.Append(fwflex.Expand(ctx, new.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
+		smerr.EnrichAppend(ctx, &response.Diagnostics, fwflex.Expand(ctx, new.JobStateTimeLimitActions, &input.JobStateTimeLimitActions))
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -274,10 +273,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			input.SchedulingPolicyArn = fwflex.StringFromFramework(ctx, new.SchedulingPolicyARN)
 			update = true
 		} else {
-			response.Diagnostics.AddError(
-				"cannot remove the fair share scheduling policy",
-				"cannot remove scheduling policy",
-			)
+			smerr.AddError(ctx, &response.Diagnostics, errors.New("cannot remove the fair share scheduling policy"), smerr.ID, new.ID)
 			return
 		}
 	}
@@ -286,24 +282,22 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		_, err := conn.UpdateJobQueue(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating Batch Job Queue (%s)", new.ID.ValueString()), err.Error())
-
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID)
 			return
 		}
 
 		if _, err := waitJobQueueUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) update", new.ID.ValueString()), err.Error())
-
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID)
 			return
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, response.State.Set(ctx, &new))
 }
 
 func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data jobQueueResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	smerr.EnrichAppend(ctx, &response.Diagnostics, request.State.Get(ctx, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -322,15 +316,13 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("disabling Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err := waitJobQueueUpdated(ctx, conn, data.ID.ValueString(), timeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) disable", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 
@@ -340,14 +332,12 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 	_, err = conn.DeleteJobQueue(ctx, &deleteInput)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 
 	if _, err := waitJobQueueDeleted(ctx, conn, data.ID.ValueString(), timeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Batch Job Queue (%s) delete", data.ID.ValueString()), err.Error())
-
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID)
 		return
 	}
 }
@@ -376,14 +366,14 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 	output, err := findJobQueue(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if status := output.Status; status == awstypes.JQStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
-		}
+		})
 	}
 
 	return output, nil
@@ -393,10 +383,10 @@ func findJobQueue(ctx context.Context, conn *batch.Client, input *batch.Describe
 	output, err := findJobQueues(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) ([]awstypes.JobQueueDetail, error) {
@@ -407,7 +397,7 @@ func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.Describ
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		output = append(output, page.JobQueues...)
@@ -450,7 +440,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) { //nolint:unparam
@@ -471,7 +461,7 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
@@ -492,7 +482,7 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 		return output, err
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 type jobQueueResourceModel struct {

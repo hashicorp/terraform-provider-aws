@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -14,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -105,7 +106,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateSchedulingPolicy(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Batch Scheduling Policy (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(aws.ToString(output.Arn))
@@ -126,12 +127,12 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Scheduling Policy (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set(names.AttrARN, sp.Arn)
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	d.Set(names.AttrName, sp.Name)
 
@@ -153,7 +154,7 @@ func resourceSchedulingPolicyUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := conn.UpdateSchedulingPolicy(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Batch Scheduling Policy (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
@@ -171,7 +172,7 @@ func resourceSchedulingPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.DeleteSchedulingPolicy(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Batch Scheduling Policy (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -189,21 +190,21 @@ func findSchedulingPolicy(ctx context.Context, conn *batch.Client, input *batch.
 	output, err := findSchedulingPolicies(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findSchedulingPolicies(ctx context.Context, conn *batch.Client, input *batch.DescribeSchedulingPoliciesInput) ([]awstypes.SchedulingPolicyDetail, error) {
 	output, err := conn.DescribeSchedulingPolicies(ctx, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
 	}
 
 	return output.SchedulingPolicies, nil

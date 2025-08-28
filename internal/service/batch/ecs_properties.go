@@ -8,6 +8,7 @@ import (
 	"slices"
 	_ "unsafe" // Required for go:linkname
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -145,7 +146,7 @@ func expandECSProperties(tfString string) (*awstypes.EcsProperties, error) {
 	apiObject := &awstypes.EcsProperties{}
 
 	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return apiObject, nil
