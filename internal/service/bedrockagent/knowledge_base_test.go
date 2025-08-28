@@ -1039,8 +1039,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   storage_configuration {
     type = "OPENSEARCH_MANAGED_CLUSTER"
     opensearch_managed_cluster_configuration {
-      domain_arn      = data.aws_opensearch_domain.test.arn
-      domain_endpoint = "https://${data.aws_opensearch_domain.test.endpoint}"
+      domain_arn        = data.aws_opensearch_domain.test.arn
+      domain_endpoint   = "https://${data.aws_opensearch_domain.test.endpoint}"
       vector_index_name = "knowledge-index"
       field_mapping {
         vector_field   = "vector_embedding"
