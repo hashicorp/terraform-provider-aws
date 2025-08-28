@@ -342,7 +342,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `service` supports the following:
 
-* `client_alias` - (Optional) List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. The maximum number of client aliases that you can have in this list is 1. [See below](#client_alias).
+* `client_alias` - (Optional) List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. For each service block where enabled is true, exactly one `client_alias` with one `port` should be specified. [See below](#client_alias).
 * `discovery_name` - (Optional) Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
 * `ingress_port_override` - (Optional) Port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
