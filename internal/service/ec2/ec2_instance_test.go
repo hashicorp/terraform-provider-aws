@@ -3315,10 +3315,19 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterface(t *testing.T) {
 				},
 			},
 			{
+				// Test standard import (should ignore network_interface as before)
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change", names.AttrForceDestroy},
+			},
+			{
+				// Test new import with network interfaces (should include network_interface in state)
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3365,10 +3374,12 @@ func TestAccEC2Instance_NetworkInterface_networkCardIndex(t *testing.T) {
 				},
 			},
 			{
+				// should include network_interface in state
 				ResourceName:            resourceName,
 				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3397,10 +3408,12 @@ func TestAccEC2Instance_NetworkInterface_primaryNetworkInterfaceSourceDestCheck(
 				),
 			},
 			{
+				// should include network_interface in state
 				ResourceName:            resourceName,
 				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -3447,10 +3460,12 @@ func TestAccEC2Instance_NetworkInterface_attachSecondaryInterface_inlineAttachme
 				},
 			},
 			{
+				// should include network_interface in state
 				ResourceName:            resourceName,
 				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceImportStateIDFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", names.AttrForceDestroy},
 			},
 			{
 				Config: testAccInstanceConfig_networkInterface_attachSecondaryNetworkInterface_inlineAttachment(rName),
@@ -6347,6 +6362,18 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+// testAccInstanceImportStateIDFunc returns an ImportStateIdFunc that appends ":with-network-interfaces" to the resource ID
+// This enables importing EC2 instances with their network interfaces included in the Terraform state
+func testAccInstanceImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+		return fmt.Sprintf("%s:with-network-interfaces", rs.Primary.ID), nil
 	}
 }
 
