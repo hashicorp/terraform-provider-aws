@@ -27,6 +27,8 @@ ENHANCEMENTS:
 * resource/aws_dlm_lifecycle_policy: Add `copy_tags`, `create_interval`, `exclusions`, `extend_deletion`, `policy_language`, `resource_type` and `retain_interval` attributes to `policy_details` configuration block ([#41055](https://github.com/hashicorp/terraform-provider-aws/issues/41055))
 * resource/aws_dlm_lifecycle_policy: Add `default_policy` argument ([#41055](https://github.com/hashicorp/terraform-provider-aws/issues/41055))
 * resource/aws_dlm_lifecycle_policy: Add `policy_details.create_rule.scripts` argument ([#41055](https://github.com/hashicorp/terraform-provider-aws/issues/41055))
+* resource/aws_dlm_lifecycle_policy: Add `policy_details.schedule.cross_region_copy_rule.target_region` argument ([#33796](https://github.com/hashicorp/terraform-provider-aws/issues/33796))
+* resource/aws_dlm_lifecycle_policy: Make `policy_details.schedule.cross_region_copy_rule.target` optional ([#33796](https://github.com/hashicorp/terraform-provider-aws/issues/33796))
 * resource/aws_dlm_lifecycle_policy:Add `policy_details.schedule.archive_rule` argument ([#41055](https://github.com/hashicorp/terraform-provider-aws/issues/41055))
 * resource/aws_dynamodb_contributor_insights: Add `mode` argument in support of [CloudWatch contributor insights modes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/contributorinsights_HowItWorks.html#contributorinsights_HowItWorks.Modes) ([#43914](https://github.com/hashicorp/terraform-provider-aws/issues/43914))
 * resource/aws_ec2_client_vpn_endpoint: Add `endpoint_ip_address_type` and `traffic_ip_address_type` arguments to support IPv6 connectivity in Client VPN ([#44059](https://github.com/hashicorp/terraform-provider-aws/issues/44059))
