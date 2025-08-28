@@ -125,6 +125,7 @@ func logGroupResourceAsListResource() list.ListResourceWithConfigure {
 type logGroupListResource struct {
 	framework.ResourceWithConfigure
 	framework.ListResourceWithSDKv2Identity
+	framework.ListResourceWithSDKv2Tags
 	framework.WithImportByIdentity
 }
 
@@ -168,6 +169,15 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
+
+			// set tags
+			err = l.SetTags(ctx, awsClient, rd)
+			if err != nil {
+				result = fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
 			err := l.SetIdentity(ctx, awsClient, rd)
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
@@ -187,13 +197,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				yield(result)
 				return
 			}
-			//if err := result.Resource.Set(ctx, *tfTypeResource); err != nil {
-			//	result = list.ListResult{
-			//		Diagnostics: err.Errors(),
-			//	}
-			//	yield(result)
-			//	return
-			//}
 
 			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
