@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -42,6 +43,10 @@ func resourceCrawler() *schema.Resource {
 		ReadWithoutTimeout:   resourceCrawlerRead,
 		UpdateWithoutTimeout: resourceCrawlerUpdate,
 		DeleteWithoutTimeout: resourceCrawlerDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -578,6 +583,8 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	glueConn := meta.(*conns.AWSClient).GlueClient(ctx)
 	name := d.Get(names.AttrName).(string)
 
+	updateTimeout := d.Timeout(schema.TimeoutUpdate)
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
@@ -585,7 +592,7 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		// Retry for IAM eventual consistency
-		err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		err = retry.RetryContext(ctx, updateTimeout, func() *retry.RetryError {
 			_, err := glueConn.UpdateCrawler(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
@@ -609,6 +616,12 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 				// InvalidInputException: SQS queue arn:aws:sqs:us-west-2:*******:tf-acc-test-4317277351691904203 does not exist or the role provided does not have access to it.
 				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "SQS queue") && errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "does not exist or the role provided does not have access to it") {
+					return retry.RetryableError(err)
+				}
+
+				// Glue will allow updating crawlers when a crawler is running. Retry occasionally to persist the updates once a crawler has finished the run.
+				// Note - the error is returned as `InvalidInputException`, not `awstypes.CrawlerRunningException`
+				if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Cannot update Crawler while running") {
 					return retry.RetryableError(err)
 				}
 
