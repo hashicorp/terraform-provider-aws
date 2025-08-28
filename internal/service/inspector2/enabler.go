@@ -48,6 +48,10 @@ func ResourceEnabler() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"account_ids": {
 				Type:     schema.TypeSet,
@@ -93,7 +97,7 @@ const (
 	ResNameEnabler = "Enabler"
 )
 
-func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -191,7 +195,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -237,7 +241,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -316,7 +320,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient)
 	conn := client.Inspector2Client(ctx)
@@ -556,8 +560,10 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
-			if k == "LambdaCode" {
-				k = "LAMBDA_CODE"
+			if strings.ToUpper(k) == "LAMBDACODE" {
+				k = string(types.ResourceScanTypeLambdaCode)
+			} else if strings.ToUpper(k) == "CODEREPOSITORY" {
+				k = string(types.ResourceScanTypeCodeRepository)
 			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}

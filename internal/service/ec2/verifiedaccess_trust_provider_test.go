@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 
 	trustProviderType := "user"
@@ -62,7 +62,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 
 	trustProviderType := "device"
@@ -101,7 +101,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 
 	trustProviderType := "user"
@@ -133,7 +133,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 
 	trustProviderType := "user"
@@ -184,7 +184,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v types.VerifiedAccessTrustProvider
+	var v awstypes.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 
 	trustProviderType := "user"
@@ -236,7 +236,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *types.VerifiedAccessTrustProvider) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *awstypes.VerifiedAccessTrustProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

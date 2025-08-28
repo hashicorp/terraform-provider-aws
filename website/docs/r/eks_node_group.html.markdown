@@ -134,13 +134,14 @@ resource "aws_subnet" "example" {
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `node_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. See [`scaling_config`](#scaling_config-configuration-block) below for details.
-* `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
+* `subnet_ids` - (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ami_type` - (Optional) Type of Amazon Machine Image (AMI) associated with the EKS Node Group. See the [AWS documentation](https://docs.aws.amazon.com/eks/latest/APIReference/API_Nodegroup.html#AmazonEKS-Type-Nodegroup-amiType) for valid values. Terraform will only perform drift detection if a configuration value is provided.
 * `capacity_type` - (Optional) Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`. Terraform will only perform drift detection if a configuration value is provided.
 * `disk_size` - (Optional) Disk size in GiB for worker nodes. Defaults to `50` for Windows, `20` all other node groups. Terraform will only perform drift detection if a configuration value is provided.
@@ -148,15 +149,15 @@ The following arguments are optional:
 * `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
 * `launch_template` - (Optional) Configuration block with Launch Template settings. See [`launch_template`](#launch_template-configuration-block) below for details. Conflicts with `remote_access`.
-* `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
-* `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
+* `node_group_name` - (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
+* `node_group_name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `node_repair_config` - (Optional) The node auto repair configuration for the node group. See [`node_repair_config`](#node_repair_config-configuration-block) below for details.
-* `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
+* `release_version` - (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details. Conflicts with `launch_template`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. See [taint](#taint-configuration-block) below for details.
 * `update_config` - (Optional) Configuration block with update settings. See [`update_config`](#update_config-configuration-block) below for details.
-* `version` – (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
+* `version` - (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
 
 ### launch_template Configuration Block
 

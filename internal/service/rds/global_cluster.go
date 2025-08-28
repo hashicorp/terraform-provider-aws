@@ -26,6 +26,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -288,7 +289,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get(names.AttrForceDestroy).(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
@@ -362,7 +363,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		globalClusterClusterDeleteTimeout = 5 * time.Minute
 	)
 	timeout := max(deadline.Remaining(), globalClusterClusterDeleteTimeout)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidGlobalClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
@@ -528,7 +529,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
-	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
 
@@ -581,7 +582,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 	}
 
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyGlobalCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -678,7 +679,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Clien
 
 		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", globalClusterID, clusterID, engineVersion)
 		_, err = tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input, optFn)
 			},
 			func(err error) (bool, error) {

@@ -25,15 +25,15 @@ import (
 )
 
 // @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(domainTfVar="domain")
 func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,
 		ReadWithoutTimeout:   resourceRuleAssociationRead,
 		DeleteWithoutTimeout: resourceRuleAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -63,7 +63,7 @@ func resourceRuleAssociation() *schema.Resource {
 	}
 }
 
-func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -91,7 +91,7 @@ func resourceRuleAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRuleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -114,7 +114,7 @@ func resourceRuleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -165,7 +165,7 @@ func findResolverRuleAssociationByID(ctx context.Context, conn *route53resolver.
 }
 
 func statusRuleAssociation(ctx context.Context, conn *route53resolver.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findResolverRuleAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

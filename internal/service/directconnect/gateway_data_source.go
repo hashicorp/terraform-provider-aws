@@ -19,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_dx_gateway", name="Gateway")
+// @Region(global=true)
 func dataSourceGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRead,
@@ -44,7 +45,7 @@ func dataSourceGateway() *schema.Resource {
 	}
 }
 
-func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 

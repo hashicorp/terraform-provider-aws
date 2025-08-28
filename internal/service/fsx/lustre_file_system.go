@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -99,6 +100,24 @@ func resourceLustreFileSystem() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.DataCompressionType](),
 				Default:          awstypes.DataCompressionTypeNone,
+			},
+			"data_read_cache_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrSize: {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"sizing_mode": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LustreReadCacheSizingMode](),
+						},
+					},
+				},
 			},
 			"deployment_type": {
 				Type:             schema.TypeString,
@@ -300,6 +319,11 @@ func resourceLustreFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"throughput_capacity": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ValidateDiagFunc: validateLustreFileSystemThroughputCapacity,
+			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -318,6 +342,7 @@ func resourceLustreFileSystem() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceLustreFileSystemStorageCapacityCustomizeDiff,
 			resourceLustreFileSystemMetadataConfigCustomizeDiff,
+			resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff,
 		),
 	}
 }
@@ -380,6 +405,34 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 	return nil
 }
 
+func resourceLustreFileSystemDataReadCacheConfigurationCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if v, ok := d.Get(names.AttrStorageType).(string); ok && v == string(awstypes.StorageTypeIntelligentTiering) {
+		var throughputCapacity int
+		if v, ok := d.Get("throughput_capacity").(int); ok && v != 0 {
+			throughputCapacity = v
+		} else {
+			return fmt.Errorf("Validation Error: ThroughputCapacity is a required parameter for Lustre file systems with StorageType  %s", awstypes.StorageTypeIntelligentTiering)
+		}
+
+		if v, ok := d.Get("data_read_cache_configuration").([]any); ok && len(v) > 0 && v[0] != nil {
+			config := v[0].(map[string]any)
+
+			if sizingMode, ok := config["sizing_mode"].(string); ok && sizingMode == string(awstypes.LustreReadCacheSizingModeUserProvisioned) {
+				if size, ok := config[names.AttrSize].(int); ok && size > 0 {
+					factor := throughputCapacity / 4000
+					minSize := 32 * factor
+					maxSize := 131072 * factor
+					if size < minSize || size > maxSize {
+						return fmt.Errorf("File systems with throughput capacity of %d MB/s support a minimum read cache size of %d GiB and maximum read cache size of %d GiB", throughputCapacity, minSize, maxSize)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
@@ -390,10 +443,9 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &awstypes.CreateFileSystemLustreConfiguration{
 			DeploymentType: awstypes.LustreDeploymentType(d.Get("deployment_type").(string)),
 		},
-		StorageCapacity: aws.Int32(int32(d.Get("storage_capacity").(int))),
-		StorageType:     awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:       flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
-		Tags:            getTagsIn(ctx),
+		StorageType: awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
+		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -428,6 +480,11 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("data_compression_type"); ok {
 		inputC.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(v.(string))
 		inputB.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(v.(string))
+	}
+
+	if v, ok := d.GetOk("data_read_cache_configuration"); ok {
+		inputC.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(v.([]any))
+		inputB.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("drive_cache_type"); ok {
@@ -491,6 +548,15 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		inputB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("storage_capacity"); ok {
+		inputC.StorageCapacity = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("throughput_capacity"); ok {
+		inputC.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(v.(int)))
+		inputB.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		inputC.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 		inputB.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
@@ -552,6 +618,10 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
+	if err := d.Set("data_read_cache_configuration", flattenLustreReadCacheConfiguration(lustreConfig.DataReadCacheConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting data_read_cache_configuration: %s", err)
+	}
+
 	d.Set("deployment_type", lustreConfig.DeploymentType)
 	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
@@ -577,6 +647,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
+	d.Set("throughput_capacity", lustreConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
 
@@ -617,6 +688,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			input.LustreConfiguration.DataCompressionType = awstypes.DataCompressionType(d.Get("data_compression_type").(string))
 		}
 
+		if d.HasChange("data_read_cache_configuration") {
+			input.LustreConfiguration.DataReadCacheConfiguration = expandLustreReadCacheConfiguration(d.Get("data_read_cache_configuration").([]any))
+		}
+
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]any))
 		}
@@ -635,6 +710,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("storage_capacity") {
 			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
+		}
+
+		if d.HasChange("throughput_capacity") {
+			input.LustreConfiguration.ThroughputCapacity = aws.Int32(int32(d.Get("throughput_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -677,7 +756,7 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]any)) > 0 {
-			lustreConfig.FinalBackupTags = Tags(tftags.New(ctx, v))
+			lustreConfig.FinalBackupTags = svcTags(tftags.New(ctx, v))
 		}
 
 		input.LustreConfiguration = lustreConfig
@@ -1051,6 +1130,39 @@ func flattenLustreMetadataConfiguration(adopts *awstypes.FileSystemLustreMetadat
 	return []map[string]any{m}
 }
 
+func expandLustreReadCacheConfiguration(l []any) *awstypes.LustreReadCacheConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]any)
+	req := &awstypes.LustreReadCacheConfiguration{
+		SizingMode: awstypes.LustreReadCacheSizingMode(data["sizing_mode"].(string)),
+	}
+
+	if v, ok := data[names.AttrSize].(int); ok && v != 0 {
+		req.SizeGiB = aws.Int32(int32(v))
+	}
+
+	return req
+}
+
+func flattenLustreReadCacheConfiguration(adopts *awstypes.LustreReadCacheConfiguration) []map[string]any {
+	if adopts == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
+		"sizing_mode": string(adopts.SizingMode),
+	}
+
+	if adopts.SizeGiB != nil {
+		m[names.AttrSize] = aws.ToInt32(adopts.SizeGiB)
+	}
+
+	return []map[string]any{m}
+}
+
 func logStateFunc(v any) string {
 	value := v.(string)
 	// API returns the specific log stream arn instead of provided log group
@@ -1064,4 +1176,19 @@ func logStateFunc(v any) string {
 		}
 	}
 	return value
+}
+
+func validateLustreFileSystemThroughputCapacity(i any, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if v := i.(int); v%4000 != 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Throughput capacity value incorrect",
+			Detail:        fmt.Sprintf("Valid values are 4000 MBps or multiples of 4000 MBps, invalid value: %d", v),
+			AttributePath: path,
+		})
+	}
+
+	return diags
 }

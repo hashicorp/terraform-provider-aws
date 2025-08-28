@@ -58,6 +58,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessType` - (Optional) The Amazon S3 or Lake Formation access type.
 * `source` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services. See [`source` Blocks](#source-blocks) below.
 * `subscriberIdentity` - (Required) The AWS identity used to access your data. See [`subscriberIdentity` Block](#subscriber_identity-block) below.
@@ -169,4 +170,4 @@ Using `terraform import`, import Security Lake subscriber using the subscriber I
 % terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f5b4e1cd25d75d8ae4e94f1a85219a6922ba8874605c700c427ef7a190ff3716 -->
+<!-- cache-key: cdktf-0.20.8 input-140e4af555754a197d0b549d7d4df83d64ea50b2a5bd36978d5ff3678f9c7b5f -->

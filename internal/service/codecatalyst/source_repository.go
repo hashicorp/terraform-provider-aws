@@ -66,7 +66,7 @@ const (
 	ResNameSourceRepository = "Source Repository"
 )
 
-func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -91,7 +91,7 @@ func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)

@@ -37,10 +37,11 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
-~> Exactly one of `id` or `name` is required.
-
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the collection.
 * `name` - (Optional) Name of the collection.
+
+~> Exactly one of `id` or `name` is required.
 
 ## Attribute Reference
 
@@ -59,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.20.8 input-64fa066128463133f1cbde30233429d61ddf5ffdc08d0e4899ef2b762694b7a0 -->
+<!-- cache-key: cdktf-0.20.8 input-6073cb0e683097ba3f5c043592179682637605534db023aa3bf046c05569f14e -->

@@ -998,7 +998,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotFleet(ctx, &input)
 		},
 		errCodeInvalidSpotFleetRequestConfig, "SpotFleetRequestConfig.IamFleetRole",
@@ -1186,7 +1186,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		input := ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}
@@ -1285,7 +1285,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]any, me
 	if m, ok := d[names.AttrTags].(map[string]any); ok && len(m) > 0 {
 		tagsSpec := make([]awstypes.SpotFleetTagSpecification, 0)
 
-		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
+		tags := svcTags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := awstypes.SpotFleetTagSpecification{
 			ResourceType: awstypes.ResourceTypeInstance,
@@ -2064,8 +2064,8 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 func hashEphemeralBlockDevice(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrDeviceName].(string))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrVirtualName].(string))
 	return create.StringHashcode(buf.String())
 }
 
@@ -2077,15 +2077,15 @@ func hashRootBlockDevice(v any) int {
 func hashLaunchSpecification(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
-	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
+	fmt.Fprintf(&buf, "%s-", m["ami"].(string))
 	if v, ok := m[names.AttrAvailabilityZone].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
 	if v, ok := m[names.AttrSubnetID].(string); ok && v != "" {
-		buf.WriteString(fmt.Sprintf("%s-", v))
+		fmt.Fprintf(&buf, "%s-", v)
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType]))
-	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
+	fmt.Fprintf(&buf, "%s-", m[names.AttrInstanceType])
+	fmt.Fprintf(&buf, "%s-", m["spot_price"].(string))
 	return create.StringHashcode(buf.String())
 }
 
@@ -2093,10 +2093,10 @@ func hashEBSBlockDevice(v any) int {
 	var buf bytes.Buffer
 	m := v.(map[string]any)
 	if name, ok := m[names.AttrDeviceName]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
+		fmt.Fprintf(&buf, "%s-", name.(string))
 	}
 	if id, ok := m[names.AttrSnapshotID]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
+		fmt.Fprintf(&buf, "%s-", id.(string))
 	}
 	return create.StringHashcode(buf.String())
 }

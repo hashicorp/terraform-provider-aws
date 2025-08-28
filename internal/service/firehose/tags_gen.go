@@ -3,8 +3,8 @@ package firehose
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/firehose/types"
@@ -24,13 +24,23 @@ func listTags(ctx context.Context, conn *firehose.Client, identifier string, opt
 		DeliveryStreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForDeliveryStream(ctx, &input, optFns...)
+	var output []awstypes.Tag
+
+	err := listTagsForDeliveryStreamPages(ctx, conn, &input, func(page *firehose.ListTagsForDeliveryStreamOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Tags...)
+
+		return !lastPage
+	}, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return keyValueTags(ctx, output), nil
 }
 
 // ListTags lists firehose service tags and set them in Context.
@@ -39,7 +49,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	tags, err := listTags(ctx, meta.(*conns.AWSClient).FirehoseClient(ctx), identifier)
 
 	if err != nil {
-		return err
+		return smarterr.NewError(err)
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
@@ -51,8 +61,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// Tags returns firehose service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+// svcTags returns firehose service tags.
+func svcTags(tags tftags.KeyValueTags) []awstypes.Tag {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
@@ -67,8 +77,8 @@ func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from firehose service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
+// keyValueTags creates tftags.KeyValueTags from firehose service tags.
+func keyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -82,7 +92,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := svcTags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -93,7 +103,7 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets firehose service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
 	}
 }
 
@@ -117,7 +127,7 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 		_, err := conn.UntagDeliveryStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 
@@ -126,13 +136,13 @@ func updateTags(ctx context.Context, conn *firehose.Client, identifier string, o
 	if len(updatedTags) > 0 {
 		input := firehose.TagDeliveryStreamInput{
 			DeliveryStreamName: aws.String(identifier),
-			Tags:               Tags(updatedTags),
+			Tags:               svcTags(updatedTags),
 		}
 
 		_, err := conn.TagDeliveryStream(ctx, &input, optFns...)
 
 		if err != nil {
-			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
+			return smarterr.NewError(err)
 		}
 	}
 

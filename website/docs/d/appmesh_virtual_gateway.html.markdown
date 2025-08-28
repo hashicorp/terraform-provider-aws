@@ -14,14 +14,14 @@ Terraform data source for managing an AWS App Mesh Virtual Gateway.
 
 ### Basic Usage
 
-```hcl
+```terraform
 data "aws_appmesh_virtual_gateway" "example" {
   mesh_name = "mesh-gateway"
   name      = "example-mesh"
 }
 ```
 
-```hcl
+```terraform
 data "aws_caller_identity" "current" {}
 
 data "aws_appmesh_virtual_gateway" "test" {
@@ -33,8 +33,9 @@ data "aws_appmesh_virtual_gateway" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the virtual gateway.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual gateway exists.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.

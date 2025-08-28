@@ -49,7 +49,7 @@ func resourceDomainNameAPIAssociation() *schema.Resource {
 	}
 }
 
-func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -74,7 +74,7 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDomainNameAPIAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -96,7 +96,7 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -118,7 +118,7 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDomainNameAPIAssociationRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -169,7 +169,7 @@ func findDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client,
 }
 
 func statusDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findDomainNameAPIAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

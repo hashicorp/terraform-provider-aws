@@ -61,7 +61,7 @@ func resourceRegistry() *schema.Resource {
 	}
 }
 
-func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -86,7 +86,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -109,7 +109,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
@@ -129,7 +129,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 

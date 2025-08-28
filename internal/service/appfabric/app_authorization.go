@@ -55,7 +55,7 @@ func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type appAuthorizationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[appAuthorizationResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -429,7 +429,7 @@ func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Clien
 }
 
 func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
 
 		if tfresource.NotFound(err) {
@@ -496,6 +496,7 @@ func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, ap
 }
 
 type appAuthorizationResourceModel struct {
+	framework.WithRegionModel
 	App                 types.String                                     `tfsdk:"app"`
 	AppAuthorizationARN types.String                                     `tfsdk:"arn"`
 	AppBundleARN        fwtypes.ARN                                      `tfsdk:"app_bundle_arn"`

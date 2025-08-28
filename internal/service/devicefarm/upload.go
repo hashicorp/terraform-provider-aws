@@ -24,15 +24,18 @@ import (
 )
 
 // @SDKResource("aws_devicefarm_upload", name="Upload")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.Upload")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(importIgnore="url", plannableImportAction="NoOp")
 func resourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,
 		ReadWithoutTimeout:   resourceUploadRead,
 		UpdateWithoutTimeout: resourceUploadUpdate,
 		DeleteWithoutTimeout: resourceUploadDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -77,7 +80,7 @@ func resourceUpload() *schema.Resource {
 	}
 }
 
-func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -103,7 +106,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
 }
 
-func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -138,7 +141,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -163,7 +166,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceUploadRead(ctx, d, meta)...)
 }
 
-func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 

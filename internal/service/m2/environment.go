@@ -56,7 +56,7 @@ func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, er
 }
 
 type environmentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[environmentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -477,7 +477,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -552,6 +552,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 type environmentResourceModel struct {
+	framework.WithRegionModel
 	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
 	Description                  types.String                                                 `tfsdk:"description"`
 	EngineType                   fwtypes.StringEnum[awstypes.EngineType]                      `tfsdk:"engine_type"`

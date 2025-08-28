@@ -102,7 +102,7 @@ func resourceMountTarget() *schema.Resource {
 	}
 }
 
-func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -150,7 +150,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -198,7 +198,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -218,7 +218,7 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceMountTargetRead(ctx, d, meta)...)
 }
 
-func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -312,7 +312,7 @@ func findMountTargetByID(ctx context.Context, conn *efs.Client, id string) (*aws
 }
 
 func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMountTargetByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -103,7 +103,7 @@ func dataSourceResources() *schema.Resource {
 	}
 }
 
-func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIClient(ctx)
 
@@ -122,7 +122,7 @@ func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("tag_filter"); ok {
-		input.TagFilters = expandTagFilters(v.([]interface{}))
+		input.TagFilters = expandTagFilters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("resource_type_filters"); ok && v.(*schema.Set).Len() > 0 {
@@ -151,11 +151,11 @@ func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func expandTagFilters(filters []interface{}) []types.TagFilter {
+func expandTagFilters(filters []any) []types.TagFilter {
 	result := make([]types.TagFilter, len(filters))
 
 	for i, filter := range filters {
-		m := filter.(map[string]interface{})
+		m := filter.(map[string]any)
 
 		result[i] = types.TagFilter{
 			Key: aws.String(m[names.AttrKey].(string)),
@@ -169,13 +169,13 @@ func expandTagFilters(filters []interface{}) []types.TagFilter {
 	return result
 }
 
-func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMapping) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(list))
+func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMapping) []map[string]any {
+	result := make([]map[string]any, 0, len(list))
 
 	for _, i := range list {
-		l := map[string]interface{}{
+		l := map[string]any{
 			names.AttrResourceARN: aws.ToString(i.ResourceARN),
-			names.AttrTags:        KeyValueTags(ctx, i.Tags).Map(),
+			names.AttrTags:        keyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
@@ -188,16 +188,16 @@ func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMap
 	return result
 }
 
-func flattenComplianceDetails(details *types.ComplianceDetails) []map[string]interface{} {
+func flattenComplianceDetails(details *types.ComplianceDetails) []map[string]any {
 	if details == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"compliance_status":             aws.ToBool(details.ComplianceStatus),
 		"keys_with_noncompliant_values": details.KeysWithNoncompliantValues,
 		"non_compliant_keys":            details.NoncompliantKeys,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

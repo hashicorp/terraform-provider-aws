@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
@@ -50,7 +49,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "guardduty", "detector/{detector_id}/filter/{name}"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
@@ -136,51 +135,6 @@ func testAccFilter_update(t *testing.T) {
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "yet-another-threat",
 					}),
-				),
-			},
-		},
-	})
-}
-
-func testAccFilter_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1, v2, v3 guardduty.GetFilterOutput
-	resourceName := "aws_guardduty_filter.test"
-
-	startDate := "2020-01-01T00:00:00Z"
-	endDate := "2020-02-01T00:00:00Z"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckDetectorNotExists(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFilterConfig_multipleTags(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
-				),
-			},
-			{
-				Config: testAccFilterConfig_updateTags(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
-				),
-			},
-			{
-				Config: testAccFilterConfig_full(startDate, endDate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -290,7 +244,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -326,7 +280,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -348,35 +302,6 @@ resource "aws_guardduty_detector" "test" {
 `, startDate, endDate)
 }
 
-func testAccFilterConfig_multipleTags() string {
-	return `
-data "aws_region" "current" {}
-
-resource "aws_guardduty_filter" "test" {
-  detector_id = aws_guardduty_detector.test.id
-  name        = "test-filter"
-  action      = "ARCHIVE"
-  rank        = 1
-
-  finding_criteria {
-    criterion {
-      field  = "region"
-      equals = [data.aws_region.current.name]
-    }
-  }
-
-  tags = {
-    Name = "test-filter"
-    Key  = "Value"
-  }
-}
-
-resource "aws_guardduty_detector" "test" {
-  enable = true
-}
-`
-}
-
 func testAccFilterConfig_update() string {
 	return `
 data "aws_region" "current" {}
@@ -390,41 +315,13 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
       field      = "service.additionalInfo.threatListName"
       not_equals = ["some-threat", "yet-another-threat"]
     }
-  }
-}
-
-resource "aws_guardduty_detector" "test" {
-  enable = true
-}
-`
-}
-
-func testAccFilterConfig_updateTags() string {
-	return `
-data "aws_region" "current" {}
-
-resource "aws_guardduty_filter" "test" {
-  detector_id = aws_guardduty_detector.test.id
-  name        = "test-filter"
-  action      = "ARCHIVE"
-  rank        = 1
-
-  finding_criteria {
-    criterion {
-      field  = "region"
-      equals = [data.aws_region.current.name]
-    }
-  }
-
-  tags = {
-    Key = "Updated"
   }
 }
 

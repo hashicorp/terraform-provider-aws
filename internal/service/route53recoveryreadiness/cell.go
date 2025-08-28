@@ -71,14 +71,14 @@ func resourceCell() *schema.Resource {
 	}
 }
 
-func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	name := d.Get("cell_name").(string)
 	input := &route53recoveryreadiness.CreateCellInput{
 		CellName: aws.String(name),
-		Cells:    flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+		Cells:    flex.ExpandStringValueList(d.Get("cells").([]any)),
 	}
 
 	output, err := conn.CreateCell(ctx, input)
@@ -96,7 +96,7 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -120,14 +120,14 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateCellInput{
 			CellName: aws.String(d.Id()),
-			Cells:    flex.ExpandStringValueList(d.Get("cells").([]interface{})),
+			Cells:    flex.ExpandStringValueList(d.Get("cells").([]any)),
 		}
 
 		_, err := conn.UpdateCell(ctx, input)
@@ -140,7 +140,7 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceCellRead(ctx, d, meta)...)
 }
 
-func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 

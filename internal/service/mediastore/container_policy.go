@@ -44,16 +44,17 @@ func ResourceContainerPolicy() *schema.Resource {
 				Required:         true,
 				ValidateFunc:     verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
 		},
+		DeprecationMessage: "aws_media_store_container_policy is deprecated. Use S3, AWS MediaPackage, or other storage solution instead.",
 	}
 }
 
-func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
@@ -78,7 +79,7 @@ func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceContainerPolicyRead(ctx, d, meta)...)
 }
 
-func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
@@ -106,7 +107,7 @@ func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceContainerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 

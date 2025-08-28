@@ -77,7 +77,7 @@ func ResourceRouteCalculator() *schema.Resource {
 	}
 }
 
-func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -106,7 +106,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRouteCalculatorRead(ctx, d, meta)...)
 }
 
-func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -133,7 +133,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -162,7 +162,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceRouteCalculatorRead(ctx, d, meta)...)
 }
 
-func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)

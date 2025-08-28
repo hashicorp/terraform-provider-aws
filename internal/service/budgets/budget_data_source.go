@@ -272,7 +272,7 @@ const (
 	DSNameBudget = "Budget Data Source"
 )
 
-func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
@@ -335,26 +335,26 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []interface{} {
+func flattenCalculatedSpend(apiObject *awstypes.CalculatedSpend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"actual_spend": flattenSpend(apiObject.ActualSpend),
 	}
-	return []interface{}{attrs}
+	return []any{attrs}
 }
 
-func flattenSpend(apiObject *awstypes.Spend) []interface{} {
+func flattenSpend(apiObject *awstypes.Spend) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	attrs := map[string]interface{}{
+	attrs := map[string]any{
 		"amount":       aws.ToString(apiObject.Amount),
 		names.AttrUnit: aws.ToString(apiObject.Unit),
 	}
 
-	return []interface{}{attrs}
+	return []any{attrs}
 }

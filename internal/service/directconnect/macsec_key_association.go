@@ -76,7 +76,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 	}
 }
 
-func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -110,7 +110,7 @@ func resourceMacSecKeyAssociatioCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceMacSecKeyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -140,7 +140,7 @@ func resourceMacSecKeyAssociationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMacSecKeyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 

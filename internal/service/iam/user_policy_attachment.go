@@ -77,7 +77,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
 	}, d.IsNewResource())
 
@@ -122,7 +122,7 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 }
 
 func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachUserPolicy(ctx, &iam.AttachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
@@ -137,7 +137,7 @@ func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN s
 }
 
 func detachPolicyFromUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ConcurrentModificationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachUserPolicy(ctx, &iam.DetachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),

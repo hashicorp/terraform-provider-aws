@@ -56,7 +56,7 @@ func resourceApprovalRuleTemplateAssociation() *schema.Resource {
 	}
 }
 
-func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -79,7 +79,7 @@ func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schem
 	return append(diags, resourceApprovalRuleTemplateAssociationRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
@@ -106,7 +106,7 @@ func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 

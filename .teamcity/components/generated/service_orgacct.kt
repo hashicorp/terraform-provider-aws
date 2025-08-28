@@ -12,8 +12,5 @@ val orgacctServices = mapOf(
     "licensemanager" to ServiceSpec("License Manager"),
     "macie2" to ServiceSpec("Macie"),
     "organizations" to ServiceSpec("Organizations"),
-    "securityhub" to ServiceSpec(
-        "Security Hub",
-        "TestAccSecurityHub_serial/Account|TestAccSecurityHub_serial/OrganizationAdminAccount|TestAccSecurityHub_serial/OrganizationConfiguration"
-    ),
+    "securityhub" to ServiceSpec("Security Hub"),
 )

@@ -51,7 +51,7 @@ func resourceCertificateValidation() *schema.Resource {
 	}
 }
 
-func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateValidationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
@@ -106,7 +106,7 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceCertificateValidationRead(ctx, d, meta)...)
 }
 
-func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateValidationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
@@ -147,7 +147,7 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 }
 
 func statusCertificate(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
 		input := acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),

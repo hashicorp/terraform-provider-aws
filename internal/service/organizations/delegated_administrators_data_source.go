@@ -74,7 +74,7 @@ func dataSourceDelegatedAdministrators() *schema.Resource {
 	}
 }
 
-func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -98,15 +98,15 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]interface{} {
+func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:             aws.ToString(apiObject.Arn),
 			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
 			names.AttrEmail:           aws.ToString(apiObject.Email),

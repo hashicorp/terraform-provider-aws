@@ -163,6 +163,10 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, SDKID is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
+		if l.ARNNamespace() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, ARNNamespace is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		}
+
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for unless NotImplemented or Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
@@ -181,7 +185,7 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 40))
+	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 41))
 
 	var fileErrs bool
 

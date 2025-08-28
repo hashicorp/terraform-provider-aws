@@ -24,8 +24,9 @@ resource "aws_backup_logically_air_gapped_vault" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Logically Air Gapped Backup Vault to create.
 * `max_retention_days` - (Required) Maximum retention period that the Logically Air Gapped Backup Vault retains recovery points.
 * `min_retention_days` - (Required) Minimum retention period that the Logically Air Gapped Backup Vault retains recovery points.

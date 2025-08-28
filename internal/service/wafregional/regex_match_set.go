@@ -285,12 +285,12 @@ func regexMatchSetTupleHash(v any) int {
 		ftm := ftms[0].(map[string]any)
 
 		if v, ok := ftm["data"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+			fmt.Fprintf(&buf, "%s-", strings.ToLower(v.(string)))
 		}
-		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType]))
+		fmt.Fprintf(&buf, "%s-", ftm[names.AttrType])
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m["regex_pattern_set_id"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+	fmt.Fprintf(&buf, "%s-", m["regex_pattern_set_id"].(string))
+	fmt.Fprintf(&buf, "%s-", m["text_transformation"].(string))
 
 	return create.StringHashcode(buf.String())
 }

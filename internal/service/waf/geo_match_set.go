@@ -64,12 +64,12 @@ func resourceGeoMatchSet() *schema.Resource {
 	}
 }
 
-func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.CreateGeoMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -87,7 +87,7 @@ func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceGeoMatchSetUpdate(ctx, d, meta)...)
 }
 
-func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -127,19 +127,19 @@ func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceGeoMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List(); len(oldConstraints) > 0 {
-		noConstraints := []interface{}{}
+		noConstraints := []any{}
 		if err := updateGeoMatchSet(ctx, conn, d.Id(), oldConstraints, noConstraints); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF GeoMatchSet: %s", d.Id())
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.DeleteGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(d.Id()),
@@ -184,8 +184,8 @@ func findGeoMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*aws
 	return output.GeoMatchSet, nil
 }
 
-func updateGeoMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+func updateGeoMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []any) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(id),
@@ -202,10 +202,10 @@ func updateGeoMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, n
 	return nil
 }
 
-func flattenGeoMatchConstraint(ts []awstypes.GeoMatchConstraint) []interface{} {
-	out := make([]interface{}, len(ts))
+func flattenGeoMatchConstraint(ts []awstypes.GeoMatchConstraint) []any {
+	out := make([]any, len(ts))
 	for i, t := range ts {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m[names.AttrType] = string(t.Type)
 		m[names.AttrValue] = string(t.Value)
 		out[i] = m
@@ -213,11 +213,11 @@ func flattenGeoMatchConstraint(ts []awstypes.GeoMatchConstraint) []interface{} {
 	return out
 }
 
-func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSetUpdate {
+func diffGeoMatchSetConstraints(oldT, newT []any) []awstypes.GeoMatchSetUpdate {
 	updates := make([]awstypes.GeoMatchSetUpdate, 0)
 
 	for _, od := range oldT {
-		constraint := od.(map[string]interface{})
+		constraint := od.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newT, constraint); contains {
 			newT = slices.Delete(newT, idx, idx+1)
@@ -234,7 +234,7 @@ func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSet
 	}
 
 	for _, nd := range newT {
-		constraint := nd.(map[string]interface{})
+		constraint := nd.(map[string]any)
 
 		updates = append(updates, awstypes.GeoMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,

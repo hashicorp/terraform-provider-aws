@@ -247,7 +247,7 @@ This resource supports the following arguments:
 
 * `zoneId` - (Required) The ID of the hosted zone to contain this record.
 * `name` - (Required) The name of the record.
-* `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV` and `TXT`.
+* `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `HTTPS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV`, `SSHFP`, `SVCB`, `TLSA`, and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
 * `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g., `"first255characters\"\"morecharacters"`).
 * `setIdentifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `cidrRoutingPolicy`, `failoverRoutingPolicy`, `geolocationRoutingPolicy`,`geoproximityRoutingPolicy`, `latencyRoutingPolicy`, `multivalueAnswerRoutingPolicy`, or `weightedRoutingPolicy`.
@@ -420,4 +420,4 @@ If the record also contains a set identifier, append it:
 % terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev_NS_dev
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-47008bdfa82262bef10281c4c8e59c8f735fd64ade80f4344f0ffc2561b5818e -->
+<!-- cache-key: cdktf-0.20.8 input-21f2f6ce183ce2dbfb3093796ed0b61119f2da17ed712a343efc3cd063207412 -->

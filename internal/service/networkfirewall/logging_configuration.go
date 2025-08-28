@@ -79,16 +79,16 @@ func resourceLoggingConfiguration() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 			// Ensure distinct logging_configuration.log_destination_config.log_type values.
-			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				tfMap := v.([]any)[0].(map[string]any)
 
 				if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
 					logTypes := make(map[string]struct{})
 
 					for _, tfMapRaw := range v.List() {
-						tfMap, ok := tfMapRaw.(map[string]interface{})
+						tfMap, ok := tfMapRaw.(map[string]any)
 						if !ok {
 							continue
 						}
@@ -108,14 +108,14 @@ func resourceLoggingConfiguration() *schema.Resource {
 	}
 }
 
-func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	firewallARN := d.Get("firewall_arn").(string)
 
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
 			if err := addLogDestinationConfigs(ctx, conn, firewallARN, &awstypes.LoggingConfiguration{}, expandLogDestinationConfigs(v.List())); err != nil {
@@ -129,7 +129,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -153,7 +153,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -178,7 +178,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceLoggingConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
@@ -193,8 +193,8 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Logging Configuration: %s", d.Id())
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
 			if err := deleteLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(v.List())); err != nil {
@@ -274,7 +274,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Cl
 	return output, nil
 }
 
-func expandLogDestinationConfigs(tfList []interface{}) []awstypes.LogDestinationConfig {
+func expandLogDestinationConfigs(tfList []any) []awstypes.LogDestinationConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -282,14 +282,14 @@ func expandLogDestinationConfigs(tfList []interface{}) []awstypes.LogDestination
 	var apiObjects []awstypes.LogDestinationConfig
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
 		apiObject := awstypes.LogDestinationConfig{}
 
-		if v, ok := tfMap["log_destination"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["log_destination"].(map[string]any); ok && len(v) > 0 {
 			apiObject.LogDestination = flex.ExpandStringValueMap(v)
 		}
 
@@ -309,23 +309,23 @@ func expandLogDestinationConfigs(tfList []interface{}) []awstypes.LogDestination
 	return apiObjects
 }
 
-func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(apiObject *awstypes.LoggingConfiguration) []any {
 	if apiObject == nil || apiObject.LogDestinationConfigs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"log_destination_config": flattenLogDestinationConfigs(apiObject.LogDestinationConfigs),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLogDestinationConfigs(apiObjects []awstypes.LogDestinationConfig) []interface{} {
-	tfList := make([]interface{}, 0, len(apiObjects))
+func flattenLogDestinationConfigs(apiObjects []awstypes.LogDestinationConfig) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"log_destination":      apiObject.LogDestination,
 			"log_destination_type": apiObject.LogDestinationType,
 			"log_type":             apiObject.LogType,

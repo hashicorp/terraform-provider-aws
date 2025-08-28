@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterArn` - (Required) ARN of the cluster the nodes belong to.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bootstrapBrokersVpcConnectivitySaslScram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity.
 * `bootstrapBrokersVpcConnectivityTls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity.
 
-<!-- cache-key: cdktf-0.20.8 input-3555206dae328005fc6c8e7006907b01e6fb47ecd0e0b5b4c01b42eb5258cfa0 -->
+<!-- cache-key: cdktf-0.20.8 input-7b54094f0706ad631225a93167f5cf8ebf4d97a5d96b94ce2921bb8b1867cc48 -->

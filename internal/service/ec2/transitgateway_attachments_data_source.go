@@ -50,7 +50,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]any))),
+			svcTags(tftags.New(ctx, v.(map[string]any))),
 		)...)
 	}
 

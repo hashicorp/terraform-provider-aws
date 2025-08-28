@@ -55,6 +55,7 @@ resource "aws_connect_instance" "test" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
 * `contact_lens_enabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.

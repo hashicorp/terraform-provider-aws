@@ -9,16 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appconfig"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -283,65 +280,43 @@ func testAccCheckExtensionDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_appconfig_environment" {
+			if rs.Type != "aws_appconfig_extension" {
 				continue
 			}
 
-			input := &appconfig.GetExtensionInput{
-				ExtensionIdentifier: aws.String(rs.Primary.ID),
-			}
+			_, err := tfappconfig.FindExtensionByID(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetExtension(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading AppConfig Extension (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("AppConfig Extension (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("AppConfig Extension %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckExtensionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckExtensionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		in := &appconfig.GetExtensionInput{
-			ExtensionIdentifier: aws.String(rs.Primary.ID),
-		}
+		_, err := tfappconfig.FindExtensionByID(ctx, conn, rs.Primary.ID)
 
-		output, err := conn.GetExtension(ctx, in)
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Extension (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("AppConfig Extension (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccExtensionConfigBase(rName string) string {
+func testAccExtensionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -367,7 +342,7 @@ resource "aws_iam_role" "test" {
 
 func testAccExtensionConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name        = %[1]q
@@ -386,7 +361,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_description(rName string, rDescription string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name        = %[1]q
@@ -405,7 +380,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_actionPoint2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -431,7 +406,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_parameter1(rName string, pName string, pDescription string, pRequired string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q
@@ -454,7 +429,7 @@ resource "aws_appconfig_extension" "test" {
 
 func testAccExtensionConfig_parameter2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
+		testAccExtensionConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_appconfig_extension" "test" {
   name = %[1]q

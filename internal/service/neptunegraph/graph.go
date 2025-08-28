@@ -52,7 +52,7 @@ func newGraphResource(_ context.Context) (resource.ResourceWithConfigure, error)
 }
 
 type graphResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[graphResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -376,7 +376,7 @@ func findGraph(ctx context.Context, conn *neptunegraph.Client, input *neptunegra
 }
 
 func statusGraph(ctx context.Context, conn *neptunegraph.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findGraphByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
@@ -455,6 +455,7 @@ func waitGraphDeleted(ctx context.Context, conn *neptunegraph.Client, id string,
 }
 
 type graphResourceModel struct {
+	framework.WithRegionModel
 	ARN                       types.String                                                    `tfsdk:"arn"`
 	DeletionProtection        types.Bool                                                      `tfsdk:"deletion_protection"`
 	Endpoint                  types.String                                                    `tfsdk:"endpoint"`

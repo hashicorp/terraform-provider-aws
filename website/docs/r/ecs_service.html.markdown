@@ -102,6 +102,24 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Blue/Green Deployment with SIGINT Rollback
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  # ... other configurations ...
+
+  deployment_configuration {
+    strategy = "BLUE_GREEN"
+  }
+
+  sigint_rollback       = true
+  wait_for_steady_state = true
+}
+```
+
 ### Redeploy Service On Every Apply
 
 The key used with `triggers` is arbitrary.
@@ -126,11 +144,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `availability_zone_rebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. [See below](#capacity_provider_strategy). Conflicts with `launch_type`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. [See below](#deployment_circuit_breaker).
+* `deployment_configuration` - (Optional) Configuration block for deployment settings. [See below](#deployment_configuration).
 * `deployment_controller` - (Optional) Configuration block for deployment controller configuration. [See below](#deployment_controller).
 * `deployment_maximum_percent` - (Optional) Upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.
 * `deployment_minimum_healthy_percent` - (Optional) Lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
@@ -151,6 +171,7 @@ The following arguments are optional:
 * `scheduling_strategy` - (Optional) Scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
 * `service_connect_configuration` - (Optional) ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. [See below](#service_connect_configuration).
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [See below](#service_registries).
+* `sigint_rollback` - (Optional) Whether to enable graceful termination of deployments using SIGINT signals. When enabled, allows customers to safely cancel an in-progress deployment and automatically trigger a rollback to the previous stable state. Defaults to `false`. Only applicable when using `ECS` deployment controller and requires `wait_for_steady_state = true`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
@@ -193,6 +214,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `size_in_gb` - (Optional) Size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_initialization_rate` - (Optional) Volume Initialization Rate in MiB/s. You must also specify a `snapshot_id`.
 * `volume_type` - (Optional) Volume type.
 * `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
@@ -203,6 +225,22 @@ The `capacity_provider_strategy` configuration block supports the following:
 * `base` - (Optional) Number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
 * `capacity_provider` - (Required) Short name of the capacity provider.
 * `weight` - (Required) Relative percentage of the total number of launched tasks that should use the specified capacity provider.
+
+### deployment_configuration
+
+The `deployment_configuration` configuration block supports the following:
+
+* `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`. Default: `ROLLING`.
+* `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Only used when `strategy` is set to `BLUE_GREEN`.
+* `lifecycle_hook` - (Optional) Configuration block for lifecycle hooks that are invoked during deployments. [See below](#lifecycle_hook).
+
+### lifecycle_hook
+
+The `lifecycle_hook` configuration block supports the following:
+
+* `hook_target_arn` - (Required) ARN of the Lambda function to invoke for the lifecycle hook.
+* `role_arn` - (Required) ARN of the IAM role that grants the service permission to invoke the Lambda function.
+* `lifecycle_stages` - (Required) Stages during the deployment when the hook should be invoked. Valid values: `RECONCILE_SERVICE`, `PRE_SCALE_UP`, `POST_SCALE_UP`, `TEST_TRAFFIC_SHIFT`, `POST_TEST_TRAFFIC_SHIFT`, `PRODUCTION_TRAFFIC_SHIFT`, `POST_PRODUCTION_TRAFFIC_SHIFT`.
 
 ### deployment_circuit_breaker
 
@@ -225,8 +263,18 @@ The `deployment_controller` configuration block supports the following:
 * `target_group_arn` - (Required for ALB/NLB) ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) Name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) Port on the container to associate with the load balancer.
+* `advanced_configuration` - (Optional) Configuration block for Blue/Green deployment settings. Required when using `BLUE_GREEN` deployment strategy. [See below](#advanced_configuration).
 
 -> **Version note:** Multiple `load_balancer` configuration block support was added in Terraform AWS Provider version 2.22.0. This allows configuration of [ECS service support for multiple target groups](https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecs-services-now-support-multiple-load-balancer-target-groups/).
+
+### advanced_configuration
+
+The `advanced_configuration` configuration block supports the following:
+
+* `alternate_target_group_arn` - (Required) ARN of the alternate target group to use for Blue/Green deployments.
+* `production_listener_rule` - (Required) ARN of the listener rule that routes production traffic.
+* `role_arn` - (Required) ARN of the IAM role that allows ECS to manage the target groups.
+* `test_listener_rule` - (Optional) ARN of the listener rule that routes test traffic.
 
 ### network_configuration
 
@@ -328,6 +376,26 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `dns_name` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+* `test_traffic_rules` - (Optional) Configuration block for test traffic routing rules. [See below](#test_traffic_rules).
+
+### test_traffic_rules
+
+The `test_traffic_rules` configuration block supports the following:
+
+* `header` - (Optional) Configuration block for header-based routing rules. [See below](#header).
+
+### header
+
+The `header` configuration block supports the following:
+
+* `name` - (Required) Name of the HTTP header to match.
+* `value` - (Required) Configuration block for header value matching criteria. [See below](#value).
+
+### value
+
+The `value` configuration block supports the following:
+
+* `exact` - (Required) Exact string value to match in the header.
 
 ### tag_specifications
 
@@ -341,7 +409,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the service.
+* `arn` - ARN that identifies the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

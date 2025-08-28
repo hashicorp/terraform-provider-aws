@@ -54,7 +54,7 @@ func dataSourceOrganizationalUnits() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -119,15 +119,15 @@ func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.C
 	return output, nil
 }
 
-func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []interface{} {
+func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, ou := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:  aws.ToString(ou.Arn),
 			names.AttrID:   aws.ToString(ou.Id),
 			names.AttrName: aws.ToString(ou.Name),

@@ -78,7 +78,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", group, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedGroupPolicyByTwoPartKey(ctx, conn, group, policyARN)
 	}, d.IsNewResource())
 
@@ -124,7 +124,7 @@ func resourceGroupPolicyAttachmentImport(ctx context.Context, d *schema.Resource
 
 func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachGroupPolicy(ctx, &iam.AttachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),
@@ -140,7 +140,7 @@ func attachPolicyToGroup(ctx context.Context, conn *iam.Client, group, policyARN
 
 func detachPolicyFromGroup(ctx context.Context, conn *iam.Client, group, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachGroupPolicy(ctx, &iam.DetachGroupPolicyInput{
 			GroupName: aws.String(group),
 			PolicyArn: aws.String(policyARN),

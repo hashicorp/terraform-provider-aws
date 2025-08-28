@@ -68,7 +68,7 @@ const (
 	regionResourceIDPartCount = 2
 )
 
-func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
@@ -141,7 +141,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceRegionRead(ctx, d, meta)...)
 }
 
-func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
@@ -194,7 +194,7 @@ func findRegionOptStatus(ctx context.Context, conn *account.Client, accountID, r
 }
 
 func statusRegionOptStatus(ctx context.Context, conn *account.Client, accountID, region string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRegionOptStatus(ctx, conn, accountID, region)
 
 		if tfresource.NotFound(err) {

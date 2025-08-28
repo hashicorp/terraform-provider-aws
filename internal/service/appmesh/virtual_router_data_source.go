@@ -56,7 +56,7 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualRouterSpecSchema()),
+				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualRouterSpecSchema()),
 				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},

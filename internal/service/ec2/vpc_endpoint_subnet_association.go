@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,6 +30,7 @@ func resourceVPCEndpointSubnetAssociation() *schema.Resource {
 		CreateWithoutTimeout: resourceVPCEndpointSubnetAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSubnetAssociationRead,
 		DeleteWithoutTimeout: resourceVPCEndpointSubnetAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceVPCEndpointSubnetAssociationImport,
 		},
@@ -56,46 +59,22 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	subnetID := d.Get(names.AttrSubnetID).(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
+	vpceID, subnetID := d.Get(names.AttrVPCEndpointID).(string), d.Get(names.AttrSubnetID).(string)
+	// Human friendly ID for error messages since d.Id() is non-descriptive.
+	id := fmt.Sprintf("%s/%s", vpceID, subnetID)
 
-	input := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId: aws.String(endpointID),
+	input := ec2.ModifyVpcEndpointInput{
 		AddSubnetIds:  []string{subnetID},
+		VpcEndpointId: aws.String(vpceID),
 	}
-
-	log.Printf("[DEBUG] Creating VPC Endpoint Subnet Association: %v", input)
-
-	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
-	// Prevent concurrent subnet association requests and delay between requests.
-	mk := "vpc_endpoint_subnet_association_" + endpointID
-	conns.GlobalMutexKV.Lock(mk)
-	defer conns.GlobalMutexKV.Unlock(mk)
-
-	c := &retry.StateChangeConf{
-		Delay:   1 * time.Minute,
-		Timeout: 3 * time.Minute,
-		Target:  []string{"ok"},
-		Refresh: func() (any, string, error) {
-			output, err := conn.ModifyVpcEndpoint(ctx, input)
-
-			return output, "ok", err
-		},
-	}
-	_, err := c.WaitForStateContext(ctx)
-
-	if err != nil {
+	if err := modifyVPCEndpointExclusive(ctx, conn, &input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
+	d.SetId(vpcEndpointSubnetAssociationCreateID(vpceID, subnetID))
 
-	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
+	if _, err := waitVPCEndpointAvailable(ctx, conn, vpceID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", vpceID, err)
 	}
 
 	return append(diags, resourceVPCEndpointSubnetAssociationRead(ctx, d, meta)...)
@@ -105,12 +84,11 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	subnetID := d.Get(names.AttrSubnetID).(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
+	vpceID, subnetID := d.Get(names.AttrVPCEndpointID).(string), d.Get(names.AttrSubnetID).(string)
+	// Human friendly ID for error messages since d.Id() is non-descriptive.
+	id := fmt.Sprintf("%s/%s", vpceID, subnetID)
 
-	err := findVPCEndpointSubnetAssociationExists(ctx, conn, endpointID, subnetID)
+	err := findVPCEndpointSubnetAssociationExists(ctx, conn, vpceID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)
@@ -129,18 +107,16 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
-	subnetID := d.Get(names.AttrSubnetID).(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
-
-	input := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId:   aws.String(endpointID),
+	vpceID, subnetID := d.Get(names.AttrVPCEndpointID).(string), d.Get(names.AttrSubnetID).(string)
+	// Human friendly ID for error messages since d.Id() is non-descriptive.
+	id := fmt.Sprintf("%s/%s", vpceID, subnetID)
+	input := ec2.ModifyVpcEndpointInput{
 		RemoveSubnetIds: []string{subnetID},
+		VpcEndpointId:   aws.String(vpceID),
 	}
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
-	_, err := conn.ModifyVpcEndpoint(ctx, input)
+	err := modifyVPCEndpointExclusive(ctx, conn, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return diags
@@ -150,28 +126,53 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	_, err = waitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
+	if _, err := waitVPCEndpointAvailable(ctx, conn, vpceID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", vpceID, err)
 	}
 
 	return diags
 }
 
 func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
+	const (
+		idSeparator = "/"
+	)
+	parts := strings.Split(d.Id(), idSeparator)
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/subnet-id'", d.Id())
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected vpc-endpoint-id%[2]ssubnet-id", d.Id(), idSeparator)
 	}
 
-	endpointID := parts[0]
-	subnetID := parts[1]
-	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Subnet (%s) Association", endpointID, subnetID)
-
-	d.SetId(vpcEndpointSubnetAssociationCreateID(endpointID, subnetID))
-	d.Set(names.AttrVPCEndpointID, endpointID)
+	vpceID, subnetID := parts[0], parts[1]
+	d.SetId(vpcEndpointSubnetAssociationCreateID(vpceID, subnetID))
+	d.Set(names.AttrVPCEndpointID, vpceID)
 	d.Set(names.AttrSubnetID, subnetID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func modifyVPCEndpointExclusive(ctx context.Context, conn *ec2.Client, input *ec2.ModifyVpcEndpointInput) error {
+	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
+	// Prevent concurrent requests and delay between requests.
+	vpceID := aws.ToString(input.VpcEndpointId)
+	mk := "vpc_endpoint_" + vpceID
+	conns.GlobalMutexKV.Lock(mk)
+	defer conns.GlobalMutexKV.Unlock(mk)
+
+	stateConf := &retry.StateChangeConf{
+		Delay:   1 * time.Minute,
+		Timeout: 3 * time.Minute,
+		Target:  []string{strconv.FormatBool(true)},
+		Refresh: func() (any, string, error) {
+			output, err := conn.ModifyVpcEndpoint(ctx, input)
+
+			if err != nil {
+				return nil, "", err
+			}
+
+			return output, flex.BoolToStringValue(output.Return), err
+		},
+	}
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

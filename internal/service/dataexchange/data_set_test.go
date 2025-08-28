@@ -144,7 +144,7 @@ func testAccCheckDataSetExists(ctx context.Context, n string, v *dataexchange.Ge
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeClient(ctx)
-		resp, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
+		resp, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -168,7 +168,7 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Try to find the resource
-			_, err := tfdataexchange.FindDataSetById(ctx, conn, rs.Primary.ID)
+			_, err := tfdataexchange.FindDataSetByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}

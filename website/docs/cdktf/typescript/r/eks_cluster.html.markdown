@@ -63,7 +63,7 @@ class MyConvertedCode extends TerraformStack {
       },
       dependsOn: [clusterAmazonEksClusterPolicy],
       name: "example",
-      roleArn: Token.asString(awsIamRoleExample.arn),
+      roleArn: cluster.arn,
       version: "1.31",
       vpcConfig: {
         subnetIds: [az1.id, az2.id, az3.id],
@@ -346,7 +346,7 @@ class MyConvertedCode extends TerraformStack {
         controlPlaneInstanceType: "m5.large",
         outpostArns: [Token.asString(example.arn)],
       },
-      roleArn: Token.asString(awsIamRoleExample.arn),
+      roleArn: cluster.arn,
       version: "1.31",
       vpcConfig: {
         endpointPrivateAccess: true,
@@ -365,7 +365,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `name` – (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]*$`).
+* `name` - (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]*$`).
 * `roleArn` - (Required) ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf. Ensure the resource configuration includes explicit dependencies on the IAM Role permissions by adding [`dependsOn`](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html) if using the [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html) or [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html), otherwise EKS cannot delete EKS managed EC2 infrastructure such as Security Groups on EKS Cluster deletion.
 * `vpcConfig` - (Required) Configuration block for the VPC associated with your cluster. Amazon EKS VPC resources have specific requirements to work properly with Kubernetes. For more information, see [Cluster VPC Considerations](https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html) and [Cluster Security Group Considerations](https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html) in the Amazon EKS User Guide. Detailed below. Also contains attributes detailed in the Attributes section.
 
@@ -374,15 +374,18 @@ The following arguments are optional:
 * `accessConfig` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html). [Detailed](#access_config) below.
 * `bootstrapSelfManagedAddons` - (Optional) Install default unmanaged add-ons, such as `aws-cni`, `kube-proxy`, and CoreDNS during cluster creation. If `false`, you must manually install desired add-ons. Changing this value will force a new cluster to be created. Defaults to `true`.
 * `computeConfig` - (Optional) Configuration block with compute configuration for EKS Auto Mode. [Detailed](#compute_config) below.
+* `deletionProtection` - (Optional) Whether to enable deletion protection for the cluster. When enabled, the cluster cannot be deleted unless deletion protection is first disabled. Default: `false`.
 * `enabledClusterLogTypes` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryptionConfig` - (Optional) Configuration block with encryption configuration for the cluster. [Detailed](#encryption_config) below.
+* `forceUpdateVersion` - (Optional) Force version update by overriding upgrade-blocking readiness checks when updating a cluster.
 * `kubernetesNetworkConfig` - (Optional) Configuration block with kubernetes network configuration for the cluster. [Detailed](#kubernetes_network_config) below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpostConfig` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remoteNetworkConfig` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. [Detailed](#remote_network_config) below.
 * `storageConfig` - (Optional) Configuration block with storage configuration for EKS Auto Mode. [Detailed](#storage_config) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `upgradePolicy` - (Optional) Configuration block for the support policy to use for the cluster.  See [upgrade_policy](#upgrade_policy) for details.
-* `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
+* `version` - (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
 * `zonalShiftConfig` - (Optional) Configuration block with zonal shift configuration for the cluster. [Detailed](#zonal_shift_config) below.
 
 ### access_config
@@ -390,7 +393,7 @@ The following arguments are optional:
 The `accessConfig` configuration block supports the following arguments:
 
 * `authenticationMode` - (Optional) The authentication mode for the cluster. Valid values are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
-* `bootstrapClusterCreatorAdminPermissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `false`.
+* `bootstrapClusterCreatorAdminPermissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `true`.
 
 ### compute_config
 
@@ -438,8 +441,8 @@ The `remotePodNetworks` configuration block supports the following arguments:
 * `endpointPrivateAccess` - (Optional) Whether the Amazon EKS private API server endpoint is enabled. Default is `false`.
 * `endpointPublicAccess` - (Optional) Whether the Amazon EKS public API server endpoint is enabled. Default is `true`.
 * `publicAccessCidrs` - (Optional) List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint when enabled. EKS defaults this to a list with `0.0.0.0/0`. Terraform will only perform drift detection of its value when present in a configuration.
-* `securityGroupIds` – (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
-* `subnetIds` – (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
+* `securityGroupIds` - (Optional) List of security group IDs for the cross-account elastic network interfaces that Amazon EKS creates to use to allow communication between your worker nodes and the Kubernetes control plane.
+* `subnetIds` - (Required) List of subnet IDs. Must be in at least two different availability zones. Amazon EKS creates cross-account elastic network interfaces in these subnets to allow communication between your worker nodes and the Kubernetes control plane.
 * `vpcId` - (Computed) ID of the VPC associated with your cluster.
 
 ### kubernetes_network_config
@@ -573,4 +576,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2d24990bd2ea1c0eb7e155f17072c56c6730c8900950a6c003e033a6e8faafd3 -->
+<!-- cache-key: cdktf-0.20.8 input-73d371e0d08cd74f8d5994de2f0ced8b5f27097313ee689013fc244fbb0c8c5e -->

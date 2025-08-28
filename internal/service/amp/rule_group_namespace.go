@@ -28,6 +28,8 @@ import (
 
 // @SDKResource("aws_prometheus_rule_group_namespace", name="Rule Group Namespace")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.RuleGroupsNamespaceDescription")
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
@@ -35,10 +37,6 @@ func resourceRuleGroupNamespace() *schema.Resource {
 		ReadWithoutTimeout:   resourceRuleGroupNamespaceRead,
 		UpdateWithoutTimeout: resourceRuleGroupNamespaceUpdate,
 		DeleteWithoutTimeout: resourceRuleGroupNamespaceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -65,7 +63,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 	}
 }
 
-func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -93,7 +91,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -123,7 +121,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -148,7 +146,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceRuleGroupNamespaceRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
@@ -223,7 +221,7 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 }
 
 func statusRuleGroupNamespace(ctx context.Context, conn *amp.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findRuleGroupNamespaceByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {

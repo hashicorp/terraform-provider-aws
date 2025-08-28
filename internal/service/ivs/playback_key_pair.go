@@ -24,15 +24,19 @@ import (
 
 // @SDKResource("aws_ivs_playback_key_pair", name="Playback Key Pair")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivs/types;awstypes.PlaybackKeyPair")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(tlsEcdsaPublicKeyPem=true)
+// @Testing(importIgnore="public_key")
+// @Testing(plannableImportAction=Replace)
 func ResourcePlaybackKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaybackKeyPairCreate,
 		ReadWithoutTimeout:   resourcePlaybackKeyPairRead,
 		DeleteWithoutTimeout: resourcePlaybackKeyPairDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -69,7 +73,7 @@ const (
 	ResNamePlaybackKeyPair = "Playback Key Pair"
 )
 
-func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -101,7 +105,7 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourcePlaybackKeyPairRead(ctx, d, meta)...)
 }
 
-func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)
@@ -125,7 +129,7 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSClient(ctx)

@@ -28,7 +28,11 @@ import (
 )
 
 // @SDKResource("aws_codegurureviewer_repository_association", name="Repository Association")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
+// @Testing(importIgnore="repository", plannableImportAction="Replace")
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
@@ -262,7 +266,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 	}
 }
 
-func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
@@ -270,10 +274,10 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 		Tags: getTagsIn(ctx),
 	}
 
-	input.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]interface{}))
+	input.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]any))
 
 	if v, ok := d.GetOk("repository"); ok {
-		input.Repository = expandRepository(v.([]interface{}))
+		input.Repository = expandRepository(v.([]any))
 	}
 
 	output, err := conn.AssociateRepository(ctx, input)
@@ -291,11 +295,11 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
-	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
+	out, err := findRepositoryAssociationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeGuru Reviewer Repository Association (%s) not found, removing from state", d.Id())
@@ -325,7 +329,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -333,7 +337,7 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerClient(ctx)
 
@@ -358,9 +362,9 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.Client, id string) (*types.RepositoryAssociation, error) {
+func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.Client, arn string) (*types.RepositoryAssociation, error) {
 	input := &codegurureviewer.DescribeRepositoryAssociationInput{
-		AssociationArn: aws.String(id),
+		AssociationArn: aws.String(arn),
 	}
 
 	output, err := conn.DescribeRepositoryAssociation(ctx, input)
@@ -384,8 +388,8 @@ func findRepositoryAssociationByID(ctx context.Context, conn *codegurureviewer.C
 }
 
 func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findRepositoryAssociationByID(ctx, conn, id)
+	return func() (any, string, error) {
+		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -439,12 +443,12 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	return nil, err
 }
 
-func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []interface{} {
+func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []any {
 	if kmsKeyDetails == nil {
 		return nil
 	}
 
-	values := map[string]interface{}{
+	values := map[string]any{
 		"encryption_option": kmsKeyDetails.EncryptionOption,
 	}
 
@@ -452,15 +456,15 @@ func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []interface{} {
 		values[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) []interface{} {
+func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) []any {
 	if s3RepositoryDetails == nil {
 		return nil
 	}
 
-	values := map[string]interface{}{}
+	values := map[string]any{}
 
 	if v := s3RepositoryDetails.BucketName; v != nil {
 		values[names.AttrBucketName] = aws.ToString(v)
@@ -470,15 +474,15 @@ func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) 
 		values["code_artifacts"] = flattenCodeArtifacts(v)
 	}
 
-	return []interface{}{values}
+	return []any{values}
 }
 
-func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]interface{} {
+func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.BuildArtifactsObjectKey; v != nil {
 		m["build_artifacts_object_key"] = aws.ToString(v)
@@ -491,12 +495,12 @@ func flattenCodeArtifacts(apiObject *types.CodeArtifacts) map[string]interface{}
 	return m
 }
 
-func expandKMSKeyDetails(kmsKeyDetails []interface{}) *types.KMSKeyDetails {
+func expandKMSKeyDetails(kmsKeyDetails []any) *types.KMSKeyDetails {
 	if len(kmsKeyDetails) == 0 || kmsKeyDetails[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := kmsKeyDetails[0].(map[string]interface{})
+	tfMap, ok := kmsKeyDetails[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -514,12 +518,12 @@ func expandKMSKeyDetails(kmsKeyDetails []interface{}) *types.KMSKeyDetails {
 	return result
 }
 
-func expandCodeCommitRepository(repository []interface{}) *types.CodeCommitRepository {
+func expandCodeCommitRepository(repository []any) *types.CodeCommitRepository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -533,12 +537,12 @@ func expandCodeCommitRepository(repository []interface{}) *types.CodeCommitRepos
 	return result
 }
 
-func expandRepository(repository []interface{}) *types.Repository {
+func expandRepository(repository []any) *types.Repository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -546,27 +550,27 @@ func expandRepository(repository []interface{}) *types.Repository {
 	result := &types.Repository{}
 
 	if v, ok := tfMap["bitbucket"]; ok {
-		result.Bitbucket = expandThirdPartySourceRepository(v.([]interface{}))
+		result.Bitbucket = expandThirdPartySourceRepository(v.([]any))
 	}
 	if v, ok := tfMap["codecommit"]; ok {
-		result.CodeCommit = expandCodeCommitRepository(v.([]interface{}))
+		result.CodeCommit = expandCodeCommitRepository(v.([]any))
 	}
 	if v, ok := tfMap["github_enterprise_server"]; ok {
-		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]interface{}))
+		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]any))
 	}
 	if v, ok := tfMap[names.AttrS3Bucket]; ok {
-		result.S3Bucket = expandS3Repository(v.([]interface{}))
+		result.S3Bucket = expandS3Repository(v.([]any))
 	}
 
 	return result
 }
 
-func expandS3Repository(repository []interface{}) *types.S3Repository {
+func expandS3Repository(repository []any) *types.S3Repository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -584,12 +588,12 @@ func expandS3Repository(repository []interface{}) *types.S3Repository {
 	return result
 }
 
-func expandThirdPartySourceRepository(repository []interface{}) *types.ThirdPartySourceRepository {
+func expandThirdPartySourceRepository(repository []any) *types.ThirdPartySourceRepository {
 	if len(repository) == 0 || repository[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := repository[0].(map[string]interface{})
+	tfMap, ok := repository[0].(map[string]any)
 	if !ok {
 		return nil
 	}

@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `client_id` - (Required) Client ID (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.
@@ -77,4 +78,4 @@ Using `terraform import`, import Pinpoint ADM Channel using the `application-id`
 % terraform import aws_pinpoint_adm_channel.channel application-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e30cdacbcd0d1d318a6eb43fc0d36eaf1fd763528beb84e0e7303428d7cdffa4 -->
+<!-- cache-key: cdktf-0.20.8 input-ca4eef90f7bf92861b8c4573b88c4a3693560af1fe300371625185e0fe705e8d -->

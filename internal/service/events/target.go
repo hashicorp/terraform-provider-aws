@@ -29,34 +29,25 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_target", name="Target")
+// @IdentityAttribute("event_bus_name")
+// @IdentityAttribute("rule")
+// @IdentityAttribute("target_id")
+// @ImportIDHandler("targetImportID")
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge/types;types.Target")
+// @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
 		ReadWithoutTimeout:   resourceTargetRead,
 		UpdateWithoutTimeout: resourceTargetUpdate,
 		DeleteWithoutTimeout: resourceTargetDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				busName, ruleName, targetID, err := targetParseImportID(d.Id())
-				if err != nil {
-					return []*schema.ResourceData{}, err
-				}
-
-				id := targetCreateResourceID(busName, ruleName, targetID)
-				d.SetId(id)
-				d.Set("target_id", targetID)
-				d.Set(names.AttrRule, ruleName)
-				d.Set("event_bus_name", busName)
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -507,7 +498,7 @@ func resourceTarget() *schema.Resource {
 	}
 }
 
-func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -542,7 +533,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -574,7 +565,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if target.HttpParameters != nil {
-		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(target.HttpParameters)}); err != nil {
+		if err := d.Set("http_target", []any{flattenTargetHTTPParameters(target.HttpParameters)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting http_target: %s", err)
 		}
 	} else {
@@ -644,7 +635,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -665,7 +656,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
@@ -755,52 +746,6 @@ func findTargets(ctx context.Context, conn *eventbridge.Client, input *eventbrid
 	return output, nil
 }
 
-// Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
-const (
-	targetResourceIDSeparator = "-"
-	targetImportIDSeparator   = "/"
-)
-
-func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
-	var parts []string
-
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
-		parts = []string{ruleName, targetID}
-	} else {
-		parts = []string{eventBusName, ruleName, targetID}
-	}
-
-	id := strings.Join(parts, targetResourceIDSeparator)
-
-	return id
-}
-
-func targetParseImportID(id string) (string, string, string, error) {
-	parts := strings.Split(id, targetImportIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return DefaultEventBusName, parts[0], parts[1], nil
-	}
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-	if len(parts) > 3 {
-		iTarget := strings.LastIndex(id, targetImportIDSeparator)
-		targetID := id[iTarget+1:]
-		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
-		eventBusName := id[:iRule]
-		ruleName := id[iRule+1 : iTarget]
-		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
-			return eventBusName, ruleName, targetID, nil
-		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
-			return eventBusName, ruleName, targetID, nil
-		}
-	}
-
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME%[2]sTARGETID or RULENAME%[2]sTARGETID", id, targetImportIDSeparator)
-}
-
 func putTargetError(apiObject types.PutTargetsResultEntry) error {
 	return errs.APIError(aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
 }
@@ -847,52 +792,52 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 		target.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("run_command_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.RunCommandParameters = expandTargetRunParameters(v.([]interface{}))
+	if v, ok := d.GetOk("run_command_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.RunCommandParameters = expandTargetRunParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.EcsParameters = expandTargetECSParameters(ctx, v.([]interface{}))
+	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.EcsParameters = expandTargetECSParameters(ctx, v.([]any))
 	}
 
-	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.RedshiftDataParameters = expandTargetRedshiftParameters(v.([]interface{}))
+	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.RedshiftDataParameters = expandTargetRedshiftParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("http_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.HttpParameters = expandTargetHTTPParameters(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("http_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.HttpParameters = expandTargetHTTPParameters(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("batch_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.BatchParameters = expandTargetBatchParameters(v.([]interface{}))
+	if v, ok := d.GetOk("batch_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.BatchParameters = expandTargetBatchParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("kinesis_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.KinesisParameters = expandTargetKinesisParameters(v.([]interface{}))
+	if v, ok := d.GetOk("kinesis_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.KinesisParameters = expandTargetKinesisParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.SqsParameters = expandTargetSQSParameters(v.([]interface{}))
+	if v, ok := d.GetOk("sqs_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.SqsParameters = expandTargetSQSParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("sagemaker_pipeline_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.SageMakerPipelineParameters = expandTargetSageMakerPipelineParameters(v.([]interface{}))
+	if v, ok := d.GetOk("sagemaker_pipeline_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.SageMakerPipelineParameters = expandTargetSageMakerPipelineParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.InputTransformer = expandTransformerParameters(v.([]interface{}))
+	if v, ok := d.GetOk("input_transformer"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.InputTransformer = expandTransformerParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("retry_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.RetryPolicy = expandRetryPolicyParameters(v.([]interface{}))
+	if v, ok := d.GetOk("retry_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.RetryPolicy = expandRetryPolicyParameters(v.([]any))
 	}
 
-	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
+	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		target.AppSyncParameters = expandAppSyncParameters(v.([]interface{}))
+	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		target.AppSyncParameters = expandAppSyncParameters(v.([]any))
 	}
 
 	input := &eventbridge.PutTargetsInput{
@@ -907,13 +852,13 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 	return input
 }
 
-func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters {
+func expandTargetRunParameters(config []any) *types.RunCommandParameters {
 	commands := make([]types.RunCommandTarget, 0)
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 		command := types.RunCommandTarget{
 			Key:    aws.String(param[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(param[names.AttrValues].([]interface{})),
+			Values: flex.ExpandStringValueList(param[names.AttrValues].([]any)),
 		}
 		commands = append(commands, command)
 	}
@@ -925,10 +870,10 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 	return command
 }
 
-func expandTargetRedshiftParameters(config []interface{}) *types.RedshiftDataParameters {
+func expandTargetRedshiftParameters(config []any) *types.RedshiftDataParameters {
 	redshiftParameters := &types.RedshiftDataParameters{}
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 
 		redshiftParameters.Database = aws.String(param[names.AttrDatabase].(string))
 		redshiftParameters.Sql = aws.String(param["sql"].(string))
@@ -953,11 +898,11 @@ func expandTargetRedshiftParameters(config []interface{}) *types.RedshiftDataPar
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types.EcsParameters {
+func expandTargetECSParameters(ctx context.Context, tfList []any) *types.EcsParameters {
 	ecsParameters := &types.EcsParameters{}
 	for _, c := range tfList {
-		tfMap := c.(map[string]interface{})
-		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
+		tfMap := c.(map[string]any)
+		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]any))
 
 		if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
@@ -972,7 +917,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		}
 
 		if v, ok := tfMap[names.AttrNetworkConfiguration]; ok {
-			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
+			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]any))
 		}
 
 		if v, ok := tfMap["platform_version"].(string); ok && v != "" {
@@ -984,7 +929,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		}
 
 		if v, ok := tfMap["ordered_placement_strategy"]; ok {
-			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
+			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]any))
 		}
 
 		if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
@@ -992,7 +937,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		}
 
 		if len(tags) > 0 {
-			ecsParameters.Tags = Tags(tags.IgnoreAWS())
+			ecsParameters.Tags = svcTags(tags.IgnoreAWS())
 		}
 
 		ecsParameters.EnableExecuteCommand = tfMap["enable_execute_command"].(bool)
@@ -1004,11 +949,11 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 	return ecsParameters
 }
 
-func expandRetryPolicyParameters(rp []interface{}) *types.RetryPolicy {
+func expandRetryPolicyParameters(rp []any) *types.RetryPolicy {
 	retryPolicy := &types.RetryPolicy{}
 
 	for _, v := range rp {
-		params := v.(map[string]interface{})
+		params := v.(map[string]any)
 
 		if val, ok := params["maximum_event_age_in_seconds"].(int); ok {
 			retryPolicy.MaximumEventAgeInSeconds = aws.Int32(int32(val))
@@ -1022,11 +967,11 @@ func expandRetryPolicyParameters(rp []interface{}) *types.RetryPolicy {
 	return retryPolicy
 }
 
-func expandDeadLetterParametersConfig(dlp []interface{}) *types.DeadLetterConfig {
+func expandDeadLetterParametersConfig(dlp []any) *types.DeadLetterConfig {
 	deadLetterConfig := &types.DeadLetterConfig{}
 
 	for _, v := range dlp {
-		params := v.(map[string]interface{})
+		params := v.(map[string]any)
 
 		if val, ok := params[names.AttrARN].(string); ok && val != "" {
 			deadLetterConfig.Arn = aws.String(val)
@@ -1036,12 +981,12 @@ func expandDeadLetterParametersConfig(dlp []interface{}) *types.DeadLetterConfig
 	return deadLetterConfig
 }
 
-func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.NetworkConfiguration {
+func expandTargetECSParametersNetworkConfiguration(nc []any) *types.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
 	awsVpcConfig := &types.AwsVpcConfiguration{}
-	raw := nc[0].(map[string]interface{})
+	raw := nc[0].(map[string]any)
 	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
@@ -1056,10 +1001,10 @@ func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.Netw
 	return &types.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandTargetBatchParameters(config []interface{}) *types.BatchParameters {
+func expandTargetBatchParameters(config []any) *types.BatchParameters {
 	batchParameters := &types.BatchParameters{}
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 		batchParameters.JobDefinition = aws.String(param["job_definition"].(string))
 		batchParameters.JobName = aws.String(param["job_name"].(string))
 		if v, ok := param["array_size"].(int); ok && v > 1 && v <= 10000 {
@@ -1077,10 +1022,10 @@ func expandTargetBatchParameters(config []interface{}) *types.BatchParameters {
 	return batchParameters
 }
 
-func expandTargetKinesisParameters(config []interface{}) *types.KinesisParameters {
+func expandTargetKinesisParameters(config []any) *types.KinesisParameters {
 	kinesisParameters := &types.KinesisParameters{}
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 		if v, ok := param["partition_key_path"].(string); ok && v != "" {
 			kinesisParameters.PartitionKeyPath = aws.String(v)
 		}
@@ -1089,10 +1034,10 @@ func expandTargetKinesisParameters(config []interface{}) *types.KinesisParameter
 	return kinesisParameters
 }
 
-func expandTargetSQSParameters(config []interface{}) *types.SqsParameters {
+func expandTargetSQSParameters(config []any) *types.SqsParameters {
 	sqsParameters := &types.SqsParameters{}
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 		if v, ok := param["message_group_id"].(string); ok && v != "" {
 			sqsParameters.MessageGroupId = aws.String(v)
 		}
@@ -1101,7 +1046,7 @@ func expandTargetSQSParameters(config []interface{}) *types.SqsParameters {
 	return sqsParameters
 }
 
-func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.SageMakerPipelineParameter {
+func expandTargetSageMakerPipelineParameterList(tfList []any) []types.SageMakerPipelineParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1113,7 +1058,7 @@ func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.Sa
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := types.SageMakerPipelineParameter{}
 
@@ -1131,10 +1076,10 @@ func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.Sa
 	return result
 }
 
-func expandTargetSageMakerPipelineParameters(config []interface{}) *types.SageMakerPipelineParameters {
+func expandTargetSageMakerPipelineParameters(config []any) *types.SageMakerPipelineParameters {
 	sageMakerPipelineParameters := &types.SageMakerPipelineParameters{}
 	for _, c := range config {
-		param := c.(map[string]interface{})
+		param := c.(map[string]any)
 		if v, ok := param["pipeline_parameter_list"].(*schema.Set); ok && v.Len() > 0 {
 			sageMakerPipelineParameters.PipelineParameterList = expandTargetSageMakerPipelineParameterList(v.List())
 		}
@@ -1143,36 +1088,36 @@ func expandTargetSageMakerPipelineParameters(config []interface{}) *types.SageMa
 	return sageMakerPipelineParameters
 }
 
-func expandTargetHTTPParameters(tfMap map[string]interface{}) *types.HttpParameters {
+func expandTargetHTTPParameters(tfMap map[string]any) *types.HttpParameters {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.HttpParameters{}
 
-	if v, ok := tfMap["header_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["header_parameters"].(map[string]any); ok && len(v) > 0 {
 		apiObject.HeaderParameters = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := tfMap["path_parameter_values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["path_parameter_values"].([]any); ok && len(v) > 0 {
 		apiObject.PathParameterValues = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap["query_string_parameters"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["query_string_parameters"].(map[string]any); ok && len(v) > 0 {
 		apiObject.QueryStringParameters = flex.ExpandStringValueMap(v)
 	}
 
 	return apiObject
 }
 
-func expandTransformerParameters(config []interface{}) *types.InputTransformer {
+func expandTransformerParameters(config []any) *types.InputTransformer {
 	transformerParameters := &types.InputTransformer{}
 
 	inputPathsMaps := map[string]string{}
 
 	for _, c := range config {
-		param := c.(map[string]interface{})
-		inputPaths := param["input_paths"].(map[string]interface{})
+		param := c.(map[string]any)
+		inputPaths := param["input_paths"].(map[string]any)
 
 		for k, v := range inputPaths {
 			inputPathsMaps[k] = v.(string)
@@ -1184,11 +1129,11 @@ func expandTransformerParameters(config []interface{}) *types.InputTransformer {
 	return transformerParameters
 }
 
-func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
+func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[string]any {
+	result := make([]map[string]any, 0)
 
 	for _, x := range runCommand.RunCommandTargets {
-		config := make(map[string]interface{})
+		config := make(map[string]any)
 
 		config[names.AttrKey] = aws.ToString(x.Key)
 		config[names.AttrValues] = x.Values
@@ -1199,8 +1144,8 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 	return result
 }
 
-func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsParameters) []map[string]any {
+	config := make(map[string]any)
 	if ecsParameters.Group != nil {
 		config["group"] = aws.ToString(ecsParameters.Group)
 	}
@@ -1226,20 +1171,20 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config[names.AttrTags] = keyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
 	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
 	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)
 	config["task_definition_arn"] = aws.ToString(ecsParameters.TaskDefinitionArn)
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetRedshiftParameters(redshiftParameters *types.RedshiftDataParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetRedshiftParameters(redshiftParameters *types.RedshiftDataParameters) []map[string]any {
+	config := make(map[string]any)
 
 	if redshiftParameters == nil {
-		return []map[string]interface{}{config}
+		return []map[string]any{config}
 	}
 
 	config[names.AttrDatabase] = aws.ToString(redshiftParameters.Database)
@@ -1249,25 +1194,25 @@ func flattenTargetRedshiftParameters(redshiftParameters *types.RedshiftDataParam
 	config["statement_name"] = aws.ToString(redshiftParameters.StatementName)
 	config["with_event"] = redshiftParameters.WithEvent
 
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfiguration) []interface{} {
+func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfiguration) []any {
 	if nc == nil {
 		return nil
 	}
 
-	result := make(map[string]interface{})
+	result := make(map[string]any)
 	result[names.AttrSecurityGroups] = nc.AwsvpcConfiguration.SecurityGroups
 	result[names.AttrSubnets] = nc.AwsvpcConfiguration.Subnets
 	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == types.AssignPublicIpEnabled
 
-	return []interface{}{result}
+	return []any{result}
 }
 
-func flattenTargetBatchParameters(batchParameters *types.BatchParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetBatchParameters(batchParameters *types.BatchParameters) []map[string]any {
+	config := make(map[string]any)
 	config["job_definition"] = aws.ToString(batchParameters.JobDefinition)
 	config["job_name"] = aws.ToString(batchParameters.JobName)
 	if batchParameters.ArrayProperties != nil {
@@ -1276,31 +1221,31 @@ func flattenTargetBatchParameters(batchParameters *types.BatchParameters) []map[
 	if batchParameters.RetryStrategy != nil {
 		config["job_attempts"] = batchParameters.RetryStrategy.Attempts
 	}
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetKinesisParameters(kinesisParameters *types.KinesisParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetKinesisParameters(kinesisParameters *types.KinesisParameters) []map[string]any {
+	config := make(map[string]any)
 	config["partition_key_path"] = aws.ToString(kinesisParameters.PartitionKeyPath)
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetSageMakerPipelineParameters(sageMakerParameters *types.SageMakerPipelineParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetSageMakerPipelineParameters(sageMakerParameters *types.SageMakerPipelineParameters) []map[string]any {
+	config := make(map[string]any)
 	config["pipeline_parameter_list"] = flattenTargetSageMakerPipelineParameter(sageMakerParameters.PipelineParameterList)
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParameter) []map[string]interface{} {
+func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParameter) []map[string]any {
 	if len(pcs) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, pc := range pcs {
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c[names.AttrName] = aws.ToString(pc.Name)
 		c[names.AttrValue] = aws.ToString(pc.Value)
 
@@ -1309,19 +1254,19 @@ func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParame
 	return results
 }
 
-func flattenTargetSQSParameters(sqsParameters *types.SqsParameters) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetSQSParameters(sqsParameters *types.SqsParameters) []map[string]any {
+	config := make(map[string]any)
 	config["message_group_id"] = aws.ToString(sqsParameters.MessageGroupId)
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetHTTPParameters(apiObject *types.HttpParameters) map[string]interface{} {
+func flattenTargetHTTPParameters(apiObject *types.HttpParameters) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.HeaderParameters; v != nil {
 		tfMap["header_parameters"] = v
@@ -1338,35 +1283,35 @@ func flattenTargetHTTPParameters(apiObject *types.HttpParameters) map[string]int
 	return tfMap
 }
 
-func flattenInputTransformer(inputTransformer *types.InputTransformer) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenInputTransformer(inputTransformer *types.InputTransformer) []map[string]any {
+	config := make(map[string]any)
 	config["input_template"] = aws.ToString(inputTransformer.InputTemplate)
 	config["input_paths"] = inputTransformer.InputPathsMap
 
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetRetryPolicy(rp *types.RetryPolicy) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetRetryPolicy(rp *types.RetryPolicy) []map[string]any {
+	config := make(map[string]any)
 
 	config["maximum_event_age_in_seconds"] = aws.ToInt32(rp.MaximumEventAgeInSeconds)
 	config["maximum_retry_attempts"] = aws.ToInt32(rp.MaximumRetryAttempts)
 
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func flattenTargetDeadLetterConfig(dlc *types.DeadLetterConfig) []map[string]interface{} {
-	config := make(map[string]interface{})
+func flattenTargetDeadLetterConfig(dlc *types.DeadLetterConfig) []map[string]any {
+	config := make(map[string]any)
 
 	config[names.AttrARN] = aws.ToString(dlc.Arn)
 
-	result := []map[string]interface{}{config}
+	result := []map[string]any{config}
 	return result
 }
 
-func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementConstraint {
+func expandTargetPlacementConstraints(tfList []any) []types.PlacementConstraint {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1378,7 +1323,7 @@ func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementCon
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := types.PlacementConstraint{}
 
@@ -1396,7 +1341,7 @@ func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementCon
 	return result
 }
 
-func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStrategy {
+func expandTargetPlacementStrategies(tfList []any) []types.PlacementStrategy {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1408,7 +1353,7 @@ func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStra
 			continue
 		}
 
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		apiObject := types.PlacementStrategy{}
 
@@ -1426,7 +1371,7 @@ func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStra
 	return result
 }
 
-func expandTargetCapacityProviderStrategy(tfList []interface{}) []types.CapacityProviderStrategyItem {
+func expandTargetCapacityProviderStrategy(tfList []any) []types.CapacityProviderStrategyItem {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1438,7 +1383,7 @@ func expandTargetCapacityProviderStrategy(tfList []interface{}) []types.Capacity
 			continue
 		}
 
-		cp := tfMapRaw.(map[string]interface{})
+		cp := tfMapRaw.(map[string]any)
 
 		apiObject := types.CapacityProviderStrategyItem{}
 
@@ -1460,13 +1405,13 @@ func expandTargetCapacityProviderStrategy(tfList []interface{}) []types.Capacity
 	return result
 }
 
-func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[string]interface{} {
+func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[string]any {
 	if len(pcs) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, pc := range pcs {
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c[names.AttrType] = pc.Type
 		if pc.Expression != nil {
 			c[names.AttrExpression] = aws.ToString(pc.Expression)
@@ -1477,13 +1422,13 @@ func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[st
 	return results
 }
 
-func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[string]interface{} {
+func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[string]any {
 	if len(pcs) == 0 {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, pc := range pcs {
-		c := make(map[string]interface{})
+		c := make(map[string]any)
 		c[names.AttrType] = pc.Type
 		if pc.Field != nil {
 			c[names.AttrField] = aws.ToString(pc.Field)
@@ -1494,13 +1439,13 @@ func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[strin
 	return results
 }
 
-func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyItem) []map[string]interface{} {
+func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyItem) []map[string]any {
 	if cps == nil {
 		return nil
 	}
-	results := make([]map[string]interface{}, 0)
+	results := make([]map[string]any, 0)
 	for _, cp := range cps {
-		s := make(map[string]interface{})
+		s := make(map[string]any)
 		s["capacity_provider"] = aws.ToString(cp.CapacityProvider)
 		s[names.AttrWeight] = cp.Weight
 		s["base"] = cp.Base
@@ -1509,22 +1454,94 @@ func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyI
 	return results
 }
 
-func flattenAppSyncParameters(apiObject *types.AppSyncParameters) []map[string]interface{} {
-	tfMap := make(map[string]interface{})
+func flattenAppSyncParameters(apiObject *types.AppSyncParameters) []map[string]any {
+	tfMap := make(map[string]any)
 	tfMap["graphql_operation"] = aws.ToString(apiObject.GraphQLOperation)
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func expandAppSyncParameters(tfList []interface{}) *types.AppSyncParameters {
+func expandAppSyncParameters(tfList []any) *types.AppSyncParameters {
 	apiObject := &types.AppSyncParameters{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		if v, ok := tfMap["graphql_operation"].(string); ok && v != "" {
 			apiObject.GraphQLOperation = aws.String(v)
 		}
 	}
 
 	return apiObject
+}
+
+// Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
+const (
+	targetResourceIDSeparator = "-"
+	targetImportIDSeparator   = "/"
+)
+
+func targetCreateResourceID(eventBusName, ruleName, targetID string) string {
+	var parts []string
+
+	if eventBusName == "" || eventBusName == DefaultEventBusName {
+		parts = []string{ruleName, targetID}
+	} else {
+		parts = []string{eventBusName, ruleName, targetID}
+	}
+
+	id := strings.Join(parts, targetResourceIDSeparator)
+
+	return id
+}
+
+func targetParseImportID(id string) (string, string, string, error) {
+	parts := strings.Split(id, targetImportIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return DefaultEventBusName, parts[0], parts[1], nil
+	}
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+	if len(parts) > 3 {
+		iTarget := strings.LastIndex(id, targetImportIDSeparator)
+		targetID := id[iTarget+1:]
+		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
+		eventBusName := id[:iRule]
+		ruleName := id[iRule+1 : iTarget]
+		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+			return eventBusName, ruleName, targetID, nil
+		}
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME%[2]sTARGETID or RULENAME%[2]sTARGETID", id, targetImportIDSeparator)
+}
+
+var _ inttypes.SDKv2ImportID = targetImportID{}
+
+type targetImportID struct{}
+
+func (targetImportID) Create(d *schema.ResourceData) string {
+	eventBusName := d.Get("event_bus_name").(string)
+	rule := d.Get(names.AttrRule).(string)
+	targetID := d.Get("target_id").(string)
+	return targetCreateResourceID(eventBusName, rule, targetID)
+}
+
+func (targetImportID) Parse(id string) (string, map[string]string, error) {
+	eventBusName, rule, targetID, err := targetParseImportID(id)
+	if err != nil {
+		return id, nil, err
+	}
+
+	results := map[string]string{
+		"event_bus_name": eventBusName,
+		names.AttrRule:   rule,
+		"target_id":      targetID,
+	}
+
+	return targetCreateResourceID(eventBusName, rule, targetID), results, nil
 }

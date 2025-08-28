@@ -25,15 +25,17 @@ import (
 
 // @SDKResource("aws_devicefarm_test_grid_project", name="Test Grid Project")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.TestGridProject")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,
 		ReadWithoutTimeout:   resourceTestGridProjectRead,
 		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
 		DeleteWithoutTimeout: resourceTestGridProjectDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -81,7 +83,7 @@ func resourceTestGridProject() *schema.Resource {
 	}
 }
 
-func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -95,7 +97,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
-		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
+		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]any))
 	}
 
 	output, err := conn.CreateTestGridProject(ctx, input)
@@ -113,7 +115,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -140,7 +142,7 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -167,7 +169,7 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -212,12 +214,12 @@ func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	return output.TestGridProject, nil
 }
 
-func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig {
+func expandTestGridProjectVPCConfig(l []any) *awstypes.TestGridVpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.TestGridVpcConfig{
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
@@ -228,16 +230,16 @@ func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig
 	return config
 }
 
-func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []interface{} {
+func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []any {
 	if conf == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrVPCID:            aws.ToString(conf.VpcId),
 		names.AttrSubnetIDs:        flex.FlattenStringValueSet(conf.SubnetIds),
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(conf.SecurityGroupIds),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

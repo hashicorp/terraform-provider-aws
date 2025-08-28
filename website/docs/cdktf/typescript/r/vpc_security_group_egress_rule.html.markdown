@@ -46,10 +46,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidrIpv4` - (Optional) The destination IPv4 CIDR range.
 * `cidrIpv6` - (Optional) The destination IPv6 CIDR range.
 * `description` - (Optional) The security group rule description.
@@ -60,6 +59,8 @@ This resource supports the following arguments:
 * `securityGroupId` - (Required) The ID of the security group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `toPort` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
+
+~> **Note** Although `cidrIpv4`, `cidrIpv6`, `prefixListId`, and `referencedSecurityGroupId` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `fromPort` and `toPort` arguments are required unless `ipProtocol` is set to `-1` or `icmpv6`.
 
 ## Attribute Reference
 
@@ -101,4 +102,4 @@ Using `terraform import`, import security group egress rules using the `security
 % terraform import aws_vpc_security_group_egress_rule.example sgr-02108b27edd666983
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cf9a4e466b446dd133f3e4195e1a5ced0a6edeb108853868245912f2a717b26a -->
+<!-- cache-key: cdktf-0.20.8 input-18eb6ec0cef7a67bfd23373c53fd4cb28b1e99517beaff6ca443c85986f81adf -->

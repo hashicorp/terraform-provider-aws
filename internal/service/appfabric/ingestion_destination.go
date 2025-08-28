@@ -56,7 +56,7 @@ func newIngestionDestinationResource(context.Context) (resource.ResourceWithConf
 }
 
 type ingestionDestinationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ingestionDestinationResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -411,7 +411,7 @@ func findIngestionDestinationByThreePartKey(ctx context.Context, conn *appfabric
 }
 
 func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findIngestionDestinationByThreePartKey(ctx, conn, appBundleARN, ingestionARN, arn)
 
 		if tfresource.NotFound(err) {
@@ -465,6 +465,7 @@ func waitIngestionDestinationDeleted(ctx context.Context, conn *appfabric.Client
 }
 
 type ingestionDestinationResourceModel struct {
+	framework.WithRegionModel
 	AppBundleARN             fwtypes.ARN                                                    `tfsdk:"app_bundle_arn"`
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	DestinationConfiguration fwtypes.ListNestedObjectValueOf[destinationConfigurationModel] `tfsdk:"destination_configuration"`

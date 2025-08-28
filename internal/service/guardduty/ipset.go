@@ -27,7 +27,9 @@ import (
 
 // @SDKResource("aws_guardduty_ipset", name="IP Set")
 // @Tags(identifierAttribute="arn")
-func ResourceIPSet() *schema.Resource {
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
@@ -72,7 +74,7 @@ func ResourceIPSet() *schema.Resource {
 	}
 }
 
-func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -104,12 +106,12 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): waiting for completion: %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", detectorID, *resp.IpSetId))
+	d.SetId(fmt.Sprintf("%s:%s", detectorID, aws.ToString(resp.IpSetId)))
 
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -152,7 +154,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -186,7 +188,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -227,7 +229,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, ipSetID, detectorID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		input := &guardduty.GetIPSetInput{
 			DetectorId: aws.String(detectorID),
 			IpSetId:    aws.String(ipSetID),

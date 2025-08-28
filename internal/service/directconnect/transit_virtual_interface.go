@@ -127,7 +127,7 @@ func resourceTransitVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -172,7 +172,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
@@ -214,7 +214,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
@@ -229,11 +229,11 @@ func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())

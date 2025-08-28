@@ -53,6 +53,7 @@ resource "aws_securityhub_automation_rule" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `actions` - (Required) A block that specifies one or more actions to update finding fields if a finding matches the conditions specified in `Criteria`. [Documented below](#actions).
 * `criteria` - (Required) A block that specifies a set of ASFF finding field attributes and corresponding expected values that Security Hub uses to filter findings. [Documented below](#criteria).
 * `description` - (Required) The description of the rule.

@@ -204,7 +204,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SupportUrl = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.CreateProduct(ctx, input)
 	}, "profile does not exist")
 
@@ -313,11 +313,11 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
-			input.AddTags = Tags(updatedTags)
+			input.AddTags = svcTags(updatedTags)
 		}
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParametersException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 		return conn.UpdateProduct(ctx, input)
 	}, "profile does not exist")
 

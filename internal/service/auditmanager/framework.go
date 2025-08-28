@@ -5,15 +5,12 @@ package auditmanager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,20 +31,17 @@ import (
 
 // @FrameworkResource("aws_auditmanager_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
-func newResourceFramework(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceFramework{}, nil
+func newFrameworkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &frameworkResource{}, nil
 }
 
-const (
-	ResNameFramework = "Framework"
-)
-
-type resourceFramework struct {
-	framework.ResourceWithConfigure
+type frameworkResource struct {
+	framework.ResourceWithModel[frameworkResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *frameworkResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
@@ -69,6 +65,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 		},
 		Blocks: map[string]schema.Block{
 			"control_sets": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[controlSetModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 				},
@@ -81,6 +78,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 					},
 					Blocks: map[string]schema.Block{
 						"controls": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[frameworkControlModel](ctx),
 							Validators: []validator.Set{
 								setvalidator.SizeAtLeast(1),
 							},
@@ -99,190 +97,154 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceFramework) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *frameworkResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data frameworkResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AuditManagerClient(ctx)
 
-	var plan resourceFrameworkData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input auditmanager.CreateAssessmentFrameworkInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var cs []frameworkControlSetsData
-	resp.Diagnostics.Append(plan.ControlSets.ElementsAs(ctx, &cs, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
-	csInput, d := expandFrameworkControlSetsCreate(ctx, cs)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.CreateAssessmentFramework(ctx, &input)
 
-	in := auditmanager.CreateAssessmentFrameworkInput{
-		Name:        plan.Name.ValueStringPointer(),
-		ControlSets: csInput,
-		Tags:        getTagsIn(ctx),
-	}
-
-	if !plan.ComplianceType.IsNull() {
-		in.ComplianceType = plan.ComplianceType.ValueStringPointer()
-	}
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
-	}
-
-	out, err := conn.CreateAssessmentFramework(ctx, &in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameFramework, plan.Name.String(), nil),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Framework == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionCreating, ResNameFramework, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Audit Manager Framework (%s)", name), err.Error())
+
 		return
 	}
 
-	state := plan
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.Framework)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// Set values for unknowns.
+	framework := output.Framework
+	data.ARN = fwflex.StringToFramework(ctx, framework.Arn)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, framework.ControlSets, &data.ControlSets)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.ID = fwflex.StringToFramework(ctx, framework.Id)
+	data.Type = fwflex.StringValueToFramework(ctx, framework.Type)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceFramework) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceFrameworkData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *frameworkResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data frameworkResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := FindFrameworkByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	output, err := findFrameworkByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.Diagnostics.AddWarning(
-			"AWS Resource Not Found During Refresh",
-			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
-		)
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionReading, ResNameFramework, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Audit Manager Framework (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceFramework) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var plan, state resourceFrameworkData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *frameworkResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old frameworkResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.ControlSets.Equal(state.ControlSets) ||
-		!plan.ComplianceType.Equal(state.ComplianceType) ||
-		!plan.Description.Equal(state.Description) {
-		var cs []frameworkControlSetsData
-		resp.Diagnostics.Append(plan.ControlSets.ElementsAs(ctx, &cs, false)...)
-		if resp.Diagnostics.HasError() {
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	if !new.ControlSets.Equal(old.ControlSets) ||
+		!new.ComplianceType.Equal(old.ComplianceType) ||
+		!new.Description.Equal(old.Description) ||
+		!new.Name.Equal(old.Name) {
+		var input auditmanager.UpdateAssessmentFrameworkInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		csInput, d := expandFrameworkControlSetsUpdate(ctx, cs)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		// Additional fields.
+		input.FrameworkId = fwflex.StringFromFramework(ctx, new.ID)
 
-		in := &auditmanager.UpdateAssessmentFrameworkInput{
-			ControlSets: csInput,
-			FrameworkId: plan.ID.ValueStringPointer(),
-			Name:        plan.Name.ValueStringPointer(),
-		}
+		_, err := conn.UpdateAssessmentFramework(ctx, &input)
 
-		if !plan.ComplianceType.IsNull() {
-			in.ComplianceType = plan.ComplianceType.ValueStringPointer()
-		}
-		if !plan.Description.IsNull() {
-			in.Description = plan.Description.ValueStringPointer()
-		}
-
-		out, err := conn.UpdateAssessmentFramework(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameFramework, plan.ID.String(), nil),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Audit Manager Framework (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
-		if out == nil || out.Framework == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AuditManager, create.ErrActionUpdating, ResNameFramework, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-		state.refreshFromOutput(ctx, out.Framework)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient(ctx)
-
-	var state resourceFrameworkData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *frameworkResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data frameworkResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := conn.DeleteAssessmentFramework(ctx, &auditmanager.DeleteAssessmentFrameworkInput{
-		FrameworkId: state.ID.ValueStringPointer(),
-	})
+	conn := r.Meta().AuditManagerClient(ctx)
+
+	input := auditmanager.DeleteAssessmentFrameworkInput{
+		FrameworkId: fwflex.StringFromFramework(ctx, data.ID),
+	}
+	_, err := conn.DeleteAssessmentFramework(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AuditManager, create.ErrActionDeleting, ResNameFramework, state.ID.String(), nil),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Audit Manager Framework (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 }
 
-func (r *resourceFramework) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan resourceFrameworkData
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-		if resp.Diagnostics.HasError() {
+func (r *frameworkResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		var data frameworkResourceModel
+		response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		var planCs []frameworkControlSetsData
-		resp.Diagnostics.Append(plan.ControlSets.ElementsAs(ctx, &planCs, false)...)
-		if resp.Diagnostics.HasError() {
+		controlSets, diags := data.ControlSets.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -290,194 +252,57 @@ func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyP
 		//
 		// Attribute level plan modifiers are applied before resource modifiers, so ID's
 		// previously in state should never be unknown.
-		for _, item := range planCs {
-			if item.ID.IsUnknown() {
-				resp.RequiresReplace = []path.Path{path.Root("control_sets")}
+		for _, controlSet := range controlSets {
+			if controlSet.ID.IsUnknown() {
+				response.RequiresReplace = []path.Path{path.Root("control_sets")}
 			}
 		}
 	}
 }
 
-func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {
-	in := &auditmanager.GetAssessmentFrameworkInput{
+func findFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.Framework, error) {
+	input := auditmanager.GetAssessmentFrameworkInput{
 		FrameworkId: aws.String(id),
 	}
-	out, err := conn.GetAssessmentFramework(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetAssessmentFramework(ctx, &input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.Framework == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.Framework == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.Framework, nil
+	return output.Framework, nil
 }
 
-var (
-	frameworkControlSetsAttrTypes = map[string]attr.Type{
-		"controls":     types.SetType{ElemType: types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}},
-		names.AttrID:   types.StringType,
-		names.AttrName: types.StringType,
-	}
-
-	frameworkControlSetsControlsAttrTypes = map[string]attr.Type{
-		names.AttrID: types.StringType,
-	}
-)
-
-type resourceFrameworkData struct {
-	ARN            types.String `tfsdk:"arn"`
-	ComplianceType types.String `tfsdk:"compliance_type"`
-	ControlSets    types.Set    `tfsdk:"control_sets"`
-	Description    types.String `tfsdk:"description"`
-	FrameworkType  types.String `tfsdk:"framework_type"`
-	ID             types.String `tfsdk:"id"`
-	Name           types.String `tfsdk:"name"`
-	Tags           tftags.Map   `tfsdk:"tags"`
-	TagsAll        tftags.Map   `tfsdk:"tags_all"`
+type frameworkResourceModel struct {
+	framework.WithRegionModel
+	ARN            types.String                                    `tfsdk:"arn"`
+	ComplianceType types.String                                    `tfsdk:"compliance_type"`
+	ControlSets    fwtypes.SetNestedObjectValueOf[controlSetModel] `tfsdk:"control_sets"`
+	Description    types.String                                    `tfsdk:"description"`
+	ID             types.String                                    `tfsdk:"id"`
+	Name           types.String                                    `tfsdk:"name"`
+	Tags           tftags.Map                                      `tfsdk:"tags"`
+	TagsAll        tftags.Map                                      `tfsdk:"tags_all"`
+	Type           types.String                                    `tfsdk:"framework_type"`
 }
 
-type frameworkControlSetsData struct {
-	Controls types.Set    `tfsdk:"controls"`
-	ID       types.String `tfsdk:"id"`
-	Name     types.String `tfsdk:"name"`
+type controlSetModel struct {
+	Controls fwtypes.SetNestedObjectValueOf[frameworkControlModel] `tfsdk:"controls"`
+	ID       types.String                                          `tfsdk:"id"`
+	Name     types.String                                          `tfsdk:"name"`
 }
 
-type frameworkControlSetsControlsData struct {
+type frameworkControlModel struct {
 	ID types.String `tfsdk:"id"`
-}
-
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceFrameworkData) refreshFromOutput(ctx context.Context, out *awstypes.Framework) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	rd.ID = types.StringValue(aws.ToString(out.Id))
-	rd.Name = types.StringValue(aws.ToString(out.Name))
-	cs, d := flattenFrameworkControlSets(ctx, out.ControlSets)
-	diags.Append(d...)
-	rd.ControlSets = cs
-
-	rd.ComplianceType = flex.StringToFramework(ctx, out.ComplianceType)
-	rd.Description = flex.StringToFramework(ctx, out.Description)
-	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
-	rd.ARN = flex.StringToFramework(ctx, out.Arn)
-
-	setTagsOut(ctx, out.Tags)
-
-	return diags
-}
-
-func expandFrameworkControlSetsCreate(ctx context.Context, tfList []frameworkControlSetsData) ([]awstypes.CreateAssessmentFrameworkControlSet, diag.Diagnostics) {
-	var ccs []awstypes.CreateAssessmentFrameworkControlSet
-	var diags diag.Diagnostics
-
-	for _, item := range tfList {
-		var controls []frameworkControlSetsControlsData
-		diags.Append(item.Controls.ElementsAs(ctx, &controls, false)...)
-
-		new := awstypes.CreateAssessmentFrameworkControlSet{
-			Name:     item.Name.ValueStringPointer(),
-			Controls: expandFrameworkControlSetsControls(controls),
-		}
-
-		ccs = append(ccs, new)
-	}
-	return ccs, diags
-}
-
-func expandFrameworkControlSetsUpdate(ctx context.Context, tfList []frameworkControlSetsData) ([]awstypes.UpdateAssessmentFrameworkControlSet, diag.Diagnostics) {
-	var ucs []awstypes.UpdateAssessmentFrameworkControlSet
-	var diags diag.Diagnostics
-
-	for _, item := range tfList {
-		var controls []frameworkControlSetsControlsData
-		diags.Append(item.Controls.ElementsAs(ctx, &controls, false)...)
-
-		new := awstypes.UpdateAssessmentFrameworkControlSet{
-			Controls: expandFrameworkControlSetsControls(controls),
-			Id:       item.ID.ValueStringPointer(),
-			Name:     item.Name.ValueStringPointer(),
-		}
-
-		ucs = append(ucs, new)
-	}
-	return ucs, diags
-}
-
-func expandFrameworkControlSetsControls(tfList []frameworkControlSetsControlsData) []awstypes.CreateAssessmentFrameworkControl {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var controlsInput []awstypes.CreateAssessmentFrameworkControl
-	for _, item := range tfList {
-		new := awstypes.CreateAssessmentFrameworkControl{
-			Id: item.ID.ValueStringPointer(),
-		}
-		controlsInput = append(controlsInput, new)
-	}
-
-	return controlsInput
-}
-
-func flattenFrameworkControlSets(ctx context.Context, apiObject []awstypes.ControlSet) (types.Set, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: frameworkControlSetsAttrTypes}
-
-	elems := []attr.Value{}
-	for _, item := range apiObject {
-		controls, d := flattenFrameworkControlSetsControls(ctx, item.Controls)
-		diags.Append(d...)
-
-		obj := map[string]attr.Value{
-			"controls":     controls,
-			names.AttrID:   flex.StringToFramework(ctx, item.Id),
-			names.AttrName: flex.StringToFramework(ctx, item.Name),
-		}
-		objVal, d := types.ObjectValue(frameworkControlSetsAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
-}
-
-func flattenFrameworkControlSetsControls(ctx context.Context, apiObject []awstypes.Control) (types.Set, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}
-
-	if apiObject == nil {
-		return types.SetValueMust(elemType, []attr.Value{}), diags
-	}
-
-	elems := []attr.Value{}
-	for _, item := range apiObject {
-		obj := map[string]attr.Value{
-			names.AttrID: flex.StringToFramework(ctx, item.Id),
-		}
-		objVal, d := types.ObjectValue(frameworkControlSetsControlsAttrTypes, obj)
-		diags.Append(d...)
-
-		elems = append(elems, objVal)
-	}
-	setVal, d := types.SetValue(elemType, elems)
-	diags.Append(d...)
-
-	return setVal, diags
 }

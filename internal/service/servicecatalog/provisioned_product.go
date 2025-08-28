@@ -478,7 +478,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	setTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
+	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
 
 	return diags
 }

@@ -75,30 +75,6 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
-
-		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
-
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
-		}
-
-		return err
-	}
-}
-
 func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
@@ -108,12 +84,7 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
-			}
-
-			err = tfappstream.FindFleetStackAssociation(ctx, conn, fleetName, stackName)
+			err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -123,10 +94,25 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 				return err
 			}
 
-			return fmt.Errorf("AppStream Fleet Stack Association %q still exists", rs.Primary.ID)
+			return fmt.Errorf("AppStream Fleet Stack Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckFleetStackAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+
+		err := tfappstream.FindFleetStackAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["fleet_name"], rs.Primary.Attributes["stack_name"])
+
+		return err
 	}
 }
 

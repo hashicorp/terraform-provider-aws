@@ -123,11 +123,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `aws_account_id` - (Optional, Forces new resource) AWS account ID.
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `definition` - (Optional) A detailed analysis definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
 * `parameters` - (Optional) The parameters for the creation of the analysis, which you want to use to override the default settings. An analysis can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).
 * `permissions` - (Optional) A set of resource permissions on the analysis. Maximum of 64 items. See [permissions](#permissions).
 * `recovery_window_in_days` - (Optional) A value that specifies the number of days that Amazon QuickSight waits before it deletes the analysis. Use `0` to force deletion without recovery. Minimum value of `7`. Maximum value of `30`. Default to `30`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_entity` - (Optional) The entity that you are using as a source when you create the analysis (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `theme_arn` - (Optional) The Amazon Resource Name (ARN) of the theme that is being used for this analysis. The theme ARN must exist in the same AWS account where you create the analysis.
@@ -212,4 +213,4 @@ Using `terraform import`, import a QuickSight Analysis using the AWS account ID 
 % terraform import aws_quicksight_analysis.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-da63973c1a54eccd64c52cb6d2329e99e5d72cb15c08eeb0242091234a75ffbf -->
+<!-- cache-key: cdktf-0.20.8 input-f3fd873d28e3f177d81528809d7d0da84b1568242201000ad48650a48e5f9fbe -->

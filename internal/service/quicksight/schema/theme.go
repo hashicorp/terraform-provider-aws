@@ -161,7 +161,7 @@ func ThemeConfigurationSchema() *schema.Schema {
 }
 
 func ThemeConfigurationDataSourceSchema() *schema.Schema {
-	return sdkv2.DataSourcePropertyFromResourceProperty(ThemeConfigurationSchema())
+	return sdkv2.ComputedOnlyFromSchema(ThemeConfigurationSchema())
 }
 
 func ExpandThemeConfiguration(tfList []any) *awstypes.ThemeConfiguration {

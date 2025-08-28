@@ -61,7 +61,7 @@ func resourceEnvironmentMembership() *schema.Resource {
 	}
 }
 
-func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -85,7 +85,7 @@ func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEnvironmentMembershipRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -114,7 +114,7 @@ func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
@@ -138,7 +138,7 @@ func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEnvironmentMembershipRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 

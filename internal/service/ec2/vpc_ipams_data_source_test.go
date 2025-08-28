@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCIPAMsDataSource_basic(t *testing.T) {
+func TestAccIPAMsDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipams.test"
@@ -24,10 +24,9 @@ func TestAccVPCIPAMsDataSource_basic(t *testing.T) {
 
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPAMsDataSourceConfig_basic(),
+				Config: testAccIPAMsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipams.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ipams.0.id", resourceName, names.AttrID),
@@ -39,7 +38,7 @@ func TestAccVPCIPAMsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIPAMsDataSource_filter(t *testing.T) {
+func TestAccIPAMsDataSource_filter(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceNameAdvanced := "data.aws_vpc_ipams.advanced"
@@ -56,7 +55,7 @@ func TestAccVPCIPAMsDataSource_filter(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPAMsDataSourceConfig_filter(),
+				Config: testAccIPAMsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceNameAdvanced, "ipams.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceNameAdvanced, "ipams.0.id", resourceName, names.AttrID),
@@ -68,7 +67,7 @@ func TestAccVPCIPAMsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccVPCIPAMsDataSourceConfig_basic() string {
+func testAccIPAMsDataSourceConfig_basic() string {
 	return acctest.ConfigCompose(testAccIPAMConfig_tags("Some", "Value"), `
 data "aws_vpc_ipams" "test" {
   ipam_ids = [aws_vpc_ipam.test.id]
@@ -76,7 +75,7 @@ data "aws_vpc_ipams" "test" {
 `)
 }
 
-func testAccVPCIPAMsDataSourceConfig_filter() string {
+func testAccIPAMsDataSourceConfig_filter() string {
 	return acctest.ConfigCompose(testAccIPAMConfig_tags("Some", "Value"), `
 data "aws_vpc_ipams" "advanced" {
   ipam_ids = [aws_vpc_ipam.test.id]

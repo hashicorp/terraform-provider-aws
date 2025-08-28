@@ -37,7 +37,7 @@ func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id
 }
 
 func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findOperationDetailByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

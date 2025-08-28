@@ -20,19 +20,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_eks_cluster_versions", name="Cluster Versions")
-func newDataSourceClusterVersions(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceClusterVersions{}, nil
+func newClusterVersionsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &clusterVersionsDataSource{}, nil
 }
 
 const (
 	DSNameClusterVersions = "Cluster Versions Data Source"
 )
 
-type dataSourceClusterVersions struct {
-	framework.DataSourceWithConfigure
+type clusterVersionsDataSource struct {
+	framework.DataSourceWithModel[clusterVersionsDataSourceModel]
 }
 
-func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *clusterVersionsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cluster_type": schema.StringAttribute{
@@ -57,10 +57,10 @@ func (d *dataSourceClusterVersions) Schema(ctx context.Context, req datasource.S
 	}
 }
 
-func (d *dataSourceClusterVersions) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *clusterVersionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EKSClient(ctx)
 
-	var data dataSourceClusterVersionsModel
+	var data clusterVersionsDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -105,7 +105,8 @@ func findClusterVersions(ctx context.Context, conn *eks.Client, input *eks.Descr
 	return out, nil
 }
 
-type dataSourceClusterVersionsModel struct {
+type clusterVersionsDataSourceModel struct {
+	framework.WithRegionModel
 	ClusterType         types.String                                                    `tfsdk:"cluster_type"`
 	ClusterVersions     fwtypes.ListNestedObjectValueOf[customDataSourceClusterVersion] `tfsdk:"cluster_versions"`
 	ClusterVersionsOnly fwtypes.ListValueOf[types.String]                               `tfsdk:"cluster_versions_only"`

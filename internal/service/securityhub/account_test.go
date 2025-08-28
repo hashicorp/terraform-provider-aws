@@ -10,7 +10,11 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
@@ -163,11 +167,6 @@ func testAccAccount_migrateV0(t *testing.T) {
 func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_account.test"
-	controlFindingGeneratorExpectedValue := "SECURITY_CONTROL"
-	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
-		controlFindingGeneratorExpectedValue = ""
-	}
-	expectNonEmptyPlan := acctest.Partition() == endpoints.AwsUsGovPartitionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
@@ -184,16 +183,35 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorExpectedValue),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
-				ExpectNonEmptyPlan: expectNonEmptyPlan,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("auto_enable_controls"), knownvalue.Bool(true)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("control_finding_generator"), knownvalue.StringExact("SECURITY_CONTROL")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enable_default_standards"), knownvalue.Bool(true)),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccAccountConfig_basic,
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

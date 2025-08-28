@@ -145,7 +145,7 @@ func resourceEventDestination() *schema.Resource {
 	}
 }
 
-func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -165,16 +165,16 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if v, ok := d.GetOk("kinesis_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("kinesis_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input.EventDestination.KinesisFirehoseDestination = &awstypes.KinesisFirehoseDestination{
 			DeliveryStreamARN: aws.String(tfMap[names.AttrStreamARN].(string)),
 			IAMRoleARN:        aws.String(tfMap[names.AttrRoleARN].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("sns_destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("sns_destination"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 		input.EventDestination.SNSDestination = &awstypes.SNSDestination{
 			TopicARN: aws.String(tfMap[names.AttrTopicARN].(string)),
 		}
@@ -191,7 +191,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceEventDestinationRead(ctx, d, meta)...)
 }
 
-func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -235,7 +235,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -256,7 +256,7 @@ func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceEventDestinationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'configuration-set-name/event-destination-name'", d.Id())
@@ -302,11 +302,11 @@ func findEventDestinations(ctx context.Context, conn *ses.Client, input *ses.Des
 	return tfslices.Filter(output.EventDestinations, tfslices.PredicateValue(filter)), nil
 }
 
-func expandCloudWatchDimensionConfigurations(tfList []interface{}) []awstypes.CloudWatchDimensionConfiguration {
+func expandCloudWatchDimensionConfigurations(tfList []any) []awstypes.CloudWatchDimensionConfiguration {
 	apiObjects := make([]awstypes.CloudWatchDimensionConfiguration, 0)
 
 	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.CloudWatchDimensionConfiguration{
 			DefaultDimensionValue: aws.String(tfMap[names.AttrDefaultValue].(string)),
 			DimensionName:         aws.String(tfMap["dimension_name"].(string)),
@@ -318,15 +318,15 @@ func expandCloudWatchDimensionConfigurations(tfList []interface{}) []awstypes.Cl
 	return apiObjects
 }
 
-func flattenCloudWatchDestination(apiObject *awstypes.CloudWatchDestination) []interface{} {
+func flattenCloudWatchDestination(apiObject *awstypes.CloudWatchDestination) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := []interface{}{}
+	tfList := []any{}
 
 	for _, apiObject := range apiObject.DimensionConfigurations {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrDefaultValue: aws.ToString(apiObject.DefaultDimensionValue),
 			"dimension_name":       aws.ToString(apiObject.DimensionName),
 			"value_source":         apiObject.DimensionValueSource,
@@ -338,27 +338,27 @@ func flattenCloudWatchDestination(apiObject *awstypes.CloudWatchDestination) []i
 	return tfList
 }
 
-func flattenKinesisFirehoseDestination(apiObject *awstypes.KinesisFirehoseDestination) []interface{} {
+func flattenKinesisFirehoseDestination(apiObject *awstypes.KinesisFirehoseDestination) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrRoleARN:   aws.ToString(apiObject.IAMRoleARN),
 		names.AttrStreamARN: aws.ToString(apiObject.DeliveryStreamARN),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSNSDestination(apiObject *awstypes.SNSDestination) []interface{} {
+func flattenSNSDestination(apiObject *awstypes.SNSDestination) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrTopicARN: aws.ToString(apiObject.TopicARN),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

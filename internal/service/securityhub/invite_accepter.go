@@ -45,7 +45,7 @@ func resourceInviteAccepter() *schema.Resource {
 	}
 }
 
-func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -75,7 +75,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
@@ -97,7 +97,7 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 

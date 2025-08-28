@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenAddress(apiObject *types.Address) map[string]interface{} {
+func flattenAddress(apiObject *types.Address) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Country; v != nil {
 		tfMap["country"] = aws.ToString(v)
@@ -50,7 +50,7 @@ func flattenAddress(apiObject *types.Address) map[string]interface{} {
 	return tfMap
 }
 
-func expandAddress(tfMap map[string]interface{}) *types.Address {
+func expandAddress(tfMap map[string]any) *types.Address {
 	if tfMap == nil {
 		return nil
 	}
@@ -90,12 +90,12 @@ func expandAddress(tfMap map[string]interface{}) *types.Address {
 	return apiObject
 }
 
-func flattenAddresses(apiObjects []types.Address) []interface{} {
+func flattenAddresses(apiObjects []types.Address) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenAddress(&apiObject))
@@ -104,11 +104,11 @@ func flattenAddresses(apiObjects []types.Address) []interface{} {
 	return tfList
 }
 
-func expandAddresses(tfList []interface{}) []types.Address {
+func expandAddresses(tfList []any) []types.Address {
 	apiObjects := make([]types.Address, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -125,30 +125,30 @@ func expandAddresses(tfList []interface{}) []types.Address {
 	return apiObjects
 }
 
-func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIdentifier {
+func expandAlternateIdentifier(tfMap map[string]any) types.AlternateIdentifier {
 	if tfMap == nil {
 		return nil
 	}
 
-	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]any)) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
-			Value: *expandExternalID(v.([]interface{})[0].(map[string]interface{})),
+			Value: *expandExternalID(v.([]any)[0].(map[string]any)),
 		}
-	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]interface{})) > 0 {
+	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]any)) > 0 {
 		return &types.AlternateIdentifierMemberUniqueAttribute{
-			Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
+			Value: *expandUniqueAttribute(v.([]any)[0].(map[string]any)),
 		}
 	}
 
 	return nil
 }
 
-func flattenEmail(apiObject *types.Email) map[string]interface{} {
+func flattenEmail(apiObject *types.Email) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["primary"] = apiObject.Primary
 
@@ -163,7 +163,7 @@ func flattenEmail(apiObject *types.Email) map[string]interface{} {
 	return tfMap
 }
 
-func expandEmail(tfMap map[string]interface{}) *types.Email {
+func expandEmail(tfMap map[string]any) *types.Email {
 	if tfMap == nil {
 		return nil
 	}
@@ -183,12 +183,12 @@ func expandEmail(tfMap map[string]interface{}) *types.Email {
 	return apiObject
 }
 
-func flattenEmails(apiObjects []types.Email) []interface{} {
+func flattenEmails(apiObjects []types.Email) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenEmail(&apiObject))
@@ -197,11 +197,11 @@ func flattenEmails(apiObjects []types.Email) []interface{} {
 	return tfList
 }
 
-func expandEmails(tfList []interface{}) []types.Email {
+func expandEmails(tfList []any) []types.Email {
 	apiObjects := make([]types.Email, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -218,7 +218,7 @@ func expandEmails(tfList []interface{}) []types.Email {
 	return apiObjects
 }
 
-func expandExternalID(tfMap map[string]interface{}) *types.ExternalId {
+func expandExternalID(tfMap map[string]any) *types.ExternalId {
 	if tfMap == nil {
 		return nil
 	}
@@ -236,12 +236,12 @@ func expandExternalID(tfMap map[string]interface{}) *types.ExternalId {
 	return apiObject
 }
 
-func flattenExternalID(apiObject *types.ExternalId) map[string]interface{} {
+func flattenExternalID(apiObject *types.ExternalId) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
 		tfMap[names.AttrID] = aws.ToString(v)
@@ -254,12 +254,12 @@ func flattenExternalID(apiObject *types.ExternalId) map[string]interface{} {
 	return tfMap
 }
 
-func flattenExternalIDs(apiObjects []types.ExternalId) []interface{} {
+func flattenExternalIDs(apiObjects []types.ExternalId) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenExternalID(&apiObject))
@@ -268,12 +268,12 @@ func flattenExternalIDs(apiObjects []types.ExternalId) []interface{} {
 	return tfList
 }
 
-func flattenName(apiObject *types.Name) map[string]interface{} {
+func flattenName(apiObject *types.Name) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FamilyName; v != nil {
 		tfMap["family_name"] = aws.ToString(v)
@@ -302,7 +302,7 @@ func flattenName(apiObject *types.Name) map[string]interface{} {
 	return tfMap
 }
 
-func expandName(tfMap map[string]interface{}) *types.Name {
+func expandName(tfMap map[string]any) *types.Name {
 	if tfMap == nil {
 		return nil
 	}
@@ -336,12 +336,12 @@ func expandName(tfMap map[string]interface{}) *types.Name {
 	return apiObject
 }
 
-func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
+func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["primary"] = apiObject.Primary
 
@@ -356,7 +356,7 @@ func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
 	return tfMap
 }
 
-func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
+func expandPhoneNumber(tfMap map[string]any) *types.PhoneNumber {
 	if tfMap == nil {
 		return nil
 	}
@@ -376,12 +376,12 @@ func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
 	return apiObject
 }
 
-func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
+func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPhoneNumber(&apiObject))
@@ -390,11 +390,11 @@ func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
 	return tfList
 }
 
-func expandPhoneNumbers(tfList []interface{}) []types.PhoneNumber {
+func expandPhoneNumbers(tfList []any) []types.PhoneNumber {
 	apiObjects := make([]types.PhoneNumber, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -411,7 +411,7 @@ func expandPhoneNumbers(tfList []interface{}) []types.PhoneNumber {
 	return apiObjects
 }
 
-func expandUniqueAttribute(tfMap map[string]interface{}) *types.UniqueAttribute {
+func expandUniqueAttribute(tfMap map[string]any) *types.UniqueAttribute {
 	if tfMap == nil {
 		return nil
 	}

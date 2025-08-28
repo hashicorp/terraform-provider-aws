@@ -23,25 +23,26 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_group_policies_exclusive", name="Group Policies Exclusive")
-func newResourceGroupPoliciesExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceGroupPoliciesExclusive{}, nil
+func newGroupPoliciesExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &groupPoliciesExclusiveResource{}, nil
 }
 
 const (
 	ResNameGroupPoliciesExclusive = "Group Policies Exclusive"
 )
 
-type resourceGroupPoliciesExclusive struct {
-	framework.ResourceWithConfigure
+type groupPoliciesExclusiveResource struct {
+	framework.ResourceWithModel[groupPoliciesExclusiveResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceGroupPoliciesExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *groupPoliciesExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrGroupName: schema.StringAttribute{
@@ -51,6 +52,7 @@ func (r *resourceGroupPoliciesExclusive) Schema(ctx context.Context, req resourc
 				},
 			},
 			"policy_names": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
@@ -61,8 +63,8 @@ func (r *resourceGroupPoliciesExclusive) Schema(ctx context.Context, req resourc
 	}
 }
 
-func (r *resourceGroupPoliciesExclusive) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceGroupPoliciesExclusiveData
+func (r *groupPoliciesExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan groupPoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,10 +88,10 @@ func (r *resourceGroupPoliciesExclusive) Create(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceGroupPoliciesExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *groupPoliciesExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
-	var state resourceGroupPoliciesExclusiveData
+	var state groupPoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -108,12 +110,12 @@ func (r *resourceGroupPoliciesExclusive) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.PolicyNames = flex.FlattenFrameworkStringValueSetLegacy(ctx, out)
+	state.PolicyNames = flex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGroupPoliciesExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceGroupPoliciesExclusiveData
+func (r *groupPoliciesExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state groupPoliciesExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -146,7 +148,7 @@ func (r *resourceGroupPoliciesExclusive) Update(ctx context.Context, req resourc
 // Inline policies defined on this resource but not attached to the group will
 // be added. Policies attached to the group but not configured on this resource
 // will be removed.
-func (r *resourceGroupPoliciesExclusive) syncAttachments(ctx context.Context, groupName string, want []string) error {
+func (r *groupPoliciesExclusiveResource) syncAttachments(ctx context.Context, groupName string, want []string) error {
 	conn := r.Meta().IAMClient(ctx)
 
 	have, err := findGroupPoliciesByName(ctx, conn, groupName)
@@ -183,7 +185,7 @@ func (r *resourceGroupPoliciesExclusive) syncAttachments(ctx context.Context, gr
 	return nil
 }
 
-func (r *resourceGroupPoliciesExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *groupPoliciesExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrGroupName), req, resp)
 }
 
@@ -212,7 +214,7 @@ func findGroupPoliciesByName(ctx context.Context, conn *iam.Client, groupName st
 	return policyNames, nil
 }
 
-type resourceGroupPoliciesExclusiveData struct {
-	GroupName   types.String `tfsdk:"group_name"`
-	PolicyNames types.Set    `tfsdk:"policy_names"`
+type groupPoliciesExclusiveResourceModel struct {
+	GroupName   types.String        `tfsdk:"group_name"`
+	PolicyNames fwtypes.SetOfString `tfsdk:"policy_names"`
 }

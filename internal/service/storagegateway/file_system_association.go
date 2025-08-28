@@ -111,7 +111,7 @@ func resourceFileSystemAssociation() *schema.Resource {
 	}
 }
 
-func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -130,7 +130,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]any))
 	}
 
 	output, err := conn.AssociateFileSystem(ctx, input)
@@ -148,7 +148,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -177,7 +177,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -190,7 +190,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]any))
 		}
 
 		_, err := conn.UpdateFileSystemAssociation(ctx, input)
@@ -207,7 +207,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -271,7 +271,7 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 }
 
 func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findFileSystemAssociationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -331,12 +331,12 @@ func fileSystemAssociationStatusDetailError(v awstypes.FileSystemAssociationStat
 	return errors.New(aws.ToString(v.ErrorCode))
 }
 
-func expandFileSystemAssociationCacheAttributes(tfList []interface{}) *awstypes.CacheAttributes {
+func expandFileSystemAssociationCacheAttributes(tfList []any) *awstypes.CacheAttributes {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.CacheAttributes{
 		CacheStaleTimeoutInSeconds: aws.Int32(int32(tfMap["cache_stale_timeout_in_seconds"].(int))),
@@ -345,14 +345,14 @@ func expandFileSystemAssociationCacheAttributes(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenFileSystemAssociationCacheAttributes(apiObject *awstypes.CacheAttributes) []interface{} {
+func flattenFileSystemAssociationCacheAttributes(apiObject *awstypes.CacheAttributes) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cache_stale_timeout_in_seconds": aws.ToInt32(apiObject.CacheStaleTimeoutInSeconds),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

@@ -83,7 +83,7 @@ func resourcePackage() *schema.Resource {
 	}
 }
 
-func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -95,7 +95,7 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("package_source"); ok {
-		input.PackageSource = expandPackageSource(v.([]interface{})[0].(map[string]interface{}))
+		input.PackageSource = expandPackageSource(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreatePackage(ctx, input)
@@ -109,7 +109,7 @@ func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourcePackageRead(ctx, d, meta)...)
 }
 
-func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -134,14 +134,14 @@ func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	input := &opensearch.UpdatePackageInput{
 		PackageID:          aws.String(d.Id()),
 		PackageDescription: aws.String(d.Get("package_description").(string)),
-		PackageSource:      expandPackageSource(d.Get("package_source").([]interface{})[0].(map[string]interface{})),
+		PackageSource:      expandPackageSource(d.Get("package_source").([]any)[0].(map[string]any)),
 	}
 
 	_, err := conn.UpdatePackage(ctx, input)
@@ -153,7 +153,7 @@ func resourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourcePackageRead(ctx, d, meta)...)
 }
 
-func resourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -220,13 +220,13 @@ func findPackages(ctx context.Context, conn *opensearch.Client, input *opensearc
 	return output, nil
 }
 
-func expandPackageSource(v interface{}) *awstypes.PackageSource {
+func expandPackageSource(v any) *awstypes.PackageSource {
 	if v == nil {
 		return nil
 	}
 
 	return &awstypes.PackageSource{
-		S3BucketName: aws.String(v.(map[string]interface{})[names.AttrS3BucketName].(string)),
-		S3Key:        aws.String(v.(map[string]interface{})["s3_key"].(string)),
+		S3BucketName: aws.String(v.(map[string]any)[names.AttrS3BucketName].(string)),
+		S3Key:        aws.String(v.(map[string]any)["s3_key"].(string)),
 	}
 }

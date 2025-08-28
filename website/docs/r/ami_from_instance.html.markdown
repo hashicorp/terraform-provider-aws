@@ -39,6 +39,7 @@ resource "aws_ami_from_instance" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping

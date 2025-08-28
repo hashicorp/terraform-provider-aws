@@ -96,7 +96,7 @@ func resourcePrimaryContact() *schema.Resource {
 	}
 }
 
-func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
@@ -156,7 +156,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourcePrimaryContactRead(ctx, d, meta)...)
 }
 
-func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)

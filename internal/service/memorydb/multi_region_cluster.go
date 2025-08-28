@@ -50,7 +50,7 @@ const (
 )
 
 type multiRegionClusterResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[multiRegionClusterResourceModel]
 	framework.WithTimeouts
 }
 
@@ -420,6 +420,7 @@ func (r *multiRegionClusterResource) ImportState(ctx context.Context, request re
 }
 
 type multiRegionClusterResourceModel struct {
+	framework.WithRegionModel
 	ARN                           types.String   `tfsdk:"arn"`
 	Description                   types.String   `tfsdk:"description"`
 	Engine                        types.String   `tfsdk:"engine"`
@@ -490,7 +491,7 @@ func updateMultiRegionClusterAndWaitAvailable(ctx context.Context, conn *memoryd
 }
 
 func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findMultiRegionClusterByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {

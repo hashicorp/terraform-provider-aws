@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 )
 
-func listTrafficPolicyVersionsPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPolicyVersionsInput, fn func(*route53.ListTrafficPolicyVersionsOutput, bool) bool) error {
+func listTrafficPolicyVersionsPages(ctx context.Context, conn *route53.Client, input *route53.ListTrafficPolicyVersionsInput, fn func(*route53.ListTrafficPolicyVersionsOutput, bool) bool, optFns ...func(*route53.Options)) error {
 	for {
-		output, err := conn.ListTrafficPolicyVersions(ctx, input)
+		output, err := conn.ListTrafficPolicyVersions(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

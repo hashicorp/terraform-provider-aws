@@ -91,6 +91,33 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunctionDataSource_versionWithReservedConcurrency(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -460,6 +487,25 @@ resource "aws_lambda_function" "test" {
   publish       = true
   role          = aws_iam_role.lambda.arn
   runtime       = "nodejs20.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+  qualifier     = 1
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_versionWithReservedConcurrency(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = %[1]q
+  handler                        = "exports.example"
+  publish                        = true
+  role                           = aws_iam_role.lambda.arn
+  runtime                        = "nodejs20.x"
+  reserved_concurrent_executions = 10
 }
 
 data "aws_lambda_function" "test" {

@@ -377,9 +377,10 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
-
-  policy = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -388,7 +389,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -411,7 +412,7 @@ resource "aws_kms_key" "test" {
         "StringEquals": {
           "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}",
           "kms:EncryptionContext:aws:s3:arn": "${aws_s3_bucket.test.arn}",
-          "kms:ViaService": "s3.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "s3.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }

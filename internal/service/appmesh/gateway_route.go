@@ -539,7 +539,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshClient(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	gatewayRoute, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.GatewayRouteData, error) {
 		return findGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
@@ -552,8 +552,6 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route (%s): %s", d.Id(), err)
 	}
-
-	gatewayRoute := outputRaw.(*awstypes.GatewayRouteData)
 
 	d.Set(names.AttrARN, gatewayRoute.Metadata.Arn)
 	d.Set(names.AttrCreatedDate, gatewayRoute.Metadata.CreatedAt.Format(time.RFC3339))

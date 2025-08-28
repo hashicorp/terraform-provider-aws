@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +37,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 				Config: testAccFlowConfig_basic(rName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appflow", regexache.MustCompile(`flow/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "flow/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),
@@ -275,10 +274,6 @@ func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "task.#", "1"),
 				),
 			},
-			{
-				Config:   testAccFlowConfig_task_mapAll(rName),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -329,10 +324,6 @@ func TestAccAppFlowFlow_metadataCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.1", "EXECUTION_ID"),
 					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.#", "2"),
 				),
-			},
-			{
-				Config:   testAccFlowConfig_metadata_catalog(rName),
-				PlanOnly: true,
 			},
 		},
 	})

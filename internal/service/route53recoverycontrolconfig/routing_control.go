@@ -58,7 +58,7 @@ func resourceRoutingControl() *schema.Resource {
 	}
 }
 
-func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -92,7 +92,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRoutingControlRead(ctx, d, meta)...)
 }
 
-func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -116,7 +116,7 @@ func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
@@ -134,7 +134,7 @@ func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRoutingControlRead(ctx, d, meta)...)
 }
 
-func resourceRoutingControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoutingControlDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 

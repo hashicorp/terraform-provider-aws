@@ -9,34 +9,32 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
@@ -58,21 +56,21 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 func TestAccLogsAnomalyDetector_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
@@ -92,7 +90,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 			{
 				Config: testAccAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "FIVE_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "8"),
@@ -115,21 +113,21 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -138,9 +136,9 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAnomalyDetectorDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_anomaly_detector" {
@@ -149,7 +147,7 @@ func testAccCheckAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tflogs.FindLogAnomalyDetectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -164,14 +162,14 @@ func testAccCheckAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckAnomalyDetectorExists(ctx context.Context, n string, v *cloudwatchlogs.GetLogAnomalyDetectorOutput) resource.TestCheckFunc {
+func testAccCheckAnomalyDetectorExists(ctx context.Context, t *testing.T, n string, v *cloudwatchlogs.GetLogAnomalyDetectorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindLogAnomalyDetectorByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 

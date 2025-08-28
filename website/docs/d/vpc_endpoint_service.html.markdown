@@ -55,8 +55,7 @@ data "aws_vpc_endpoint_service" "test" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoint services.
-The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
+This data source supports the following arguments:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
@@ -86,8 +85,9 @@ This data source exports the following attributes in addition to the arguments a
 * `owner` - AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - Private DNS name for the service.
 * `private_dns_names` - Private DNS names assigned to the VPC endpoint service.
-* `region` - Region of the endpoint service.
+* `region` - (**Deprecated**) Region of the endpoint service. Use `service_region` instead.
 * `service_id` - ID of the endpoint service.
+* `service_region` - Region of the endpoint service.
 * `supported_ip_address_types` - The supported IP address types.
 * `tags` - Map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.

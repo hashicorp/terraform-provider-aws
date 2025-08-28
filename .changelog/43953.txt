@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_instance: Adds `primary_network_interface` to allow importing resources with custom primary network interface.
+```
+
+```release-note:bug
+resource/aws_spot_instance_request: Adds `primary_network_interface` to allow importing resources with custom primary network interface.
+```
+
+```release-note:note
+resource/aws_instance: The `network_interface` block has been deprecated. Use `primary_network_interface` for the primary network interface and `aws_network_interface_attachment` resources for other network interfaces.
+```
+
+```release-note:note
+resource/aws_spot_instance_request: The `network_interface` block has been deprecated. Use `primary_network_interface` for the primary network interface and `aws_network_interface_attachment` resources for other network interfaces.
+```

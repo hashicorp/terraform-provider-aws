@@ -12,6 +12,8 @@ description: |-
 
 Provides an Elastic Transcoder pipeline resource.
 
+~> **Warning:** This resource is deprecated. Use [AWS Elemental MediaConvert](https://aws.amazon.com/blogs/media/migrating-workflows-from-amazon-elastic-transcoder-to-aws-elemental-mediaconvert/) instead. AWS will [discontinue support for Amazon Elastic Transcoder](https://aws.amazon.com/blogs/media/support-for-amazon-elastic-transcoder-ending-soon/), effective November 13, 2025.
+
 ## Example Usage
 
 ```typescript
@@ -46,10 +48,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsKmsKeyArn` - (Optional) The AWS Key Management Service (AWS KMS) key that you want to use with this pipeline.
 * `contentConfig` - (Optional) The ContentConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save transcoded files and playlists. (documented below)
 * `contentConfigPermissions` - (Optional) The permissions for the `contentConfig` object. (documented below)
@@ -60,6 +61,8 @@ This resource supports the following arguments:
 * `role` - (Required) The IAM Amazon Resource Name (ARN) for the role that you want Elastic Transcoder to use to transcode jobs for this pipeline.
 * `thumbnailConfig` - (Optional) The ThumbnailConfig object specifies information about the Amazon S3 bucket in which you want Elastic Transcoder to save thumbnail files. (documented below)
 * `thumbnailConfigPermissions` - (Optional) The permissions for the `thumbnailConfig` object. (documented below)
+
+See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
 The `contentConfig` object specifies information about the Amazon S3 bucket in
 which you want Elastic Transcoder to save transcoded files and playlists: which
@@ -146,4 +149,4 @@ Using `terraform import`, import Elastic Transcoder pipelines using the `id`. Fo
 % terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d637ae6851ebe5a730672dfa1ffb2f0583f0f26c659341ebee69f076e573b14b -->
+<!-- cache-key: cdktf-0.20.8 input-f1a853a6ded849f809671734c847e3908a37c518f0ebeb0b67bf049c0c5828ce -->

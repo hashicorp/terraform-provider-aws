@@ -49,7 +49,7 @@ func newSlackChannelConfigurationResource(_ context.Context) (resource.ResourceW
 }
 
 type slackChannelConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[slackChannelConfigurationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -268,7 +268,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Chatbot Slack Channel Configuration", map[string]any{
 		"chat_configuration_arn": data.ChatConfigurationARN.ValueString(),
 	})
 
@@ -276,7 +276,7 @@ func (r *slackChannelConfigurationResource) Delete(ctx context.Context, request 
 		ChatConfigurationArn: data.ChatConfigurationARN.ValueStringPointer(),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return conn.DeleteSlackChannelConfiguration(ctx, input)
 	}, "DependencyViolation")
 
@@ -346,7 +346,7 @@ const (
 )
 
 func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+	return func() (any, string, error) {
 		output, err := findSlackChannelConfigurationByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
@@ -399,6 +399,7 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
 	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
 	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`

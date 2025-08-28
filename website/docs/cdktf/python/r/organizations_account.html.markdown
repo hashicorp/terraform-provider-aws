@@ -67,6 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
+- `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
 ## Import
@@ -125,4 +126,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-35394f7e9624d7ccf742ca922ca2cdb97283fba02833f568bddd3cb45957b8f4 -->
+<!-- cache-key: cdktf-0.20.8 input-8e8887e3741a0846efe266d58d6294d1394e4019b43b0d7ca53014a12b747e55 -->

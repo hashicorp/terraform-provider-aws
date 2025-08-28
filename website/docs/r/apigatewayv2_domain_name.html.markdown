@@ -60,6 +60,7 @@ resource "aws_route53_record" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name.
@@ -70,6 +71,7 @@ This resource supports the following arguments:
 * `certificate_arn` - (Required) ARN of an AWS-managed certificate that will be used by the endpoint for the domain name. AWS Certificate Manager is the only supported source. Use the [`aws_acm_certificate`](/docs/providers/aws/r/acm_certificate.html) resource to configure an ACM certificate.
 * `endpoint_type` - (Required) Endpoint type. Valid values: `REGIONAL`.
 * `hosted_zone_id` - (Computed) Amazon Route 53 Hosted Zone ID of the endpoint.
+* `ip_address_type` - (Optional) The IP address types that can invoke the domain name. Valid values: `ipv4`, `dualstack`. Use `ipv4` to allow only IPv4 addresses to invoke your domain name, or use `dualstack` to allow both IPv4 and IPv6 addresses to invoke your domain name. Defaults to `ipv4`.
 * `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
 * `security_policy` - (Required) Transport Layer Security (TLS) version of the [security policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-custom-domain-tls-version.html) for the domain name. Valid values: `TLS_1_2`.
 * `target_domain_name` - (Computed) Target domain name.

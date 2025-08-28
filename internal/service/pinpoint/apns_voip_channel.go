@@ -80,7 +80,7 @@ func resourceAPNSVoIPChannel() *schema.Resource {
 	}
 }
 
-func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	certificate, certificateOk := d.GetOk(names.AttrCertificate)
 	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
@@ -126,7 +126,7 @@ func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceAPNSVoIPChannelRead(ctx, d, meta)...)
 }
 
-func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -152,7 +152,7 @@ func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceAPNSVoIPChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAPNSVoIPChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 

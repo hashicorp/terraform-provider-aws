@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS SSM Contact.
 
+~> **NOTE:** A contact implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `dependsOn` argument for the Terraform Contact Resource.
+
 ## Example Usage
 
 ### Basic Usage
@@ -68,27 +70,23 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** A contact implicitly depends on a replication set. If you configured your replication set in Terraform, we recommend you add it to the `dependsOn` argument for the Terraform Contact Resource.
-
 The following arguments are required:
 
 - `alias` - (Required) A unique and identifiable alias for the contact or escalation plan. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), and hyphens (`-`).
-
 - `type` - (Required) The type of contact engaged. A single contact is type PERSONAL and an escalation
   plan is type ESCALATION.
 
 The following arguments are optional:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `displayName` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
-
-- `tags` - (Optional) Map of tags to assign to the resource.
+- `tags` - (Optional) Key-value tags for the monitor. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
-
 - `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -119,4 +117,4 @@ Using `terraform import`, import SSM Contact using the `ARN`. For example:
 % terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2663536b417f222904b9f9c62ac959d51fabe5b14bf73e4c198bb18616b00366 -->
+<!-- cache-key: cdktf-0.20.8 input-0ab2bc24e93232d8ef5abaa2beb664f3e908609e01e2ae4a2220c0ee682789b2 -->

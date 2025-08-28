@@ -59,7 +59,7 @@ func resourceReadinessCheck() *schema.Resource {
 	}
 }
 
-func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -84,7 +84,7 @@ func resourceReadinessCheckCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceReadinessCheckRead(ctx, d, meta)...)
 }
 
-func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -107,7 +107,7 @@ func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 
@@ -127,7 +127,7 @@ func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceReadinessCheckRead(ctx, d, meta)...)
 }
 
-func resourceReadinessCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReadinessCheckDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessClient(ctx)
 

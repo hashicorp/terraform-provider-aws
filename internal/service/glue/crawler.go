@@ -36,7 +36,7 @@ func targets() []string {
 
 // @SDKResource("aws_glue_crawler", name="Crawler")
 // @Tags(identifierAttribute="arn")
-func ResourceCrawler() *schema.Resource {
+func resourceCrawler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCrawlerCreate,
 		ReadWithoutTimeout:   resourceCrawlerRead,
@@ -484,7 +484,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
+	crawler, err := findCrawlerByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -647,6 +647,30 @@ func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	return diags
+}
+
+func findCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*awstypes.Crawler, error) {
+	input := &glue.GetCrawlerInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetCrawler(ctx, input)
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Crawler == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Crawler, nil
 }
 
 func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string) (*glue.CreateCrawlerInput, error) {

@@ -70,6 +70,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
 
@@ -154,4 +155,4 @@ Using `terraform import`, import Multi-Region Access Points using the `accountId
 % terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c062e6275316732e03cf56b1f29e3af7a9c9f929af2e8fbccd540e074753cbf -->
+<!-- cache-key: cdktf-0.20.8 input-d56994999dac8051dde4eae934a626b4c50894dbbf14c21bc9911f91bbf1467c -->

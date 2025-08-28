@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCIPAMDataSource_basic(t *testing.T) {
+func TestAccIPAMDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_ipam.test"
 	dataSourceName := "data.aws_vpc_ipam.test"
@@ -23,10 +23,9 @@ func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPAMDataSourceConfig_basic(),
+				Config: testAccIPAMDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -34,6 +33,7 @@ func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_id", resourceName, "default_resource_discovery_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_resource_discovery_association_id", resourceName, "default_resource_discovery_association_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enable_private_gua", resourceName, "enable_private_gua"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "metered_account", resourceName, "metered_account"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "operating_regions.0.region_name", resourceName, "operating_regions.0.region_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_default_scope_id", resourceName, "private_default_scope_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_default_scope_id", resourceName, "public_default_scope_id"),
@@ -47,14 +47,14 @@ func TestAccVPCIPAMDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccVPCIPAMDataSourceConfig_basic() string {
+func testAccIPAMDataSourceConfig_basic() string {
 	return `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   description = "My IPAM"
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   tags = {

@@ -163,7 +163,7 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	if d.HasChange(names.AttrTagsAll) {
 		o, n := d.GetChange(names.AttrTagsAll)
 
-		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
+		input.AddTags = svcTags(tftags.New(ctx, n).IgnoreAWS())
 		input.RemoveTags = tftags.New(ctx, o).IgnoreAWS().Keys()
 	}
 

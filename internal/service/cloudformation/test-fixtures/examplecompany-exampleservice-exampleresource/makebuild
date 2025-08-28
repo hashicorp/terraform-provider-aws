@@ -4,4 +4,4 @@
 .PHONY: build
 build:
 	cfn generate
-	env GOOS=linux go build -ldflags="-s -w" -tags="$(TAGS)" -o bin/handler cmd/main.go
+	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -tags="lambda.norpc,$(TAGS)" -o bin/bootstrap cmd/main.go

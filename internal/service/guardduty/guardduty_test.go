@@ -24,9 +24,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			"tags":                              testAccDetector_tags,
+			"tags":                              testAccGuardDutyDetector_tagsSerial,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
+			"datasource_tags":                   testAccGuardDutyDetectorDataSource_tagsSerial,
 		},
 		"DetectorFeature": {
 			acctest.CtBasic:            testAccDetectorFeature_basic,
@@ -36,7 +37,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"Filter": {
 			acctest.CtBasic:      testAccFilter_basic,
 			"update":             testAccFilter_update,
-			"tags":               testAccFilter_tags,
+			"tags":               testAccGuardDutyFilter_tagsSerial,
 			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
@@ -47,7 +48,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"IPSet": {
 			acctest.CtBasic: testAccIPSet_basic,
-			"tags":          testAccIPSet_tags,
+			"tags":          testAccGuardDutyIPSet_tagsSerial,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
@@ -71,7 +72,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
-			"tags":          testAccThreatIntelSet_tags,
+			"tags":          testAccGuardDutyThreatIntelSet_tagsSerial,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,
