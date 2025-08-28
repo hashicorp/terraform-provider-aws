@@ -722,12 +722,10 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			var foo *retry.UnexpectedStateError
-			if errors.As(err, &foo) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
-				status := string(detail.Status)
-				if status == string(awstypes.ProvisionedProductStatusError) || status == string(awstypes.ProvisionedProductStatusTainted) {
+				if status := detail.Status; status == awstypes.ProvisionedProductStatusError || status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed
 					return output, &provisionedProductFailureError{
 						StatusMessage: aws.ToString(detail.StatusMessage),
@@ -758,11 +756,9 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
 		if detail := output.ProvisionedProductDetail; detail != nil {
-			var foo *retry.UnexpectedStateError
-			if errors.As(err, &foo) {
+			if errs.IsA[*retry.UnexpectedStateError](err) {
 				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
-				status := string(detail.Status)
-				if status == string(awstypes.ProvisionedProductStatusTainted) {
+				if status := detail.Status; status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed
 					return &provisionedProductFailureError{
 						StatusMessage: aws.ToString(detail.StatusMessage),
@@ -782,7 +778,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 // that requires state refresh to recover from inconsistent state.
 type provisionedProductFailureError struct {
 	StatusMessage string
-	Status        string
+	Status        awstypes.ProvisionedProductStatus
 	NeedsRefresh  bool
 }
 
