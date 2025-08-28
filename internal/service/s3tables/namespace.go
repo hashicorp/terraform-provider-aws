@@ -245,7 +245,7 @@ type namespaceResourceModel struct {
 
 var namespaceNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
+	stringMustContainLowerCaseLettersNumbersHyphensUnderscores,
 	stringMustStartWithLetterOrNumber,
 	stringMustEndWithLetterOrNumber,
 }
