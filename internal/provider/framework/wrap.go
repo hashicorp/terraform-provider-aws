@@ -785,6 +785,12 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		v.SetIdentitySpec(spec.Identity)
 	}
 
+	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+		if !tfunique.IsHandleNil(spec.Tags) {
+			v.SetTagsSpec(spec.Tags)
+		}
+	}
+
 	return &wrappedListResourceSDK{
 		inner:              inner,
 		servicePackageName: servicePackageName,
