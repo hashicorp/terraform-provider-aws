@@ -943,8 +943,8 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 
 	inner := spec.Factory()
 
-	if v, ok := inner.(inttypes.SDKv2Identityer); ok {
-		v.WithTranslatedIdentity(spec.Identity.Attributes)
+	if v, ok := inner.(framework.Identityer); ok {
+		v.SetIdentitySpec(spec.Identity)
 	}
 
 	return &wrappedListResourceSDK{
