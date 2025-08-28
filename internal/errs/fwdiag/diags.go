@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 )
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
@@ -59,6 +60,16 @@ func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	)
 }
 
+func NewListResultErrorDiagnostic(err error) list.ListResult {
+	return list.ListResult{
+		Diagnostics: diag.Diagnostics{
+			diag.NewErrorDiagnostic(
+				"Error Listing Remote Resources",
+				fmt.Sprintf("%s", err.Error()),
+			),
+		},
+	}
+}
 func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
 	return x, DiagnosticsError(diags)
 }
