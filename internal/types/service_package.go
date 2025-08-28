@@ -418,3 +418,7 @@ type SDKv2Import struct {
 type SDKv2Identityer interface {
 	AddIdentity([]IdentityAttribute)
 }
+
+type SDKv2Tagger interface {
+	SetTagsSpec(tags unique.Handle[ServicePackageResourceTags])
+}
