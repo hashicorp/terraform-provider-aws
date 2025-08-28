@@ -449,7 +449,7 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 	}
 }
 
-func TestAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+func TestAccBedrockAgentKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := skipIfOSDomainEnvVarNotSet(t)
 	bedrockIAMRoleName := skipIfIAMRoleVarNotSet(t)
@@ -1027,7 +1027,7 @@ data "aws_opensearch_domain" "test" {
 
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
-  role_arn = %[3]q #aws_iam_role.test.arn
+  role_arn = %[3]q
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {

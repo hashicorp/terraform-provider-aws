@@ -54,8 +54,8 @@ resource "aws_bedrockagent_knowledge_base" "example" {
   storage_configuration {
     type = "OPENSEARCH_MANAGED_CLUSTER"
     opensearch_managed_cluster_configuration {
-      domain_arn      = "arn:aws:es:us-west-2:123456789012:domain/example-domain"
-      domain_endpoint = "https://search-example-domain.us-west-2.es.amazonaws.com"
+      domain_arn        = "arn:aws:es:us-west-2:123456789012:domain/example-domain"
+      domain_endpoint   = "https://search-example-domain.us-west-2.es.amazonaws.com"
       vector_index_name = "example_index"
       field_mapping {
         metadata_field = "metadata"
