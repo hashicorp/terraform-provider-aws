@@ -1563,7 +1563,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
   execution_role_arn = aws_iam_role.test.arn
 
   policy_details {
-	policy_type = "IMAGE_MANAGEMENT"
+    policy_type    = "IMAGE_MANAGEMENT"
     resource_types = ["INSTANCE"]
 
     schedule {
@@ -1579,7 +1579,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       cross_region_copy_rule {
         target_region    = %[2]q
-        encrypted 		 = false
+        encrypted        = false
         retain_rule {
           interval      = 15
           interval_unit = "DAYS"
