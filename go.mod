@@ -386,6 +386,7 @@ require (
 
 replace github.com/hashicorp/terraform-plugin-log => github.com/gdavison/terraform-plugin-log v0.0.0-20230928191232-6c653d8ef8fb
 
-replace github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250826091022-afb7e09a233a
-
-replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250826074230-9419032037aa
+replace (
+ 	github.com/hashicorp/terraform-plugin-framework => github.com/hashicorp/terraform-plugin-framework v1.16.0-beta.1.0.20250828103048-e39d5775ca20
+ 	github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.1-0.20250828092556-6590c690cf26
+ )

@@ -8,19 +8,14 @@ import (
 	"fmt"
 	"iter"
 	"log"
-	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,7 +30,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,10 +48,10 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute),
-		},
+		//Timeouts: &schema.ResourceTimeout{
+		//	Create: schema.DefaultTimeout(2 * time.Minute),
+		//	Update: schema.DefaultTimeout(2 * time.Minute),
+		//},
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -165,19 +159,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 		}
 	}
 
-	interceptors := []listResultInterceptor{
-		populateIdentityInterceptor{},
-		identityInterceptor{
-			attributes: l.IdentitySpec().Attributes,
-		},
-		//setResourceInterceptor{},
-		//tagsInterceptor{
-		//	HTags: interceptors.HTags(unique.Make(inttypes.ServicePackageResourceTags{
-		//		IdentifierAttribute: names.AttrARN,
-		//	})),
-		//},
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
@@ -194,26 +175,23 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			params := interceptorParams{
-				c:      awsClient,
-				result: &result,
-			}
-
-			params.when = Before
-			for interceptor := range slices.Values(interceptors) {
-				d := interceptor.read(ctx, params)
-				result.Diagnostics.Append(d...)
-				if d.HasError() {
-					result = list.ListResult{Diagnostics: result.Diagnostics}
-					yield(result)
-					return
-				}
-			}
-
 			logGroupResource := l.GetResource()
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
+			err := l.SetIdentity(ctx, awsClient, rd)
+			if err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
+				}
+				yield(result)
+				return
+			}
 
 			tfTypeResource, err := rd.TfTypeResourceState()
 			if err != nil {
@@ -244,19 +222,29 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
-			params.when = After
-			for interceptor := range tfslices.BackwardValues(interceptors) {
-				d := interceptor.read(ctx, params)
-				result.Diagnostics.Append(d...)
-				if d.HasError() {
-					result = list.ListResult{Diagnostics: result.Diagnostics}
-					yield(result)
-					return
+			tfTypeIdentity, err := rd.TfTypeIdentityState()
+			if err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
 				}
+				yield(result)
+				return
 			}
 
-			if result.Diagnostics.HasError() {
-				result = list.ListResult{Diagnostics: result.Diagnostics}
+			if err := result.Identity.Set(ctx, *tfTypeIdentity); err != nil {
+				result = list.ListResult{
+					Diagnostics: fwdiag.Diagnostics{
+						fwdiag.NewErrorDiagnostic(
+							"Error Listing Remote Resources",
+							fmt.Sprintf("Error: %s", err),
+						),
+					},
+				}
 				yield(result)
 				return
 			}
@@ -308,7 +296,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutRetentionPolicy(ctx, &input)
 		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -359,7 +347,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 				return conn.PutRetentionPolicy(ctx, &input)
 			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -477,119 +465,4 @@ func listLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 			}
 		}
 	}
-}
-
-// when represents the point in the CRUD request lifecycle that an interceptor is run.
-// Multiple values can be ORed together.
-type when uint16
-
-const (
-	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
-	After                    // Interceptor is invoked after successful call to method in schema
-	OnError                  // Interceptor is invoked after unsuccessful call to method in schema
-	Finally                  // Interceptor is invoked after After or OnError
-)
-
-type interceptorParams struct {
-	c      *conns.AWSClient
-	result *list.ListResult
-	//object *jobQueueResourceModel // Because tfsdk.Resource doesn't have SetAttribute
-	when when
-}
-
-type listResultInterceptor interface {
-	read(ctx context.Context, params interceptorParams) fwdiag.Diagnostics
-}
-
-type identityInterceptor struct {
-	attributes []inttypes.IdentityAttribute
-}
-
-func (r identityInterceptor) read(ctx context.Context, params interceptorParams) (diags fwdiag.Diagnostics) {
-	awsClient := params.c
-
-	switch params.when {
-	case After:
-		for _, att := range r.attributes {
-			switch att.Name() {
-			case names.AttrAccountID:
-				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.AccountID(ctx))...)
-				if diags.HasError() {
-					return
-				}
-
-			case names.AttrRegion:
-				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), awsClient.Region(ctx))...)
-				if diags.HasError() {
-					return
-				}
-
-			default:
-				var attrVal attr.Value
-				diags.Append(params.result.Resource.GetAttribute(ctx, path.Root(att.ResourceAttributeName()), &attrVal)...)
-				if diags.HasError() {
-					return
-				}
-
-				diags.Append(params.result.Identity.SetAttribute(ctx, path.Root(att.Name()), attrVal)...)
-				if diags.HasError() {
-					return
-				}
-			}
-		}
-	}
-
-	return
-}
-
-// This interceptor will not be needed if Framework pre-populates the Identity as it does with CRUD operations
-type populateIdentityInterceptor struct{}
-
-// This interceptor will not be needed if Framework pre-populates the Identity as it does with CRUD operations
-
-func (r populateIdentityInterceptor) read(ctx context.Context, params interceptorParams) (diags fwdiag.Diagnostics) {
-	switch params.when {
-	case Before:
-		identityType := params.result.Identity.Schema.Type()
-
-		obj, d := newEmptyObject(identityType)
-		diags.Append(d...)
-		if diags.HasError() {
-			return
-		}
-
-		diags.Append(params.result.Identity.Set(ctx, obj)...)
-		if diags.HasError() {
-			return
-		}
-	}
-
-	return
-}
-
-func newEmptyObject(typ attr.Type) (obj basetypes.ObjectValue, diags fwdiag.Diagnostics) {
-	i, ok := typ.(attr.TypeWithAttributeTypes)
-	if !ok {
-		diags.AddError(
-			"Internal Error",
-			"An unexpected error occurred. "+
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
-		)
-		return
-	}
-
-	attrTypes := i.AttributeTypes()
-	attrValues := make(map[string]attr.Value, len(attrTypes))
-	for attrName := range attrTypes {
-		attrValues[attrName] = types.StringNull()
-	}
-	obj, d := basetypes.NewObjectValue(attrTypes, attrValues)
-	diags.Append(d...)
-	if d.HasError() {
-		return basetypes.ObjectValue{}, diags
-	}
-
-	return obj, diags
 }

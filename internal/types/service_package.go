@@ -416,5 +416,5 @@ type SDKv2Import struct {
 }
 
 type SDKv2Identityer interface {
-	WithTranslatedIdentity([]IdentityAttribute)
+	AddIdentity([]IdentityAttribute)
 }
