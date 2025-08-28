@@ -173,6 +173,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
+			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
 			// set tags
 			err = l.SetTags(ctx, awsClient, rd)
@@ -202,8 +203,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 				return
 			}
 
-			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
-
 			tfTypeIdentity, err := rd.TfTypeIdentityState()
 			if err != nil {
 				result = fwdiag.NewListResultErrorDiagnostic(err)
@@ -213,12 +212,6 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 			result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
 			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if result.Diagnostics.HasError() {
-				result = list.ListResult{Diagnostics: result.Diagnostics}
 				yield(result)
 				return
 			}
