@@ -167,9 +167,9 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 
 	interceptors := []listResultInterceptor{
 		populateIdentityInterceptor{},
-		//identityInterceptor{
-		//	attributes: l.IdentitySpec().Attributes,
-		//},
+		identityInterceptor{
+			attributes: l.IdentitySpec().Attributes,
+		},
 		//setResourceInterceptor{},
 		//tagsInterceptor{
 		//	HTags: interceptors.HTags(unique.Make(inttypes.ServicePackageResourceTags{
@@ -211,14 +211,9 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			}
 
 			logGroupResource := l.GetResource()
-
 			rd := logGroupResource.Data(&terraform.InstanceState{})
 			rd.SetId(aws.ToString(output.LogGroupName))
 			resourceGroupFlatten(ctx, rd, output)
-
-			result.Identity.SetAttribute(ctx, path.Root(names.AttrAccountID), awsClient.AccountID(ctx))
-			result.Identity.SetAttribute(ctx, path.Root(names.AttrRegion), awsClient.Region(ctx))
-			result.Identity.SetAttribute(ctx, path.Root(names.AttrName), types.StringValue(aws.ToString(output.LogGroupName)))
 
 			tfTypeResource, err := rd.TfTypeResourceState()
 			if err != nil {
