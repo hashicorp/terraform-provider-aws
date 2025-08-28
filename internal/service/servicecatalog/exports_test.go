@@ -37,7 +37,6 @@ var (
 	WaitOrganizationsAccessStable           = waitOrganizationsAccessStable
 	WaitProductPortfolioAssociationDeleted  = waitProductPortfolioAssociationDeleted
 	WaitProductPortfolioAssociationReady    = waitProductPortfolioAssociationReady
-	WaitProvisionedProductReady             = waitProvisionedProductReady
 	WaitTagOptionResourceAssociationDeleted = waitTagOptionResourceAssociationDeleted
 	WaitTagOptionResourceAssociationReady   = waitTagOptionResourceAssociationReady
 
