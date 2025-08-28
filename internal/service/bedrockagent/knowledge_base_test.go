@@ -449,6 +449,51 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 	}
 }
 
+func TestAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := skipIfOSDomainEnvVarNotSet(t)
+	bedrockIAMRoleName := skipIfIAMRoleVarNotSet(t)
+
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domain, bedrockIAMRoleName, foundationModel),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_MANAGED_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.vector_index_name", "knowledge-index"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.vector_field", "vector_embedding"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.text_field", "text"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.metadata_field", "metadata"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // skipIfOSSCollectionNameEnvVarNotSet handles skipping tests when an environment
 // variable providing a valid OSS collection name is unset
 //
@@ -498,6 +543,18 @@ func skipIfOSDomainEnvVarNotSet(t *testing.T) string {
 	if v == "" {
 		acctest.Skip(t, "This test requires external configuration of an OpenSearch domain. "+
 			"Set the TF_AWS_BEDROCK_OS_DOMAIN_NAME environment variable to the OpenSearch domain name.")
+	}
+	return v
+}
+
+func skipIfIAMRoleVarNotSet(t *testing.T) string {
+	t.Helper()
+
+	v := os.Getenv("TF_AWS_BEDROCK_IAM_ROLE_ARN")
+	if v == "" {
+		acctest.Skip(t, "This test requires external configuration of an IAM Role with permissions on the OpenSearch Cluster."+
+			"It must be able to be assumed by the Amazon Bedrock service"+
+			"Set the TF_AWS_BEDROCK_IAM_ROLE_ARN environment variable to the IAM Role's ARN.")
 	}
 	return v
 }
@@ -957,166 +1014,20 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 `, rName, model))
 }
 
-func testAccKnowledgeBase_OpenSearchManagedCluster_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	domain := skipIfOSDomainEnvVarNotSet(t)
-
-	var knowledgebase types.KnowledgeBase
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_knowledge_base.test"
-	foundationModel := "amazon.titan-embed-text-v2:0"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domain, foundationModel),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.vector_knowledge_base_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.0.type", "VECTOR"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.type", "OPENSEARCH_MANAGED_CLUSTER"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.vector_index_name", "bedrock-knowledge-base-default-index"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.vector_field", "bedrock-knowledge-base-default-vector"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.text_field", "text_chunk"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.opensearch_managed_cluster_configuration.0.field_mapping.0.metadata_field", "metadata"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccKnowledgeBaseConfigBase_openSearchManagedCluster(rName, domainName, model string) string {
-	return fmt.Sprintf(`
+func testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domainName, bedrockRole, model string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
 data "aws_opensearch_domain" "test" {
-  domain_name = %[2]q
+  domain_name = %[4]q
 }
 
-# See the Amazon Bedrock documentation for creating a service role:
-# https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html
-data "aws_iam_policy_document" "test_trust" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "sts:AssumeRole",
-    ]
-    principals {
-      type        = "Service"
-      identifiers = ["bedrock.amazonaws.com"]
-    }
-    condition {
-      test     = "StringEquals"
-      variable = "aws:SourceAccount"
-      values = [
-        data.aws_caller_identity.current.account_id,
-      ]
-    }
-    condition {
-      test     = "ArnLike"
-      variable = "aws:SourceArn"
-      values = [
-        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:knowledge-base/*"
-      ]
-    }
-  }
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "bedrock:ListFoundationModels",
-      "bedrock:ListCustomModels",
-    ]
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "bedrock:InvokeModel",
-    ]
-    resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:foundation-model/%[3]s",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "bedrock:RetreiveAndGenerate",
-    ]
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "es:ESHttpDelete",
-      "es:ESHttpGet",
-      "es:ESHttpHead",
-      "es:ESHttpPost",
-      "es:ESHttpPut",
-    ]
-    resources = [
-      data.aws_opensearch_domain.test.arn,
-      "${data.aws_opensearch_domain.test.arn}/*",
-    ]
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = data.aws_iam_policy_document.test_trust.json
-}
-
-resource "aws_iam_policy" "test" {
-  name   = %[1]q
-  policy = data.aws_iam_policy_document.test.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = aws_iam_policy.test.arn
-}
-`, rName, domainName, model)
-}
-
-func testAccKnowledgeBaseConfig_OpenSearchManagedCluster_basic(rName, domainName, model string) string {
-	return acctest.ConfigCompose(
-		testAccKnowledgeBaseConfigBase_openSearchManagedCluster(rName, domainName, model),
-		fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
-  depends_on = [
-    aws_iam_role_policy_attachment.test,
-  ]
-
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = %[3]q #aws_iam_role.test.arn
 
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
@@ -1129,15 +1040,15 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     type = "OPENSEARCH_MANAGED_CLUSTER"
     opensearch_managed_cluster_configuration {
       domain_arn      = data.aws_opensearch_domain.test.arn
-      domain_endpoint = data.aws_opensearch_domain.test.endpoint
-      vector_index_name = "bedrock-knowledge-base-default-index"
+      domain_endpoint = "https://${data.aws_opensearch_domain.test.endpoint}"
+      vector_index_name = "knowledge-index"
       field_mapping {
-        vector_field   = "bedrock-knowledge-base-default-vector"
-        text_field     = "text_chunk"
+        vector_field   = "vector_embedding"
+        text_field     = "text"
         metadata_field = "metadata"
       }
     }
   }
 }
-`, rName, model))
+`, rName, model, bedrockRole, domainName))
 }
