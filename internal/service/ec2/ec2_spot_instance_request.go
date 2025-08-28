@@ -85,6 +85,10 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			}
+			s["network_interface"].Elem.(*schema.Resource).Schema["network_card_index"] = &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			}
 			s["primary_network_interface"] = &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
@@ -211,7 +215,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {

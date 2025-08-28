@@ -336,7 +336,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout+canaryCreatedTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return retryCreateCanary(ctx, conn, d, input)
 		},
 		func(err error) (bool, error) {

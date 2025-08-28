@@ -152,7 +152,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateConnectAttachment(ctx, input)
 		},
 		func(err error) (bool, error) {

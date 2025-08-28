@@ -648,6 +648,38 @@ service "appsync" {
   brand                    = "AWS"
 }
 
+service "arcregionswitch" {
+  cli_v2_command {
+    aws_cli_v2_command           = "arc-region-switch"
+    aws_cli_v2_command_no_dashes = "arcregionswitch"
+  }
+
+  sdk {
+    id             = "ARC Region Switch"
+    arn_namespace  = "arcregionswitch"
+  }
+
+  names {
+    provider_name_upper = "ARCRegionSwitch"
+    human_friendly      = "Application Resilience Controller Region Switch"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPlans"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_arcregionswitch_"
+  }
+
+  provider_package_correct = "arcregionswitch"
+  doc_prefix               = ["arcregionswitch_"]
+  brand                    = "AWS"
+}
+
 service "athena" {
   sdk {
     id            = "Athena"

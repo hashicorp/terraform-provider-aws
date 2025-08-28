@@ -27,72 +27,8 @@ type Retryable func(error) (bool, error)
 
 // RetryWhen retries the function `f` when the error it returns satisfies `retryable`.
 // `f` is retried until `timeout` expires.
-func RetryWhen(ctx context.Context, timeout time.Duration, f func() (any, error), retryable Retryable) (any, error) {
-	var output any
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = retryable(err)
-
-		if again {
-			return sdkretry.RetryableError(err)
-		}
-
-		if err != nil {
-			return sdkretry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-// RetryGWhen is the generic version of RetryWhen which obviates the need for a type
-// assertion after the call. It retries the function `f` when the error it returns
-// satisfies `retryable`. `f` is retried until `timeout` expires.
-func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (T, error), retryable Retryable) (T, error) {
-	var output T
-
-	err := Retry(ctx, timeout, func() *sdkretry.RetryError {
-		var err error
-		var again bool
-
-		output, err = f()
-		again, err = retryable(err)
-
-		if again {
-			return sdkretry.RetryableError(err)
-		}
-
-		if err != nil {
-			return sdkretry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if TimedOut(err) {
-		output, err = f()
-	}
-
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	return output, nil
+func RetryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable) (T, error) {
+	return retryWhen(ctx, timeout, f, retryable)
 }
 
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
@@ -343,9 +279,7 @@ func Retry(ctx context.Context, timeout time.Duration, f sdkretry.RetryFunc, opt
 	return resultErr
 }
 
-type retryable func(error) (bool, error)
-
-func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable retryable, opts ...backoff.Option) (T, error) {
+func retryWhen[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), retryable Retryable, opts ...backoff.Option) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
 		return retryable(err)
 	})(ctx, timeout, opts...)
