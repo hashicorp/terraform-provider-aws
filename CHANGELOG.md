@@ -1,9 +1,5 @@
 ## 6.12.0 (Unreleased)
 
-BUG FIXES:
-
-* resource/aws_s3tables_table_policy: Fix namespaceNameValidator to allow hyphens ([#43688](https://github.com/hashicorp/terraform-provider-aws/issues/43688))
-
 ## 6.11.0 (August 28, 2025)
 
 FEATURES:
