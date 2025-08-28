@@ -578,7 +578,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
+	_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
 
 	if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
 		input.IgnoreErrors = true
@@ -593,7 +593,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 		}
 
-		err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
+		_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
 	}
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -707,7 +707,7 @@ func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 	}
 }
 
-func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
+func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
 		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
@@ -741,7 +741,7 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 	return nil, err
 }
 
-func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) error {
+func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.ProvisionedProductStatusAvailable,
@@ -760,7 +760,7 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
 				if status := detail.Status; status == awstypes.ProvisionedProductStatusTainted {
 					// Create a custom error type that signals state refresh is needed
-					return &provisionedProductFailureError{
+					return output, &provisionedProductFailureError{
 						StatusMessage: aws.ToString(detail.StatusMessage),
 						Status:        status,
 						NeedsRefresh:  true,
@@ -768,10 +768,10 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 				}
 			}
 		}
-		return err
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
 // provisionedProductFailureError represents a provisioned product operation failure
