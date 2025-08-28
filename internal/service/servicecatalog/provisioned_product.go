@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -44,10 +45,9 @@ func resourceProvisionedProduct() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ProvisionedProductReadyTimeout),
-			Read:   schema.DefaultTimeout(ProvisionedProductReadTimeout),
-			Update: schema.DefaultTimeout(ProvisionedProductUpdateTimeout),
-			Delete: schema.DefaultTimeout(ProvisionedProductDeleteTimeout),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -281,9 +281,10 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.ProvisionProductInput{
+	name := d.Get(names.AttrName).(string)
+	input := servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
-		ProvisionedProductName: aws.String(d.Get(names.AttrName).(string)),
+		ProvisionedProductName: aws.String(name),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -327,42 +328,25 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]any)[0].(map[string]any))
 	}
 
-	var output *servicecatalog.ProvisionProductOutput
+	output, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
+		func(ctx context.Context) (*servicecatalog.ProvisionProductOutput, error) {
+			return conn.ProvisionProduct(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+				return true, err
+			}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		var err error
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return true, err
+			}
 
-		output, err = conn.ProvisionProduct(ctx, input)
-
-		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
-		}
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.ProvisionProduct(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning Service Catalog Product: %s", err)
-	}
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning Service Catalog Product: empty response")
-	}
-
-	if output.RecordDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning Service Catalog Product: no product view detail or summary")
+		return sdkdiag.AppendErrorf(diags, "provisioning Service Catalog Product (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.RecordDetail.ProvisionedProductId))
@@ -386,43 +370,30 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// DescribeRecord is available in the data source aws_servicecatalog_record.
 
 	acceptLanguage := acceptLanguageEnglish
-
 	if v, ok := d.GetOk("accept_language"); ok {
 		acceptLanguage = v.(string)
 	}
 
-	input := &servicecatalog.DescribeProvisionedProductInput{
-		Id:             aws.String(d.Id()),
-		AcceptLanguage: aws.String(acceptLanguage),
-	}
+	outputDPP, err := findProvisionedProductByTwoPartKey(ctx, conn, d.Id(), acceptLanguage)
 
-	output, err := conn.DescribeProvisionedProduct(ctx, input)
-
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Provisioned Product (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.ProvisionedProductDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s): empty response", d.Id())
-	}
-
-	detail := output.ProvisionedProductDetail
-
+	detail := outputDPP.ProvisionedProductDetail
 	d.Set(names.AttrARN, detail.Arn)
-	d.Set("cloudwatch_dashboard_names", flattenCloudWatchDashboards(output.CloudWatchDashboards))
-
+	d.Set("cloudwatch_dashboard_names", flattenCloudWatchDashboards(outputDPP.CloudWatchDashboards))
 	if detail.CreatedTime != nil {
 		d.Set(names.AttrCreatedTime, detail.CreatedTime.Format(time.RFC3339))
 	} else {
 		d.Set(names.AttrCreatedTime, nil)
 	}
-
 	d.Set("last_provisioning_record_id", detail.LastProvisioningRecordId)
 	d.Set("last_record_id", detail.LastRecordId)
 	d.Set("last_successful_provisioning_record_id", detail.LastSuccessfulProvisioningRecordId)
@@ -449,35 +420,23 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// 	recordIdToUse = detail.LastProvisioningRecordId
 	// }
 
-	recordInput := &servicecatalog.DescribeRecordInput{
-		Id: detail.LastProvisioningRecordId,
-		// Id:             recordIdToUse,
-		AcceptLanguage: aws.String(acceptLanguage),
-	}
+	recordIdToUse := aws.ToString(detail.LastProvisioningRecordId)
+	outputDR, err := findRecordByTwoPartKey(ctx, conn, recordIdToUse, acceptLanguage)
 
-	recordOutput, err := conn.DescribeRecord(ctx, recordInput)
-
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
-		// log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.ToString(recordIdToUse))
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), recordIdToUse)
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), err)
-		// return sdkdiag.AppendErrorf(diags, "describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(recordIdToUse), err)
-	}
-
-	if recordOutput == nil || recordOutput.RecordDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.ToString(detail.LastProvisioningRecordId))
-		// return sdkdiag.AppendErrorf(diags, "getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.ToString(recordIdToUse))
+		return sdkdiag.AppendErrorf(diags, "reading Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), recordIdToUse, err)
 	}
 
 	// To enable debugging of potential v, log as a warning
 	// instead of exiting prematurely with an error, e.g.
 	// v can be present after update to a new version failed and the stack
 	// rolled back to the current version.
-	if v := recordOutput.RecordDetail.RecordErrors; len(v) > 0 {
+	if v := outputDR.RecordDetail.RecordErrors; len(v) > 0 {
 		var errs []error
 
 		for _, err := range v {
@@ -487,13 +446,13 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.ToString(detail.LastProvisioningRecordId), errors.Join(errs...))
 	}
 
-	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
+	if err := d.Set("outputs", flattenRecordOutputs(outputDR.RecordOutputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outputs: %s", err)
 	}
 
-	d.Set("path_id", recordOutput.RecordDetail.PathId)
+	d.Set("path_id", outputDR.RecordDetail.PathId)
 
-	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
+	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, outputDR.RecordDetail.RecordTags)))
 
 	return diags
 }
@@ -502,9 +461,9 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	input := &servicecatalog.UpdateProvisionedProductInput{
-		UpdateToken:          aws.String(id.UniqueId()),
+	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
+		UpdateToken:          aws.String(id.UniqueId()),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -546,23 +505,18 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	// to provisioned AWS objects during update if the tags don't change.
 	input.Tags = getTagsIn(ctx)
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.UpdateProvisionedProduct(ctx, input)
+	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
+		func(ctx context.Context) (any, error) {
+			return conn.UpdateProvisionedProduct(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
+				return true, err
+			}
 
-		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateProvisionedProduct(ctx, input)
-	}
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
@@ -626,7 +580,7 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 
 	err = waitProvisionedProductTerminated(ctx, conn, d.Get("accept_language").(string), d.Id(), "", d.Timeout(schema.TimeoutDelete))
 
-	if failureErr, ok := errs.As[*ProvisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
+	if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
 		input.IgnoreErrors = true
 
 		_, err = conn.TerminateProvisionedProduct(ctx, &input)
@@ -647,10 +601,216 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) to be terminated: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) terminate: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findProvisionedProductByTwoPartKey(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) (*servicecatalog.DescribeProvisionedProductOutput, error) {
+	input := servicecatalog.DescribeProvisionedProductInput{
+		Id: aws.String(id),
+	}
+	if acceptLanguage != "" {
+		input.AcceptLanguage = aws.String(acceptLanguage)
+	}
+
+	return findProvisionedProduct(ctx, conn, &input)
+}
+
+func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.DescribeProvisionedProductInput) (*servicecatalog.DescribeProvisionedProductOutput, error) {
+	output, err := conn.DescribeProvisionedProduct(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ProvisionedProductDetail == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findRecordByTwoPartKey(ctx context.Context, conn *servicecatalog.Client, id, acceptLanguage string) (*servicecatalog.DescribeRecordOutput, error) {
+	input := servicecatalog.DescribeRecordInput{
+		Id: aws.String(id),
+	}
+	if acceptLanguage != "" {
+		input.AcceptLanguage = aws.String(acceptLanguage)
+	}
+
+	return findRecord(ctx, conn, &input)
+}
+
+func findRecord(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.DescribeRecordInput) (*servicecatalog.DescribeRecordOutput, error) {
+	var output *servicecatalog.DescribeRecordOutput
+
+	for {
+		page, err := conn.DescribeRecord(ctx, input)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		if page == nil {
+			break
+		}
+
+		if output == nil {
+			output = page
+		} else {
+			output.RecordOutputs = append(output.RecordOutputs, page.RecordOutputs...)
+		}
+
+		nextPageToken := aws.ToString(page.NextPageToken)
+		if nextPageToken == "" {
+			break
+		}
+		input.PageToken = aws.String(nextPageToken)
+	}
+
+	if output == nil || output.RecordDetail == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
+	return func() (any, string, error) {
+		input := &servicecatalog.DescribeProvisionedProductInput{}
+
+		if acceptLanguage != "" {
+			input.AcceptLanguage = aws.String(acceptLanguage)
+		}
+
+		// one or the other but not both
+		if id != "" {
+			input.Id = aws.String(id)
+		} else if name != "" {
+			input.Name = aws.String(name)
+		}
+
+		output, err := conn.DescribeProvisionedProduct(ctx, input)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.ProvisionedProductDetail == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.ProvisionedProductDetail.Status), err
+	}
+}
+
+func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.ProvisionedProductStatusUnderChange, awstypes.ProvisionedProductStatusPlanInProgress),
+		Target:                    enum.Slice(awstypes.ProvisionedProductStatusAvailable),
+		Refresh:                   statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: continuousTargetOccurrence,
+		NotFoundChecks:            notFoundChecks,
+		MinTimeout:                minTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			var foo *retry.UnexpectedStateError
+			if errors.As(err, &foo) {
+				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
+				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
+				status := string(detail.Status)
+				if status == string(awstypes.ProvisionedProductStatusError) || status == string(awstypes.ProvisionedProductStatusTainted) {
+					// Create a custom error type that signals state refresh is needed
+					return output, &provisionedProductFailureError{
+						StatusMessage: aws.ToString(detail.StatusMessage),
+						Status:        status,
+						NeedsRefresh:  true,
+					}
+				}
+			}
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.ProvisionedProductStatusAvailable,
+			awstypes.ProvisionedProductStatusUnderChange,
+		),
+		Target:  []string{},
+		Refresh: statusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			var foo *retry.UnexpectedStateError
+			if errors.As(err, &foo) {
+				// If the status is `TAINTED`, we can retry with `IgnoreErrors`
+				status := string(detail.Status)
+				if status == string(awstypes.ProvisionedProductStatusTainted) {
+					// Create a custom error type that signals state refresh is needed
+					return &provisionedProductFailureError{
+						StatusMessage: aws.ToString(detail.StatusMessage),
+						Status:        status,
+						NeedsRefresh:  true,
+					}
+				}
+			}
+		}
+		return err
+	}
+
+	return err
+}
+
+// provisionedProductFailureError represents a provisioned product operation failure
+// that requires state refresh to recover from inconsistent state.
+type provisionedProductFailureError struct {
+	StatusMessage string
+	Status        string
+	NeedsRefresh  bool
+}
+
+func (e *provisionedProductFailureError) Error() string {
+	return e.StatusMessage
+}
+
+// IsStateInconsistent returns true if this error indicates state inconsistency
+// that requires a refresh to recover.
+func (e *provisionedProductFailureError) IsStateInconsistent() bool {
+	return e.NeedsRefresh
 }
 
 func expandProvisioningParameter(tfMap map[string]any) awstypes.ProvisioningParameter {

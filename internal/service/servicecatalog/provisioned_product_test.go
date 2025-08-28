@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -467,13 +467,9 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			input := &servicecatalog.DescribeProvisionedProductInput{
-				Id:             aws.String(rs.Primary.ID),
-				AcceptLanguage: aws.String(rs.Primary.Attributes["accept_language"]),
-			}
-			_, err := conn.DescribeProvisionedProduct(ctx, input)
+			_, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -481,29 +477,29 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("Service Catalog Provisioned Product (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("Service Catalog Provisioned Product %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string, pprod *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(ctx context.Context, n string, v *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-		out, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
+		output, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
+
 		if err != nil {
-			return fmt.Errorf("describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		*pprod = *out.ProvisionedProductDetail
+		*v = *output.ProvisionedProductDetail
 
 		return nil
 	}
