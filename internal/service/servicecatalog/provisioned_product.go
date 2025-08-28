@@ -421,6 +421,10 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// }
 
 	recordIdToUse := aws.ToString(detail.LastProvisioningRecordId)
+	if detail.Status == awstypes.ProvisionedProductStatusTainted && detail.LastSuccessfulProvisioningRecordId != nil {
+		recordIdToUse = aws.ToString(detail.LastSuccessfulProvisioningRecordId)
+		log.Printf("[DEBUG] Service Catalog Provisioned Product (%s) is TAINTED, using last successful record %s for parameter values", d.Id(), recordIdToUse)
+	}
 	outputDR, err := findRecordByTwoPartKey(ctx, conn, recordIdToUse, acceptLanguage)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -523,24 +527,23 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		// // Check if this is a state inconsistency error
-		// var failureErr *ProvisionedProductFailureError
-		// if errors.As(err, &failureErr) && failureErr.IsStateInconsistent() {
-		// 	// Force a state refresh to get actual AWS values before returning error
-		// 	log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
+		// Check if this is a state inconsistency error
+		if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
+			// Force a state refresh to get actual AWS values before returning error
+			log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
 
-		// 	// Perform state refresh to get actual current values from AWS
-		// 	refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
-		// 	if refreshDiags.HasError() {
-		// 		// If refresh fails, return both errors
-		// 		return append(refreshDiags, sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)...)
-		// 	}
+			// Perform state refresh to get actual current values from AWS
+			refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
+			if refreshDiags.HasError() {
+				// If refresh fails, return both errors
+				return append(refreshDiags, sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)...)
+			}
 
-		// 	// Return the original failure error after state is corrected
-		// 	return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
-		// }
+			// Return the original failure error after state is corrected
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
+		}
 
-		// // For other errors, proceed as before
+		// For other errors, proceed as before
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
 	}
 
