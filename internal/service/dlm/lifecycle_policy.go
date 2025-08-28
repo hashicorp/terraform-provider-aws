@@ -513,8 +513,13 @@ func resourceLifecyclePolicy() *schema.Resource {
 												},
 												names.AttrTarget: {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+												},
+												"target_region": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidRegionName,
 												},
 											},
 										},
@@ -1180,6 +1185,9 @@ func expandCrossRegionCopyRules(tfList []any) []awstypes.CrossRegionCopyRule {
 		if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 			apiObject.Target = aws.String(v)
 		}
+		if v, ok := tfMap["target_region"].(string); ok && v != "" {
+			apiObject.TargetRegion = aws.String(v)
+		}
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -1202,6 +1210,7 @@ func flattenCrossRegionCopyRules(apiObjects []awstypes.CrossRegionCopyRule) []an
 			names.AttrEncrypted: aws.ToBool(apiObject.Encrypted),
 			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(apiObject.RetainRule),
 			names.AttrTarget:    aws.ToString(apiObject.Target),
+			"target_region":     aws.ToString(apiObject.TargetRegion),
 		}
 
 		tfList = append(tfList, tfMap)
