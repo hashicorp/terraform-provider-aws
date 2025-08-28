@@ -1578,8 +1578,8 @@ resource "aws_dlm_lifecycle_policy" "test" {
       }
 
       cross_region_copy_rule {
-        target_region    = %[2]q
-        encrypted        = false
+        target_region = %[2]q
+        encrypted     = false
         retain_rule {
           interval      = 15
           interval_unit = "DAYS"
