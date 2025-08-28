@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -138,7 +138,7 @@ func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, req
 	}
 }
 
-func (l *logGroupListResource) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+func (l *logGroupListResource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
 	response.ProtoV5Schema = l.GetResource().ProtoSchema(ctx)()
 	response.ProtoV5IdentitySchema = l.GetResource().ProtoIdentitySchema(ctx)()
 }
@@ -159,14 +159,7 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 		result := request.NewListResult(ctx)
 		for output, err := range listLogGroups(ctx, conn, &cloudwatchlogs.DescribeLogGroupsInput{}, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
@@ -177,70 +170,48 @@ func (l *logGroupListResource) List(ctx context.Context, request list.ListReques
 			resourceGroupFlatten(ctx, rd, output)
 			err := l.SetIdentity(ctx, awsClient, rd)
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
 			tfTypeResource, err := rd.TfTypeResourceState()
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			if err := result.Resource.Set(ctx, *tfTypeResource); err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+			result.Diagnostics.Append(result.Resource.Set(ctx, *tfTypeResource)...)
+			if result.Diagnostics.HasError() {
 				yield(result)
 				return
 			}
+			//if err := result.Resource.Set(ctx, *tfTypeResource); err != nil {
+			//	result = list.ListResult{
+			//		Diagnostics: err.Errors(),
+			//	}
+			//	yield(result)
+			//	return
+			//}
 
 			result.DisplayName = fmt.Sprintf("%s: (%s)", aws.ToString(output.LogGroupName), aws.ToString(output.Arn))
 
 			tfTypeIdentity, err := rd.TfTypeIdentityState()
 			if err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+				result = fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
 				return
 			}
 
-			if err := result.Identity.Set(ctx, *tfTypeIdentity); err != nil {
-				result = list.ListResult{
-					Diagnostics: fwdiag.Diagnostics{
-						fwdiag.NewErrorDiagnostic(
-							"Error Listing Remote Resources",
-							fmt.Sprintf("Error: %s", err),
-						),
-					},
-				}
+			result.Diagnostics.Append(result.Identity.Set(ctx, *tfTypeIdentity)...)
+			if result.Diagnostics.HasError() {
+				yield(result)
+				return
+			}
+
+			if result.Diagnostics.HasError() {
+				result = list.ListResult{Diagnostics: result.Diagnostics}
 				yield(result)
 				return
 			}
