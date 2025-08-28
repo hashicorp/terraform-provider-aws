@@ -93,6 +93,7 @@ This resource supports the following arguments:
 * `branch_filter` - (Optional) A regular expression used to determine which branches get built. Default is all branches are built. We recommend using `filter_group` over `branch_filter`.
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 * `scope_configuration` - (Optional) Scope configuration for global or organization webhooks. Scope configuration blocks are documented below.
+* `pull_request_build_policy` - (Optional) Define a comment-based approval requirements for triggering builds on pull requests. This policy helps control when automated builds are executed based on contributor permissions and approval workflows
 
 `filter_group` supports the following:
 
@@ -109,6 +110,11 @@ This resource supports the following arguments:
 * `name` - (Required) The name of either the enterprise or organization.
 * `scope` - (Required) The type of scope for a GitHub webhook. Valid values for this parameter are: `GITHUB_ORGANIZATION`, `GITHUB_GLOBAL`.
 * `domain` - (Optional) The domain of the GitHub Enterprise organization. Required if your project's source type is GITHUB_ENTERPRISE.
+
+`pull_request_build_policy` supports the following:
+
+* `requires_comment_approval` - (Required) Specifies when comment-based approval is required before triggering a build on pull requests. Valid values: `DISABLED`, `ALL_PULL_REQUESTS`, `FORK_PULL_REQUESTS`.
+* `approver_roles` - (Optional) List of repository roles that have approval privileges for pull request builds when comment approval is required. Only users with these roles can provide valid comment approvals. If a pull request contributor is one of these roles, their pull request builds will trigger automatically.
 
 ## Attribute Reference
 
