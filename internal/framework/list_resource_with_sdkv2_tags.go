@@ -28,11 +28,14 @@ func (r *ListResourceWithSDKv2Tags) SetTags(ctx context.Context, client *conns.A
 		return nil
 	}
 
-	// Some old resources may not have the required attribute set after Read:
-	// https://github.com/hashicorp/terraform-provider-aws/issues/31180
-	if identifier := r.tagSpec.GetIdentifierSDKv2(ctx, d); identifier != "" {
-		if err := r.tagSpec.ListTags(ctx, sp, client, identifier); err != nil {
-			return err
+	// If the R handler didn't set tags, try and read them from the service API.
+	if tagsInContext.TagsOut.IsNone() {
+		// Some old resources may not have the required attribute set after Read:
+		// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+		if identifier := r.tagSpec.GetIdentifierSDKv2(ctx, d); identifier != "" {
+			if err := r.tagSpec.ListTags(ctx, sp, client, identifier); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -48,5 +51,9 @@ func (r *ListResourceWithSDKv2Tags) SetTags(ctx context.Context, client *conns.A
 	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 		return err
 	}
+
+	// reset tags in context for next resource
+	tagsInContext.TagsOut = nil
+
 	return nil
 }
