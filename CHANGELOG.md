@@ -16,7 +16,6 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_bedrockagent_knowledge_base: Add support for OpenSearch managed clusters in `storage_configuration` ([#42588](https://github.com/hashicorp/terraform-provider-aws/issues/42588))
 * data-source/aws_network_interface: Add `attachment.network_card_index` attribute ([#42188](https://github.com/hashicorp/terraform-provider-aws/issues/42188))
 * data-source/aws_sesv2_email_identity: Add `verification_status` attribute ([#44045](https://github.com/hashicorp/terraform-provider-aws/issues/44045))
 * data-source/aws_signer_signing_profile: Add `signing_material` and `signing_parameters` attributes ([#43921](https://github.com/hashicorp/terraform-provider-aws/issues/43921))
