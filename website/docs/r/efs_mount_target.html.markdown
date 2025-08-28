@@ -38,6 +38,9 @@ This resource supports the following arguments:
 * `subnet_id` - (Required) The ID of the subnet to add the mount target in.
 * `ip_address` - (Optional) The address (within the address range of the specified subnet) at
 which the file system may be mounted via the mount target.
+* `ip_address_type` - (Optional) IP address type used by the mount target. Valid values are `IPV4_ONLY`, `IPV6_ONLY`, and `DUAL_STACK`. The IP address type of a mount target must be compatible with the subnet to which it belongs.
+* `ipv6_address` - (Optional) The IPv6 address (within the address range of the specified subnet) at
+which the file system may be mounted via the mount target.
 * `security_groups` - (Optional) A list of up to 5 VPC security group IDs (that must
 be for the same VPC as subnet specified) in effect for the mount target.
 
