@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -59,14 +58,6 @@ type resourceTransformer struct {
 func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrCreationTime: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			"log_group_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -1016,8 +1007,6 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 }
 
 type resourceTransformerModel struct {
-	CreationTime       timetypes.RFC3339Type                                   `tfsdk:"creation_time"`
-	LastModifiedTime   timetypes.RFC3339Type                                   `tfsdk:"last_modified_time"`
 	LogGroupIdentifier types.String                                            `tfsdk:"log_group_identifier"`
 	TransformerConfig  fwtypes.ListNestedObjectValueOf[transformerConfigModel] `tfsdk:"transformer_config"`
 	Timeouts           timeouts.Value                                          `tfsdk:"timeouts"`
