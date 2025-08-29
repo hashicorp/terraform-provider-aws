@@ -65,6 +65,10 @@ func resourceInvocation() *schema.Resource {
 				ForceNew: true,
 				Default:  FunctionVersionLatest,
 			},
+			"reset_state_on_crud_update_failure": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"result": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -180,6 +184,13 @@ func isCreateOnlyScope(d *schema.ResourceData) bool {
 
 func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, action invocationAction) diag.Diagnostics {
 	var diags diag.Diagnostics
+	completed := false
+
+	defer func() {
+		if !completed {
+			resetAttributes(d)
+		}
+	}()
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
@@ -208,7 +219,21 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
 	d.Set("result", string(output.Payload))
 
+	completed = true
 	return diags
+}
+
+func resetAttributes(d *schema.ResourceData) {
+	if d.Id() != "" {
+		if v := d.Get("reset_state_on_crud_update_failure").(bool); v {
+			for _, key := range []string{"input", "lifecycle_scope", "result", "terraform_key"} {
+				if d.HasChange(key) {
+					old, _ := d.GetChange(key)
+					d.Set(key, old)
+				}
+			}
+		}
+	}
 }
 
 // customizeDiffValidateInput validates that `input` is JSON object when
