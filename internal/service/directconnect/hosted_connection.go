@@ -61,7 +61,6 @@ func resourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"loa_issue_time": {
 				Type:     schema.TypeString,
 				Computed: true,
