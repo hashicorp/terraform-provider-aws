@@ -235,7 +235,8 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 				Description: "The time zone of the Autonomous VM cluster.",
 			},
 			"total_container_databases": schema.Int32Attribute{
-				Computed: true,
+				Computed:    true,
+				Description: "The total number of Autonomous Container Databases that can be created with the allocated local storage.",
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"maintenance_window": schema.ListAttribute{
@@ -249,7 +250,6 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 
 func (d *dataSourceCloudAutonomousVmCluster) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ODBClient(ctx)
-
 	var data cloudAutonomousVmClusterDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -329,15 +329,12 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	Tags                                         tftags.Map                                                                                `tfsdk:"tags"`
 }
 type cloudAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
-	CustomActionTimeoutInMins    types.Int32                                                                                    `tfsdk:"custom_action_timeout_in_mins"`
-	DaysOfWeek                   fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week"`
-	HoursOfDay                   fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"hours_of_day"`
-	IsCustomActionTimeoutEnabled types.Bool                                                                                     `tfsdk:"is_custom_action_timeout_enabled"`
-	LeadTimeInWeeks              types.Int32                                                                                    `tfsdk:"lead_time_in_weeks"`
-	Months                       fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel]   `tfsdk:"months"`
-	PatchingMode                 fwtypes.StringEnum[odbtypes.PatchingModeType]                                                  `tfsdk:"patching_mode"`
-	Preference                   fwtypes.StringEnum[odbtypes.PreferenceType]                                                    `tfsdk:"preference"`
-	WeeksOfMonth                 fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"weeks_of_month"`
+	DaysOfWeek      fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week"`
+	HoursOfDay      fwtypes.SetValueOf[types.Int64]                                                                `tfsdk:"hours_of_day"`
+	LeadTimeInWeeks types.Int32                                                                                    `tfsdk:"lead_time_in_weeks"`
+	Months          fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel]   `tfsdk:"months"`
+	Preference      fwtypes.StringEnum[odbtypes.PreferenceType]                                                    `tfsdk:"preference"`
+	WeeksOfMonth    fwtypes.SetValueOf[types.Int64]                                                                `tfsdk:"weeks_of_month"`
 }
 type dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
 	Name fwtypes.StringEnum[odbtypes.DayOfWeekName] `tfsdk:"name"`

@@ -126,10 +126,10 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
   maintenance_window {
-    custom_action_timeout_in_mins    = 16
-    is_custom_action_timeout_enabled = true
-    patching_mode                    = "ROLLING"
-    preference                       = "NO_PREFERENCE"
+    preference = "NO_PREFERENCE"
+  }
+  tags = {
+    "env" = "dev"
   }
 
 }
@@ -177,16 +177,11 @@ resource "aws_odb_cloud_exadata_infrastructure" "test" {
   compute_count                    = 2
   availability_zone_id             = "use1-az6"
   customer_contacts_to_send_to_oci = ["%[2]s"]
-  maintenance_window = {
+  maintenance_window {
     custom_action_timeout_in_mins    = 16
-    days_of_week                     = []
-    hours_of_day                     = []
     is_custom_action_timeout_enabled = true
-    lead_time_in_weeks               = 0
-    months                           = []
     patching_mode                    = "ROLLING"
     preference                       = "NO_PREFERENCE"
-    weeks_of_month                   = []
   }
 }
 

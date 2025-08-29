@@ -339,55 +339,52 @@ func (r *resourceCloudAutonomousVmCluster) Schema(ctx context.Context, req resou
 
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"custom_action_timeout_in_mins": schema.Int32Attribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "The custom action timeout in minutes for the maintenance window.",
-						},
 						"days_of_week": schema.SetAttribute{
 							ElementType: fwtypes.NewObjectTypeOf[dayWeekNameAutonomousVmClusterMaintenanceWindowResourceModel](ctx),
 							Optional:    true,
-							Computed:    true,
 							Description: "The days of the week when maintenance can be performed.",
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 						"hours_of_day": schema.SetAttribute{
-							ElementType: types.Int32Type,
+							ElementType: types.Int64Type,
 							Optional:    true,
-							Computed:    true,
 							Description: "The hours of the day when maintenance can be performed.",
-						},
-						"is_custom_action_timeout_enabled": schema.BoolAttribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "Indicates whether custom action timeout is enabled for the maintenance window.",
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 						"lead_time_in_weeks": schema.Int32Attribute{
 							Optional:    true,
-							Computed:    true,
 							Description: "The lead time in weeks before the maintenance window.",
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
 						},
 						"months": schema.SetAttribute{
 							ElementType: fwtypes.NewObjectTypeOf[monthNameAutonomousVmClusterMaintenanceWindowResourceModel](ctx),
 							Optional:    true,
-							Computed:    true,
 							Description: "The months when maintenance can be performed.",
-						},
-						"patching_mode": schema.StringAttribute{
-							Optional:    true,
-							Computed:    true,
-							CustomType:  fwtypes.StringEnumType[odbtypes.PatchingModeType](),
-							Description: "The patching mode for the maintenance window.",
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 						"preference": schema.StringAttribute{
 							Required:    true,
 							CustomType:  fwtypes.StringEnumType[odbtypes.PreferenceType](),
 							Description: "The preference for the maintenance window scheduling.",
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"weeks_of_month": schema.SetAttribute{
-							ElementType: types.Int32Type,
+							ElementType: types.Int64Type,
 							Optional:    true,
-							Computed:    true,
 							Description: "Indicates whether to skip release updates during maintenance.",
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
@@ -676,15 +673,12 @@ type cloudAutonomousVmClusterResourceModel struct {
 }
 
 type cloudAutonomousVmClusterMaintenanceWindowResourceModel struct {
-	CustomActionTimeoutInMins    types.Int32                                                                                  `tfsdk:"custom_action_timeout_in_mins"`
-	DaysOfWeek                   fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowResourceModel] `tfsdk:"days_of_week"`
-	HoursOfDay                   fwtypes.SetValueOf[types.Int32]                                                              `tfsdk:"hours_of_day"`
-	IsCustomActionTimeoutEnabled types.Bool                                                                                   `tfsdk:"is_custom_action_timeout_enabled"`
-	LeadTimeInWeeks              types.Int32                                                                                  `tfsdk:"lead_time_in_weeks"`
-	Months                       fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowResourceModel]   `tfsdk:"months"`
-	PatchingMode                 fwtypes.StringEnum[odbtypes.PatchingModeType]                                                `tfsdk:"patching_mode"`
-	Preference                   fwtypes.StringEnum[odbtypes.PreferenceType]                                                  `tfsdk:"preference"`
-	WeeksOfMonth                 fwtypes.SetValueOf[types.Int32]                                                              `tfsdk:"weeks_of_month"`
+	DaysOfWeek      fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowResourceModel] `tfsdk:"days_of_week"`
+	HoursOfDay      fwtypes.SetValueOf[types.Int64]                                                              `tfsdk:"hours_of_day"`
+	LeadTimeInWeeks types.Int32                                                                                  `tfsdk:"lead_time_in_weeks"`
+	Months          fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowResourceModel]   `tfsdk:"months"`
+	Preference      fwtypes.StringEnum[odbtypes.PreferenceType]                                                  `tfsdk:"preference"`
+	WeeksOfMonth    fwtypes.SetValueOf[types.Int64]                                                              `tfsdk:"weeks_of_month"`
 }
 
 type dayWeekNameAutonomousVmClusterMaintenanceWindowResourceModel struct {

@@ -1,5 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 # Autonomous VM Cluster with default maintenance window and minimum parameters
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
@@ -15,13 +14,8 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
   db_servers                 = ["<my_db_server_id>"]
   scan_listener_port_tls     = 8561
   scan_listener_port_non_tls = 1024
-  maintenance_window = {
-    preference         = "NO_PREFERENCE"
-    days_of_week       = []
-    hours_of_day       = []
-    months             = []
-    weeks_of_month     = []
-    lead_time_in_weeks = 0
+  maintenance_window {
+    preference = "NO_PREFERENCE"
   }
 
 }
@@ -41,13 +35,13 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = ["<my_db_server_1>", "<my_db_server_2>"]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window = {
-    preference         = "CUSTOM_PREFERENCE"
-    days_of_week       = ["MONDAY", "TUESDAY"]
+  maintenance_window {
+    days_of_week       = [{ name = "MONDAY" }, { name = "TUESDAY" }]
     hours_of_day       = [4, 16]
-    months             = ["FEBRUARY", "MAY", "AUGUST", "NOVEMBER"]
-    weeks_of_month     = [2, 4]
     lead_time_in_weeks = 3
+    months             = [{ name = "FEBRUARY" }, { name = "MAY" }, { name = "AUGUST" }, { name = "NOVEMBER" }]
+    preference         = "CUSTOM_PREFERENCE"
+    weeks_of_month     = [2, 4]
   }
   tags = {
     "env" = "dev"

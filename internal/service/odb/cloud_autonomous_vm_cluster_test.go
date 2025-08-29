@@ -294,11 +294,13 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window  {
-    preference         = "NO_PREFERENCE"
+  maintenance_window {
+    preference = "NO_PREFERENCE"
   }
 
 }
+
+
 
 
 `, exaInfraRes, odbNetRes, avmcDisplayName)
@@ -336,10 +338,12 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
   maintenance_window {
-    preference         = "NO_PREFERENCE"
+    preference = "NO_PREFERENCE"
   }
 
 }
+
+
 
 
 `, exaInfraRes, odbNetRes, avmcDisplayName)
@@ -365,13 +369,15 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
   maintenance_window {
-    preference         = "NO_PREFERENCE"
+    preference = "NO_PREFERENCE"
   }
   tags = {
     "env" = "dev"
   }
 
 }
+
+
 
 
 `, exaInfraRes, odbNetRes, avmcDisplayName)
@@ -411,18 +417,20 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
   maintenance_window {
-    preference         = "CUSTOM_PREFERENCE"
     days_of_week       = [{ name = "MONDAY" }, { name = "TUESDAY" }]
     hours_of_day       = [4, 16]
-    months             = [{ name = "FEBRUARY" }, { name = "MAY" }, { name = "AUGUST" }, { name = "NOVEMBER" }]
-    weeks_of_month     = [2, 4]
     lead_time_in_weeks = 3
+    months             = [{ name = "FEBRUARY" }, { name = "MAY" }, { name = "AUGUST" }, { name = "NOVEMBER" }]
+    preference         = "CUSTOM_PREFERENCE"
+    weeks_of_month     = [2, 4]
   }
   tags = {
     "env" = "dev"
   }
 
 }
+
+
 
 
 `, exaInfraRes, odbNetRes, avmcDisplayName)
