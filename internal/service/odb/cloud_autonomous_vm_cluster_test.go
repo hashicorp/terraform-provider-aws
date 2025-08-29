@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -34,7 +33,7 @@ type autonomousVMClusterResourceTest struct {
 
 var autonomousVMClusterResourceTestEntity = autonomousVMClusterResourceTest{
 	exaInfraDisplayNamePrefix:            "Ofake-exa",
-	odbNetDisplayNamePrefix:              "odb-net",
+	odbNetDisplayNamePrefix:              "oracleDB-net",
 	autonomousVmClusterDisplayNamePrefix: "Ofake-avmc",
 }
 
@@ -295,13 +294,8 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window = {
+  maintenance_window  {
     preference         = "NO_PREFERENCE"
-    days_of_week       = []
-    hours_of_day       = []
-    months             = []
-    weeks_of_month     = []
-    lead_time_in_weeks = 0
   }
 
 }
@@ -341,13 +335,8 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window = {
+  maintenance_window {
     preference         = "NO_PREFERENCE"
-    days_of_week       = []
-    hours_of_day       = []
-    months             = []
-    weeks_of_month     = []
-    lead_time_in_weeks = 0
   }
 
 }
@@ -375,13 +364,8 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window = {
+  maintenance_window {
     preference         = "NO_PREFERENCE"
-    days_of_week       = []
-    hours_of_day       = []
-    months             = []
-    weeks_of_month     = []
-    lead_time_in_weeks = 0
   }
   tags = {
     "env" = "dev"
@@ -426,11 +410,11 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "test" {
   db_servers                            = [for db_server in data.aws_odb_db_servers_list.test.db_servers : db_server.id]
   scan_listener_port_tls                = 8561
   scan_listener_port_non_tls            = 1024
-  maintenance_window = {
+  maintenance_window {
     preference         = "CUSTOM_PREFERENCE"
-    days_of_week       = ["MONDAY", "TUESDAY"]
+    days_of_week       = [{ name = "MONDAY" }, { name = "TUESDAY" }]
     hours_of_day       = [4, 16]
-    months             = ["FEBRUARY", "MAY", "AUGUST", "NOVEMBER"]
+    months             = [{ name = "FEBRUARY" }, { name = "MAY" }, { name = "AUGUST" }, { name = "NOVEMBER" }]
     weeks_of_month     = [2, 4]
     lead_time_in_weeks = 3
   }
@@ -469,23 +453,17 @@ resource "aws_odb_network" "test" {
 func (autonomousVMClusterResourceTest) exaInfra(exaDisplayName, emailAddress string) string {
 	resource := fmt.Sprintf(`
 resource "aws_odb_cloud_exadata_infrastructure" "test" {
-  display_name                     = "%[1]s"
+  display_name                     = %[1]q
   shape                            = "Exadata.X9M"
   storage_count                    = 3
   compute_count                    = 2
   availability_zone_id             = "use1-az6"
-  customer_contacts_to_send_to_oci = ["%[2]s"]
-
-  maintenance_window = {
+  customer_contacts_to_send_to_oci = [{ email = "%[2]s" }]
+  maintenance_window {
     custom_action_timeout_in_mins    = 16
-    days_of_week                     = []
-    hours_of_day                     = []
     is_custom_action_timeout_enabled = true
-    lead_time_in_weeks               = 0
-    months                           = []
     patching_mode                    = "ROLLING"
     preference                       = "NO_PREFERENCE"
-    weeks_of_month                   = []
   }
 }
 `, exaDisplayName, emailAddress)

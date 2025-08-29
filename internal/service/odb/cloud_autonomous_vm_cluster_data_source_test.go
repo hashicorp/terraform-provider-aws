@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 

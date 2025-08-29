@@ -1,5 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
+// Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
@@ -330,12 +329,15 @@ type cloudAutonomousVmClusterDataSourceModel struct {
 	Tags                                         tftags.Map                                                                                `tfsdk:"tags"`
 }
 type cloudAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
-	DaysOfWeek      fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week"`
-	HoursOfDay      fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"hours_of_day"`
-	LeadTimeInWeeks types.Int32                                                                                    `tfsdk:"lead_time_in_weeks"`
-	Months          fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel]   `tfsdk:"months"`
-	Preference      fwtypes.StringEnum[odbtypes.PreferenceType]                                                    `tfsdk:"preference"`
-	WeeksOfMonth    fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"weeks_of_month"`
+	CustomActionTimeoutInMins    types.Int32                                                                                    `tfsdk:"custom_action_timeout_in_mins"`
+	DaysOfWeek                   fwtypes.SetNestedObjectValueOf[dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel] `tfsdk:"days_of_week"`
+	HoursOfDay                   fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"hours_of_day"`
+	IsCustomActionTimeoutEnabled types.Bool                                                                                     `tfsdk:"is_custom_action_timeout_enabled"`
+	LeadTimeInWeeks              types.Int32                                                                                    `tfsdk:"lead_time_in_weeks"`
+	Months                       fwtypes.SetNestedObjectValueOf[monthNameAutonomousVmClusterMaintenanceWindowDataSourceModel]   `tfsdk:"months"`
+	PatchingMode                 fwtypes.StringEnum[odbtypes.PatchingModeType]                                                  `tfsdk:"patching_mode"`
+	Preference                   fwtypes.StringEnum[odbtypes.PreferenceType]                                                    `tfsdk:"preference"`
+	WeeksOfMonth                 fwtypes.SetValueOf[types.Int32]                                                                `tfsdk:"weeks_of_month"`
 }
 type dayWeekNameAutonomousVmClusterMaintenanceWindowDataSourceModel struct {
 	Name fwtypes.StringEnum[odbtypes.DayOfWeekName] `tfsdk:"name"`
