@@ -66,7 +66,7 @@ data "aws_account_account" "test" {}
 `
 }
 
-func testAccAccountDataSourceConfig_organization() string {
+func testAccAccountDataSourceConfig_organization() string { // nosemgrep:ci.account-in-func-name
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "test" {
   provider = "awsalternate"
