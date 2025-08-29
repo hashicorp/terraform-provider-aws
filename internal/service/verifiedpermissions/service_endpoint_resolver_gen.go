@@ -62,7 +62,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params verifiedpermissi
 				})
 				params.UseFIPS = aws.Bool(false)
 			} else {
-				err = fmt.Errorf("looking up verifiedpermissions endpoint %q: %s", hostname, err)
+				err = fmt.Errorf("looking up verifiedpermissions endpoint %q: %w", hostname, err)
 				return
 			}
 		} else {

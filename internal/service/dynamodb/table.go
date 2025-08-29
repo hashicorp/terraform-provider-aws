@@ -299,6 +299,11 @@ func resourceTable() *schema.Resource {
 							Default:          awstypes.MultiRegionConsistencyEventual,
 							ValidateDiagFunc: enum.Validate[awstypes.MultiRegionConsistency](),
 						},
+						"deletion_protection_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -613,7 +618,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]any))
 		}
 
-		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.RestoreTableToPointInTime(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
@@ -681,7 +686,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		input.TableCreationParameters = tcp
 
-		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (any, error) {
+		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.ImportTable(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
@@ -772,7 +777,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.TableClass = awstypes.TableClass(v.(string))
 		}
 
-		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
 			return conn.CreateTable(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
@@ -1573,6 +1578,12 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			if err = updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), nil, tfMap["region_name"].(string), timeout); err != nil {
 				return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
 			}
+
+			if v, ok := tfMap["deletion_protection_enabled"].(bool); ok {
+				if err = updateReplicaDeletionProtection(ctx, conn, tableName, tfMap["region_name"].(string), v, timeout); err != nil {
+					return fmt.Errorf("updating replica (%s) deletion protection: %w", tfMap["region_name"].(string), err)
+				}
+			}
 		}
 	}
 	return nil
@@ -1683,6 +1694,26 @@ func updatePITR(ctx context.Context, conn *dynamodb.Client, tableName string, en
 	return nil
 }
 
+func updateReplicaDeletionProtection(ctx context.Context, conn *dynamodb.Client, tableName, region string, enabled bool, timeout time.Duration) error {
+	log.Printf("[DEBUG] Updating DynamoDB deletion protection to %v (%s)", enabled, region)
+	input := dynamodb.UpdateTableInput{
+		TableName:                 aws.String(tableName),
+		DeletionProtectionEnabled: aws.Bool(enabled),
+	}
+
+	optFn := func(o *dynamodb.Options) { o.Region = region }
+	_, err := conn.UpdateTable(ctx, &input, optFn)
+	if err != nil {
+		return fmt.Errorf("updating deletion protection: %w", err)
+	}
+
+	if _, err := waitReplicaActive(ctx, conn, tableName, region, timeout, replicaPropagationDelay); err != nil {
+		return fmt.Errorf("waiting for deletion protection update: %w", err)
+	}
+
+	return nil
+}
+
 func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.ResourceData) error {
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
@@ -1762,6 +1793,14 @@ func updateReplica(ctx context.Context, conn *dynamodb.Client, d *schema.Resourc
 			if ma["point_in_time_recovery"].(bool) != mr["point_in_time_recovery"].(bool) {
 				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), nil, ma["region_name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return fmt.Errorf("updating replica (%s) point in time recovery: %w", ma["region_name"].(string), err)
+				}
+				break
+			}
+
+			// just update deletion protection
+			if ma["deletion_protection_enabled"].(bool) != mr["deletion_protection_enabled"].(bool) {
+				if err := updateReplicaDeletionProtection(ctx, conn, d.Id(), ma["region_name"].(string), ma["deletion_protection_enabled"].(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("updating replica (%s) deletion protection: %w", ma["region_name"].(string), err)
 				}
 				break
 			}
@@ -1943,7 +1982,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 		TableName: aws.String(tableName),
 	}
 
-	_, err := tfresource.RetryWhen(ctx, deleteTableTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhen(ctx, deleteTableTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteTable(ctx, input)
 	}, func(err error) (bool, error) {
 		// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -2210,12 +2249,12 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName s
 			continue
 		}
 
-		tfMap[names.AttrStreamARN] = aws.ToString(table.LatestStreamArn)
-		tfMap["stream_label"] = aws.ToString(table.LatestStreamLabel)
-
+		tfMap["deletion_protection_enabled"] = aws.ToBool(table.DeletionProtectionEnabled)
 		if table.SSEDescription != nil {
 			tfMap[names.AttrKMSKeyARN] = aws.ToString(table.SSEDescription.KMSMasterKeyArn)
 		}
+		tfMap[names.AttrStreamARN] = aws.ToString(table.LatestStreamArn)
+		tfMap["stream_label"] = aws.ToString(table.LatestStreamLabel)
 
 		tfList[i] = tfMap
 	}

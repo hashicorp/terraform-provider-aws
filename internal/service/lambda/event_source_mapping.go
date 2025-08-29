@@ -821,7 +821,7 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteEventSourceMapping(ctx, &lambda.DeleteEventSourceMappingInput{
 			UUID: aws.String(d.Id()),
 		})
@@ -848,7 +848,7 @@ type eventSourceMappingCU interface {
 
 func retryEventSourceMapping[T eventSourceMappingCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {

@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -44,6 +45,10 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionOutput")
 // @Testing(importIgnore="filename;last_modified;publish")
+// @IdentityAttribute("function_name")
+// @Testing(idAttrDuplicates="function_name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @CustomImport
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -59,6 +64,10 @@ func resourceFunction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
 				d.Set("function_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -645,6 +654,20 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
 	function := output.Configuration
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
@@ -1079,11 +1102,11 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findFunctionByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionOutput, error) {
-	input := &lambda.GetFunctionInput{
+	input := lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
 	}
 
-	return findFunction(ctx, conn, input)
+	return findFunction(ctx, conn, &input)
 }
 
 func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
@@ -1140,13 +1163,13 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 }
 
 func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, name string) (*awstypes.FunctionConfiguration, error) {
-	input := &lambda.ListVersionsByFunctionInput{
+	input := lambda.ListVersionsByFunctionInput{
 		FunctionName: aws.String(name),
 		MaxItems:     aws.Int32(listVersionsMaxItems),
 	}
 	var output *awstypes.FunctionConfiguration
 
-	pages := lambda.NewListVersionsByFunctionPaginator(conn, input)
+	pages := lambda.NewListVersionsByFunctionPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -1158,6 +1181,35 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 			// List is sorted from oldest to latest.
 			output = &page.Versions[len(page.Versions)-1]
 		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findFunctionConcurrencyByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionConcurrencyOutput, error) {
+	input := lambda.GetFunctionConcurrencyInput{
+		FunctionName: aws.String(name),
+	}
+
+	return findFunctionConcurrency(ctx, conn, &input)
+}
+
+func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionConcurrencyInput) (*lambda.GetFunctionConcurrencyOutput, error) {
+	output, err := conn.GetFunctionConcurrency(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if output == nil {
@@ -1351,7 +1403,7 @@ type functionCU interface {
 
 func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1383,7 +1435,7 @@ func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*
 			functionExtraThrottlingTimeout = 9 * time.Minute
 		)
 		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return f()
 			},
 			func(err error) (bool, error) {

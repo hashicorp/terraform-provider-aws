@@ -248,7 +248,7 @@ This resource supports the following arguments:
 `update_policy` supports the following:
 
 * `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
-* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the compute environment infrastructure is updated.
 
 ## Attribute Reference
 

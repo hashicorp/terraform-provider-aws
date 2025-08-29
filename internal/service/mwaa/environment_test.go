@@ -13,8 +13,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -467,6 +471,67 @@ func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.5.1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMWAAEnvironment_updateAirflowWorkerReplacementStrategy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var environment awstypes.Environment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "worker_replacement_strategy", "FORCED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_replacement_strategy"), tfknownvalue.StringExact(awstypes.WorkerReplacementStrategyForced)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("worker_replacement_strategy"), tfknownvalue.StringExact(awstypes.WorkerReplacementStrategyGraceful)),
+				},
 			},
 		},
 	})
@@ -1010,8 +1075,25 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-
-  airflow_version = %[2]q
+  airflow_version   = %[2]q
 }
 `, rName, airflowVersion))
+}
+
+func testAccEnvironmentConfig_airflowWorkerReplacementStrategy(rName string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_mwaa_environment" "test" {
+  dag_s3_path                 = aws_s3_object.dags.key
+  execution_role_arn          = aws_iam_role.test.arn
+  name                        = %[1]q
+  worker_replacement_strategy = "GRACEFUL"
+  network_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.private[*].id
+  }
+
+  source_bucket_arn = aws_s3_bucket.test.arn
+  airflow_version   = "2.4.3"
+}
+`, rName))
 }
