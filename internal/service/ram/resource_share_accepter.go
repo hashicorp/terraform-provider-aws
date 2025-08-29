@@ -294,16 +294,16 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client
 	// Retry for RAM resource share invitation eventual consistency.
 	errNotFound := errors.New("not found")
 	var output option.Option[awstypes.ResourceShareInvitation]
-	err := tfresource.Retry(ctx, resourceShareInvitationPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, resourceShareInvitationPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = findMaybeResourceShareInvitation(ctx, conn, input, filter)
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if output.IsNone() {
-			return retry.RetryableError(errNotFound)
+			return tfresource.RetryableError(errNotFound)
 		}
 
 		return nil

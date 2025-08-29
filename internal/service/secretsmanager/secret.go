@@ -247,19 +247,19 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	var policy *secretsmanager.GetResourcePolicyOutput
-	err = tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+	err = tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if v := output.ResourcePolicy; v != nil {
 			if valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.ToString(v)); err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			} else if !valid {
 				log.Printf("[DEBUG] Retrying because of invalid principals")
-				return retry.RetryableError(errors.New("contains invalid principals"))
+				return tfresource.RetryableError(errors.New("contains invalid principals"))
 			}
 		}
 

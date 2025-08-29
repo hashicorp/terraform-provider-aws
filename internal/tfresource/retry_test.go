@@ -11,7 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -354,8 +355,8 @@ func TestRetryContext_error(t *testing.T) {
 
 	ctx := t.Context()
 	expected := fmt.Errorf("nope")
-	f := func() *retry.RetryError {
-		return retry.NonRetryableError(expected)
+	f := func(context.Context) *tfresource.RetryError {
+		return tfresource.NonRetryableError(expected)
 	}
 
 	errCh := make(chan error)
@@ -430,7 +431,7 @@ func TestOptionsApply(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			conf := retry.StateChangeConf{}
+			conf := sdkretry.StateChangeConf{}
 
 			testCase.options.Apply(&conf)
 
