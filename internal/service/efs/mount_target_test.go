@@ -332,7 +332,7 @@ resource "aws_subnet" "test_ipv6_only" {
 
   ipv6_cidr_block = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 7)
 
-  enable_resource_name_dns_aaaa_record_on_launch  = true
+  enable_resource_name_dns_aaaa_record_on_launch = true
 
   assign_ipv6_address_on_creation = true
 
