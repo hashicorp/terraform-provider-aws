@@ -75,34 +75,36 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"add_keys": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[addKeysModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"add_keys": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[addKeysModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Blocks: map[string]schema.Block{
-								"entries": schema.ListNestedBlock{
-									CustomType: fwtypes.NewListNestedObjectTypeOf[addKeysEntryModel](ctx),
-									Validators: []validator.List{
-										listvalidator.IsRequired(),
-										listvalidator.SizeBetween(1, 5),
-									},
-									NestedObject: schema.NestedBlockObject{
-										Attributes: map[string]schema.Attribute{
-											names.AttrKey: schema.StringAttribute{
-												Required: true,
-												Validators: []validator.String{
-													stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[addKeysEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1, 5),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKey: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
 												},
-											},
-											"overwrite_if_exists": schema.BoolAttribute{
-												Optional: true,
-												Computed: true,
-											},
-											names.AttrValue: schema.StringAttribute{
-												Required: true,
-												Validators: []validator.String{
-													stringvalidator.LengthBetween(1, 256),
+												"overwrite_if_exists": schema.BoolAttribute{
+													Optional: true,
+													Computed: true,
+												},
+												names.AttrValue: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+													},
 												},
 											},
 										},
@@ -110,34 +112,36 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
-						"copy_value": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[copyValueModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"copy_value": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[copyValueModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Blocks: map[string]schema.Block{
-								"entries": schema.ListNestedBlock{
-									CustomType: fwtypes.NewListNestedObjectTypeOf[copyValueEntryModel](ctx),
-									Validators: []validator.List{
-										listvalidator.IsRequired(),
-										listvalidator.SizeBetween(1, 5),
-									},
-									NestedObject: schema.NestedBlockObject{
-										Attributes: map[string]schema.Attribute{
-											"overwrite_if_exists": schema.BoolAttribute{
-												Optional: true,
-												Computed: true,
-											},
-											names.AttrSource: schema.StringAttribute{
-												Required: true,
-												Validators: []validator.String{
-													stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"entries": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[copyValueEntryModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeBetween(1, 5),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"overwrite_if_exists": schema.BoolAttribute{
+													Optional: true,
+													Computed: true,
 												},
-											},
-											names.AttrTarget: schema.StringAttribute{
-												Required: true,
-												Validators: []validator.String{
-													stringvalidator.LengthBetween(1, 128),
+												names.AttrSource: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
+												},
+												names.AttrTarget: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 128),
+													},
 												},
 											},
 										},
@@ -264,23 +268,25 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
-						"grok": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[grokModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"grok": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[grokModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								"match": schema.StringAttribute{
-									Required: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 512),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"match": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 512),
+										},
 									},
-								},
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
@@ -385,17 +391,19 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
-						"parse_cloudfront": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[parseCloudfrontModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"parse_cloudfront": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseCloudfrontModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
@@ -480,62 +488,70 @@ func (r *resourceTransformer) Schema(ctx context.Context, req resource.SchemaReq
 								},
 							},
 						},
-						"parse_postgres": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[parsePostgresModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"parse_postgres": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parsePostgresModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
 						},
-						"parse_route53": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[parseRoute53Model](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"parse_route53": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseRoute53Model](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
 						},
-						"parse_vpc": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[parseVPCModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"parse_vpc": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseVPCModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
 						},
-						"parse_waf": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[parseWAFModel](ctx),
-							Validators: []validator.Object{
-								// TBD
+						"parse_waf": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[parseWAFModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
 							},
-							Attributes: map[string]schema.Attribute{
-								names.AttrSource: schema.StringAttribute{
-									Optional: true,
-									Computed: true,
-									Validators: []validator.String{
-										stringvalidator.LengthBetween(1, 128),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrSource: schema.StringAttribute{
+										Optional: true,
+										Computed: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 128),
+										},
 									},
 								},
 							},
@@ -1013,22 +1029,22 @@ type resourceTransformerModel struct {
 }
 
 type transformerConfigModel struct {
-	AddKeys           fwtypes.ObjectValueOf[addKeysModel]                     `tfsdk:"add_keys"`
-	CopyValue         fwtypes.ObjectValueOf[copyValueModel]                   `tfsdk:"copy_value"`
+	AddKeys           fwtypes.ListNestedObjectValueOf[addKeysModel]           `tfsdk:"add_keys"`
+	CopyValue         fwtypes.ListNestedObjectValueOf[copyValueModel]         `tfsdk:"copy_value"`
 	CSV               fwtypes.ListNestedObjectValueOf[csvModel]               `tfsdk:"csv"`
 	DateTimeConverter fwtypes.ListNestedObjectValueOf[dateTimeConverterModel] `tfsdk:"date_time_converter"`
 	DeleteKeys        fwtypes.ListNestedObjectValueOf[deleteKeysModel]        `tfsdk:"delete_keys"`
-	Grok              fwtypes.ObjectValueOf[grokModel]                        `tfsdk:"grok"`
+	Grok              fwtypes.ListNestedObjectValueOf[grokModel]              `tfsdk:"grok"`
 	ListToMap         fwtypes.ListNestedObjectValueOf[listToMapModel]         `tfsdk:"list_to_map"`
 	LowerCaseString   fwtypes.ListNestedObjectValueOf[lowerCaseStringModel]   `tfsdk:"lower_case_string"`
 	MoveKeys          fwtypes.ListNestedObjectValueOf[moveKeysModel]          `tfsdk:"move_keys"`
-	ParseCloudfront   fwtypes.ObjectValueOf[parseCloudfrontModel]             `tfsdk:"parse_cloudfront"`
+	ParseCloudfront   fwtypes.ListNestedObjectValueOf[parseCloudfrontModel]   `tfsdk:"parse_cloudfront"`
 	ParseJSON         fwtypes.ListNestedObjectValueOf[parseJSONModel]         `tfsdk:"parse_json"`
 	ParseKeyValue     fwtypes.ListNestedObjectValueOf[parseKeyValueModel]     `tfsdk:"parse_key_value"`
-	ParsePostgres     fwtypes.ObjectValueOf[parsePostgresModel]               `tfsdk:"parse_postgres"`
-	ParseRoute53      fwtypes.ObjectValueOf[parseRoute53Model]                `tfsdk:"parse_route53"`
-	ParseVPC          fwtypes.ObjectValueOf[parseVPCModel]                    `tfsdk:"parse_vpc"`
-	ParseWAF          fwtypes.ObjectValueOf[parseWAFModel]                    `tfsdk:"parse_waf"`
+	ParsePostgres     fwtypes.ListNestedObjectValueOf[parsePostgresModel]     `tfsdk:"parse_postgres"`
+	ParseRoute53      fwtypes.ListNestedObjectValueOf[parseRoute53Model]      `tfsdk:"parse_route53"`
+	ParseVPC          fwtypes.ListNestedObjectValueOf[parseVPCModel]          `tfsdk:"parse_vpc"`
+	ParseWAF          fwtypes.ListNestedObjectValueOf[parseWAFModel]          `tfsdk:"parse_waf"`
 	RenameEntries     fwtypes.ListNestedObjectValueOf[renameKeysModel]        `tfsdk:"rename_entries"`
 	SplitString       fwtypes.ListNestedObjectValueOf[splitStringModel]       `tfsdk:"split_string"`
 	SubstituteString  fwtypes.ListNestedObjectValueOf[substituteStringModel]  `tfsdk:"substitute_string"`
