@@ -48,10 +48,6 @@ func resourceGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
-		//Timeouts: &schema.ResourceTimeout{
-		//	Create: schema.DefaultTimeout(2 * time.Minute),
-		//	Update: schema.DefaultTimeout(2 * time.Minute),
-		//},
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -393,10 +389,11 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 
 	return findLogGroup(ctx, conn, &input, func(v *awstypes.LogGroup) bool {
 		return aws.ToString(v.LogGroupName) == name
-	})
+	}, tfslices.WithReturnFirstMatch)
 }
 
-func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
+func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) (*awstypes.LogGroup, error) {
+	opts := tfslices.NewFinderOptions(optFns)
 	var output []awstypes.LogGroup
 	for value, err := range listLogGroups(ctx, conn, input, filter) {
 		if err != nil {
@@ -404,6 +401,9 @@ func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 		}
 
 		output = append(output, value)
+		if opts.ReturnFirstMatch() {
+			break
+		}
 	}
 
 	return tfresource.AssertSingleValueResult(output)
