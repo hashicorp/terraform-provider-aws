@@ -321,39 +321,6 @@ func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptL
 	}
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &servicecatalog.DescribeProvisionedProductInput{}
-
-		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		// one or the other but not both
-		if id != "" {
-			input.Id = aws.String(id)
-		} else if name != "" {
-			input.Name = aws.String(name)
-		}
-
-		output, err := conn.DescribeProvisionedProduct(ctx, input)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.ProvisionedProductDetail == nil {
-			return nil, "", nil
-		}
-
-		return output, string(output.ProvisionedProductDetail.Status), err
-	}
-}
-
 func statusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{
