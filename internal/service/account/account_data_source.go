@@ -20,13 +20,9 @@ import (
 )
 
 // @FrameworkDataSource("aws_account_account", name="Account")
-func newAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newAccountDataSource(context.Context) (datasource.DataSourceWithConfigure, error) { // nosemgrep:ci.account-in-func-name
 	return &dataSourceAccount{}, nil
 }
-
-const (
-	DSNameAccount = "Account Data Source"
-)
 
 type dataSourceAccount struct {
 	framework.DataSourceWithModel[dataSourceAccountModel]
@@ -80,7 +76,7 @@ type dataSourceAccountModel struct {
 	AccountName        types.String      `tfsdk:"account_name"`
 }
 
-func findAccountInformation(ctx context.Context, conn *account.Client, accountID string) (*account.GetAccountInformationOutput, error) {
+func findAccountInformation(ctx context.Context, conn *account.Client, accountID string) (*account.GetAccountInformationOutput, error) { // nosemgrep:ci.account-in-func-name
 	input := account.GetAccountInformationInput{}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)

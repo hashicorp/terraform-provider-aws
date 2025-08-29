@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccAccountDataSource_basic(t *testing.T) {
+func testAccAccountDataSource_basic(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_account_account.test"
 
@@ -33,7 +33,7 @@ func testAccAccountDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAccountDataSource_accountID(t *testing.T) {
+func testAccAccountDataSource_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_account_account.test"
 
