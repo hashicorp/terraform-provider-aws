@@ -5,7 +5,6 @@ package flex
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"reflect"
 	"time"
@@ -16,7 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 )
 
 type emptyStruct struct{}
@@ -436,30 +436,30 @@ type tfMapBlockElementNoKey struct {
 	Attr2 types.String `tfsdk:"attr2"`
 }
 
-var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
+var _ tfsmithy.JSONStringer = (*testJSONDocument)(nil)
 var _ smithydocument.Marshaler = (*testJSONDocument)(nil)
 
 type testJSONDocument struct {
 	Value any
 }
 
-func newTestJSONDocument(v any) smithyjson.JSONStringer {
+func newTestJSONDocument(v any) tfsmithy.JSONStringer {
 	return &testJSONDocument{Value: v}
 }
 
 func (m *testJSONDocument) UnmarshalSmithyDocument(v any) error {
-	data, err := json.Marshal(m.Value)
+	data, err := tfjson.EncodeToBytes(m.Value)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, v)
+	return tfjson.DecodeFromBytes(data, v)
 }
 
 func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
-	return json.Marshal(m.Value)
+	return tfjson.EncodeToBytes(m.Value)
 }
 
-var _ smithyjson.JSONStringer = &testJSONDocumentError{}
+var _ tfsmithy.JSONStringer = &testJSONDocumentError{}
 
 type testJSONDocumentError struct{}
 
@@ -477,11 +477,11 @@ var (
 )
 
 type awsJSONStringer struct {
-	Field1 smithyjson.JSONStringer `json:"field1"`
+	Field1 tfsmithy.JSONStringer `json:"field1"`
 }
 
 type tfJSONStringer struct {
-	Field1 fwtypes.SmithyJSON[smithyjson.JSONStringer] `tfsdk:"field1"`
+	Field1 fwtypes.SmithyJSON[tfsmithy.JSONStringer] `tfsdk:"field1"`
 }
 
 type tfListNestedObject[T any] struct {

@@ -413,6 +413,11 @@ func StringValueToInt64Value(v string) int64 {
 	return i
 }
 
+// Int64ToRFC3339StringValue converts an int64 timestamp pointer to an RFC3339 Go string value.
+func Int64ToRFC3339StringValue(v *int64) string {
+	return time.UnixMilli(aws.ToInt64(v)).Format(time.RFC3339)
+}
+
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant
 // returns the number of parts
 func ResourceIdPartCount(id string) int {

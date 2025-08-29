@@ -60,6 +60,7 @@ TF_ACC=1 go test \
     ./internal/semver/... \
     ./internal/slices/... \
     ./internal/smerr/... \
+    ./internal/smithy/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \

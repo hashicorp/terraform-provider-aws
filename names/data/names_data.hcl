@@ -2133,13 +2133,21 @@ service "cognitoidp" {
   }
 
   resource_prefix {
-    actual  = "aws_cognito_(identity_provider|resource|user|risk|log)"
+    actual  = "aws_cognito_(identity_provider|log|managed_login_branding|managed_user|resource|risk|user)"
     correct = "aws_cognitoidp_"
   }
 
   provider_package_correct = "cognitoidp"
-  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk", "cognito_log"]
-  brand                    = "AWS"
+  doc_prefix = [
+    "cognito_identity_provider",
+    "cognito_log",
+    "cognito_managed_login_branding",
+    "cognito_managed_user",
+    "cognito_resource_",
+    "cognito_risk",
+    "cognito_user"
+  ]
+  brand = "AWS"
 }
 
 service "cognitosync" {
