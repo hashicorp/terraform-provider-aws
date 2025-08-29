@@ -42,6 +42,7 @@ This data source exports the following attributes in addition to the arguments a
 * `private_dns_name` - Private DNS name.
 * `private_ip` - Private IPv4 address of the network interface within the subnet.
 * `private_ips` - Private IPv4 addresses associated with the network interface.
+* `public_dns_names_ipv6` - List of public DNS names which resolve to the addresses in `ipv6_addresses`.
 * `requester_id` - ID of the entity that launched the instance on your behalf.
 * `security_groups` - List of security groups for the network interface.
 * `subnet_id` - ID of the subnet.
