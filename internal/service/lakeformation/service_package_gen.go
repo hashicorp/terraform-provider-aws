@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Resource LF Tag",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newLFTagExpressionResource,
+			TypeName: "aws_lakeformation_lf_tag_expression",
+			Name:     "LF Tag Expression",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
