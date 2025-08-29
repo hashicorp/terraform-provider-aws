@@ -60,7 +60,7 @@ func testAccAccountDataSource_accountID(t *testing.T) { // nosemgrep:ci.account-
 	})
 }
 
-func testAccAccountDataSourceConfig_basic() string {
+func testAccAccountDataSourceConfig_basic() string { // nosemgrep:ci.account-in-func-name
 	return `
 data "aws_account_account" "test" {}
 `
