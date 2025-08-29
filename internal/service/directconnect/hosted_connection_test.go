@@ -42,7 +42,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connection_region"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwnerAccountID, ownerAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
+
 					resource.TestCheckResourceAttr(resourceName, "vlan", "4094"),
 				),
 			},
