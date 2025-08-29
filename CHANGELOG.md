@@ -1,5 +1,15 @@
 ## 6.12.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_instance: Add resource identity support ([#44068](https://github.com/hashicorp/terraform-provider-aws/issues/44068))
+* resource/aws_ssm_association: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_ssm_document: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_ssm_maintenance_window: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_ssm_maintenance_window_target: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_ssm_maintenance_window_task: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+* resource/aws_ssm_patch_baseline: Add resource identity support ([#44075](https://github.com/hashicorp/terraform-provider-aws/issues/44075))
+
 ## 6.11.0 (August 28, 2025)
 
 FEATURES:
