@@ -6,20 +6,20 @@ package framework
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type ListResourceWithSDKv2Identity struct {
+type ListResourceWithSDKv2Resource struct {
 	resource           *schema.Resource
 	identityAttributes []inttypes.IdentityAttribute
 	identity           *schema.ResourceIdentity
 }
 
-func (l *ListResourceWithSDKv2Identity) AddIdentity(attrs []inttypes.IdentityAttribute) {
-	var identity schema.ResourceIdentity
+func (l *ListResourceWithSDKv2Resource) AddIdentity(attrs []inttypes.IdentityAttribute) {
 	out := make(map[string]*schema.Schema)
 	for _, v := range attrs {
 		out[v.Name()] = &schema.Schema{
@@ -32,8 +32,10 @@ func (l *ListResourceWithSDKv2Identity) AddIdentity(attrs []inttypes.IdentityAtt
 		}
 	}
 
-	identity.SchemaFunc = func() map[string]*schema.Schema {
-		return out
+	identity := schema.ResourceIdentity{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return out
+		},
 	}
 
 	l.identity = &identity
@@ -41,11 +43,16 @@ func (l *ListResourceWithSDKv2Identity) AddIdentity(attrs []inttypes.IdentityAtt
 	l.identityAttributes = attrs
 }
 
-func (l *ListResourceWithSDKv2Identity) GetResource() *schema.Resource {
+func (l *ListResourceWithSDKv2Resource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
+	response.ProtoV5Schema = l.resource.ProtoSchema(ctx)()
+	response.ProtoV5IdentitySchema = l.resource.ProtoIdentitySchema(ctx)()
+}
+
+func (l *ListResourceWithSDKv2Resource) GetResource() *schema.Resource {
 	return l.resource
 }
 
-func (l *ListResourceWithSDKv2Identity) SetResource(resource *schema.Resource) {
+func (l *ListResourceWithSDKv2Resource) SetResource(resource *schema.Resource) {
 	// Add region attribute if it does not exit
 	if _, ok := resource.SchemaMap()[names.AttrRegion]; !ok {
 		resource.SchemaMap()[names.AttrRegion] = &schema.Schema{
@@ -58,7 +65,7 @@ func (l *ListResourceWithSDKv2Identity) SetResource(resource *schema.Resource) {
 	l.resource = resource
 }
 
-func (l *ListResourceWithSDKv2Identity) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
+func (l *ListResourceWithSDKv2Resource) SetIdentity(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData) error {
 	ident, err := d.Identity()
 	if err != nil {
 		return err
