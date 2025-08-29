@@ -810,6 +810,15 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
+	codeUpdateCompleted := false
+	defer func() {
+		if !codeUpdateCompleted {
+			// If an error occurs before completing the code update,
+			// reset non-refreshable attributes to pre-apply state.
+			resetNonRefreshableAttributes(d)
+		}
+	}()
+
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
 			input := lambda.PutFunctionCodeSigningConfigInput{
@@ -820,7 +829,6 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			_, err := conn.PutFunctionCodeSigningConfig(ctx, &input)
 
 			if err != nil {
-				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		} else {
@@ -831,7 +839,6 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			_, err := conn.DeleteFunctionCodeSigningConfig(ctx, &input)
 
 			if err != nil {
-				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		}
@@ -846,7 +853,6 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChange("dead_letter_config") {
 			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
 				if v.([]any)[0] == nil {
-					resetNonRefreshableAttributes(d)
 					return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", d.Id())
 				}
 
@@ -968,12 +974,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		})
 
 		if err != nil {
-			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) configuration: %s", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
 		}
 	}
@@ -1003,7 +1007,6 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				old, _ := d.GetChange("filename")
 				d.Set("filename", old)
 
-				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", v, err)
 			}
 
@@ -1026,15 +1029,14 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		_, err := conn.UpdateFunctionCode(ctx, &input)
 
 		if err != nil {
-			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) code update: %s", d.Id(), err)
 		}
 	}
+	codeUpdateCompleted = true
 
 	if d.HasChange("reserved_concurrent_executions") {
 		if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
