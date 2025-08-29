@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,6 +29,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -806,7 +806,7 @@ func (r *resourceTransformer) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	out, err := findTransformerByLogGroupIdentifier(ctx, conn, state.LogGroupIdentifier.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -935,7 +935,7 @@ func waitTransformerCreated(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusTransformer(ctx, conn, logGroupIdentifier),
+		Refresh:                   statusTransformer(conn, logGroupIdentifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -953,7 +953,7 @@ func waitTransformerUpdated(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusTransformer(ctx, conn, logGroupIdentifier),
+		Refresh:                   statusTransformer(conn, logGroupIdentifier),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -971,7 +971,7 @@ func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{},
-		Refresh: statusTransformer(ctx, conn, logGroupIdentifier),
+		Refresh: statusTransformer(conn, logGroupIdentifier),
 		Timeout: timeout,
 	}
 
@@ -983,10 +983,10 @@ func waitTransformerDeleted(ctx context.Context, conn *cloudwatchlogs.Client, lo
 	return nil, err
 }
 
-func statusTransformer(ctx context.Context, conn *cloudwatchlogs.Client, logGroupIdentifier string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTransformer(conn *cloudwatchlogs.Client, logGroupIdentifier string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findTransformerByLogGroupIdentifier(ctx, conn, logGroupIdentifier)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1008,7 +1008,6 @@ func findTransformerByLogGroupIdentifier(ctx context.Context, conn *cloudwatchlo
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: &input,
 			}
 		}
 
