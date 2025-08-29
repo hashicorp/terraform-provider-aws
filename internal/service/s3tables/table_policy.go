@@ -38,15 +38,13 @@ func (r *tablePolicyResource) Schema(ctx context.Context, request resource.Schem
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrName: schema.StringAttribute{
-				Required:   true,
-				Validators: tableNameValidator,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrNamespace: schema.StringAttribute{
-				Required:   true,
-				Validators: namespaceNameValidator,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
