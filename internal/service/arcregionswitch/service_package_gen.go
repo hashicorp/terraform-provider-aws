@@ -4,11 +4,11 @@ package arcregionswitch
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
-	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -27,11 +27,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
-	return []*inttypes.ServicePackageSDKDataSource{}
+	return []*inttypes.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourcePlan,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
-	return []*inttypes.ServicePackageSDKResource{}
+	return []*inttypes.ServicePackageSDKResource{
+		{
+			Factory:  ResourcePlan,
+			TypeName: "aws_arcregionswitch_plan",
+			Name:     "Plan",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
@@ -58,19 +75,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
 				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
-			}
-		},
-		func(o *arcregionswitch.Options) {
-			switch partition := config["partition"].(string); partition {
-			case endpoints.AwsPartitionID:
-				if region := endpoints.UsEast1RegionID; o.Region != region {
-					tflog.Info(ctx, "overriding effective AWS API region", map[string]any{
-						"service":         p.ServicePackageName(),
-						"original_region": o.Region,
-						"override_region": region,
-					})
-					o.Region = region
-				}
 			}
 		},
 		withExtraOptions(ctx, p, config),
