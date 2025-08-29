@@ -4314,6 +4314,38 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+resource "terraform_data" "lambdatest_zip_sha256" {
+  input = filebase64sha256("test-fixtures/lambdatest.zip")
+}
+resource "terraform_data" "lambdatest_modified_zip_sha256" {
+  input = filebase64sha256("test-fixtures/lambdatest_modified.zip")
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket             = aws_s3_bucket.test.bucket
+  key                = %[2]q
+  source             = "test-fixtures/%[2]s"
+  checksum_algorithm = "SHA256"
+}
+
+resource "aws_lambda_function" "test" {
+  function_name    = %[1]q
+  role             = aws_iam_role.iam_for_lambda.arn
+  handler          = "exports.example"
+  runtime          = "nodejs20.x"
+  s3_bucket        = aws_s3_bucket.test.bucket
+  s3_key           = %[3]q
+  source_code_hash = aws_s3_object.test.checksum_sha256
+}
+`, rName, zipFileS3, zipFileLambda))
+}
+
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
