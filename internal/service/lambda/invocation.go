@@ -212,12 +212,18 @@ func isCreateOnlyScope(d *schema.ResourceData) bool {
 
 func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, action invocationAction) diag.Diagnostics {
 	var diags diag.Diagnostics
+	completed := false
+
+	defer func() {
+		if !completed {
+			resetAttributes(d)
+		}
+	}()
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 	payload, err := buildInput(d, action)
 	if err != nil {
-		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "Lambda Invocation (%s) input transformation failed for input (%s): %s", d.Id(), d.Get("input").(string), err)
 	}
 
@@ -234,12 +240,10 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	output, err := conn.Invoke(ctx, input)
 
 	if err != nil {
-		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
 	}
 
 	if output.FunctionError != nil {
-		resetAttributes(d)
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
@@ -252,6 +256,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 	d.SetId(id)
 	d.Set("result", string(output.Payload))
 
+	completed = true
 	return diags
 }
 
