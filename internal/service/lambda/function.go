@@ -820,7 +820,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			_, err := conn.PutFunctionCodeSigningConfig(ctx, &input)
 
 			if err != nil {
-				resetSourceCodeHash(d)
+				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		} else {
@@ -831,7 +831,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			_, err := conn.DeleteFunctionCodeSigningConfig(ctx, &input)
 
 			if err != nil {
-				resetSourceCodeHash(d)
+				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		}
@@ -846,7 +846,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChange("dead_letter_config") {
 			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
 				if v.([]any)[0] == nil {
-					resetSourceCodeHash(d)
+					resetNonRefreshableAttributes(d)
 					return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", d.Id())
 				}
 
@@ -968,12 +968,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		})
 
 		if err != nil {
-			resetSourceCodeHash(d)
+			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) configuration: %s", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			resetSourceCodeHash(d)
+			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
 		}
 	}
@@ -1003,7 +1003,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				old, _ := d.GetChange("filename")
 				d.Set("filename", old)
 
-				resetSourceCodeHash(d)
+				resetNonRefreshableAttributes(d)
 				return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", v, err)
 			}
 
@@ -1026,20 +1026,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		_, err := conn.UpdateFunctionCode(ctx, &input)
 
 		if err != nil {
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
-				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
-				for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version"} {
-					old, _ := d.GetChange(key)
-					d.Set(key, old)
-				}
-			}
-			resetSourceCodeHash(d)
-
+			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			resetSourceCodeHash(d)
+			resetNonRefreshableAttributes(d)
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) code update: %s", d.Id(), err)
 		}
 	}
@@ -1770,12 +1762,14 @@ func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []any {
 	return []any{tfMap}
 }
 
-// source_code_hash in the state is updated even if the update fails, and it cannot be refreshed (as it is a virtual attribute).
-// Therefore, reset it to the previous value when the update fails.
+// Non-API attributes (which cannot be refreshed via AWS API calls) in the state are updated even if the update fails.
+// Therefore, reset them to the previous value when the update fails.
 // https://developer.hashicorp.com/terraform/plugin/framework/diagnostics#how-errors-affect-state
-func resetSourceCodeHash(d *schema.ResourceData) {
-	if d.HasChange("source_code_hash") {
-		old, _ := d.GetChange("source_code_hash")
-		d.Set("source_code_hash", old)
+func resetNonRefreshableAttributes(d *schema.ResourceData) {
+	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "source_code_hash", "filename"} {
+		if d.HasChange(key) {
+			old, _ := d.GetChange(key)
+			d.Set(key, old)
+		}
 	}
 }
