@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
-	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,8 +38,8 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var avmc1 odbtypes.CloudAutonomousVmCluster
-	dataSourceName := "data.aws_odb_cloud_autonomous_vm_cluster.test"
+	avmcResource := "aws_odb_cloud_autonomous_vm_cluster.test"
+	avmcDataSource := "data.aws_odb_cloud_autonomous_vm_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -54,7 +53,7 @@ func TestAccODBCloudAutonomousVmClusterDataSource_basic(t *testing.T) {
 			{
 				Config: autonomousVMClusterDSTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrDisplayName, *avmc1.DisplayName),
+					resource.TestCheckResourceAttrPair(avmcResource, names.AttrID, avmcDataSource, names.AttrID),
 				),
 			},
 		},

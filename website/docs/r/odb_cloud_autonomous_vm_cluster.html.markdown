@@ -94,24 +94,16 @@ The following arguments are optional:
 
 ### maintenance_window
 
-The following arguments are required:
-
-* `preference` - (Required) The preference for the maintenance window scheduling.
-
-The following arguments are optional:
-
-* `days_of_week` - (Optional) The days of the week when maintenance can be performed.
-* `hours_of_day` - (Optional) The hours of the day when maintenance can be performed.
-* `lead_time_in_weeks` - (Optional) The lead time in weeks before the maintenance window.
-* `months` - (Optional) The months when maintenance can be performed.
-* `weeks_of_month` - (Optional) Indicates whether to skip release updates during maintenance.
-
+* `preference` - (Required) The preference for the maintenance window scheduling. Changing this will force terraform to create new resource.
+* `days_of_week` - (Optional) The days of the week when maintenance can be performed. Changing this will force terraform to create new resource.
+* `hours_of_day` - (Optional) The hours of the day when maintenance can be performed. Changing this will force terraform to create new resource.
+* `lead_time_in_weeks` - (Optional) The lead time in weeks before the maintenance window. Changing this will force terraform to create new resource.
+* `months` - (Optional) The months when maintenance can be performed. Changing this will force terraform to create new resource.
+* `weeks_of_month` - (Optional) Indicates whether to skip release updates during maintenance. Changing this will force terraform to create new resource.
 
 ## Attribute Reference
 
-This data source exports the following attributes in addition to the arguments above:
-
-# Computed Attributes for Autonomous VM Cluster Resource
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - The progress of the current operation on the Autonomous VM cluster, as a percentage.
