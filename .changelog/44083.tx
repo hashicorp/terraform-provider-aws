@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dx_hosted_connection: Updated documentation and removed deprecated attributes (`lag_id` & `region`)
+```
