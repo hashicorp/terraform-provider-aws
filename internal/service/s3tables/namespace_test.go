@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -102,40 +101,39 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+			_, err := tfs3tables.FindNamespaceByTwoPartKey(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameNamespace, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameNamespace, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Namespace %s still exists", rs.Primary.Attributes[names.AttrNamespace])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckNamespaceExists(ctx context.Context, name string, namespace *s3tables.GetNamespaceOutput) resource.TestCheckFunc {
+func testAccCheckNamespaceExists(ctx context.Context, n string, v *s3tables.GetNamespaceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+		output, err := tfs3tables.FindNamespaceByTwoPartKey(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, rs.Primary.ID, err)
+			return err
 		}
 
-		*namespace = *resp
+		*v = *output
 
 		return nil
 	}

@@ -10,17 +10,16 @@ var (
 	NewResourceTableBucketPolicy = newTableBucketPolicyResource
 	ResourceTablePolicy          = newTablePolicyResource
 
-	FindNamespace           = findNamespace
-	FindTableByThreePartKey = findTableByThreePartKey
-	FindTableBucketByARN    = findTableBucketByARN
-	FindTableBucketPolicy   = findTableBucketPolicy
-	FindTablePolicy         = findTablePolicy
+	FindNamespaceByTwoPartKey = findNamespaceByTwoPartKey
+	FindTableByThreePartKey   = findTableByThreePartKey
+	FindTableBucketByARN      = findTableBucketByARN
+	FindTableBucketPolicy     = findTableBucketPolicy
+	FindTablePolicy           = findTablePolicy
 
 	TableIDFromTableARN = tableIDFromTableARN
 )
 
 const (
-	ResNameNamespace     = resNameNamespace
 	NamespaceIDSeparator = namespaceIDSeparator
 )
 
