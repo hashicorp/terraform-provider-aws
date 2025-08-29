@@ -75,13 +75,12 @@ type ServicePackageFrameworkResource struct {
 }
 
 type ServicePackageFrameworkListResource struct {
-	Factory       func() list.ListResourceWithConfigure
-	TypeName      string
-	Name          string
-	Tags          unique.Handle[ServicePackageResourceTags]
-	Region        unique.Handle[ServicePackageResourceRegion]
-	Identity      Identity
-	SDKv2Resource *schema.Resource
+	Factory  func() list.ListResourceWithConfigure
+	TypeName string
+	Name     string
+	Tags     unique.Handle[ServicePackageResourceTags]
+	Region   unique.Handle[ServicePackageResourceRegion]
+	Identity Identity
 }
 
 // ServicePackageSDKDataSource represents a Terraform Plugin SDK data source
