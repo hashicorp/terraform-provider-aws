@@ -124,24 +124,20 @@ func logGroupResourceAsListResource() list.ListResourceWithConfigure {
 
 type logGroupListResource struct {
 	framework.ResourceWithConfigure
-	framework.ListResourceWithSDKv2Identity
+	framework.ListResourceWithSDKv2Resource
 	framework.ListResourceWithSDKv2Tags
-	framework.WithImportByIdentity
 }
 
 type logGroupListResourceModel struct {
 	framework.WithRegionModel
 }
 
+// ListResourceConfigSchema defines the schema for the List configuration
+// might be able to intercept or wrap this for simplicity
 func (l *logGroupListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{},
 	}
-}
-
-func (l *logGroupListResource) RawV5Schemas(ctx context.Context, _ list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {
-	response.ProtoV5Schema = l.GetResource().ProtoSchema(ctx)()
-	response.ProtoV5IdentitySchema = l.GetResource().ProtoIdentitySchema(ctx)()
 }
 
 func (l *logGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
