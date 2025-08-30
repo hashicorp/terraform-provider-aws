@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the hosted connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
-* `loa_id` - (**Deprecated**) The ID of the LAG. You will find the information under `connection_id`.
+* `lag_id` - (**Deprecated**) The ID of the LAG. You will find the information under `connection_id`.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
 * `location` - The location of the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
