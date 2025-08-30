@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_dx_hosted_connection
 
-Provides a hosted connection on the specified interconnect or a link aggregation group (LAG) of interconnects. Intended for use by AWS Direct Connect Partners only. 
+Provides a hosted connection on the specified interconnect or a link aggregation group (LAG) of interconnects. Intended for use by AWS Direct Connect Partners only.
 
-Once the hosted connection is created, the receiver AWS Account needs to confirm the creation by using the [aws_dx_connection_confirmation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dx_connection_confirmation) resource.
+With the hosted connection created, the receiver account needs to confirm the creation by using the [aws_dx_connection_confirmation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dx_connection_confirmation) resource.
 
 ## Example Usage
 
