@@ -15,17 +15,13 @@ Once the hosted connection is created, the receiver AWS Account needs to confirm
 ## Example Usage
 
 ```terraform
-provider "aws" {
-  alias = "partner"
-}
+provider "aws" {}
 
 provider "aws" {
-  alias = "customer"
+  alias = "receiver"
 }
 
 resource "aws_dx_hosted_connection" "hosted" {
-  provider = aws.partner
-
   connection_id    = "dxcon-ffabc123"
   bandwidth        = "100Mbps"
   name             = "tf-dx-hosted-connection"
@@ -34,7 +30,7 @@ resource "aws_dx_hosted_connection" "hosted" {
 }
 
 resource "aws_dx_connection_confirmation" "confirmation" {
-  provider = aws.customer
+  provider = aws.receiver
 
   connection_id = aws_dx_hosted_connection.hosted.id
 }
@@ -59,8 +55,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
 * `id` - The ID of the hosted connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
+* `loa_id` - (**Deprecated**) The ID of the LAG. You will find the information under `connection_id`.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
 * `location` - The location of the connection.
 * `partner_name` - The name of the AWS Direct Connect service provider associated with the connection.
 * `provider_name` - The name of the service provider associated with the connection.
+* `region` - (**Deprecated**) The AWS Region where the connection is located. Use `connection_region` instead.
 * `state` - The state of the connection. Possible values include: ordering, requested, pending, available, down, deleting, deleted, rejected, unknown. See [AllocateHostedConnection](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_AllocateHostedConnection.html) for a description of each connection state.
