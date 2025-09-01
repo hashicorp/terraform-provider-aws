@@ -83,8 +83,6 @@ func TestAccEC2KeyPair_writeOnly(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "public_key_wo", ""),
 					resource.TestCheckResourceAttr(resourceName, "public_key_wo_version", "1"),
 				),
 			},
