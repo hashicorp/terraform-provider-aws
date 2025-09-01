@@ -1,38 +1,32 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb
 
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -137,23 +131,19 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 
 func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
-
 	var plan odbNetworkPeeringConnectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	input := odb.CreateOdbPeeringConnectionInput{
 		OdbNetworkId:  plan.OdbNetworkId.ValueStringPointer(),
 		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
 		DisplayName:   plan.DisplayName.ValueStringPointer(),
 		Tags:          getTagsIn(ctx),
 	}
-
 	out, err := conn.CreateOdbPeeringConnection(ctx, &input)
 	if err != nil {
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
 			err.Error(),
@@ -167,12 +157,10 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		)
 		return
 	}
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	createdPeeredConnection, err := waitNetworkPeeringConnectionCreated(ctx, conn, plan.OdbPeeringConnectionId.ValueString(), createTimeout)
 	if err != nil {
@@ -187,7 +175,6 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -244,14 +231,12 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 
 func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ODBClient(ctx)
-
 	var plan, state odbNetworkPeeringConnectionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	updatedOdbNetPeeringConn, err := waitNetworkPeeringConnectionUpdated(ctx, conn, plan.OdbPeeringConnectionId.ValueString(), updateTimeout)
 	if err != nil {
@@ -269,7 +254,6 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 		)
 		return
 	}
-
 	peerVpcARN, err := arn.Parse(*updatedOdbNetPeeringConn.PeerNetworkArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -300,14 +284,11 @@ func (r *resourceNetworkPeeringConnection) Delete(ctx context.Context, req resou
 	input := odb.DeleteOdbPeeringConnectionInput{
 		OdbPeeringConnectionId: state.OdbPeeringConnectionId.ValueStringPointer(),
 	}
-
 	_, err := conn.DeleteOdbPeeringConnection(ctx, &input)
-
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
 			return
 		}
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionDeleting, ResNameNetworkPeeringConnection, state.OdbPeeringConnectionId.ValueString(), err),
 			err.Error(),
@@ -378,7 +359,6 @@ func waitNetworkPeeringConnectionDeleted(ctx context.Context, conn *odb.Client, 
 	if out, ok := outputRaw.(*odbtypes.OdbPeeringConnection); ok {
 		return out, err
 	}
-
 	return nil, err
 }
 
@@ -388,11 +368,9 @@ func statusNetworkPeeringConnection(ctx context.Context, conn *odb.Client, id st
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
-
 		if err != nil {
 			return nil, "", err
 		}
-
 		return out, string(out.Status), nil
 	}
 }
@@ -438,26 +416,4 @@ type odbNetworkPeeringConnectionResourceModel struct {
 	Timeouts                 timeouts.Value                              `tfsdk:"timeouts"`
 	Tags                     tftags.Map                                  `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                  `tfsdk:"tags_all"`
-}
-
-func sweepNetworkPeeringConnections(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := odb.ListOdbPeeringConnectionsInput{}
-	conn := client.ODBClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := odb.NewListOdbPeeringConnectionsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.OdbPeeringConnections {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceNetworkPeeringConnection, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.OdbPeeringConnectionId))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }

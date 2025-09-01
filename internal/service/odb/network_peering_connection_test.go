@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,22 +6,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/odb"
+	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type odbNwkPeeringResourceTest struct {
@@ -75,7 +74,7 @@ func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccODBNetworkPeeringConnectionAddRemoveTag(t *testing.T) {
+func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -162,12 +161,10 @@ func TestAccODBNetworkPeeringConnection_disappears(t *testing.T) {
 func (odbNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network_peering_connection" {
 				continue
 			}
-
 			_, err := odbNwkPeeringTestResource.findOdbPeering(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
@@ -175,10 +172,8 @@ func (odbNwkPeeringResourceTest) testAccCheckNetworkPeeringConnectionDestroy(ctx
 			if err != nil {
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameNetworkPeeringConnection, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.ResNameNetworkPeeringConnection, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -189,31 +184,24 @@ func testAccCheckNetworkPeeringConnectionExists(ctx context.Context, name string
 		if !ok {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameNetworkPeeringConnection, name, errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameNetworkPeeringConnection, name, errors.New("not set"))
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
 
 		resp, err := odbNwkPeeringTestResource.findOdbPeering(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ODB, create.ErrActionCheckingExistence, tfodb.ResNameNetworkPeeringConnection, rs.Primary.ID, err)
 		}
-
 		*odbPeeringConnection = *resp
-
 		return nil
 	}
 }
 
 func (odbNwkPeeringResourceTest) testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
-	input := &odb.ListOdbPeeringConnectionsInput{}
-
-	_, err := conn.ListOdbPeeringConnections(ctx, input)
-
+	input := odb.ListOdbPeeringConnectionsInput{}
+	_, err := conn.ListOdbPeeringConnections(ctx, &input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

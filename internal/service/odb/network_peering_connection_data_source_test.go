@@ -1,4 +1,4 @@
-//Copyright © 2025, Oracle and/or its affiliates. All rights reserved.
+//Copyright (c) 2025, Oracle and/or its affiliates. All rights reserved.
 
 package odb_test
 
@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -19,7 +21,6 @@ import (
 	tfodb "github.com/hashicorp/terraform-provider-aws/internal/service/odb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"testing"
 )
 
 type odbPeeringDataSourceTest struct {
@@ -36,7 +37,6 @@ var odbPeeringDSTest = odbPeeringDataSourceTest{
 
 // Acceptance test access AWS and cost money to run.
 func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
-
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -46,7 +46,6 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 	odbNetPeeringDisplayName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetworkPeeringDisplayNamePrefix)
 	odbNetDispName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.odbNetDisplayNamePrefix)
 	vpcName := sdkacctest.RandomWithPrefix(odbPeeringDSTest.vpcNamePrefix)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -68,7 +67,6 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 func (odbPeeringDataSourceTest) testAccCheckCloudOdbNetworkPeeringDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ODBClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_odb_network_peering_connection" {
 				continue
@@ -81,10 +79,8 @@ func (odbPeeringDataSourceTest) testAccCheckCloudOdbNetworkPeeringDestroy(ctx co
 				}
 				return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameNetworkPeeringConnection, rs.Primary.ID, err)
 			}
-
 			return create.Error(names.ODB, create.ErrActionCheckingDestroyed, tfodb.DSNameNetworkPeeringConnection, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -110,7 +106,6 @@ func (odbPeeringDataSourceTest) findOdbPeering(ctx context.Context, conn *odb.Cl
 	return out, nil
 }
 func (odbPeeringDataSourceTest) basicPeeringConfig(vpcName, odbNetDisplayName, odbPeeringDisplayName string) string {
-
 	testData := fmt.Sprintf(`
 
 resource "aws_vpc" "test" {
