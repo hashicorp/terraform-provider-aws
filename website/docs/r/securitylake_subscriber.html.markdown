@@ -40,8 +40,8 @@ resource "aws_securitylake_subscriber" "example" {
 
 ```terraform
 resource "aws_securitylake_subscriber" "example" {
-  subscriber_name        = "example-name"
-  access_type            = "S3"
+  subscriber_name = "example-name"
+  access_type     = "S3"
 
   source {
     aws_log_source_resource {
@@ -52,8 +52,8 @@ resource "aws_securitylake_subscriber" "example" {
 
   source {
     aws_log_source_resource {
-       source_name    = "ROUTE53"
-       source_version = "2.0"
+      source_name    = "ROUTE53"
+      source_version = "2.0"
     }
   }
 
