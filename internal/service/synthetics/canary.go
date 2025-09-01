@@ -133,6 +133,12 @@ func ResourceCanary() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"ephemeral_storage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1024, 5120),
+						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -718,6 +724,10 @@ func expandCanaryRunConfig(l []any) *awstypes.CanaryRunConfigInput {
 		codeConfig.EnvironmentVariables = flex.ExpandStringValueMap(vars)
 	}
 
+	if v, ok := m["ephemeral_storage"].(int); ok && v > 0 {
+		codeConfig.EphemeralStorage = aws.Int32(int32(v))
+	}
+
 	return codeConfig
 }
 
@@ -734,6 +744,10 @@ func flattenCanaryRunConfig(canaryCodeOut *awstypes.CanaryRunConfigOutput, envVa
 
 	if envVars != nil {
 		m["environment_variables"] = envVars
+	}
+
+	if canaryCodeOut.EphemeralStorage != nil {
+		m["ephemeral_storage"] = aws.ToInt32(canaryCodeOut.EphemeralStorage)
 	}
 
 	return []any{m}
