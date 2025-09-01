@@ -133,10 +133,11 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAliasImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAliasImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"function_name"}, // ARN vs name format difference
 			},
 		},
 	})
@@ -342,7 +343,8 @@ func testAccAliasImportStateIDFunc(n string) resource.ImportStateIdFunc {
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes[names.AttrName]), nil
+		// With ARN identity, we should import using the ARN
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 
