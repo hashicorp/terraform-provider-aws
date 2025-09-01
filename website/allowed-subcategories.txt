@@ -26,6 +26,7 @@ BCM Data Exports
 Backup
 Batch
 Bedrock
+Bedrock AgentCore
 Bedrock Agents
 Billing
 CE (Cost Explorer)
@@ -174,6 +175,7 @@ Network Manager
 OpenSearch
 OpenSearch Ingestion
 OpenSearch Serverless
+Oracle Database@AWS
 Organizations
 Outposts
 Outposts (EC2)
@@ -207,6 +209,7 @@ S3 (Simple Storage)
 S3 Control
 S3 Glacier
 S3 Tables
+S3 Vectors
 S3 on Outposts
 SES (Simple Email)
 SESv2 (Simple Email V2)

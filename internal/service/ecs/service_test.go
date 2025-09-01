@@ -12,6 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -2260,6 +2261,37 @@ func TestAccECSService_ServiceConnect_remove(t *testing.T) {
 	})
 }
 
+// Regression for https://github.com/hashicorp/terraform-provider-aws/issues/42818
+func TestAccECSService_ServiceConnect_outOfBandRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnectBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					testAccCheckServiceDisableServiceConnect(ctx, &service),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccServiceConfig_serviceConnectBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_Tags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -2328,6 +2360,136 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_Tags_UpgradeFromV5_100_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				// Just only upgrading to the latest provider version
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_Tags_UpgradeFromV5_100_0ThroughV6_08_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ECSServiceID),
+		CheckDestroy: testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.8.0",
+					},
+				},
+				Config: testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				// Just only upgrading to the latest provider version
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -2485,9 +2647,10 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
+		var output *awstypes.Service
 		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
-			service, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			output, err = tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 
 			if tfresource.NotFound(err) {
 				return retry.RetryableError(err)
@@ -2500,6 +2663,29 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *awstyp
 			return nil
 		})
 
+		if err != nil {
+			return err
+		}
+
+		*service = *output
+
+		return nil
+	}
+}
+
+func testAccCheckServiceDisableServiceConnect(ctx context.Context, service *awstypes.Service) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+
+		input := &ecs.UpdateServiceInput{
+			Cluster: service.ClusterArn,
+			Service: service.ServiceName,
+			ServiceConnectConfiguration: &awstypes.ServiceConnectConfiguration{
+				Enabled: false,
+			},
+		}
+
+		_, err := conn.UpdateService(ctx, input)
 		return err
 	}
 }

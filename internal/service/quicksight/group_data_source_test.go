@@ -33,7 +33,7 @@ func TestAccQuickSightGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrGroupName, resourceName, names.AttrGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "text1"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultGroupNamespace),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultNamespace),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
 				),
 			},

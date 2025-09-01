@@ -482,11 +482,11 @@ func expandVpcOptions(tfMap map[string]any) *awstypes.VpcOptions { // nosemgrep:
 	apiObject := &awstypes.VpcOptions{}
 
 	if v, ok := tfMap["appliance_mode_support"].(bool); ok {
-		apiObject.ApplianceModeSupport = v
+		apiObject.ApplianceModeSupport = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
-		apiObject.Ipv6Support = v
+		apiObject.Ipv6Support = aws.Bool(v)
 	}
 
 	return apiObject
@@ -498,8 +498,8 @@ func flattenVpcOptions(apiObject *awstypes.VpcOptions) map[string]any { // nosem
 	}
 
 	tfMap := map[string]any{
-		"appliance_mode_support": apiObject.ApplianceModeSupport,
-		"ipv6_support":           apiObject.Ipv6Support,
+		"appliance_mode_support": aws.ToBool(apiObject.ApplianceModeSupport),
+		"ipv6_support":           aws.ToBool(apiObject.Ipv6Support),
 	}
 
 	return tfMap

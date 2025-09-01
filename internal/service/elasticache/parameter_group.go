@@ -293,7 +293,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 			CacheParameterGroupName: aws.String(name),
 		})
