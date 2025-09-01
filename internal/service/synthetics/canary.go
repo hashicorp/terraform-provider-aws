@@ -394,7 +394,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
-	if canary.EngineConfigs != nil && len(canary.EngineConfigs) > 0 {
+	if len(canary.EngineConfigs) > 0 {
 		d.Set("engine_arn", canary.EngineConfigs[0].EngineArn)
 	}
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
