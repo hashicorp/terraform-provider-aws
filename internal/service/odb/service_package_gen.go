@@ -4,6 +4,7 @@ package odb
 
 import (
 	"context"
+	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -18,7 +19,38 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newDataSourceCloudAutonomousVmClustersList,
+			TypeName: "aws_odb_cloud_autonomous_vm_clusters_list",
+			Name:     "Cloud Autonomous Vm Clusters List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceCloudExadataInfrastructuresList,
+			TypeName: "aws_odb_cloud_exadata_infrastructures_list",
+			Name:     "Cloud Exadata Infrastructures List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceCloudVmClustersList,
+			TypeName: "aws_odb_cloud_vm_clusters_list",
+			Name:     "Cloud Vm Clusters List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworkPeeringConnectionsList,
+			TypeName: "aws_odb_network_peering_connections_list",
+			Name:     "Network Peering Connections List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newDataSourceNetworksList,
+			TypeName: "aws_odb_networks_list",
+			Name:     "Networks List",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
