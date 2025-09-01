@@ -416,7 +416,7 @@ The following arguments are optional:
 
 #### eks_metadata
 
-* `labels` - Key-value pairs used to identify, sort, and organize cube resources.
+* `labels` - Key-value pairs used to identify, sort, and organize kubernetes resources.
 
 #### `eks_secret`
 
@@ -480,4 +480,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cb970cfc3e275c855f5ece8c46f54ad83bc9ab27fa9744302f6ddd188feb329f -->
+<!-- cache-key: cdktf-0.20.8 input-b7ce6e0290340c5ea95eea95ebeae1c8bf23c6560c84934a45cd14bdc10f920e -->
