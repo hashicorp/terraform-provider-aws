@@ -4,10 +4,9 @@ package odb
 
 import (
 	"context"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -72,6 +71,7 @@ func (d *dataSourceNetworkPeeringConnection) Schema(ctx context.Context, req dat
 			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 			},
 			"percent_progress": schema.Float32Attribute{
 				Description: "Progress of the odb network peering connection.",
@@ -112,10 +112,7 @@ func (d *dataSourceNetworkPeeringConnection) Read(ctx context.Context, req datas
 	if tagsRead != nil {
 		data.Tags = tftags.FlattenStringValueMap(ctx, tagsRead.Map())
 	}
-	if out.OdbPeeringConnection.CreatedAt != nil {
-		data.CreatedAt = types.StringValue(out.OdbPeeringConnection.CreatedAt.Format(time.RFC3339))
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.OdbPeeringConnection, &data, flex.WithIgnoredFieldNamesAppend("CreatedAt"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.OdbPeeringConnection, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -132,7 +129,7 @@ type odbNetworkPeeringConnectionDataSourceModel struct {
 	OdbNetworkArn            types.String                                `tfsdk:"odb_network_arn"`
 	PeerNetworkArn           types.String                                `tfsdk:"peer_network_arn"`
 	OdbPeeringConnectionType types.String                                `tfsdk:"odb_peering_connection_type"`
-	CreatedAt                types.String                                `tfsdk:"created_at"`
+	CreatedAt                timetypes.RFC3339                           `tfsdk:"created_at"`
 	PercentProgress          types.Float32                               `tfsdk:"percent_progress"`
 	Tags                     tftags.Map                                  `tfsdk:"tags"`
 }

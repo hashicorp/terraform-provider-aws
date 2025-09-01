@@ -5,6 +5,8 @@ package odb
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"strings"
 	"time"
 
@@ -111,6 +113,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
+				CustomType:  timetypes.RFC3339Type{},
 			},
 			"percent_progress": schema.Float32Attribute{
 				Description: "Progress of the odb network peering connection.",
@@ -163,6 +166,7 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 	}
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	createdPeeredConnection, err := waitNetworkPeeringConnectionCreated(ctx, conn, plan.OdbPeeringConnectionId.ValueString(), createTimeout)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(out.OdbPeeringConnectionId))...)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ODB, create.ErrActionWaitingForCreation, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
@@ -170,8 +174,26 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		)
 		return
 	}
-	plan.CreatedAt = types.StringValue(createdPeeredConnection.CreatedAt.Format(time.RFC3339))
-	resp.Diagnostics.Append(flex.Flatten(ctx, createdPeeredConnection, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"))...)
+
+	odbNetworkARNParsed, err := arn.Parse(*createdPeeredConnection.OdbNetworkArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	peerVpcARN, err := arn.Parse(*createdPeeredConnection.PeerNetworkArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionReading, ResNameNetworkPeeringConnection, plan.DisplayName.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
+	plan.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
+	resp.Diagnostics.Append(flex.Flatten(ctx, createdPeeredConnection, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -218,11 +240,9 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 		return
 	}
 	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
-	state.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
 	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithIgnoredFieldNamesAppend("CreatedAt"),
-		flex.WithIgnoredFieldNamesAppend("PeerNetworkId"), flex.WithIgnoredFieldNamesAppend("OdbNetworkId"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -263,10 +283,8 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 		return
 	}
 	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
-	state.CreatedAt = types.StringValue(updatedOdbNetPeeringConn.CreatedAt.Format(time.RFC3339))
 	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
-	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNetPeeringConn, &plan, flex.WithIgnoredFieldNamesAppend("CreatedAt"), flex.WithIgnoredFieldNamesAppend("CreatedAt"),
-		flex.WithIgnoredFieldNamesAppend("PeerNetworkId"), flex.WithIgnoredFieldNamesAppend("OdbNetworkId"))...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, updatedOdbNetPeeringConn, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -401,8 +419,8 @@ func findNetworkPeeringConnectionByID(ctx context.Context, conn *odb.Client, id 
 
 type odbNetworkPeeringConnectionResourceModel struct {
 	framework.WithRegionModel
-	OdbNetworkId             types.String                                `tfsdk:"odb_network_id"`
-	PeerNetworkId            types.String                                `tfsdk:"peer_network_id"`
+	OdbNetworkId             types.String                                `tfsdk:"odb_network_id" autoflex:",noflatten"`
+	PeerNetworkId            types.String                                `tfsdk:"peer_network_id" autoflex:",noflatten"`
 	OdbPeeringConnectionId   types.String                                `tfsdk:"id"`
 	DisplayName              types.String                                `tfsdk:"display_name"`
 	Status                   fwtypes.StringEnum[odbtypes.ResourceStatus] `tfsdk:"status"`
@@ -411,7 +429,7 @@ type odbNetworkPeeringConnectionResourceModel struct {
 	OdbNetworkArn            types.String                                `tfsdk:"odb_network_arn"`
 	PeerNetworkArn           types.String                                `tfsdk:"peer_network_arn"`
 	OdbPeeringConnectionType types.String                                `tfsdk:"odb_peering_connection_type"`
-	CreatedAt                types.String                                `tfsdk:"created_at"`
+	CreatedAt                timetypes.RFC3339                           `tfsdk:"created_at"`
 	PercentProgress          types.Float32                               `tfsdk:"percent_progress"`
 	Timeouts                 timeouts.Value                              `tfsdk:"timeouts"`
 	Tags                     tftags.Map                                  `tfsdk:"tags"`
