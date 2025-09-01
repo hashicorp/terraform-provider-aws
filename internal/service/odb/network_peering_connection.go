@@ -77,7 +77,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Description: "Required field. The unique identifier of the ODB peering connection. Changing this will force terraform to create new resource",
 			},
 
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "Display name of the odb network peering connection. Changing this will force terraform to create new resource",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -85,12 +85,12 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				},
 			},
 
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Description: "Status of the odb network peering connection.",
 				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
 				Computed:    true,
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Description: "The reason for the current status of the ODB peering connection..",
 				Computed:    true,
 			},
@@ -108,7 +108,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Description: "Type of the odb peering connection.",
 				Computed:    true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
 			},

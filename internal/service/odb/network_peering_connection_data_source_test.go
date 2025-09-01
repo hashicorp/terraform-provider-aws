@@ -57,7 +57,7 @@ func TestAccODBNetworkPeeringConnectionDataSource_basic(t *testing.T) {
 			{
 				Config: odbPeeringDSTest.basicPeeringConfig(vpcName, odbNetDispName, odbNetPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(networkPeeringResource, "id", networkPerringDataSource, "id"),
+					resource.TestCheckResourceAttrPair(networkPeeringResource, names.AttrID, networkPerringDataSource, names.AttrID),
 				),
 			},
 		},

@@ -40,16 +40,16 @@ func (d *dataSourceNetworkPeeringConnection) Schema(ctx context.Context, req dat
 				Description: "Network Peering Connection identifier.",
 				Required:    true,
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "Display name of the odb network peering connection.",
 				Computed:    true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Description: "Status of the odb network peering connection.",
 				CustomType:  fwtypes.StringEnumType[odbtypes.ResourceStatus](),
 				Computed:    true,
 			},
-			"status_reason": schema.StringAttribute{
+			names.AttrStatusReason: schema.StringAttribute{
 				Description: "Status of the odb network peering connection.",
 				Computed:    true,
 			},
@@ -69,7 +69,7 @@ func (d *dataSourceNetworkPeeringConnection) Schema(ctx context.Context, req dat
 				Description: "Type of the odb peering connection.",
 				Computed:    true,
 			},
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				Description: "Created time of the odb network peering connection.",
 				Computed:    true,
 			},

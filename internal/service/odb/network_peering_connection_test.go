@@ -61,7 +61,7 @@ func TestAccODBNetworkPeeringConnection_basic(t *testing.T) {
 				Config: odbNwkPeeringTestResource.basicConfig(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
@@ -100,7 +100,7 @@ func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 				Config: odbNwkPeeringTestResource.basicConfig(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "dev"),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccODBNetworkPeeringConnection_tagging(t *testing.T) {
 				Config: odbNwkPeeringTestResource.basicConfigNoTag(vpcName, odbNetName, odbPeeringDisplayName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPeeringConnectionExists(ctx, resourceName, &odbPeeringResource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
