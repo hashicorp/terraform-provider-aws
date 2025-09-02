@@ -1173,7 +1173,7 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_placementGroupId(rName),
+				Config: testAccInstanceConfig_placementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "placement_group", rName),
@@ -1189,7 +1189,7 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_placementGroupId(t *testing.T) {
+func TestAccEC2Instance_placementGroupID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
 	resourceName := "aws_instance.test"
@@ -1202,7 +1202,7 @@ func TestAccEC2Instance_placementGroupId(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_placementGroupId(rName),
+				Config: testAccInstanceConfig_placementGroupID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_id", rName),
@@ -7456,7 +7456,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_placementGroupId(rName string) string {
+func testAccInstanceConfig_placementGroupID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceConfig_vpcBase(rName, false, 0),
