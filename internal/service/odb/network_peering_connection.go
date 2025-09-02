@@ -59,7 +59,7 @@ type resourceNetworkPeeringConnection struct {
 
 func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Information about an ODB network. Also refer odb_network_peering resource : A peering connection between an ODB network and either another ODB network or a customer-owned VPC.",
+		Description: "A peering connection between an ODB network and either another ODB network or a customer-owned VPC.",
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
