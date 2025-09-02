@@ -939,10 +939,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 		return nil
 	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCluster(ctx, &input)
-	}
-
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}

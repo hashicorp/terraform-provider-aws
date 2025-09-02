@@ -171,9 +171,6 @@ func (bs backupSweeper) Delete(ctx context.Context, optFns ...tfresource.Options
 
 		return nil
 	}, optFns...)
-	if tfresource.TimedOut(err) {
-		_, err = bs.conn.DeleteBackup(ctx, input)
-	}
 
 	return err
 }
