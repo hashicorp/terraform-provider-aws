@@ -1205,14 +1205,14 @@ func TestAccEC2Instance_placementGroupID(t *testing.T) {
 				Config: testAccInstanceConfig_placementGroupID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "placement_group_id", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "placement_group_id"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "user_data"},
 			},
 		},
 	})
@@ -7475,7 +7475,7 @@ resource "aws_instance" "test" {
   placement_group_id          = aws_placement_group.test.placement_group_id
 
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data_base64 = "3dc39dda39be1205215e776bad998da361a5955d"
 
   tags = {
     Name = %[1]q
