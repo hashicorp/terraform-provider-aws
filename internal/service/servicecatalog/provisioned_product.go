@@ -519,12 +519,8 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if _, err := waitProvisionedProductReady(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		// Check if this is a state inconsistency error
-		if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
-			// Force a state refresh to get actual AWS values before returning error
+		if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok {
 			log.Printf("[WARN] Service Catalog Provisioned Product (%s) update failed with status %s, refreshing state", d.Id(), failureErr.Status)
-
-			// Perform state refresh to get actual current values from AWS
 			refreshDiags := resourceProvisionedProductRead(ctx, d, meta)
 			if refreshDiags.HasError() {
 				// If refresh fails, return both errors
@@ -540,12 +536,8 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 				oldParams, _ := d.GetChange("provisioning_parameters")
 				d.Set("provisioning_parameters", oldParams)
 			}
-
-			// Return the original failure error after state is corrected
-			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
 		}
 
-		// For other errors, proceed as before
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)
 	}
 
@@ -585,15 +577,13 @@ func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceDat
 
 	_, err = waitProvisionedProductTerminated(ctx, conn, d.Id(), d.Get("accept_language").(string), d.Timeout(schema.TimeoutDelete))
 
-	if failureErr, ok := errs.As[*provisionedProductFailureError](err); ok && failureErr.IsStateInconsistent() {
+	if errs.IsA[*provisionedProductFailureError](err) {
 		input.IgnoreErrors = true
 
 		_, err = conn.TerminateProvisionedProduct(ctx, &input)
-
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "terminating Service Catalog Provisioned Product (%s): %s", d.Id(), err)
 		}
@@ -735,7 +725,6 @@ func waitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 					return output, &provisionedProductFailureError{
 						StatusMessage: aws.ToString(detail.StatusMessage),
 						Status:        status,
-						NeedsRefresh:  true,
 					}
 				}
 			}
@@ -768,7 +757,6 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 					return output, &provisionedProductFailureError{
 						StatusMessage: aws.ToString(detail.StatusMessage),
 						Status:        status,
-						NeedsRefresh:  true,
 					}
 				}
 			}
@@ -784,17 +772,10 @@ func waitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.
 type provisionedProductFailureError struct {
 	StatusMessage string
 	Status        awstypes.ProvisionedProductStatus
-	NeedsRefresh  bool
 }
 
 func (e *provisionedProductFailureError) Error() string {
 	return e.StatusMessage
-}
-
-// IsStateInconsistent returns true if this error indicates state inconsistency
-// that requires a refresh to recover.
-func (e *provisionedProductFailureError) IsStateInconsistent() bool {
-	return e.NeedsRefresh
 }
 
 func expandProvisioningParameter(tfMap map[string]any) awstypes.ProvisioningParameter {

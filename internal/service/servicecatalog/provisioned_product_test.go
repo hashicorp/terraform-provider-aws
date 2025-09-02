@@ -524,7 +524,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("TAINTED")),
-					// Verify state is rolled back to the paramters from the original setup run
+					// Verify state is rolled back to the parameters from the original setup run
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
