@@ -396,6 +396,8 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
 	if len(canary.EngineConfigs) > 0 {
 		d.Set("engine_arn", canary.EngineConfigs[0].EngineArn)
+	} else {
+		d.Set("engine_arn", canary.EngineArn)
 	}
 	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
