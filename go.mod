@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.57.2
-	github.com/aws/aws-sdk-go-v2/service/databrew v1.38.0
+	github.com/aws/aws-sdk-go-v2/service/databrew v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.54.1
