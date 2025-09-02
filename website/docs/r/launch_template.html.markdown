@@ -461,8 +461,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availability_zone` - (Optional) The Availability Zone for the instance.
-* `group_name` - (Optional) The name of the placement group for the instance. Conflicts with `group_id`.
 * `group_id` - (Optional) The ID of the placement group for the instance. Conflicts with `group_name`.
+* `group_name` - (Optional) The name of the placement group for the instance. Conflicts with `group_id`.
 * `host_id` - (Optional) The ID of the Dedicated Host for the instance.
 * `host_resource_group_arn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - (Optional) Reserved for future use.

@@ -897,15 +897,15 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrGroupName: {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"placement.0.group_id"},
-						},
 						"group_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"placement.0.group_name"},
+						},
+						names.AttrGroupName: {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_id"},
 						},
 						"host_id": {
 							Type:     schema.TypeString,
@@ -2094,12 +2094,12 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.Launch
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
-		apiObject.GroupName = aws.String(v)
-	}
-
 	if v, ok := tfMap["group_id"].(string); ok && v != "" {
 		apiObject.GroupId = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
+		apiObject.GroupName = aws.String(v)
 	}
 
 	if v, ok := tfMap["host_id"].(string); ok && v != "" {
@@ -3002,12 +3002,12 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
-	if v := apiObject.GroupName; v != nil {
-		tfMap[names.AttrGroupName] = aws.ToString(v)
-	}
-
 	if v := apiObject.GroupId; v != nil {
 		tfMap["group_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.GroupName; v != nil {
+		tfMap[names.AttrGroupName] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostId; v != nil {

@@ -1192,6 +1192,75 @@ func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_Placement_groupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEC2LaunchTemplate_Placement_groupNameToGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_name"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_id", ""),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_Placement_hostResourceGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4151,75 +4220,6 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName)
-}
-
-func TestAccEC2LaunchTemplate_placement_groupID(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template awstypes.LaunchTemplate
-	resourceName := "aws_launch_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2LaunchTemplate_placement_groupNameToGroupID(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template awstypes.LaunchTemplate
-	resourceName := "aws_launch_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchTemplateConfig_placementGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_name"),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.group_id", ""),
-				),
-			},
-			{
-				Config: testAccLaunchTemplateConfig_placementGroupID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "placement.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "placement.0.group_id"),
-					resource.TestCheckResourceAttr(resourceName, "placement.0.group_name", ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
 }
 
 func testAccLaunchTemplateConfig_asgBasic(rName string) string {

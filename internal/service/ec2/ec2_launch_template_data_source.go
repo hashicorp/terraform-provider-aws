@@ -704,11 +704,11 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrGroupName: {
+						"group_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"group_id": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
