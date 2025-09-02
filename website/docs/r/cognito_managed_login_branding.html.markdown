@@ -70,6 +70,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `managed_login_branding_id` - ID of the managed login branding style.
+* `settings_all` - Settings including Amazon Cognito defaults.
 
 ## Import
 

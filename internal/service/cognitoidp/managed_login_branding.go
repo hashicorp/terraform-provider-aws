@@ -68,6 +68,10 @@ func (r *managedLoginBrandingResource) Schema(ctx context.Context, request resou
 				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Optional:   true,
 			},
+			"settings_all": schema.StringAttribute{
+				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
+				Computed:   true,
+			},
 			"use_cognito_provided_values": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -172,6 +176,23 @@ func (r *managedLoginBrandingResource) Create(ctx context.Context, request resou
 	data.ManagedLoginBrandingID = fwflex.StringToFramework(ctx, mlb.ManagedLoginBrandingId)
 	data.UseCognitoProvidedValues = fwflex.BoolValueToFramework(ctx, mlb.UseCognitoProvidedValues)
 
+	userPoolID, managedLoginBrandingID := fwflex.StringValueFromFramework(ctx, data.UserPoolID), fwflex.StringValueFromFramework(ctx, data.ManagedLoginBrandingID)
+	// Return all values.
+	mlb, err = findManagedLoginBrandingByThreePartKey(ctx, conn, userPoolID, managedLoginBrandingID, true)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
+
+		return
+	}
+
+	settingsAll, diags := flattenManagedLoginBrandingSettings(ctx, mlb.Settings)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.SettingsAll = settingsAll
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -206,6 +227,29 @@ func (r *managedLoginBrandingResource) Read(ctx context.Context, request resourc
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	settings, diags := flattenManagedLoginBrandingSettings(ctx, mlb.Settings)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.Settings = settings
+
+	// Return all values.
+	mlb, err = findManagedLoginBrandingByThreePartKey(ctx, conn, userPoolID, managedLoginBrandingID, true)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
+
+		return
+	}
+
+	settingsAll, diags := flattenManagedLoginBrandingSettings(ctx, mlb.Settings)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.SettingsAll = settingsAll
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -255,6 +299,22 @@ func (r *managedLoginBrandingResource) Update(ctx context.Context, request resou
 
 		return
 	}
+
+	// Return all values.
+	mlb, err := findManagedLoginBrandingByThreePartKey(ctx, conn, userPoolID, managedLoginBrandingID, true)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito Managed Login Branding (%s)", managedLoginBrandingID), err.Error())
+
+		return
+	}
+
+	settingsAll, diags := flattenManagedLoginBrandingSettings(ctx, mlb.Settings)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	new.SettingsAll = settingsAll
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -342,9 +402,42 @@ type managedLoginBrandingResourceModel struct {
 	Asset                    fwtypes.SetNestedObjectValueOf[assetTypeModel] `tfsdk:"asset"`
 	ClientID                 types.String                                   `tfsdk:"client_id"`
 	ManagedLoginBrandingID   types.String                                   `tfsdk:"managed_login_branding_id"`
-	Settings                 fwtypes.SmithyJSON[document.Interface]         `tfsdk:"settings"`
+	Settings                 fwtypes.SmithyJSON[document.Interface]         `tfsdk:"settings" autoflex:"-"`
+	SettingsAll              fwtypes.SmithyJSON[document.Interface]         `tfsdk:"settings_all" autoflex:"-"`
 	UseCognitoProvidedValues types.Bool                                     `tfsdk:"use_cognito_provided_values"`
 	UserPoolID               types.String                                   `tfsdk:"user_pool_id"`
+}
+
+func flattenManagedLoginBrandingSettings(ctx context.Context, settings document.Interface) (fwtypes.SmithyJSON[document.Interface], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if settings == nil {
+		return fwtypes.NewSmithyJSONNull[document.Interface](), diags
+	}
+
+	value, err := tfsmithy.DocumentToJSONString(settings)
+
+	if err != nil {
+		diags.AddError("reading Smithy document", err.Error())
+
+		return fwtypes.NewSmithyJSONNull[document.Interface](), diags
+	}
+
+	settings, d := fwtypes.NewSmithyJSONValue(value, document.NewLazyDocument).ToSmithyDocument(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return fwtypes.NewSmithyJSONNull[document.Interface](), diags
+	}
+
+	value, err = tfsmithy.DocumentToJSONString(settings)
+
+	if err != nil {
+		diags.AddError("reading Smithy document", err.Error())
+
+		return fwtypes.NewSmithyJSONNull[document.Interface](), diags
+	}
+
+	return fwtypes.NewSmithyJSONValue(value, document.NewLazyDocument), diags
 }
 
 type assetTypeModel struct {
