@@ -40,16 +40,16 @@ var SetLastError = retry.SetLastError
 
 // RetryError forces client code to choose whether or not a given error is retryable.
 type RetryError struct {
-	Err       error
-	Retryable bool
+	err         error
+	isRetryable bool
 }
 
 func (e *RetryError) Error() string {
-	return e.Unwrap().Error()
+	return e.err.Error()
 }
 
 func (e *RetryError) Unwrap() error {
-	return e.Err
+	return e.err
 }
 
 // RetryableError is a helper to create a RetryError that's retryable from a
@@ -58,13 +58,13 @@ func (e *RetryError) Unwrap() error {
 func RetryableError(err error) *RetryError {
 	if err == nil {
 		return &RetryError{
-			Err: errors.New("empty retryable error received. " +
+			err: errors.New("empty retryable error received. " +
 				"This is a bug with the Terraform AWS Provider and should be " +
 				"reported as a GitHub issue in the provider repository."),
-			Retryable: false,
+			isRetryable: false,
 		}
 	}
-	return &RetryError{Err: err, Retryable: true}
+	return &RetryError{err: err, isRetryable: true}
 }
 
 // NonRetryableError is a helper to create a RetryError that's _not_ retryable
@@ -73,11 +73,11 @@ func RetryableError(err error) *RetryError {
 func NonRetryableError(err error) *RetryError {
 	if err == nil {
 		return &RetryError{
-			Err: errors.New("empty non-retryable error received. " +
+			err: errors.New("empty non-retryable error received. " +
 				"This is a bug with the Terraform AWS Provider and should be " +
 				"reported as a GitHub issue in the provider repository."),
-			Retryable: false,
+			isRetryable: false,
 		}
 	}
-	return &RetryError{Err: err, Retryable: false}
+	return &RetryError{err: err, isRetryable: false}
 }
