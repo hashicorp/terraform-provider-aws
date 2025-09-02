@@ -266,7 +266,7 @@ This resource supports the following arguments:
 `update_policy` supports the following:
 
 * `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
-* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the compute environment infrastructure is updated.
 
 ## Attribute Reference
 
@@ -307,4 +307,4 @@ Using `terraform import`, import AWS Batch compute using the `name`. For example
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
 
-<!-- cache-key: cdktf-0.20.8 input-34b25398c465cc0f2a06a183bd9203e1e436e2bdc14ae05e27f3b4c8a13411b1 -->
+<!-- cache-key: cdktf-0.20.8 input-bb12066d19c776fafa8e78537144c38048e4a233205cecfafb01673652651802 -->

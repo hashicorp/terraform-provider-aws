@@ -171,7 +171,7 @@ func TestAccS3TablesTableBucket_disappears(t *testing.T) {
 				Config: testAccTableBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTableBucket, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTableBucket, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

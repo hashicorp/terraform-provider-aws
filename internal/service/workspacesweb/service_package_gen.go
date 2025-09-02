@@ -7,7 +7,6 @@ import (
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,6 +111,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newSessionLoggerAssociationResource,
+			TypeName: "aws_workspacesweb_session_logger_association",
+			Name:     "Session Logger Association",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newTrustStoreResource,
 			TypeName: "aws_workspacesweb_trust_store",
 			Name:     "Trust Store",
@@ -190,7 +195,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *workspacesweb.Options) {
 			if inContext, ok := conns.FromContext(ctx); ok && inContext.VCREnabled() {
 				tflog.Info(ctx, "overriding retry behavior to immediately return VCR errors")
-				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(vcr.InteractionNotFoundRetryableFunc))
+				o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), vcr.InteractionNotFoundRetryableFunc)
 			}
 		},
 		withExtraOptions(ctx, p, config),

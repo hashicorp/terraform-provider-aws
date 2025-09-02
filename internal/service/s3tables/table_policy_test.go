@@ -5,7 +5,6 @@ package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -101,48 +99,47 @@ func testAccCheckTablePolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfs3tables.FindTablePolicy(ctx, conn,
+			_, err := tfs3tables.FindTablePolicyByThreePartKey(ctx, conn,
 				rs.Primary.Attributes["table_bucket_arn"],
 				rs.Primary.Attributes[names.AttrNamespace],
 				rs.Primary.Attributes[names.AttrName],
 			)
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTablePolicy, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTablePolicy, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table Policy %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTablePolicyExists(ctx context.Context, name string, tablepolicy *s3tables.GetTablePolicyOutput) resource.TestCheckFunc {
+func testAccCheckTablePolicyExists(ctx context.Context, n string, v *s3tables.GetTablePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" || rs.Primary.Attributes[names.AttrName] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindTablePolicy(ctx, conn,
+		output, err := tfs3tables.FindTablePolicyByThreePartKey(ctx, conn,
 			rs.Primary.Attributes["table_bucket_arn"],
 			rs.Primary.Attributes[names.AttrNamespace],
 			rs.Primary.Attributes[names.AttrName],
 		)
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTablePolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*tablepolicy = *resp
+		*v = *output
 
 		return nil
 	}

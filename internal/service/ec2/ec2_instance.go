@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -46,9 +47,13 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
+// @CustomImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(plannableImportAction="NoOp")
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,8 +64,12 @@ func resourceInstance() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				rd.Set(names.AttrForceDestroy, false)
+				identitySpec := importer.IdentitySpec(ctx)
+				if err := importer.RegionalSingleParameterized(ctx, rd, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
 
+				rd.Set(names.AttrForceDestroy, false)
 				return []*schema.ResourceData{rd}, nil
 			},
 		},
