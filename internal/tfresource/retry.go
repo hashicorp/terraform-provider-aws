@@ -235,8 +235,8 @@ func Retry(ctx context.Context, timeout time.Duration, f func(context.Context) *
 			return nil, f(ctx)
 		},
 		func(err error) (bool, error) {
-			if err, ok := errs.As[*RetryError](err); ok {
-				return err.Retryable, err.Err
+			if err, ok := errs.As[*RetryError](err); ok && err != nil {
+				return err.isRetryable, err.err
 			}
 
 			return false, err
