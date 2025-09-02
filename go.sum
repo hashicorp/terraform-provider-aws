@@ -113,8 +113,8 @@ github.com/aws/aws-sdk-go-v2/service/chime v1.40.1 h1:yAd8AQKAspLHfsOYHDipEgx34o
 github.com/aws/aws-sdk-go-v2/service/chime v1.40.1/go.mod h1:0BKNnUBOVTsOH3svKuVHbc5Or1eMOW7PM5IvStfJ1wg=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.2 h1:kx06nIs4bnHaGVTRvkiw5pCNfPkRCctjM4P1YXdVh/I=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.2/go.mod h1:jqJrPA64O8ZI7pqR0sWSNj73NdRhf0AxCvVUfrv4BAo=
-github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.0 h1:ODu09ttlefuFHYh/9qgasV7EVPwT77w7n3W9Dt6xR4w=
-github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.0/go.mod h1:lYnUjAovFbs8P+hSc5XIoE11iGPlHk2g/FLa0CBDsdY=
+github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.1 h1:O9bLIMtriAFtiU4qnppOXhqNNWuMHXYbX2pLcV8uzkY=
+github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.26.1/go.mod h1:QcftJ3U92WQXE1ZJ7ODgTCJhcuVblb9czGv4no9GTC4=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.31.1 h1:t2qx6QwMdGcPWLTfGst/BhTXjkHPinwvB9+Ym2YmQQE=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.31.1/go.mod h1:VHXJrJvDZUapCDAbJsLOZ7hkY9rjmz7JDR0pevEwgcM=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.33.0 h1:kJnHCohevlyrJpPCgxAsk9KXO8vmnfffeBbR//zCL0U=
