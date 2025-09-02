@@ -97,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_location_place_index",
 			Name:     "Map",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "index_arn",
+				IdentifierAttribute: names.AttrIndexARN,
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},

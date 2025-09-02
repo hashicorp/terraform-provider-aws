@@ -126,6 +126,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Name:     "DynamoDB Resource Tag",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  resourceGlobalSecondaryIndex,
+			TypeName: "aws_dynamodb_global_secondary_index",
+			Name:     "Global Secondary Index",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

@@ -10,6 +10,7 @@ application_id,ApplicationID
 apply_immediately,ApplyImmediately
 arn,ARN
 arns,ARNs
+index_arn,IndexARN
 association_id,AssociationID
 attributes,Attributes
 auto_minor_version_upgrade,AutoMinorVersionUpgrade
