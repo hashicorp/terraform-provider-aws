@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `network_acl_id` - (Required) The ID of the network ACL.
 * `subnet_id` - (Required) The ID of the associated Subnet.
 
@@ -74,4 +75,4 @@ Using `terraform import`, import Network ACL associations using the `id`. For ex
 % terraform import aws_network_acl_association.main aclassoc-02baf37f20966b3e6
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-69e12ff31c5696b283b9746119b087ee33344ab065233815a81f6919c5715f99 -->
+<!-- cache-key: cdktf-0.20.8 input-ae1dc01457913fe13c917ecf361ddf82b8d696b33d36cb57ed839214caaccca4 -->

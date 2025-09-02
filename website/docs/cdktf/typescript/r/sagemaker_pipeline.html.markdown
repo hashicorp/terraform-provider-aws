@@ -54,8 +54,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `pipelineName` - (Required) The name of the pipeline.
 * `pipelineDescription` - (Optional) A description of the pipeline.
 * `pipelineDisplayName` - (Required) The display name of the pipeline.
@@ -111,4 +112,4 @@ Using `terraform import`, import pipelines using the `pipelineName`. For example
 % terraform import aws_sagemaker_pipeline.test_pipeline pipeline
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d537202b139dd47c1023a1f9a8dcce4e9ac9b6af813002b5bab6dd98e3a9c316 -->
+<!-- cache-key: cdktf-0.20.8 input-8c812c2a6cf066ac69fdb1ae9830835ae33836b706dc85d3f4381944c7d96379 -->

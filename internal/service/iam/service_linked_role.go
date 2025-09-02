@@ -31,16 +31,14 @@ import (
 
 // @SDKResource("aws_iam_service_linked_role", name="Service Linked Role")
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
+// @ArnIdentity(arnAttribute="id")
+// @Testing(preIdentityVersion="v6.4.0")
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
 		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
 		UpdateWithoutTimeout: resourceServiceLinkedRoleUpdate,
 		DeleteWithoutTimeout: resourceServiceLinkedRoleDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -107,7 +105,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := tfresource.RetryGWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (*iam.CreateServiceLinkedRoleOutput, error) {
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (*iam.CreateServiceLinkedRoleOutput, error) {
 		return conn.CreateServiceLinkedRole(ctx, input)
 	}, "AccessDenied")
 	if err != nil {
@@ -123,7 +121,7 @@ func resourceServiceLinkedRoleCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		err = roleUpdateTags(ctx, conn, roleName, nil, KeyValueTags(ctx, tags))
+		err = roleUpdateTags(ctx, conn, roleName, nil, keyValueTags(ctx, tags))
 
 		// If default tags only, continue. Otherwise, error.
 		partition := meta.(*conns.AWSClient).Partition(ctx)
@@ -149,7 +147,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	role, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (*awstypes.Role, error) {
 		return findRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
@@ -162,8 +160,6 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Service Linked Role (%s): %s", d.Id(), err)
 	}
-
-	role := outputRaw.(*awstypes.Role)
 
 	d.Set(names.AttrARN, role.Arn)
 	d.Set("aws_service_name", serviceName)

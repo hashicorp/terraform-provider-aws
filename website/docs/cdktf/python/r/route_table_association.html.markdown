@@ -53,13 +53,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-~> **NOTE:** Please note that one of either `subnet_id` or `gateway_id` is required.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_id` - (Optional) The subnet ID to create an association. Conflicts with `gateway_id`.
 * `gateway_id` - (Optional) The gateway ID to create an association. Conflicts with `subnet_id`.
 * `route_table_id` - (Required) The ID of the routing table to associate with.
+
+~> **NOTE:** Please note that one of either `subnet_id` or `gateway_id` is required.
 
 ## Attribute Reference
 
@@ -129,4 +130,4 @@ With EC2 Internet Gateways:
 % terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d833e942943c29498d69033568b4fe023077f6cef2c48bcf891e7dba9a8ab544 -->
+<!-- cache-key: cdktf-0.20.8 input-ce7ca3826330e1b9ad29beaa6b2dfae3a704aca53b314bd3265540897861bc69 -->

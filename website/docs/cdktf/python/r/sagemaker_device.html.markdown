@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `device_fleet_name` - (Required) The name of the Device Fleet.
 * `device` - (Required) The device to register with SageMaker AI Edge Manager. See [Device](#device) details below.
 
@@ -81,4 +82,4 @@ Using `terraform import`, import SageMaker AI Devices using the `device-fleet-na
 % terraform import aws_sagemaker_device.example my-fleet/my-device
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fdd2ff8d47aba6fbcc83e6b503865508ca01826e328fbf1c740e252689e014e5 -->
+<!-- cache-key: cdktf-0.20.8 input-11af6c8599e6538822f3b08953f045b7b1309796fa086c7ed4ca81705b3a57fc -->

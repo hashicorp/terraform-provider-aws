@@ -11,7 +11,7 @@ var (
 	ResourcePackage                    = resourcePackage
 	ResourcePackageAssociation         = resourcePackageAssociation
 	ResourceVPCEndpoint                = resourceVPCEndpoint
-	ResourceAuthorizeVPCEndpointAccess = newResourceAuthorizeVPCEndpointAccess
+	ResourceAuthorizeVPCEndpointAccess = newAuthorizeVPCEndpointAccessResource
 
 	FindDomainByName                     = findDomainByName
 	FindPackageByID                      = findPackageByID

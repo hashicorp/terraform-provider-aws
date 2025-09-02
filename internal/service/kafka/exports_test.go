@@ -22,4 +22,6 @@ var (
 	FindSingleSCRAMSecretAssociationByTwoPartKey = findSingleSCRAMSecretAssociationByTwoPartKey
 	FindServerlessClusterByARN                   = findServerlessClusterByARN
 	FindVPCConnectionByARN                       = findVPCConnectionByARN
+
+	SortEndpointsString = sortEndpointsString
 )

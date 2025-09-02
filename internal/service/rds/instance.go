@@ -35,6 +35,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -189,20 +190,10 @@ func resourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ConflictsWith: []string{
+					"replicate_source_db",
 					"s3_import",
-				},
-				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					for _, conflictAttr := range []string{
-						"replicate_source_db",
-						// s3_import is handled by the schema ConflictsWith
-						"snapshot_identifier",
-						"restore_to_point_in_time",
-					} {
-						if _, ok := d.GetOk(conflictAttr); ok {
-							return true
-						}
-					}
-					return false
+					"restore_to_point_in_time",
+					"snapshot_identifier",
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -771,23 +762,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	var resourceID string // will be assigned depending on how it is created
 
-	if _, ok := d.GetOk("character_set_name"); ok {
-		charSetPath := cty.GetAttrPath("character_set_name")
-		for _, conflictAttr := range []string{
-			"replicate_source_db",
-			// s3_import is handled by the schema ConflictsWith
-			"snapshot_identifier",
-			"restore_to_point_in_time",
-		} {
-			if _, ok := d.GetOk(conflictAttr); ok {
-				diags = append(diags, errs.NewAttributeConflictsWillBeError(
-					charSetPath,
-					cty.GetAttrPath(conflictAttr),
-				))
-			}
-		}
-	}
-
 	// get write-only value from configuration
 	passwordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("password_wo"))
 	diags = append(diags, di...)
@@ -1185,7 +1159,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromS3(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1440,7 +1414,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceFromDBSnapshot(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1656,7 +1630,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.RestoreDBInstanceToPointInTime(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1876,7 +1850,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.CreateDBInstance(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -2127,7 +2101,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
 	if d.HasChange("replicate_source_db") {
@@ -2291,7 +2265,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				timeout = 5 * time.Minute
 			)
 			_, err = tfresource.RetryWhen(ctx, timeout,
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.DeleteDBInstance(ctx, input)
 				},
 				func(err error) (bool, error) {
@@ -2396,7 +2370,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta an
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
-				func() (any, error) {
+				func(ctx context.Context) (any, error) {
 					return conn.ModifyDBInstance(ctx, &rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),
 						DBInstanceIdentifier: aws.String(d.Get(names.AttrIdentifier).(string)),
@@ -2456,7 +2430,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta any)
 
 func dbInstanceCreateReadReplica(ctx context.Context, conn *rds.Client, input *rds.CreateDBInstanceReadReplicaInput) (*rds.CreateDBInstanceReadReplicaOutput, error) {
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDBInstanceReadReplica(ctx, input)
 		},
 		errCodeInvalidParameterValue, "ENHANCED_MONITORING")
@@ -2515,6 +2489,9 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 	if d.HasChange("database_insights_mode") {
 		input.DatabaseInsightsMode = types.DatabaseInsightsMode(d.Get("database_insights_mode").(string))
 		input.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
+		if v, ok := d.Get("performance_insights_kms_key_id").(string); ok && v != "" {
+			input.PerformanceInsightsKMSKeyId = aws.String(v)
+		}
 		input.PerformanceInsightsRetentionPeriod = aws.Int32(int32(d.Get("performance_insights_retention_period").(int)))
 	}
 
@@ -2731,7 +2708,7 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 
 func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, input *rds.ModifyDBInstanceInput, timeout time.Duration) error {
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
 		func(err error) (bool, error) {

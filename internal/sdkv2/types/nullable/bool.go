@@ -32,10 +32,6 @@ func (b Bool) ValueBool() (bool, bool, error) {
 	return value, false, nil
 }
 
-func NewBool(v bool) Bool {
-	return Bool(strconv.FormatBool(v))
-}
-
 // ValidateTypeStringNullableBool provides custom error messaging for TypeString booleans
 // Some arguments require a boolean value or unspecified, empty field.
 func ValidateTypeStringNullableBool(v any, k string) (ws []string, es []error) {
@@ -45,19 +41,12 @@ func ValidateTypeStringNullableBool(v any, k string) (ws []string, es []error) {
 		return
 	}
 
-	if value == "" {
+	switch value {
+	case "", "true", "false":
 		return
 	}
 
-	if _, err := strconv.ParseBool(value); err != nil {
-		es = append(es, fmt.Errorf("%s: cannot parse '%s' as boolean: %w", k, value, err))
-		return
-	}
-
-	if value != "true" && value != "false" {
-		ws = append(ws, fmt.Sprintf(`%s: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider`, k))
-	}
-
+	es = append(es, fmt.Errorf("expected %s to be one of '', 'true', or 'false', got '%s'", k, value))
 	return
 }
 

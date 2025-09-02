@@ -32,7 +32,7 @@ func newRetentionConfigurationResource(context.Context) (resource.ResourceWithCo
 }
 
 type retentionConfigurationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[retentionConfigurationResourceModel]
 	framework.WithImportByID
 }
 
@@ -213,6 +213,7 @@ func findRetentionConfigurations(ctx context.Context, conn *configservice.Client
 }
 
 type retentionConfigurationResourceModel struct {
+	framework.WithRegionModel
 	ID                    types.String `tfsdk:"id"`
 	Name                  types.String `tfsdk:"name"`
 	RetentionPeriodInDays types.Int64  `tfsdk:"retention_period_in_days"`

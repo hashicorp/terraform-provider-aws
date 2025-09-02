@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKDataSource("aws_ssoadmin_permission_set", name="Permission Set")
-func DataSourcePermissionSet() *schema.Resource {
+func dataSourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePermissionSetRead,
 

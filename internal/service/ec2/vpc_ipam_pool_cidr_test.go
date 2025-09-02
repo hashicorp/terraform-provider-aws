@@ -44,9 +44,6 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"netmask_length",
-				},
 			},
 		},
 	})
@@ -77,9 +74,6 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) { // nosemgrep:ci.vpc-
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"netmask_length",
-				},
 			},
 		},
 	})
@@ -198,7 +192,7 @@ resource "aws_vpc_ipam" "test" {
   description = "test"
 
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 
   cascade = true
@@ -209,7 +203,7 @@ const TestAccIPAMPoolCIDRConfig_privatePool = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 `
 
@@ -217,7 +211,7 @@ const TestAccIPAMPoolCIDRConfig_privatePoolWithCIDR = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 
 resource "aws_vpc_ipam_pool_cidr" "testparent" {
@@ -228,7 +222,7 @@ resource "aws_vpc_ipam_pool_cidr" "testparent" {
 resource "aws_vpc_ipam_pool" "testchild" {
   address_family      = "ipv4"
   ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
-  locale              = data.aws_region.current.name
+  locale              = data.aws_region.current.region
   source_ipam_pool_id = aws_vpc_ipam_pool.test.id
 }
 `

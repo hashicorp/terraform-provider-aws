@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
 * `name` - (Required) The name of the rule group namespace.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -89,4 +90,4 @@ Using `terraform import`, import the prometheus rule group namespace using the a
 % terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-631c413fb65428e21b6b2840d778a867666fc7f12fd76d940de1896adf416bd8 -->
+<!-- cache-key: cdktf-0.20.8 input-4211a39714c75d9b3b9abdf69ddf8427a591fe49143ddbe476198ca5b51a3164 -->

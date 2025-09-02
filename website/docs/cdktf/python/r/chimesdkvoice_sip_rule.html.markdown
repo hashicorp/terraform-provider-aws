@@ -51,6 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `disabled` - (Optional) Enables or disables a rule. You must disable rules before you can delete them.
 
 ### `target_applications`
@@ -92,4 +93,4 @@ Using `terraform import`, import a ChimeSDKVoice SIP Rule using the `id`. For ex
 % terraform import aws_chimesdkvoice_sip_rule.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3475b0a57a4be526a5e2626982a1ad5155fe2cd8afc53724a14c23471b5a6ff8 -->
+<!-- cache-key: cdktf-0.20.8 input-0f7ae5f446fd55aa0199046b516479800eaae4ebaa2887226bfd4bcfb421c74f -->

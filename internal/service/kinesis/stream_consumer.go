@@ -18,16 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
+// @Tags(identifierAttribute="arn", resourceType="StreamConsumer")
 func resourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
 		ReadWithoutTimeout:   resourceStreamConsumerRead,
+		UpdateWithoutTimeout: resourceStreamConsumerUpdate,
 		DeleteWithoutTimeout: resourceStreamConsumerDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -54,6 +57,8 @@ func resourceStreamConsumer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -63,12 +68,16 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	input := &kinesis.RegisterStreamConsumerInput{
+	input := kinesis.RegisterStreamConsumerInput{
 		ConsumerName: aws.String(name),
 		StreamARN:    aws.String(d.Get(names.AttrStreamARN).(string)),
 	}
 
-	output, err := conn.RegisterStreamConsumer(ctx, input)
+	if tags := keyValueTags(ctx, getTagsIn(ctx)).Map(); len(tags) > 0 {
+		input.Tags = tags
+	}
+
+	output, err := conn.RegisterStreamConsumer(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Stream Consumer (%s): %s", name, err)
@@ -107,14 +116,23 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
+func resourceStreamConsumerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceStreamConsumerRead(ctx, d, meta)...)
+}
+
 func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
 	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
-	_, err := conn.DeregisterStreamConsumer(ctx, &kinesis.DeregisterStreamConsumerInput{
+	input := kinesis.DeregisterStreamConsumerInput{
 		ConsumerARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterStreamConsumer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -132,11 +150,11 @@ func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn string) (*types.ConsumerDescription, error) {
-	input := &kinesis.DescribeStreamConsumerInput{
+	input := kinesis.DescribeStreamConsumerInput{
 		ConsumerARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStreamConsumer(ctx, input)
+	output, err := conn.DescribeStreamConsumer(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

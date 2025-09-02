@@ -24,13 +24,12 @@ from cdktf import TerraformStack
 #
 from imports.aws.glue_partition import GluePartition
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, partitionValues):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         GluePartition(self, "example",
             database_name="some-database",
-            table_name="some-table",
-            values=["some-value"],
-            partition_values=partition_values
+            partition_values=["some-value"],
+            table_name="some-table"
         )
 ```
 
@@ -38,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partition_values` - (Required) The values that define the partition.
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
@@ -117,4 +117,4 @@ Using `terraform import`, import Glue Partitions using the catalog ID (usually A
 % terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-462112b62aec7925ebd6737afdabe9d69a387daa4715f683073541c4130b403b -->
+<!-- cache-key: cdktf-0.20.8 input-eb330c4133efdbd6c87f84a4181de288c7a3bab330a576198aa7a41ac4884294 -->

@@ -512,15 +512,7 @@ Terraform resources should wait for these background operations to complete. Fai
 
 ### AWS Go SDK Waiters
 
-In limited cases, the AWS service API model includes the information to automatically generate a waiter function in the AWS Go SDK for an operation. These are typically named with the prefix `WaitUntil...`. If available, these functions can be used for an initial resource implementation. For example:
-
-```go
-if err := conn.WaitUntilEndpointInService(input); err != nil {
-	return fmt.Errorf("waiting for Example Thing (%s) ...: %w", d.Id(), err)
-}
-```
-
-If it is necessary to customize the timeouts and polling, we generally prefer using [Resource Lifecycle Waiters](#resource-lifecycle-waiters) instead since they are more commonly used throughout the codebase.
+The AWS SDK for Go provides [waiters](https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/using.html#using-waiters) for some asynchronous operations. We prefer using [Resource Lifecycle Waiters](#resource-lifecycle-waiters) instead since they are more commonly used throughout the codebase and provide more options for customization.
 
 ### Resource Lifecycle Waiters
 

@@ -28,6 +28,9 @@ output "kubeconfig-certificate-authority-data" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -47,6 +50,7 @@ This data source exports the following attributes in addition to the arguments a
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch time stamp in seconds for when the cluster was created.
+* `deletion_protection` - Whether deletion protection for the cluster is enabled.
 * `enabled_cluster_log_types` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
@@ -83,8 +87,8 @@ This data source exports the following attributes in addition to the arguments a
     * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `security_group_ids` – List of security group IDs
-    * `subnet_ids` – List of subnet IDs
-    * `vpc_id` – The VPC associated with your cluster.
+    * `security_group_ids` - List of security group IDs
+    * `subnet_ids` - List of subnet IDs
+    * `vpc_id` - The VPC associated with your cluster.
 * `zonal_shift_config` - Contains Zonal Shift Configuration.
     * `enabled` - Whether zonal shift is enabled.

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +26,7 @@ func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithC
 }
 
 type securityGroupRuleDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[securityGroupRuleDataSourceModel]
 }
 
 func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -73,7 +73,7 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(ctx),
 		},
 	}
 }
@@ -93,7 +93,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	if !data.SecurityGroupRuleID.IsNull() {
-		input.SecurityGroupRuleIds = []string{flex.StringValueFromFramework(ctx, data.SecurityGroupRuleID)}
+		input.SecurityGroupRuleIds = []string{fwflex.StringValueFromFramework(ctx, data.SecurityGroupRuleID)}
 	}
 
 	if len(input.Filters) == 0 {
@@ -109,20 +109,20 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
+	data.ID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.ARN = d.securityGroupRuleARN(ctx, data.ID.ValueString())
-	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
-	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
-	data.Description = flex.StringToFramework(ctx, output.Description)
-	data.FromPort = flex.Int32ToFrameworkInt64(ctx, output.FromPort)
-	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
-	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
-	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
+	data.CIDRIPv4 = fwflex.StringToFramework(ctx, output.CidrIpv4)
+	data.CIDRIPv6 = fwflex.StringToFramework(ctx, output.CidrIpv6)
+	data.Description = fwflex.StringToFramework(ctx, output.Description)
+	data.FromPort = fwflex.Int32ToFrameworkInt64(ctx, output.FromPort)
+	data.IPProtocol = fwflex.StringToFramework(ctx, output.IpProtocol)
+	data.IsEgress = fwflex.BoolToFramework(ctx, output.IsEgress)
+	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID(ctx))
-	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
-	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
+	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
+	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-	data.ToPort = flex.Int32ToFrameworkInt64(ctx, output.ToPort)
+	data.ToPort = fwflex.Int32ToFrameworkInt64(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -132,19 +132,20 @@ func (d *securityGroupRuleDataSource) securityGroupRuleARN(ctx context.Context, 
 }
 
 type securityGroupRuleDataSourceModel struct {
-	ARN                       types.String `tfsdk:"arn"`
-	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
-	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`
-	Description               types.String `tfsdk:"description"`
-	Filters                   types.Set    `tfsdk:"filter"`
-	FromPort                  types.Int64  `tfsdk:"from_port"`
-	ID                        types.String `tfsdk:"id"`
-	IPProtocol                types.String `tfsdk:"ip_protocol"`
-	IsEgress                  types.Bool   `tfsdk:"is_egress"`
-	PrefixListID              types.String `tfsdk:"prefix_list_id"`
-	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
-	SecurityGroupID           types.String `tfsdk:"security_group_id"`
-	SecurityGroupRuleID       types.String `tfsdk:"security_group_rule_id"`
-	Tags                      tftags.Map   `tfsdk:"tags"`
-	ToPort                    types.Int64  `tfsdk:"to_port"`
+	framework.WithRegionModel
+	ARN                       types.String  `tfsdk:"arn"`
+	CIDRIPv4                  types.String  `tfsdk:"cidr_ipv4"`
+	CIDRIPv6                  types.String  `tfsdk:"cidr_ipv6"`
+	Description               types.String  `tfsdk:"description"`
+	Filters                   customFilters `tfsdk:"filter"`
+	FromPort                  types.Int64   `tfsdk:"from_port"`
+	ID                        types.String  `tfsdk:"id"`
+	IPProtocol                types.String  `tfsdk:"ip_protocol"`
+	IsEgress                  types.Bool    `tfsdk:"is_egress"`
+	PrefixListID              types.String  `tfsdk:"prefix_list_id"`
+	ReferencedSecurityGroupID types.String  `tfsdk:"referenced_security_group_id"`
+	SecurityGroupID           types.String  `tfsdk:"security_group_id"`
+	SecurityGroupRuleID       types.String  `tfsdk:"security_group_rule_id"`
+	Tags                      tftags.Map    `tfsdk:"tags"`
+	ToPort                    types.Int64   `tfsdk:"to_port"`
 }

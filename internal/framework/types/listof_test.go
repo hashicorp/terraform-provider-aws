@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -52,5 +53,67 @@ func TestListOfStringFromTerraform(t *testing.T) {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
+	}
+}
+
+func TestListOfValidateAttribute(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		val         []attr.Value
+		expectError bool
+	}{
+		"null value": {
+			val: []attr.Value{
+				fwtypes.StringEnumNull[mockEnum](),
+			},
+		},
+		"unknown value": {
+			val: []attr.Value{
+				fwtypes.StringEnumUnknown[mockEnum](),
+			},
+		},
+		"valid values": { // lintignore:AWSAT003,AWSAT005
+			val: []attr.Value{
+				fwtypes.StringEnumValue[mockEnum]("red"),
+				fwtypes.StringEnumValue[mockEnum]("blue"),
+			},
+		},
+		"invalid values": {
+			val: []attr.Value{
+				fwtypes.StringEnumValue[mockEnum]("blue"),
+				fwtypes.StringEnumValue[mockEnum]("green"),
+			},
+			expectError: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
+
+			listOfEnums := fwtypes.ListOfStringEnumType[mockEnum]()
+			values, _ := listOfEnums.ValueFromList(ctx, types.ListValueMust(fwtypes.StringEnumType[mockEnum](), test.val))
+
+			// asserting here because we know the interface is implemented
+			eval := values.(fwtypes.ListValueOf[fwtypes.StringEnum[mockEnum]])
+			eval.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			}
+		})
+	}
+}
+
+type mockEnum string
+
+func (mockEnum) Values() []mockEnum {
+	return []mockEnum{
+		"blue",
+		"red",
 	}
 }

@@ -23,6 +23,7 @@ resource "aws_redshiftserverless_snapshot" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `namespace_name` - (Required) The namespace to create a snapshot for.
 * `snapshot_name` - (Required) The name of the snapshot.
 * `retention_period` - (Optional) How long to retain the created snapshot. Default value is `-1`.

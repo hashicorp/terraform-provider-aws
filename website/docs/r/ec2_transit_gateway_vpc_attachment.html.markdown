@@ -26,6 +26,7 @@ A full example of how to create a Transit Gateway in one AWS account, share it w
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subnet_ids` - (Required) Identifiers of EC2 Subnets.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 * `vpc_id` - (Required) Identifier of EC2 VPC.

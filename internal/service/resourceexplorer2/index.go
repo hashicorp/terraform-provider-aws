@@ -31,7 +31,11 @@ import (
 )
 
 // @FrameworkResource("aws_resourceexplorer2_index", name="Index")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -43,8 +47,8 @@ func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type indexResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[indexResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -236,6 +240,7 @@ func (r *indexResource) Delete(ctx context.Context, request resource.DeleteReque
 
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
 type indexResourceModel struct {
+	framework.WithRegionModel
 	ARN      types.String                           `tfsdk:"arn"`
 	ID       types.String                           `tfsdk:"id"`
 	Tags     tftags.Map                             `tfsdk:"tags"`

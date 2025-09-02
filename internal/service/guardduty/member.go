@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_member", name="Member")
-func ResourceMember() *schema.Resource {
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,

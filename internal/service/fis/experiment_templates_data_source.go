@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,13 +26,14 @@ func newExperimentTemplatesDataSource(context.Context) (datasource.DataSourceWit
 }
 
 type experimentTemplatesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[experimentTemplatesDataSourceDataSourceModel]
 }
 
 func (d *experimentTemplatesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -65,7 +67,7 @@ func (d *experimentTemplatesDataSource) Read(ctx context.Context, request dataso
 		return
 	}
 
-	data.IDs = fwflex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.ExperimentTemplateSummary) string {
+	data.IDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, tfslices.ApplyToAll(output, func(v awstypes.ExperimentTemplateSummary) string {
 		return aws.ToString(v.Id)
 	}))
 
@@ -73,8 +75,9 @@ func (d *experimentTemplatesDataSource) Read(ctx context.Context, request dataso
 }
 
 type experimentTemplatesDataSourceDataSourceModel struct {
-	IDs  types.List `tfsdk:"ids"`
-	Tags tftags.Map `tfsdk:"tags"`
+	framework.WithRegionModel
+	IDs  fwtypes.ListOfString `tfsdk:"ids"`
+	Tags tftags.Map           `tfsdk:"tags"`
 }
 
 func findExperimentTemplates(ctx context.Context, conn *fis.Client, input *fis.ListExperimentTemplatesInput, filter tfslices.Predicate[*awstypes.ExperimentTemplateSummary]) ([]awstypes.ExperimentTemplateSummary, error) {

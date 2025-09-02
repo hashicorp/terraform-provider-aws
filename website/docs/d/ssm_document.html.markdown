@@ -38,6 +38,7 @@ data "aws_ssm_document" "test" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the document.
 * `document_format` - The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
 * `document_version` - The document version.

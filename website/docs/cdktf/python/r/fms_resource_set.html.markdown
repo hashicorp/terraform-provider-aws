@@ -39,8 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_set` - (Required) Details about the resource set to be created or updated. See [`resource_set` Attribute Reference](#resource_set-attribute-reference) below.
 
 ### `resource_set` Attribute Reference
@@ -91,4 +92,4 @@ Using `terraform import`, import FMS (Firewall Manager) Resource Set using the `
 % terraform import aws_fms_resource_set.example resource_set-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-67e29075285b513789685cc9fcb320ea588a51cfb616661208516c819e15c4b7 -->
+<!-- cache-key: cdktf-0.20.8 input-c6e0549773a34f6bcdc1319a6a6d089a1ea13f0a0950f194d7b90d952c0466cc -->

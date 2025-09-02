@@ -122,8 +122,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 1 * time.Minute
 	)
-	certificateSummaries, err := tfresource.RetryGWhenNotFound(ctx, timeout,
-		func() ([]awstypes.CertificateSummary, error) {
+	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout,
+		func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 			output, err := findCertificates(ctx, conn, &input, f)
 			switch {
 			case err != nil:

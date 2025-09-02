@@ -104,7 +104,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta a
 		MetricsConfiguration: metricsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutBucketMetricsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -119,7 +119,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta a
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 			return findMetricsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -194,7 +194,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findMetricsConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -218,7 +218,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]any) types.MetricsFil
 
 	var tags []types.Tag
 	if v, ok := m[names.AttrTags]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = svcTags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	var metricsFilter types.MetricsFilter

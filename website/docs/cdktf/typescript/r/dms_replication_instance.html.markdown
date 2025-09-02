@@ -126,34 +126,33 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allocatedStorage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allowMajorVersionUpgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
 * `applyImmediately` - (Optional, Default: false) Indicates whether the changes should be applied immediately or during the next maintenance window. Only used when updating an existing resource.
 * `autoMinorVersionUpgrade` - (Optional, Default: false) Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
 * `availabilityZone` - (Optional) The EC2 Availability Zone that the replication instance will be created in.
+* `dnsNameServers` - (Optional) A list of custom DNS name servers supported for the replication instance to access your on-premise source or target database. This list overrides the default name servers supported by the replication instance. You can specify a comma-separated list of internet addresses for up to four on-premise DNS name servers.
 * `engineVersion` - (Optional) The engine version number of the replication instance.
+* `kerberosAuthenticationSettings` - (Optional) Configuration block for settings required for Kerberos authentication. See below.
 * `kmsKeyArn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `multiAz` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availabilityZone` parameter if the `multiAz` parameter is set to `true`.
 * `networkType` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
 * `preferredMaintenanceWindow` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
-
-    - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
-    - Format: `ddd:hh24:mi-ddd:hh24:mi`
-    - Valid Days: `mon, tue, wed, thu, fri, sat, sun`
-    - Constraints: Minimum 30-minute window.
-
 * `publiclyAccessible` - (Optional, Default: false) Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
 * `replicationInstanceClass` - (Required) The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for available instance sizes and advice on which one to choose.
 * `replicationInstanceId` - (Required) The replication instance identifier. This parameter is stored as a lowercase string.
-
-    - Must contain from 1 to 63 alphanumeric characters or hyphens.
-    - First character must be a letter.
-    - Cannot end with a hyphen
-    - Cannot contain two consecutive hyphens.
-
 * `replicationSubnetGroupId` - (Optional) A subnet group to associate with the replication instance.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcSecurityGroupIds` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
+
+## kerberos_authentication_settings
+
+-> Additional information can be found in the [Using Kerberos Authentication with AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.Kerberos.html).
+
+* `keyCacheSecretIamArn` - (Required) ARN of the IAM role that grants AWS DMS access to the secret containing key cache file for the Kerberos authentication.
+* `keyCacheSecretId` - (Required) Secret ID that stores the key cache file required for Kerberos authentication.
+* `krb5FileContents` - (Required) Contents of krb5 configuration file required for Kerberos authentication.
 
 ## Attribute Reference
 
@@ -204,4 +203,4 @@ Using `terraform import`, import replication instances using the `replicationIns
 % terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-733beca3582374a877dcda9dd5cfbdc51b9d58e00a60e7a741cbb54ccf4a4ee1 -->
+<!-- cache-key: cdktf-0.20.8 input-129d551085a6b5805fc60f111c5d7bf0e38407f09828858c0c6dda2915454eee -->

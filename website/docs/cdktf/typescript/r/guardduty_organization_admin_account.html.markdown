@@ -55,13 +55,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `adminAccountId` - (Required) AWS account identifier to designate as a delegated administrator for GuardDuty.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - AWS account identifier.
+This resource exports no additional attributes.
 
 ## Import
 
@@ -95,4 +94,4 @@ Using `terraform import`, import GuardDuty Organization Admin Account using the 
 % terraform import aws_guardduty_organization_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9503edb267379cc704ded824b2c1ffae37e126e5b11a01a39000716b3a61347e -->
+<!-- cache-key: cdktf-0.20.8 input-2bcc67249ba700bb547e27d8c299ca83553228ed153012c22f0ec8021c25613f -->

@@ -55,17 +55,18 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key, generator=false)
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
+// @Testing(tlsKey=true)
+// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -159,6 +160,12 @@ func resourceCertificate() *schema.Resource {
 							Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
 							ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+						},
+						"export": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.CertificateExport](),
 						},
 					},
 				},
@@ -545,8 +552,8 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := acm.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteCertificate(ctx, &input)
 		})
 
@@ -623,6 +630,10 @@ func expandCertificateOptions(tfMap map[string]any) *types.CertificateOptions {
 		apiObject.CertificateTransparencyLoggingPreference = types.CertificateTransparencyLoggingPreference(v)
 	}
 
+	if v, ok := tfMap["export"].(string); ok && v != "" {
+		apiObject.Export = types.CertificateExport(v)
+	}
+
 	return apiObject
 }
 
@@ -634,6 +645,10 @@ func flattenCertificateOptions(apiObject *types.CertificateOptions) map[string]a
 	tfMap := map[string]any{}
 
 	tfMap["certificate_transparency_logging_preference"] = apiObject.CertificateTransparencyLoggingPreference
+
+	if apiObject.Export != "" {
+		tfMap["export"] = apiObject.Export
+	}
 
 	return tfMap
 }

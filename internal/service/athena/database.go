@@ -108,6 +108,11 @@ func resourceDatabase() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -139,12 +144,16 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	queryString.WriteString(";")
 
-	input := &athena.StartQueryExecutionInput{
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString.String()),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
 
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Athena Database (%s): %s", name, err)
@@ -192,19 +201,28 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	queryString += ";"
 
-	input := &athena.StartQueryExecutionInput{
+	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
+	input := athena.StartQueryExecutionInput{
 		QueryString:         aws.String(queryString),
 		ResultConfiguration: expandResultConfiguration(d),
 	}
-
-	log.Printf("[DEBUG] Deleting Athena Database (%s)", d.Id())
-	output, err := conn.StartQueryExecution(ctx, input)
+	if v, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(v.(string))
+	}
+	output, err := conn.StartQueryExecution(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
-	if err := executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId)); err != nil {
+	err = executeAndExpectNoRows(ctx, conn, aws.ToString(output.QueryExecutionId))
+
+	// "reason: FAILED: SemanticException [Error 10072]: Database does not exist: ...".
+	if errs.Contains(err, "does not exist") {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Database (%s): %s", d.Id(), err)
 	}
 
@@ -212,12 +230,12 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (*types.Database, error) {
-	input := &athena.GetDatabaseInput{
+	input := athena.GetDatabaseInput{
 		CatalogName:  aws.String("AwsDataCatalog"),
 		DatabaseName: aws.String(name),
 	}
 
-	output, err := conn.GetDatabase(ctx, input)
+	output, err := conn.GetDatabase(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.MetadataException](err, "not found") {
 		return nil, &retry.NotFoundError{

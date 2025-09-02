@@ -29,16 +29,14 @@ import (
 
 // @SDKResource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
 		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
 		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
 		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -309,6 +307,29 @@ func resourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ami_account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"data_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.SsmParameterDataType](),
+									},
+									"parameter_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1011),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -540,6 +561,54 @@ func expandLaunchTemplateConfigurations(tfList []any) []awstypes.LaunchTemplateC
 	return apiObjects
 }
 
+func expandSSMParameterConfigurations(tfList []any) []awstypes.SsmParameterConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.SsmParameterConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandSSMParameterConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandSSMParameterConfiguration(tfMap map[string]any) *awstypes.SsmParameterConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.SsmParameterConfiguration{}
+
+	if v, ok := tfMap["ami_account_id"].(string); ok && v != "" {
+		apiObject.AmiAccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["data_type"].(string); ok && v != "" {
+		apiObject.DataType = awstypes.SsmParameterDataType(v)
+	}
+
+	if v, ok := tfMap["parameter_name"].(string); ok && v != "" {
+		apiObject.ParameterName = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 	if tfMap == nil {
 		return nil
@@ -573,6 +642,10 @@ func expandDistribution(tfMap map[string]any) *awstypes.Distribution {
 
 	if v, ok := tfMap["s3_export_configuration"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["ssm_parameter_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SsmParameterConfigurations = expandSSMParameterConfigurations(v.List())
 	}
 
 	return apiObject
@@ -823,7 +896,7 @@ func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConf
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
-		tfMap["target_account_ids"] = aws.StringSlice(v)
+		tfMap["target_account_ids"] = v
 	}
 
 	return tfMap
@@ -837,7 +910,7 @@ func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDist
 	tfMap := map[string]any{}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringSlice(v)
+		tfMap["container_tags"] = v
 	}
 
 	if v := apiObject.Description; v != nil {
@@ -885,7 +958,7 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
-		tfMap["license_configuration_arns"] = aws.StringSlice(v)
+		tfMap["license_configuration_arns"] = v
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -894,6 +967,10 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]any {
 
 	if v := apiObject.S3ExportConfiguration; v != nil {
 		tfMap["s3_export_configuration"] = []any{flattenS3ExportConfiguration(v)}
+	}
+
+	if v := apiObject.SsmParameterConfigurations; v != nil {
+		tfMap["ssm_parameter_configuration"] = flattenSSMParameterConfigurations(v)
 	}
 
 	return tfMap
@@ -921,19 +998,19 @@ func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionCo
 	tfMap := map[string]any{}
 
 	if v := apiObject.OrganizationArns; v != nil {
-		tfMap["organization_arns"] = aws.StringSlice(v)
+		tfMap["organization_arns"] = v
 	}
 
 	if v := apiObject.OrganizationalUnitArns; v != nil {
-		tfMap["organizational_unit_arns"] = aws.StringSlice(v)
+		tfMap["organizational_unit_arns"] = v
 	}
 
 	if v := apiObject.UserGroups; v != nil {
-		tfMap["user_groups"] = aws.StringSlice(v)
+		tfMap["user_groups"] = v
 	}
 
 	if v := apiObject.UserIds; v != nil {
-		tfMap["user_ids"] = aws.StringSlice(v)
+		tfMap["user_ids"] = v
 	}
 
 	return tfMap
@@ -1064,6 +1141,38 @@ func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map
 
 	if v := apiObject.S3Prefix; v != nil {
 		tfMap["s3_prefix"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenSSMParameterConfigurations(apiObjects []awstypes.SsmParameterConfiguration) []any {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenSSMParameterConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenSSMParameterConfiguration(apiObject awstypes.SsmParameterConfiguration) map[string]any {
+	tfMap := map[string]any{}
+
+	if v := apiObject.AmiAccountId; v != nil {
+		tfMap["ami_account_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DataType; string(v) != "" {
+		tfMap["data_type"] = string(v)
+	}
+
+	if v := apiObject.ParameterName; v != nil {
+		tfMap["parameter_name"] = aws.ToString(v)
 	}
 
 	return tfMap

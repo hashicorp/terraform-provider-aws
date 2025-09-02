@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_codebuild_project: Add `environment.docker_server` configuration block
+```
+

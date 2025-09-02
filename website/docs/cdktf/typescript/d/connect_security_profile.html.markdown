@@ -62,13 +62,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** `instanceId` and one of either `name` or `securityProfileId` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `securityProfileId` - (Optional) Returns information on a specific Security Profile by Security Profile id
 * `instanceId` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Security Profile by name
+
+~> **NOTE:** `instanceId` and one of either `name` or `securityProfileId` is required.
 
 ## Attribute Reference
 
@@ -81,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 * `permissions` - List of permissions assigned to the security profile.
 * `tags` - Map of tags to assign to the Security Profile.
 
-<!-- cache-key: cdktf-0.20.8 input-310cfc28c39dae0b7868738857b614dba73bd16825f1ac58784c86c9a5b603ce -->
+<!-- cache-key: cdktf-0.20.8 input-c6cabf6c36a43952846f9ef897f47ceb76c76bb26f71df5912186fa5b7711bfd -->

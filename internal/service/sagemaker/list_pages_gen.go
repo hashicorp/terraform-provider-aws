@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 )
 
-func listHubsPages(ctx context.Context, conn *sagemaker.Client, input *sagemaker.ListHubsInput, fn func(*sagemaker.ListHubsOutput, bool) bool) error {
+func listHubsPages(ctx context.Context, conn *sagemaker.Client, input *sagemaker.ListHubsInput, fn func(*sagemaker.ListHubsOutput, bool) bool, optFns ...func(*sagemaker.Options)) error {
 	for {
-		output, err := conn.ListHubs(ctx, input)
+		output, err := conn.ListHubs(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

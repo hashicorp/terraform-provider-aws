@@ -117,6 +117,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dead_letter_queue_url` - The URL of the SQS dead letter queue, which is used for reporting errors associated with ingesting data from third party applications.
 * `default_encryption_key` - The default encryption key, which is an AWS managed key, is used when no specific type of encryption key is specified. It is used to encrypt all data before it is placed in permanent or semi-permanent storage.
 * `matching` - A block that specifies the process of matching duplicate profiles. [Documented below](#matching).
@@ -242,4 +243,4 @@ Using `terraform import`, import Amazon Customer Profiles Domain using the resou
 % terraform import aws_customerprofiles_domain.example e6f777be-22d0-4b40-b307-5d2720ef16b2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f6eb0adce7382de9efe642aadae2cc68aa938c107380833e54341129ce75077b -->
+<!-- cache-key: cdktf-0.20.8 input-778f067702a609868bebc7da14c3bdc692fe349b9697617b103b4ad9cbfcba27 -->

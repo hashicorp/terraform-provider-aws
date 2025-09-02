@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -25,19 +24,20 @@ import (
 )
 
 // @FrameworkResource("aws_shield_subscription", name="Subscription")
-func newResourceSubscription(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSubscription{}, nil
+func newSubscriptionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &subscriptionResource{}, nil
 }
 
 const (
 	ResNameSubscription = "Subscription"
 )
 
-type resourceSubscription struct {
-	framework.ResourceWithConfigure
+type subscriptionResource struct {
+	framework.ResourceWithModel[subscriptionResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *subscriptionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"auto_renew": schema.StringAttribute{
@@ -55,10 +55,10 @@ func (r *resourceSubscription) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *subscriptionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ShieldClient(ctx)
 
-	var plan resourceSubscriptionData
+	var plan subscriptionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -86,10 +86,10 @@ func (r *resourceSubscription) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceSubscription) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *subscriptionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ShieldClient(ctx)
 
-	var state resourceSubscriptionData
+	var state subscriptionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -112,10 +112,10 @@ func (r *resourceSubscription) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSubscription) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *subscriptionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ShieldClient(ctx)
 
-	var plan, state resourceSubscriptionData
+	var plan, state subscriptionResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -140,10 +140,10 @@ func (r *resourceSubscription) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSubscription) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *subscriptionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ShieldClient(ctx)
 
-	var state resourceSubscriptionData
+	var state subscriptionResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -170,10 +170,6 @@ func (r *resourceSubscription) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *resourceSubscription) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.Subscription, error) {
 	in := &shield.DescribeSubscriptionInput{}
 
@@ -195,7 +191,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 	return out.Subscription, nil
 }
 
-type resourceSubscriptionData struct {
+type subscriptionResourceModel struct {
 	AutoRenew   fwtypes.StringEnum[awstypes.AutoRenew] `tfsdk:"auto_renew"`
 	ID          types.String                           `tfsdk:"id"`
 	SkipDestroy types.Bool                             `tfsdk:"skip_destroy"`

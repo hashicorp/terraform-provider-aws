@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -186,23 +187,48 @@ func resourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"manage_master_user_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"master_password", "master_password_wo"},
+			},
 			"master_password": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"master_password_wo"},
+				ConflictsWith: []string{"manage_master_user_password", "master_password_wo"},
 			},
 			"master_password_wo": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				WriteOnly:     true,
-				ConflictsWith: []string{"master_password"},
+				ConflictsWith: []string{"manage_master_user_password", "master_password"},
 				RequiredWith:  []string{"master_password_wo_version"},
 			},
 			"master_password_wo_version": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				RequiredWith: []string{"master_password_wo"},
+			},
+			"master_user_secret": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKMSKeyID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -276,6 +302,31 @@ func resourceCluster() *schema.Resource {
 					"snapshot_identifier",
 				},
 			},
+			"serverless_v2_scaling_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMaxCapacity: {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(1.0, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+						"min_capacity": {
+							Type:     schema.TypeFloat,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.FloatBetween(0.5, 256.0),
+								validateServerlessCapacity,
+							),
+						},
+					},
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -321,7 +372,37 @@ func resourceCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
+		CustomizeDiff: customdiff.All(
+			// if serverless_v2_scaling_configuration is newly set or deleted, ForceNew is required
+			customdiff.ForceNewIfChange("serverless_v2_scaling_configuration",
+				func(_ context.Context, old, new, meta any) bool {
+					o := old != nil && len(old.([]any)) > 0
+					n := new != nil && len(new.([]any)) > 0
+					if (o && n) || (!o && !n) {
+						return false
+					}
+					return true
+				}),
+		),
 	}
+}
+
+func validateServerlessCapacity(i any, k string) (ws []string, es []error) {
+	const (
+		epsilon = 1.0e-10
+	)
+
+	v, ok := i.(float64)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be float64", k))
+		return
+	}
+	// add a small epsilon to avoid floating point precision issues
+	if int(v*10+epsilon)%5 != 0 {
+		es = append(es, fmt.Errorf("%s must be a multiple of 0.5", k))
+		return
+	}
+	return
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -340,7 +421,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	// ModifyDBInstance afterwadocdb to prevent Terraform operators from API
 	// errors or needing to double apply.
 	var requiresModifyDbCluster bool
-	inputM := &docdb.ModifyDBClusterInput{
+	inputMDBC := docdb.ModifyDBClusterInput{
 		ApplyImmediately: aws.Bool(true),
 	}
 
@@ -352,7 +433,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
-		input := &docdb.RestoreDBClusterFromSnapshotInput{
+		input := docdb.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
@@ -365,12 +446,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v, ok := d.GetOk("backup_retention_period"); ok {
-			inputM.BackupRetentionPeriod = aws.Int32(int32(v.(int)))
+			inputMDBC.BackupRetentionPeriod = aws.Int32(int32(v.(int)))
 			requiresModifyDbCluster = true
 		}
 
 		if v, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
-			inputM.DBClusterParameterGroupName = aws.String(v.(string))
+			inputMDBC.DBClusterParameterGroupName = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
@@ -390,13 +471,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			inputMDBC.ManageMasterUserPassword = aws.Bool(v.(bool))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk("master_password"); ok {
-			inputM.MasterUserPassword = aws.String(v.(string))
+			inputMDBC.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
 		if masterPasswordWO != "" {
-			inputM.MasterUserPassword = aws.String(masterPasswordWO)
+			inputMDBC.MasterUserPassword = aws.String(masterPasswordWO)
 			requiresModifyDbCluster = true
 		}
 
@@ -405,13 +491,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
-			inputM.PreferredBackupWindow = aws.String(v.(string))
+			inputMDBC.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
 		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
-			inputM.PreferredMaintenanceWindow = aws.String(v.(string))
+			inputMDBC.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
+		}
+
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -422,8 +512,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-			return conn.RestoreDBClusterFromSnapshot(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.RestoreDBClusterFromSnapshot(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
@@ -431,7 +521,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tfMap := v.([]any)[0].(map[string]any)
-		input := &docdb.RestoreDBClusterToPointInTimeInput{
+		input := docdb.RestoreDBClusterToPointInTimeInput{
 			DBClusterIdentifier:       aws.String(identifier),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
 			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
@@ -471,6 +561,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
@@ -479,8 +573,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-			return conn.RestoreDBClusterToPointInTime(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.RestoreDBClusterToPointInTime(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore to point-in-time) (%s): %s", identifier, err)
@@ -488,8 +582,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password
 		if _, ok := d.GetOk("global_cluster_identifier"); !ok {
-			if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
-				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+			// If manage_master_user_password is true, we don't need master_password
+			if v, ok := d.GetOk("manage_master_user_password"); !ok || !v.(bool) {
+				if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
+					return sdkdiag.AppendErrorf(diags, `provider.aws: aws_docdb_cluster: %s: "master_password", "master_password_wo": required field is not set`, identifier)
+				}
 			}
 		}
 
@@ -500,7 +597,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		input := &docdb.CreateDBClusterInput{
+		input := docdb.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
@@ -540,12 +637,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("master_password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
+		if v, ok := d.GetOk("manage_master_user_password"); ok {
+			input.ManageMasterUserPassword = aws.Bool(v.(bool))
+		} else {
+			if v, ok := d.GetOk("master_password"); ok {
+				input.MasterUserPassword = aws.String(v.(string))
+			}
 
-		if masterPasswordWO != "" {
-			input.MasterUserPassword = aws.String(masterPasswordWO)
+			if masterPasswordWO != "" {
+				input.MasterUserPassword = aws.String(masterPasswordWO)
+			}
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -560,6 +661,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+		}
+
 		if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
@@ -572,8 +677,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
-			return conn.CreateDBCluster(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.CreateDBCluster(ctx, &input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
@@ -588,9 +693,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if requiresModifyDbCluster {
-		inputM.DBClusterIdentifier = aws.String(d.Id())
+		inputMDBC.DBClusterIdentifier = aws.String(d.Id())
 
-		_, err := conn.ModifyDBCluster(ctx, inputM)
+		_, err := conn.ModifyDBCluster(ctx, &inputMDBC)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DocumentDB Cluster (%s): %s", d.Id(), err)
@@ -650,18 +755,31 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
+	if v := dbc.MasterUserSecret; v != nil {
+		tfList := []any{map[string]any{
+			names.AttrKMSKeyID: aws.ToString(v.KmsKeyId),
+			"secret_arn":       aws.ToString(v.SecretArn),
+			"secret_status":    aws.ToString(v.SecretStatus),
+		}}
+		if err := d.Set("master_user_secret", tfList); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
+		}
+	} else {
+		d.Set("master_user_secret", nil)
+	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfiguration(dbc.ServerlessV2ScalingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
+	}
 	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
-	var securityGroupIDs []string
-	for _, v := range dbc.VpcSecurityGroups {
-		securityGroupIDs = append(securityGroupIDs, aws.ToString(v.VpcSecurityGroupId))
-	}
-	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	}))
 
 	return diags
 }
@@ -671,7 +789,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "skip_final_snapshot") {
-		input := &docdb.ModifyDBClusterInput{
+		input := docdb.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
@@ -700,6 +818,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
+		if d.HasChange("manage_master_user_password") {
+			input.ManageMasterUserPassword = aws.Bool(d.Get("manage_master_user_password").(bool))
+		}
+
 		if d.HasChange("master_password") {
 			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
 		}
@@ -720,6 +842,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
+		if d.HasChange("serverless_v2_scaling_configuration") {
+			if v, ok := d.GetOk("serverless_v2_scaling_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]any)[0].(map[string]any))
+			}
+		}
+
 		if d.HasChange(names.AttrStorageType) {
 			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 		}
@@ -736,9 +864,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-			func() (any, error) {
-				return conn.ModifyDBCluster(ctx, input)
+		const (
+			timeout = 5 * time.Minute
+		)
+		_, err := tfresource.RetryWhen(ctx, timeout,
+			func(ctx context.Context) (any, error) {
+				return conn.ModifyDBCluster(ctx, &input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
@@ -791,7 +922,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	input := &docdb.DeleteDBClusterInput{
+	input := docdb.DeleteDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Id()),
 		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
 	}
@@ -812,8 +943,8 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
-		func() (any, error) {
-			return conn.DeleteDBCluster(ctx, input)
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteDBCluster(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidDBClusterStateFault](err, "is not currently in the available state") {
@@ -875,13 +1006,45 @@ func diffCloudWatchLogsExportConfiguration(old, new []any) ([]any, []any) {
 	return add, disable
 }
 
+func expandServerlessV2ScalingConfiguration(v map[string]any) *awstypes.ServerlessV2ScalingConfiguration {
+	if v == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ServerlessV2ScalingConfiguration{}
+	if v, ok := v[names.AttrMaxCapacity].(float64); ok {
+		apiObject.MaxCapacity = aws.Float64(v)
+	}
+	if v, ok := v["min_capacity"].(float64); ok {
+		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func flattenServerlessV2ScalingConfiguration(v *awstypes.ServerlessV2ScalingConfigurationInfo) []any {
+	if v == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v.MaxCapacity != nil {
+		tfMap[names.AttrMaxCapacity] = aws.ToFloat64(v.MaxCapacity)
+	}
+	if v.MinCapacity != nil {
+		tfMap["min_capacity"] = aws.ToFloat64(v.MinCapacity)
+	}
+	return []any{tfMap}
+}
+
 func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clusterARN, globalClusterID string, timeout time.Duration) error {
-	input := &docdb.RemoveFromGlobalClusterInput{
+	input := docdb.RemoveFromGlobalClusterInput{
 		DbClusterIdentifier:     aws.String(clusterARN),
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	_, err := conn.RemoveFromGlobalCluster(ctx, input)
+	_, err := conn.RemoveFromGlobalCluster(ctx, &input)
 
 	if errs.IsA[*awstypes.DBClusterNotFoundFault](err) || errs.IsA[*awstypes.GlobalClusterNotFoundFault](err) ||
 		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
@@ -892,7 +1055,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clu
 		return fmt.Errorf("removing DocumentDB Cluster (%s) from DocumentDB Global Cluster (%s): %w", clusterARN, globalClusterID, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
 	})
 
@@ -904,10 +1067,10 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clu
 }
 
 func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBCluster, error) {
-	input := &docdb.DescribeDBClustersInput{
+	input := docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DBCluster]())
+	output, err := findDBCluster(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -924,9 +1087,9 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 }
 
 func findClusterByARN(ctx context.Context, conn *docdb.Client, arn string) (*awstypes.DBCluster, error) {
-	input := &docdb.DescribeDBClustersInput{}
+	input := docdb.DescribeDBClustersInput{}
 
-	return findDBCluster(ctx, conn, input, func(v *awstypes.DBCluster) bool {
+	return findDBCluster(ctx, conn, &input, func(v *awstypes.DBCluster) bool {
 		return aws.ToString(v.DBClusterArn) == arn
 	})
 }

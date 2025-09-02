@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 )
 
-func listCachePoliciesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
+func listCachePoliciesPages(ctx context.Context, conn *cloudfront.Client, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool, optFns ...func(*cloudfront.Options)) error {
 	for {
-		output, err := conn.ListCachePolicies(ctx, input)
+		output, err := conn.ListCachePolicies(ctx, input, optFns...)
 		if err != nil {
 			return err
 		}

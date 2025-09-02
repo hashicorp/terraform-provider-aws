@@ -14,6 +14,8 @@ Terraform resource for managing an AWS Security Lake Subscriber.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_securitylake_subscriber" "example" {
   subscriber_name = "example-name"
@@ -34,10 +36,41 @@ resource "aws_securitylake_subscriber" "example" {
 }
 ```
 
+### Multiple Log Sources
+
+```terraform
+resource "aws_securitylake_subscriber" "example" {
+  subscriber_name = "example-name"
+  access_type     = "S3"
+
+  source {
+    aws_log_source_resource {
+      source_name    = "SH_FINDINGS"
+      source_version = "2.0"
+    }
+  }
+
+  source {
+    aws_log_source_resource {
+      source_name    = "ROUTE53"
+      source_version = "2.0"
+    }
+  }
+
+  subscriber_identity {
+    external_id = "example"
+    principal   = "1234567890"
+  }
+
+  depends_on = [aws_securitylake_data_lake.example]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `access_type` - (Optional) The Amazon S3 or Lake Formation access type.
 * `source` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services. See [`source` Blocks](#source-blocks) below.
 * `subscriber_identity` - (Required) The AWS identity used to access your data. See [`subscriber_identity` Block](#subscriber_identity-block) below.
@@ -63,8 +96,8 @@ The `subscriber_identity` block supports the following arguments:
 
 The `aws_log_source_resource` block supports the following arguments:
 
-* `source_name` - (Required) Provides data expiration details of Amazon Security Lake object.
-* `source_version` - (Optional) Provides data storage transition details of Amazon Security Lake object.
+* `source_name` - (Required) The name for a AWS source. This must be a Regionally unique value. Valid values: `ROUTE53`, `VPC_FLOW`, `SH_FINDINGS`, `CLOUD_TRAIL_MGMT`, `LAMBDA_EXECUTION`, `S3_DATA`, `EKS_AUDIT` and `WAF`.
+* `source_version` - (Optional) The version for a AWS source. This must be a Regionally unique value.
 
 ### `custom_log_source_resource` Block
 

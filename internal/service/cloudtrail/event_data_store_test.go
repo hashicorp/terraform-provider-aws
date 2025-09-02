@@ -500,7 +500,8 @@ resource "aws_cloudtrail_event_data_store" "test" {
 func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  multi_region = true
+  multi_region        = true
+  enable_key_rotation = true
   policy = jsonencode({
     Id = %[1]q
     Statement = [{

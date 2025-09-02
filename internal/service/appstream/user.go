@@ -119,7 +119,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 	const (
 		timeout = 4 * time.Minute
 	)
-	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findUserByTwoPartKey(ctx, conn, userName, authType)
 	})
 

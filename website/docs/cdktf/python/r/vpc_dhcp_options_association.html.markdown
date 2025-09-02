@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_id` - (Required) The ID of the VPC to which we would like to associate a DHCP Options Set.
 * `dhcp_options_id` - (Required) The ID of the DHCP Options Set to associate to the VPC.
 
@@ -75,4 +76,4 @@ Using `terraform import`, import DHCP associations using the VPC ID associated w
 % terraform import aws_vpc_dhcp_options_association.imported vpc-0f001273ec18911b1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-38bb6adf7a2cdaed08e8a7d0f22e47d0c02836ef15bfce74b53d370722c7efd7 -->
+<!-- cache-key: cdktf-0.20.8 input-0ec76385b90816d059ca27e223bab212a133cc7cfc8c26ef85927752cb8ab6d5 -->

@@ -15,6 +15,7 @@ var (
 	ResourceOpenZFSFileSystem          = resourceOpenZFSFileSystem
 	ResourceOpenZFSSnapshot            = resourceOpenZFSSnapshot
 	ResourceOpenZFSVolume              = resourceOpenZFSVolume
+	ResourceS3AccessPointAttachment    = newS3AccessPointAttachmentResource
 
 	FindBackupByID                    = findBackupByID
 	FindDataRepositoryAssociationByID = findDataRepositoryAssociationByID
@@ -24,6 +25,7 @@ var (
 	FindONTAPVolumeByID               = findONTAPVolumeByID
 	FindOpenZFSFileSystemByID         = findOpenZFSFileSystemByID
 	FindOpenZFSVolumeByID             = findOpenZFSVolumeByID
+	FindS3AccessPointAttachmentByName = findS3AccessPointAttachmentByName
 	FindStorageVirtualMachineByID     = findStorageVirtualMachineByID
 	FindSnapshotByID                  = findSnapshotByID
 	FindWindowsFileSystemByID         = findWindowsFileSystemByID

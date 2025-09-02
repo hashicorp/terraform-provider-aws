@@ -13,5 +13,5 @@ var (
 	ResourceEncryptionConfig = resourceEncryptionConfig
 	ResourceGroup            = resourceGroup
 	ResourceSamplingRule     = resourceSamplingRule
-	ResourceResourcePolicy   = newResourceResourcePolicy
+	ResourceResourcePolicy   = newResourcePolicyResource
 )

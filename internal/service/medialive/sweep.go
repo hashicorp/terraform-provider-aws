@@ -68,7 +68,7 @@ func sweepChannels(region string) error {
 			id := aws.ToString(channel.Id)
 			log.Printf("[INFO] Deleting MediaLive Channels: %s", id)
 
-			r := ResourceChannel()
+			r := resourceChannel()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -112,7 +112,7 @@ func sweepInputs(region string) error {
 			id := aws.ToString(input.Id)
 			log.Printf("[INFO] Deleting MediaLive Input: %s", id)
 
-			r := ResourceInput()
+			r := resourceInput()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -156,7 +156,7 @@ func sweepInputSecurityGroups(region string) error {
 			id := aws.ToString(group.Id)
 			log.Printf("[INFO] Deleting MediaLive Input Security Group: %s", id)
 
-			r := ResourceInputSecurityGroup()
+			r := resourceInputSecurityGroup()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -200,7 +200,7 @@ func sweepMultiplexes(region string) error {
 			id := aws.ToString(multiplex.Id)
 			log.Printf("[INFO] Deleting MediaLive Multiplex: %s", id)
 
-			r := ResourceMultiplex()
+			r := resourceMultiplex()
 			d := r.Data(nil)
 			d.SetId(id)
 

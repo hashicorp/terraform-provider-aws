@@ -215,7 +215,7 @@ func objectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.
 		return nil, diags
 	}
 
-	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
+	diags.Append(val.(ObjectValueOf[T]).As(ctx, ptr, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -250,5 +250,5 @@ func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.
 }
 
 func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
+	return fwdiag.Must(NewObjectValueOf(ctx, t))
 }

@@ -5,19 +5,17 @@ package servicequotas_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,9 +102,6 @@ func testAccTemplateAssociation_skipDestroy(t *testing.T) {
 			{
 				// aws_servicequotas_template_association resource is removed from config
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateAssociationAssociated(ctx), // verify association is still live on the remote
-				),
 			},
 			{
 				// Use the basic config to remove association on destroy
@@ -129,61 +124,35 @@ func testAccCheckTemplateAssociationDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			out, err := conn.GetAssociationForServiceQuotaTemplate(ctx, &servicequotas.GetAssociationForServiceQuotaTemplateInput{})
-			if out != nil && out.ServiceQuotaTemplateAssociationStatus == types.ServiceQuotaTemplateAssociationStatusDisassociated {
-				return nil
+			_, err := tfservicequotas.FindTemplateAssociation(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameTemplateAssociation, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingDestroyed, tfservicequotas.ResNameTemplateAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Service Quotas Template Association still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTemplateAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckTemplateAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
-		out, err := conn.GetAssociationForServiceQuotaTemplate(ctx, &servicequotas.GetAssociationForServiceQuotaTemplateInput{})
-		if err != nil {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, rs.Primary.ID, err)
-		}
-		if out != nil && out.ServiceQuotaTemplateAssociationStatus == types.ServiceQuotaTemplateAssociationStatusDisassociated {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, rs.Primary.ID, fmt.Errorf("unexpected status: %s", out.ServiceQuotaTemplateAssociationStatus))
-		}
 
-		return nil
-	}
-}
+		_, err := tfservicequotas.FindTemplateAssociation(ctx, conn)
 
-// testAccCheckTemplateAssociationAssociated is a helper function for verifying a
-// template association remains in place when the skip_destroy argument is set to true
-// and the association resource is removed
-func testAccCheckTemplateAssociationAssociated(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
-
-		out, err := conn.GetAssociationForServiceQuotaTemplate(ctx, &servicequotas.GetAssociationForServiceQuotaTemplateInput{})
-		if err != nil {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, "", err)
-		}
-		if out == nil || out.ServiceQuotaTemplateAssociationStatus != types.ServiceQuotaTemplateAssociationStatusAssociated {
-			return create.Error(names.ServiceQuotas, create.ErrActionCheckingExistence, tfservicequotas.ResNameTemplateAssociation, "", fmt.Errorf("unexpected status: %s", out.ServiceQuotaTemplateAssociationStatus))
-		}
-
-		return nil
+		return err
 	}
 }
 

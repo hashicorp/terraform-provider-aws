@@ -43,6 +43,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 
@@ -75,4 +78,4 @@ Using `terraform import`, import a Spot Datafeed Subscription using the word `sp
 % terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-70bf26be611a3ee0c49d03716734469d118e9b44f2ed7494fad6b135c57c3c2e -->
+<!-- cache-key: cdktf-0.20.8 input-5b3058eda5ac2d609e5bde8ecfbe8f1d6c38956d1a71092c3ea378546d39206e -->

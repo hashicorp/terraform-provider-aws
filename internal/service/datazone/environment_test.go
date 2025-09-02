@@ -304,10 +304,10 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
   environment_blueprint_id = data.aws_datazone_environment_blueprint.test.id
   provisioning_role_arn    = aws_iam_role.test.arn
   manage_access_role_arn   = aws_iam_role.test.arn
-  enabled_regions          = [data.aws_region.test.name]
+  enabled_regions          = [data.aws_region.test.region]
 
   regional_parameters = {
-    (data.aws_region.test.name) = {
+    (data.aws_region.test.region) = {
       "S3Location" = "s3://${aws_s3_bucket.test.bucket}"
     }
   }
@@ -315,7 +315,7 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
-  aws_account_region               = data.aws_region.test.name
+  aws_account_region               = data.aws_region.test.region
   environment_blueprint_identifier = data.aws_datazone_environment_blueprint.test.id
   description                      = %[1]q
   name                             = %[1]q
@@ -335,7 +335,7 @@ resource "aws_datazone_environment" "test" {
   name                 = %[1]q
   description          = %[1]q
   account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
+  account_region       = data.aws_region.test.region
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
@@ -369,7 +369,7 @@ resource "aws_datazone_environment" "test" {
   name                 = %[2]q
   description          = %[2]q
   account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
+  account_region       = data.aws_region.test.region
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id

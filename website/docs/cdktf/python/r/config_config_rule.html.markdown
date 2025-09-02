@@ -165,6 +165,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `description` - (Optional) Description of the rule
 * `evaluation_mode` - (Optional) The modes the Config rule can be evaluated in. See [Evaluation Mode](#evaluation-mode) for more details.
@@ -246,4 +247,4 @@ Using `terraform import`, import Config Rule using the name. For example:
 % terraform import aws_config_config_rule.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9ac26380148d2369865bffa65da57a4227e4ff006488392c0ed315476f1af9e4 -->
+<!-- cache-key: cdktf-0.20.8 input-0a57f4d317bed657da11c510f3097b50fb3f36c923dcac5295290a197d8ca549 -->

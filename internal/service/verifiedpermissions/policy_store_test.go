@@ -45,7 +45,10 @@ func TestAccVerifiedPermissionsPolicyStore_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
 					resource.TestCheckResourceAttr(resourceName, "validation_settings.0.mode", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform acceptance test"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "verifiedpermissions", regexache.MustCompile(`policy-store/.+$`)),
 				),
 			},
@@ -93,6 +96,47 @@ func TestAccVerifiedPermissionsPolicyStore_update(t *testing.T) {
 		},
 	})
 }
+func TestAccVerifiedPermissionsPolicyStore_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policystore verifiedpermissions.GetPolicyStoreOutput
+	resourceName := "aws_verifiedpermissions_policy_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+			testAccPolicyStoresPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_deletion_protection("DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "DISABLED"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -120,6 +164,59 @@ func TestAccVerifiedPermissionsPolicyStore_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVerifiedPermissionsPolicyStore_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policystore verifiedpermissions.GetPolicyStoreOutput
+	resourceName := "aws_verifiedpermissions_policy_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+			testAccPolicyStoresPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyStoreConfig_tags1("OFF", acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPolicyStoreConfig_tags2("OFF", acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccPolicyStoreConfig_tags1("OFF", acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyStoreExists(ctx, resourceName, &policystore),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -197,4 +294,42 @@ resource "aws_verifiedpermissions_policy_store" "test" {
     mode = %[1]q
   }
 }`, mode)
+}
+
+func testAccPolicyStoreConfig_deletion_protection(deletionProtection string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy_store" "test" {
+  description         = "Terraform acceptance test"
+  deletion_protection = %[1]q
+  validation_settings {
+    mode = "OFF"
+  }
+}`, deletionProtection)
+}
+
+func testAccPolicyStoreConfig_tags1(mode, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy_store" "test" {
+  description = "Terraform acceptance test"
+  validation_settings {
+    mode = %[1]q
+  }
+  tags = {
+    %[2]q = %[3]q
+  }
+}`, mode, tagKey1, tagValue1)
+}
+
+func testAccPolicyStoreConfig_tags2(mode, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy_store" "test" {
+  description = "Terraform acceptance test"
+  validation_settings {
+    mode = %[1]q
+  }
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}`, mode, tagKey1, tagValue1, tagKey2, tagValue2)
 }

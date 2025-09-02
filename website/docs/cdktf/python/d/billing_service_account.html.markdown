@@ -68,6 +68,10 @@ class MyConvertedCode(TerraformStack):
         aws_s3_bucket_policy_allow_billing_logging.override_logical_id("allow_billing_logging")
 ```
 
+## Argument Reference
+
+This data source does not support any arguments.
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -75,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.
 
-<!-- cache-key: cdktf-0.20.8 input-17ce35cbdad2dfd249442b9beaa5ba48d0700677cd41afaccbdb685d3a70e690 -->
+<!-- cache-key: cdktf-0.20.8 input-5e4aecb4542e1fd678c59e2c83de1c72ab4c3d23d3792e816fa407b1d4d0b6d5 -->

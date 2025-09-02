@@ -31,10 +31,16 @@ class MyConvertedCode(TerraformStack):
         DataAwsOamLinks(self, "example")
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of ARN of the Links.
 
-<!-- cache-key: cdktf-0.20.8 input-a7fb5ca672e8b3f4688abaeffd562fa606b998eadee65b1f1a1a5566b670b2db -->
+<!-- cache-key: cdktf-0.20.8 input-810cf31dac51b65d13a0089edf5b96a37195f027e633c9bd989ca381096cd6bf -->
