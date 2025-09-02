@@ -410,18 +410,10 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	// or after an invalid update that returns a 'FAILED' record state. Thus, waiters are now present in the CREATE and UPDATE methods of this resource instead.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574#issuecomment-1126339193
 
-	// // For TAINTED resources, we need to get parameters from the last successful record
-	// // not the last provisioning record which may have failed
-	// var recordIdToUse *string
-	// if detail.Status == awstypes.ProvisionedProductStatusTainted && detail.LastSuccessfulProvisioningRecordId != nil {
-	// 	recordIdToUse = detail.LastSuccessfulProvisioningRecordId
-	// 	log.Printf("[DEBUG] Service Catalog Provisioned Product (%s) is TAINTED, using last successful record %s for parameter values", d.Id(), aws.ToString(recordIdToUse))
-	// } else {
-	// 	recordIdToUse = detail.LastProvisioningRecordId
-	// }
-
 	recordIdToUse := aws.ToString(detail.LastProvisioningRecordId)
 	if detail.Status == awstypes.ProvisionedProductStatusTainted && detail.LastSuccessfulProvisioningRecordId != nil {
+		// For TAINTED resources, we need to get artifact details from the last successful
+		// record, as the last provisioned record may have failed.
 		recordIdToUse = aws.ToString(detail.LastSuccessfulProvisioningRecordId)
 		log.Printf("[DEBUG] Service Catalog Provisioned Product (%s) is TAINTED, using last successful record %s for parameter values", d.Id(), recordIdToUse)
 	}
@@ -436,10 +428,9 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), recordIdToUse, err)
 	}
 
-	// To enable debugging of potential v, log as a warning
-	// instead of exiting prematurely with an error, e.g.
-	// v can be present after update to a new version failed and the stack
-	// rolled back to the current version.
+	// To enable debugging of potential issues, log as a warning instead of exiting prematurely.
+	// For example, errors can be present after a failed version update, and the stack rolled back
+	// to the current version.
 	if v := outputDR.RecordDetail.RecordErrors; len(v) > 0 {
 		var errs []error
 
@@ -455,6 +446,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("path_id", outputDR.RecordDetail.PathId)
+	d.Set("provisioning_artifact_id", outputDR.RecordDetail.ProvisioningArtifactId)
 
 	setTagsOut(ctx, svcTags(recordKeyValueTags(ctx, outputDR.RecordDetail.RecordTags)))
 
@@ -537,6 +529,16 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 			if refreshDiags.HasError() {
 				// If refresh fails, return both errors
 				return append(refreshDiags, sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Provisioned Product (%s) update: %s", d.Id(), err)...)
+			}
+
+			if d.HasChange("provisioning_parameters") {
+				// If parameters were changed, rollback to previous values.
+				//
+				// The read APIs used to refresh state above do not return parameter values, and therefore
+				// will not reflect that the planned updates did not take effect. Explicitly rolling back
+				// ensures the planned parameter changes are attempted again on a subsequent apply.
+				oldParams, _ := d.GetChange("provisioning_parameters")
+				d.Set("provisioning_parameters", oldParams)
 			}
 
 			// Return the original failure error after state is corrected
