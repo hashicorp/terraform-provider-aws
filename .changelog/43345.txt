@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_crawler: Retry on `Cannot update Crawler while running` when Updating a currently running crawler
+```
