@@ -73,6 +73,8 @@ func resourceBucketACL() *schema.Resource {
 												names.AttrDisplayName: {
 													Type:     schema.TypeString,
 													Computed: true,
+													Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+														"AWS and will be removed in a future major version.",
 												},
 												names.AttrID: {
 													Type:     schema.TypeString,
@@ -108,6 +110,8 @@ func resourceBucketACL() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+											"AWS and will be removed in a future major version.",
 									},
 									names.AttrID: {
 										Type:     schema.TypeString,

@@ -594,6 +594,7 @@ The following arguments are optional:
 * `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Lambda Layer. Default is `false`.
 * `snap_start` - (Optional) Configuration block for snap start settings. [See below](#snap_start-configuration-block).
 * `source_code_hash` - (Optional) Base64-encoded SHA256 hash of the package file. Used to trigger updates when source code changes.
+* `source_kms_key_arn` - (Optional) ARN of the AWS Key Management Service key used to encrypt the function's `.zip` deployment package. Conflicts with `image_uri`.
 * `tags` - (Optional) Key-value map of tags for the Lambda function. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-configuration-block).
@@ -694,4 +695,4 @@ Using `terraform import`, import Lambda Functions using the `function_name`. For
 % terraform import aws_lambda_function.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9812f203b9b5d6dfd9504a9bad733a3d01e1b9ae18cbcb0e6e621e56cb5b1289 -->
+<!-- cache-key: cdktf-0.20.8 input-b756c6f87fc0304f6fc7b40900cbabe80997f8f9d4c639dce1dab075ff7ce786 -->

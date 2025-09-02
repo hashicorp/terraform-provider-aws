@@ -390,6 +390,12 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"source_kms_key_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"image_uri"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrTimeout: {
@@ -575,6 +581,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SnapStart = expandSnapStart(v.([]any))
 	}
 
+	if v, ok := d.GetOk("source_kms_key_arn"); ok {
+		input.Code.SourceKMSKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
 			Mode: awstypes.TracingMode(v.([]any)[0].(map[string]any)[names.AttrMode].(string)),
@@ -669,6 +679,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	function := output.Configuration
+	functionCode := output.Code
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)
@@ -728,6 +739,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
@@ -998,6 +1010,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			if v, ok := d.GetOk("s3_object_version"); ok {
 				input.S3ObjectVersion = aws.String(v.(string))
 			}
+		}
+
+		// If source_kms_key_arn is set, it should be always included in the update
+		if v, ok := d.GetOk("source_kms_key_arn"); ok {
+			input.SourceKMSKeyArn = aws.String(v.(string))
 		}
 
 		_, err := conn.UpdateFunctionCode(ctx, &input)
@@ -1489,6 +1506,7 @@ func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
+		d.HasChange("source_kms_key_arn") ||
 		d.HasChange("image_uri") ||
 		d.HasChange("architectures")
 }
