@@ -134,6 +134,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_secretsmanager_secret_version",
 			Name:     "Secret Version",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("secret_id", true),
+				inttypes.StringIdentityAttribute("version_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      secretVersionImportID{},
+			},
 		},
 	}
 }

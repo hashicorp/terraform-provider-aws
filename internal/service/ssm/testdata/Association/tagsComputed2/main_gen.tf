@@ -41,7 +41,6 @@ resource "aws_ssm_document" "test" {
   }
 }
 DOC
-
 }
 
 resource "null_resource" "test" {}

@@ -102,6 +102,24 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Blue/Green Deployment with SIGINT Rollback
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  # ... other configurations ...
+
+  deployment_configuration {
+    strategy = "BLUE_GREEN"
+  }
+
+  sigint_rollback       = true
+  wait_for_steady_state = true
+}
+```
+
 ### Redeploy Service On Every Apply
 
 The key used with `triggers` is arbitrary.
@@ -153,6 +171,7 @@ The following arguments are optional:
 * `scheduling_strategy` - (Optional) Scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
 * `service_connect_configuration` - (Optional) ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. [See below](#service_connect_configuration).
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. [See below](#service_registries).
+* `sigint_rollback` - (Optional) Whether to enable graceful termination of deployments using SIGINT signals. When enabled, allows customers to safely cancel an in-progress deployment and automatically trigger a rollback to the previous stable state. Defaults to `false`. Only applicable when using `ECS` deployment controller and requires `wait_for_steady_state = true`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
@@ -323,7 +342,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 `service` supports the following:
 
-* `client_alias` - (Optional) List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. The maximum number of client aliases that you can have in this list is 1. [See below](#client_alias).
+* `client_alias` - (Optional) List of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. For each service block where enabled is true, exactly one `client_alias` with one `port` should be specified. [See below](#client_alias).
 * `discovery_name` - (Optional) Name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
 * `ingress_port_override` - (Optional) Port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) Name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.

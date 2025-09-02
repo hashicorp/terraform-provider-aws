@@ -223,6 +223,32 @@ attribute once the route resource is created.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route_table.example
+  identity = {
+    id = "rtb-4e616f6d69"
+  }
+}
+
+resource "aws_route_table" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the routing table.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
 ```python
@@ -246,4 +272,4 @@ Using `terraform import`, import Route Tables using the route table `id`. For ex
 % terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6554c36cfd791cb2429aaadb7a8160b57c2a4c69bc626678aa8becb24156a8fc -->
+<!-- cache-key: cdktf-0.20.8 input-dfc865151610891586f4609992c49179736f292de315b5eaa86d4c26acb2026e -->
