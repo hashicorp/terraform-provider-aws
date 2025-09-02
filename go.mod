@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.4.4
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.0
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.213.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.39.1
