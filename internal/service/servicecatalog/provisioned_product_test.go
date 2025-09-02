@@ -480,7 +480,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1 - Setup
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName),
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "original"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
@@ -503,7 +503,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 			},
 			// Step 2 - Trigger a failure, leaving the provisioned product tainted
 			{
-				Config:      testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
+				Config:      testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
 				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -541,7 +541,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 			},
 			// Step 3 - Verify an update is planned, even without configuration changes
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -551,7 +551,7 @@ func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
 			},
 			// Step 4 - Resolve the failure, verifying an update is completed
 			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName),
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
@@ -1109,22 +1109,15 @@ resource "aws_s3_bucket" "conflict" {
 `, rName, conflictingBucketName, tagValue))
 }
 
-func testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "original")
-}
-
-func testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated")
-}
-
-func testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "updated")
-}
-
 func testAccProvisionedProductConfig_retryTaintedUpdate(rName string, useNewVersion bool, simulateFailure bool, extraParam string) string {
 	return acctest.ConfigCompose(
 		testAccProvisionedProductPortfolioBaseConfig(rName),
 		fmt.Sprintf(`
+locals {
+  initial_provisioning_artifact = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[0]
+  new_provisioning_artifact     = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[1]
+}
+
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                     = %[1]q
   product_id               = aws_servicecatalog_product.test.id
@@ -1139,16 +1132,12 @@ resource "aws_servicecatalog_provisioned_product" "test" {
     key   = "ExtraParam"
     value = %[4]q
   }
-
-  depends_on = [
-    aws_servicecatalog_constraint.launch_constraint,
-  ]
 }
 
 resource "aws_servicecatalog_product" "test" {
   description = %[1]q
   name        = %[1]q
-  owner       = "ägare"
+  owner       = "test"
   type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
@@ -1180,11 +1169,6 @@ data "aws_servicecatalog_provisioning_artifacts" "product_artifacts" {
   depends_on = [aws_servicecatalog_provisioning_artifact.new_version]
 }
 
-locals {
-  initial_provisioning_artifact = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[0]
-  new_provisioning_artifact     = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[1]
-}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -1195,46 +1179,6 @@ resource "aws_s3_object" "test" {
   key    = "product_template.yaml"
 
   source = "${path.module}/testdata/foo/product_template.yaml"
-}
-
-# Required to validate provisioned product on update
-resource "aws_servicecatalog_constraint" "launch_constraint" {
-  description  = "Launch constraint for test product"
-  portfolio_id = aws_servicecatalog_portfolio.test.id
-  product_id   = aws_servicecatalog_product.test.id
-  type         = "LAUNCH"
-
-  parameters = jsonencode({
-    "RoleArn" = aws_iam_role.launch_role.arn
-  })
-
-  depends_on = [aws_iam_role_policy_attachment.launch_role]
-}
-
-# IAM role for Service Catalog launch constraint
-resource "aws_iam_role" "launch_role" {
-  name = "%[1]s-launch-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "servicecatalog.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-data "aws_partition" "current" {}
-
-# Attach admin policy to launch role (for demo purposes only)
-resource "aws_iam_role_policy_attachment" "launch_role" {
-  role       = aws_iam_role.launch_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
 }
 `, rName, useNewVersion, simulateFailure, extraParam))
 }
