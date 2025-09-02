@@ -177,8 +177,8 @@ github.com/aws/aws-sdk-go-v2/service/controltower v1.26.2 h1:olXHUzlyyzaXoL6t9ca
 github.com/aws/aws-sdk-go-v2/service/controltower v1.26.2/go.mod h1:ojCzzbtA/EzWHw3DMo6JFrGyWVNtppBHhNicFVWCVzE=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.33.2 h1:2d0q0nu8LC5aeas0ZmsgjZHCiAfZZXTB9Y1iF9dpm0w=
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.33.2/go.mod h1:mvpFNLX9pwMKCZtwEipfMUbAdZs9RmHcpkUp+J58eXU=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.55.2 h1:+bl1IWBe9czY7+B2VmjERXXM7A0Cv4Z95A5M0pbJ8kk=
-github.com/aws/aws-sdk-go-v2/service/costexplorer v1.55.2/go.mod h1:rpux7wx/IwrzFQeHZejTPAw5K+VjkZgqxwSVb4f8VUY=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.55.3 h1:wIxOLILQ3fjaY/A6PWfmQYaJGcmimUt6C1VJObyVL7U=
+github.com/aws/aws-sdk-go-v2/service/costexplorer v1.55.3/go.mod h1:BbguYlNx01GCK33JAkLy/Z+fwmaA8rXW2JRxqE2L7XQ=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.1 h1:8al8RyP6gjJ8Ti56vJmWblJzRshyHmzl8pCmwwIV0d8=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.20.1/go.mod h1:ujChJcb5Na2xzIwgJFkNO+B241PF3W599te3yD32e8Q=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.52.1 h1:BIH0NWmhyRCWSxjZchOUJ9aE2F6MYmHmaScru2MLSkg=
