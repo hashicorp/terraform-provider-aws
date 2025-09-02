@@ -11,12 +11,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -453,6 +455,127 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.5"),
 					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.5"),
 				),
+			},
+		},
+	})
+}
+
+// Validates that a provisioned product in tainted status properly triggers an update
+// on subsequent applies.
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/42585
+func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	artifactsDataSourceName := "data.aws_servicecatalog_provisioning_artifacts.product_artifacts"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	initialArtifactID := "provisioning_artifact_details.0.id"
+	newArtifactID := "provisioning_artifact_details.1.id"
+	var v awstypes.ProvisionedProductDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1 - Setup
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 2 - Trigger a failure, leaving the provisioned product tainted
+			{
+				Config:      testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact(acctest.CtTrue),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact("updated"),
+							}),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("TAINTED")),
+					// Verify state is rolled back to the paramters from the original setup run
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 3 - Verify an update is planned, even without configuration changes
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+			},
+			// Step 4 - Resolve the failure, verifying an update is completed
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("updated"),
+						}),
+					})),
+				},
 			},
 		},
 	})
@@ -986,155 +1109,18 @@ resource "aws_s3_bucket" "conflict" {
 `, rName, conflictingBucketName, tagValue))
 }
 
-// TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate reproduces the exact bug scenario:
-//
-// When a Service Catalog provisioned product update fails, the resource becomes TAINTED.
-// The bug is that subsequent `terraform apply` shows "no changes" instead of retrying
-// the failed update automatically.
-//
-// Expected behavior: TAINTED resources should always trigger an update attempt.
-// Current (buggy) behavior: TAINTED resources show "no changes" in plan.
-//
-// This test should FAIL at Step 4 with the current implementation, proving the bug exists.
-// Step 4 uses ConfigPlanChecks to verify that an update action should be planned.
-func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_servicecatalog_provisioned_product.test"
-	const artifactsDataSourceName = "data.aws_servicecatalog_provisioning_artifacts.product_artifacts"
-	const initialArtifactID = "provisioning_artifact_details.0.id"
-	const newArtifactID = "provisioning_artifact_details.1.id"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var pprod awstypes.ProvisionedProductDetail
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
-		Steps: []resource.TestStep{
-			// Step 1: Create with working configuration
-			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					testAccCheckProvisionedProductStatus(ctx, resourceName, "AVAILABLE"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
-					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "none"),
-				),
-			},
-
-			// Step 2: Update to failing configuration
-			{
-				Config:      testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
-				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
-			},
-
-			// // Step 3: Verify resource is now TAINTED after the failed update
-			// // Use RefreshState to avoid triggering any plan changes due to config differences
-			// {
-			// 	RefreshState: true,
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		// testAccCheckProvisionedProductExists(ctx, resourceName, &pprod), // Can't use this because it fails on TAINTED
-			// 		testAccCheckProvisionedProductStatus(ctx, resourceName, "TAINTED"),
-			// 		resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "TAINTED"),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
-			// 		resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
-			// 		resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
-			// 		resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", "true"),
-			// 		resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
-			// 		resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "changed_once"),
-			// 	),
-			// },
-
-			// Step 4: CRITICAL TEST - Apply the same failing config again
-			// BUG: Currently this shows "no changes" but should retry the update
-			// ConfigPlanChecks should FAIL with current implementation, demonstrating the bug
-			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
-			},
-
-			// Step 5: Clean up by applying a working config
-			{
-				Config: testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "AVAILABLE"),
-					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.key", "FailureSimulation"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.0.value", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.key", "ExtraParam"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_parameters.1.value", "changed_to_force_an_update"),
-				),
-			},
-		},
-	})
-}
-
-// Helper function to check provisioned product status
-func testAccCheckProvisionedProductStatus(ctx context.Context, resourceName, expectedStatus string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
-
-		input := &servicecatalog.DescribeProvisionedProductInput{
-			Id:             aws.String(rs.Primary.ID),
-			AcceptLanguage: aws.String(tfservicecatalog.AcceptLanguageEnglish),
-		}
-
-		output, err := conn.DescribeProvisionedProduct(ctx, input)
-		if err != nil {
-			return fmt.Errorf("describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output.ProvisionedProductDetail == nil {
-			return fmt.Errorf("Service Catalog Provisioned Product (%s) not found", rs.Primary.ID)
-		}
-
-		actualStatus := string(output.ProvisionedProductDetail.Status)
-		if actualStatus != expectedStatus {
-			return fmt.Errorf("Service Catalog Provisioned Product (%s) status: expected %s, got %s",
-				rs.Primary.ID, expectedStatus, actualStatus)
-		}
-
-		return nil
-	}
-}
-
 func testAccProvisionedProductConfig_retryTaintedUpdate_Setup(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "none")
+	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "original")
 }
 
 func testAccProvisionedProductConfig_retryTaintedUpdate_WithFailure(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "changed_once")
+	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated")
 }
 
 func testAccProvisionedProductConfig_retryTaintedUpdate_ResolveFailure(rName string) string {
-	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "changed_to_force_an_update")
+	return testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "updated")
 }
 
-// testAccProvisionedProductConfig_retryTaintedUpdate creates a simple working CloudFormation template
-// This avoids the complex conditional logic that was causing issues in the basic config
 func testAccProvisionedProductConfig_retryTaintedUpdate(rName string, useNewVersion bool, simulateFailure bool, extraParam string) string {
 	return acctest.ConfigCompose(
 		testAccProvisionedProductPortfolioBaseConfig(rName),
